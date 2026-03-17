@@ -1,0 +1,24 @@
+{
+    "args": [],
+    "kwargs": {
+        "src": "/tmp/key.asc",
+        "dest": "/etc/apt/keyrings/key.gpg",
+        "mode": "0600"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/key.gpg": null
+        }
+    },
+    "commands": [
+        "mkdir -p /etc/apt/keyrings",
+        "chmod 755 /etc/apt/keyrings",
+        "gpg --batch --dearmor -o \"/etc/apt/keyrings/key.gpg\" \"/tmp/key.asc\"",
+        "mkdir -p /etc/apt/keyrings",
+        "touch /etc/apt/keyrings/key.gpg",
+        "chmod 600 /etc/apt/keyrings/key.gpg"
+    ]
+}

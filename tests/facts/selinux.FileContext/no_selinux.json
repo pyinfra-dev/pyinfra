@@ -1,0 +1,8 @@
+{
+    "arg": "/etc/hostname",
+    "command": "stat -c %C /etc/hostname || exit 0",
+    "output": [
+        "?"
+    ],
+    "fact": null
+}

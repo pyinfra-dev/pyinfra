@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "path": "/some/venv; rm -rf /"
+    },
+    "facts": {
+        "files.File": {
+            "path=/some/venv; rm -rf //bin/activate": null
+        }
+    },
+    "commands": [
+        "virtualenv '/some/venv; rm -rf /'"
+    ]
+}

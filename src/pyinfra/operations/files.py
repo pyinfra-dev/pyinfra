@@ -246,7 +246,7 @@ def download(
             yield make_formatted_string_command(
                 (
                     "(( sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0} ) "
-                    "| grep {1}) || ( echo {2} && exit 1 )"
+                    "| grep {1} ) || ( echo {2} && exit 1 )"
                 ),
                 QuoteString(dest),
                 sha256sum,
@@ -257,7 +257,7 @@ def download(
             yield make_formatted_string_command(
                 (
                     "(( sha384sum {0} 2> /dev/null || shasum -a 384 {0} ) "
-                    "| grep {1}) || ( echo {2} && exit 1 )"
+                    "| grep {1} ) || ( echo {2} && exit 1 )"
                 ),
                 QuoteString(dest),
                 sha384sum,
@@ -266,7 +266,7 @@ def download(
 
         if md5sum:
             yield make_formatted_string_command(
-                ("(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) || ( echo {2} && exit 1 )"),
+                ("(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1} ) || ( echo {2} && exit 1 )"),
                 QuoteString(dest),
                 md5sum,
                 QuoteString("MD5 did not match!"),

@@ -1,0 +1,11 @@
+{
+    "kwargs": {
+        "requirements": "/tmp/reqs; cat /etc/passwd"
+    },
+    "facts": {},
+    "commands": [
+        "pip install -r '/tmp/reqs; cat /etc/passwd'"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "pip package requirements are always executed"
+}

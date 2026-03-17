@@ -48,17 +48,19 @@ def keyscan(hostname: str, force=False, port=22):
         pattern=hostname,
     )
 
+    homedir = str(homedir)
+
     keyscan_command = "ssh-keyscan -p {0} {1} >> {2}/.ssh/known_hosts".format(
         port,
-        hostname,
-        homedir,
+        shlex.quote(hostname),
+        shlex.quote(homedir),
     )
 
     if not hostname_present:
         yield keyscan_command
 
     elif force:
-        yield "ssh-keygen -R {0}".format(hostname)
+        yield "ssh-keygen -R {0}".format(shlex.quote(hostname))
         yield keyscan_command
 
     else:
@@ -93,7 +95,7 @@ def command(hostname: str, command: str, user: str | None = None, port=22):
     if user:
         connection_target = "@".join((user, hostname))
 
-    yield "ssh -p {0} {1} {2}".format(port, connection_target, command)
+    yield "ssh -p {0} {1} {2}".format(port, shlex.quote(connection_target), command)
 
 
 @operation(is_idempotent=False)
@@ -132,9 +134,9 @@ def upload(
     if not use_remote_sudo:
         yield "scp -P {0} {1} {2}:{3}".format(
             port,
-            filename,
-            connection_target,
-            remote_filename,
+            shlex.quote(filename),
+            shlex.quote(connection_target),
+            shlex.quote(remote_filename),
         )
 
     else:
@@ -144,9 +146,9 @@ def upload(
         # scp it to the temporary location
         upload_cmd = "scp -P {0} {1} {2}:{3}".format(
             port,
-            filename,
-            connection_target,
-            temp_remote_filename,
+            shlex.quote(filename),
+            shlex.quote(connection_target),
+            shlex.quote(temp_remote_filename),
         )
 
         yield upload_cmd
@@ -154,7 +156,9 @@ def upload(
         # And sudo sudo to move it
         yield from command._inner(
             hostname=hostname,
-            command="sudo mv {0} {1}".format(temp_remote_filename, remote_filename),
+            command="sudo mv {0} {1}".format(
+                shlex.quote(temp_remote_filename), shlex.quote(remote_filename)
+            ),
             port=port,
             user=user,
         )
@@ -211,7 +215,7 @@ def download(
     # Download the file with scp
     yield "scp -P {0} {1}:{2} {3}".format(
         port,
-        connection_target,
-        filename,
-        local_filename,
+        shlex.quote(connection_target),
+        shlex.quote(filename),
+        shlex.quote(local_filename),
     )

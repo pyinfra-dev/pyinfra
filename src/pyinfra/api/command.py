@@ -35,15 +35,20 @@ def make_formatted_string_command(string: str, *args, **kwargs) -> "StringComman
     """
 
     formatter = Formatter()
-    string_bits = []
+    string_bits: list[object] = []
 
     for bit in shlex.split(string):
+        token_bits = []
         for item in formatter.parse(bit):
             if item[0]:
-                string_bits.append(item[0])
+                token_bits.append(item[0])
             if item[1]:
                 value, _ = formatter.get_field(item[1], args, kwargs)
-                string_bits.append(value)
+                token_bits.append(value)
+        if len(token_bits) == 1:
+            string_bits.append(token_bits[0])
+        elif len(token_bits) > 1:
+            string_bits.append(StringCommand(*token_bits, _separator=""))
 
     return StringCommand(*string_bits)
 

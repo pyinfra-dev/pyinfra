@@ -5,6 +5,7 @@ Linux/BSD.
 
 from __future__ import annotations
 
+import shlex
 from io import StringIO
 from itertools import filterfalse, tee
 from os import path
@@ -268,11 +269,11 @@ def modprobe(module: str, present=True, force=False):
 
     # Module is loaded and we don't want it?
     if not present and present_mods:
-        yield "modprobe{0} -r -a {1}".format(args, " ".join(present_mods))
+        yield "modprobe{0} -r -a {1}".format(args, " ".join(shlex.quote(m) for m in present_mods))
 
     # Module isn't loaded and we want it?
     elif present and missing_mods:
-        yield "modprobe{0} -a {1}".format(args, " ".join(missing_mods))
+        yield "modprobe{0} -a {1}".format(args, " ".join(shlex.quote(m) for m in missing_mods))
 
     else:
         host.noop(
@@ -331,7 +332,7 @@ def mount(
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
-        yield "umount {0}".format(path)
+        yield "umount {0}".format(shlex.quote(path))
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
@@ -343,10 +344,13 @@ def mount(
                 device = mounts[path]["device"]
 
                 yield "mount -o update,{options} -t {fs_type} {device} {path}".format(
-                    options=options_string, fs_type=fs_type, device=device, path=path
+                    options=options_string,
+                    fs_type=fs_type,
+                    device=shlex.quote(device),
+                    path=shlex.quote(path),
                 )
             else:
-                yield "mount -o remount,{0} {1}".format(options_string, path)
+                yield "mount -o remount,{0} {1}".format(options_string, shlex.quote(path))
 
     else:
         host.noop(
@@ -388,7 +392,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
 
     if host.get_fact(Which, command="hostnamectl"):
         if current_hostname != hostname:
-            yield "hostnamectl set-hostname {0}".format(hostname)
+            yield "hostnamectl set-hostname {0}".format(shlex.quote(hostname))
         else:
             host.noop("hostname is set")
         return
@@ -402,7 +406,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
             hostname_file = "/etc/myname"
 
     if current_hostname != hostname:
-        yield "hostname {0}".format(hostname)
+        yield "hostname {0}".format(shlex.quote(hostname))
     else:
         host.noop("hostname is set")
 
@@ -482,7 +486,7 @@ def sysctl(
     existing_value = existing_sysctls.get(key)
 
     if existing_value != value:
-        yield "sysctl {0}='{1}'".format(key, string_value)
+        yield "sysctl {0}={1}".format(shlex.quote(key), shlex.quote(str(string_value)))
     else:
         host.noop("sysctl {0} is set to {1}".format(key, string_value))
 
@@ -671,9 +675,9 @@ def group(group: str, present=True, system=False, gid: int | str | None = None):
     # Group exists but we don't want them?
     if not present and is_present:
         if os_type == "FreeBSD":
-            yield "pw groupdel -n {0}".format(group)
+            yield "pw groupdel -n {0}".format(shlex.quote(group))
         else:
-            yield "groupdel {0}".format(group)
+            yield "groupdel {0}".format(shlex.quote(group))
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
@@ -684,15 +688,15 @@ def group(group: str, present=True, system=False, gid: int | str | None = None):
             args.append("-r")
 
         if os_type == "FreeBSD":
-            args.append("-n {0}".format(group))
+            args.append("-n {0}".format(shlex.quote(group)))
         else:
-            args.append(group)
+            args.append(shlex.quote(group))
 
         if gid:
             if os_type == "FreeBSD":
-                args.append("-g {0}".format(gid))
+                args.append("-g {0}".format(shlex.quote(str(gid))))
             else:
-                args.append("--gid {0}".format(gid))
+                args.append("--gid {0}".format(shlex.quote(str(gid))))
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
@@ -890,9 +894,9 @@ def user(
     if not present:
         if existing_user:
             if os_type == "FreeBSD":
-                yield "pw userdel -n {0}".format(user)
+                yield "pw userdel -n {0}".format(shlex.quote(user))
             else:
-                yield "userdel {0}".format(user)
+                yield "userdel {0}".format(shlex.quote(user))
         return
 
     # User doesn't exist but we want them?
@@ -906,28 +910,28 @@ def user(
         args = []
 
         if home:
-            args.append("-d {0}".format(home))
+            args.append("-d {0}".format(shlex.quote(home)))
 
         if shell:
-            args.append("-s {0}".format(shell))
+            args.append("-s {0}".format(shlex.quote(shell)))
 
         if group:
-            args.append("-g {0}".format(group))
+            args.append("-g {0}".format(shlex.quote(group)))
 
         if groups:
-            args.append("-G {0}".format(",".join(groups)))
+            args.append("-G {0}".format(",".join(shlex.quote(g) for g in groups)))
 
         if system and "BSD" not in host.get_fact(Os):
             args.append("-r")
 
         if uid:
             if os_type == "FreeBSD":
-                args.append("-u {0}".format(uid))
+                args.append("-u {0}".format(shlex.quote(str(uid))))
             else:
-                args.append("--uid {0}".format(uid))
+                args.append("--uid {0}".format(shlex.quote(str(uid))))
 
         if comment:
-            args.append("-c '{0}'".format(comment))
+            args.append("-c {0}".format(shlex.quote(comment)))
 
         if not unique:
             args.append("-o")
@@ -938,7 +942,7 @@ def user(
             args.append("-M")
 
         if password and os_type != "FreeBSD":
-            args.append("-p '{0}'".format(password))
+            args.append("-p {0}".format(shlex.quote(password)))
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
@@ -948,20 +952,20 @@ def user(
             add_user_command = "pw useradd"
 
             if password:
-                yield "echo '{3}' | {0} -n {2} -H 0 {1}".format(
-                    add_user_command, " ".join(args), user, password
+                yield "echo {3} | {0} -n {2} -H 0 {1}".format(
+                    add_user_command, " ".join(args), shlex.quote(user), shlex.quote(password)
                 )
             else:
                 yield "{0} -n {2} {1}".format(
                     add_user_command,
                     " ".join(args),
-                    user,
+                    shlex.quote(user),
                 )
         else:
             yield "{0} {1} {2}".format(
                 add_user_command,
                 " ".join(args),
-                user,
+                shlex.quote(user),
             )
 
     # User exists and we want them, check home/shell/keys/password
@@ -970,40 +974,42 @@ def user(
 
         # Check homedir
         if home and existing_user["home"] != home:
-            args.append("-d {0}".format(home))
+            args.append("-d {0}".format(shlex.quote(home)))
 
         # Check shell
         if shell and existing_user["shell"] != shell:
-            args.append("-s {0}".format(shell))
+            args.append("-s {0}".format(shlex.quote(shell)))
 
         # Check primary group
         if group and existing_user["group"] != group:
-            args.append("-g {0}".format(group))
+            args.append("-g {0}".format(shlex.quote(group)))
 
         # Check secondary groups, if defined
         if groups:
             if append:
                 if not set(groups).issubset(existing_user["groups"]):
                     args.append("-a")
-                    args.append("-G {0}".format(",".join(groups)))
+                    args.append("-G {0}".format(",".join(shlex.quote(g) for g in groups)))
             elif set(existing_user["groups"]) != set(groups):
-                args.append("-G {0}".format(",".join(groups)))
+                args.append("-G {0}".format(",".join(shlex.quote(g) for g in groups)))
 
         if comment and existing_user["comment"] != comment:
-            args.append("-c '{0}'".format(comment))
+            args.append("-c {0}".format(shlex.quote(comment)))
 
         if password and existing_user["password"] != password:
             if os_type == "FreeBSD":
-                yield "echo '{0}' | pw usermod -n {1} -H 0".format(password, user)
+                yield "echo {0} | pw usermod -n {1} -H 0".format(
+                    shlex.quote(password), shlex.quote(user)
+                )
             else:
-                args.append("-p '{0}'".format(password))
+                args.append("-p {0}".format(shlex.quote(password)))
 
         # Need to mod the user?
         if args:
             if os_type == "FreeBSD":
-                yield "pw usermod -n {1} {0}".format(" ".join(args), user)
+                yield "pw usermod -n {1} {0}".format(" ".join(args), shlex.quote(user))
             else:
-                yield "usermod {0} {1}".format(" ".join(args), user)
+                yield "usermod {0} {1}".format(" ".join(args), shlex.quote(user))
 
     # Ensure home directory ownership
     if ensure_home and home:
