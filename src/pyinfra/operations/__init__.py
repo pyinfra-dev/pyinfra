@@ -2,9 +2,6 @@ import importlib
 from glob import glob
 from os import path
 
-# Lazily discover and build __all__
-# Can be further optimized by using a hardcoded set
-# but this would be the worse decision ever
 _module_filenames = glob(path.join(path.dirname(__file__), "*.py"))
 __all__ = sorted(
     set(path.basename(name)[:-3] for name in _module_filenames if not name.endswith("__init__.py"))
