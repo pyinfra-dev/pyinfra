@@ -35,7 +35,7 @@ def make_formatted_string_command(string: str, *args, **kwargs) -> "StringComman
     """
 
     formatter = Formatter()
-    string_bits = []
+    string_bits: list[object] = []
 
     for bit in shlex.split(string):
         token_bits = []
