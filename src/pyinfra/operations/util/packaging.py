@@ -10,6 +10,7 @@ from packaging.requirements import InvalidRequirement, Requirement
 
 from pyinfra import logger
 from pyinfra.api import Host, OperationValueError, State
+from pyinfra.api.command import StringCommand
 from pyinfra.facts.files import File
 from pyinfra.facts.rpm import RpmPackage
 from pyinfra.operations import files
@@ -138,10 +139,10 @@ def ensure_packages(
     packages_to_ensure: str | list[str] | list[PkgInfo] | None,
     current_packages: dict[str, set[str]],
     present: bool,
-    install_command: str,
-    uninstall_command: str,
+    install_command: str | StringCommand,
+    uninstall_command: str | StringCommand,
     latest: bool = False,
-    upgrade_command: str | None = None,
+    upgrade_command: str | StringCommand | None = None,
     version_join: str | None = None,
     expand_package_fact: Callable[[str], list[str | list[str]]] | None = None,
 ):

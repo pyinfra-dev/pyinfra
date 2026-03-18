@@ -5,7 +5,6 @@ Linux/BSD.
 
 from __future__ import annotations
 
-import shlex
 from io import StringIO
 from itertools import filterfalse, tee
 from os import path
@@ -13,7 +12,7 @@ from time import sleep
 from typing import TYPE_CHECKING
 
 from pyinfra import host, logger, state
-from pyinfra.api import FunctionCommand, OperationError, StringCommand, operation
+from pyinfra.api import FunctionCommand, OperationError, QuoteString, StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory, FindInFile, Link
@@ -263,17 +262,17 @@ def modprobe(module: str, present=True, force=False):
     modules = host.get_fact(KernelModules)
     present_mods, missing_mods = partition(lambda mod: mod in modules, list_value)
 
-    args = ""
-    if force:
-        args = " -f"
+    force_args: list[str] = ["-f"] if force else []
 
     # Module is loaded and we don't want it?
     if not present and present_mods:
-        yield "modprobe{0} -r -a {1}".format(args, " ".join(shlex.quote(m) for m in present_mods))
+        yield StringCommand(
+            "modprobe", *force_args, "-r", "-a", *(QuoteString(m) for m in present_mods)
+        )
 
     # Module isn't loaded and we want it?
     elif present and missing_mods:
-        yield "modprobe{0} -a {1}".format(args, " ".join(shlex.quote(m) for m in missing_mods))
+        yield StringCommand("modprobe", *force_args, "-a", *(QuoteString(m) for m in missing_mods))
 
     else:
         host.noop(
@@ -343,7 +342,7 @@ def mount(
 
     # Want no mount but mounted?
     elif mounted is False and is_mounted:
-        yield "umount {0}".format(shlex.quote(mounted_path))
+        yield StringCommand("umount", QuoteString(mounted_path))
 
     # Want mount and is mounted! Check the options
     elif is_mounted and mounted and options:
@@ -354,14 +353,22 @@ def mount(
                 fs_type = mounts[mounted_path]["type"]
                 device = mounts[mounted_path]["device"]
 
-                yield "mount -o update,{options} -t {fs_type} {device} {path}".format(
-                    options=options_string,
-                    fs_type=fs_type,
-                    device=shlex.quote(device),
-                    path=shlex.quote(mounted_path),
+                yield StringCommand(
+                    "mount",
+                    "-o",
+                    StringCommand("update,", options_string, _separator=""),
+                    "-t",
+                    fs_type,
+                    QuoteString(device),
+                    QuoteString(mounted_path),
                 )
             else:
-                yield "mount -o remount,{0} {1}".format(options_string, shlex.quote(mounted_path))
+                yield StringCommand(
+                    "mount",
+                    "-o",
+                    StringCommand("remount,", options_string, _separator=""),
+                    QuoteString(mounted_path),
+                )
 
     else:
         host.noop(
@@ -403,7 +410,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
 
     if host.get_fact(Which, command="hostnamectl"):
         if current_hostname != hostname:
-            yield "hostnamectl set-hostname {0}".format(shlex.quote(hostname))
+            yield StringCommand("hostnamectl", "set-hostname", QuoteString(hostname))
         else:
             host.noop("hostname is set")
         return
@@ -417,7 +424,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
             hostname_file = "/etc/myname"
 
     if current_hostname != hostname:
-        yield "hostname {0}".format(shlex.quote(hostname))
+        yield StringCommand("hostname", QuoteString(hostname))
     else:
         host.noop("hostname is set")
 
@@ -497,7 +504,10 @@ def sysctl(
     existing_value = existing_sysctls.get(key)
 
     if existing_value != value:
-        yield "sysctl {0}={1}".format(shlex.quote(key), shlex.quote(str(string_value)))
+        yield StringCommand(
+            "sysctl",
+            StringCommand(QuoteString(key), "=", QuoteString(str(string_value)), _separator=""),
+        )
     else:
         host.noop("sysctl {0} is set to {1}".format(key, string_value))
 
@@ -686,35 +696,35 @@ def group(group: str, present=True, system=False, gid: int | str | None = None):
     # Group exists but we don't want them?
     if not present and is_present:
         if os_type == "FreeBSD":
-            yield "pw groupdel -n {0}".format(shlex.quote(group))
+            yield StringCommand("pw", "groupdel", "-n", QuoteString(group))
         else:
-            yield "groupdel {0}".format(shlex.quote(group))
+            yield StringCommand("groupdel", QuoteString(group))
 
     # Group doesn't exist and we want it?
     elif present and not is_present:
-        args = []
+        args: list[str | QuoteString] = []
 
         # BSD doesn't do system users
         if system and "BSD" not in host.get_fact(Os):
             args.append("-r")
 
         if os_type == "FreeBSD":
-            args.append("-n {0}".format(shlex.quote(group)))
+            args.extend(["-n", QuoteString(group)])
         else:
-            args.append(shlex.quote(group))
+            args.append(QuoteString(group))
 
         if gid:
             if os_type == "FreeBSD":
-                args.append("-g {0}".format(shlex.quote(str(gid))))
+                args.extend(["-g", QuoteString(str(gid))])
             else:
-                args.append("--gid {0}".format(shlex.quote(str(gid))))
+                args.extend(["--gid", QuoteString(str(gid))])
 
         # Groups are often added by other operations (package installs), so check
         # for the group at runtime before adding.
-        group_add_command = "groupadd"
         if os_type == "FreeBSD":
-            group_add_command = "pw groupadd"
-        yield "{0} {1}".format(group_add_command, " ".join(args))
+            yield StringCommand("pw", "groupadd", *args)
+        else:
+            yield StringCommand("groupadd", *args)
 
 
 @operation()
@@ -905,9 +915,9 @@ def user(
     if not present:
         if existing_user:
             if os_type == "FreeBSD":
-                yield "pw userdel -n {0}".format(shlex.quote(user))
+                yield StringCommand("pw", "userdel", "-n", QuoteString(user))
             else:
-                yield "userdel {0}".format(shlex.quote(user))
+                yield StringCommand("userdel", QuoteString(user))
         return
 
     # User doesn't exist but we want them?
@@ -918,31 +928,36 @@ def user(
             group = user
 
         # Create the user w/home/shell
-        args = []
+        args: list[str | QuoteString | StringCommand] = []
 
         if home:
-            args.append("-d {0}".format(shlex.quote(home)))
+            args.extend(["-d", QuoteString(home)])
 
         if shell:
-            args.append("-s {0}".format(shlex.quote(shell)))
+            args.extend(["-s", QuoteString(shell)])
 
         if group:
-            args.append("-g {0}".format(shlex.quote(group)))
+            args.extend(["-g", QuoteString(group)])
 
         if groups:
-            args.append("-G {0}".format(",".join(shlex.quote(g) for g in groups)))
+            group_parts: list[str | QuoteString] = []
+            for g in groups:
+                if group_parts:
+                    group_parts.append(",")
+                group_parts.append(QuoteString(g))
+            args.extend(["-G", StringCommand(*group_parts, _separator="")])
 
         if system and "BSD" not in host.get_fact(Os):
             args.append("-r")
 
         if uid:
             if os_type == "FreeBSD":
-                args.append("-u {0}".format(shlex.quote(str(uid))))
+                args.extend(["-u", QuoteString(str(uid))])
             else:
-                args.append("--uid {0}".format(shlex.quote(str(uid))))
+                args.extend(["--uid", QuoteString(str(uid))])
 
         if comment:
-            args.append("-c {0}".format(shlex.quote(comment)))
+            args.extend(["-c", QuoteString(comment)])
 
         if not unique:
             args.append("-o")
@@ -953,74 +968,85 @@ def user(
             args.append("-M")
 
         if password and os_type != "FreeBSD":
-            args.append("-p {0}".format(shlex.quote(password)))
+            args.extend(["-p", QuoteString(password)])
 
         # Users are often added by other operations (package installs), so check
         # for the user at runtime before adding.
-        add_user_command = "useradd"
-
         if os_type == "FreeBSD":
-            add_user_command = "pw useradd"
-
             if password:
-                yield "echo {3} | {0} -n {2} -H 0 {1}".format(
-                    add_user_command, " ".join(args), shlex.quote(user), shlex.quote(password)
+                yield StringCommand(
+                    "echo",
+                    QuoteString(password),
+                    "|",
+                    "pw",
+                    "useradd",
+                    "-n",
+                    QuoteString(user),
+                    "-H",
+                    "0",
+                    *args,
                 )
             else:
-                yield "{0} -n {2} {1}".format(
-                    add_user_command,
-                    " ".join(args),
-                    shlex.quote(user),
-                )
+                yield StringCommand("pw", "useradd", "-n", QuoteString(user), *args)
         else:
-            yield "{0} {1} {2}".format(
-                add_user_command,
-                " ".join(args),
-                shlex.quote(user),
-            )
+            yield StringCommand("useradd", *args, QuoteString(user))
 
     # User exists and we want them, check home/shell/keys/password
     else:
-        args = []
+        mod_args: list[str | QuoteString | StringCommand] = []
 
         # Check homedir
         if home and existing_user["home"] != home:
-            args.append("-d {0}".format(shlex.quote(home)))
+            mod_args.extend(["-d", QuoteString(home)])
 
         # Check shell
         if shell and existing_user["shell"] != shell:
-            args.append("-s {0}".format(shlex.quote(shell)))
+            mod_args.extend(["-s", QuoteString(shell)])
 
         # Check primary group
         if group and existing_user["group"] != group:
-            args.append("-g {0}".format(shlex.quote(group)))
+            mod_args.extend(["-g", QuoteString(group)])
 
         # Check secondary groups, if defined
         if groups:
+            mod_group_parts: list[str | QuoteString] = []
+            for g in groups:
+                if mod_group_parts:
+                    mod_group_parts.append(",")
+                mod_group_parts.append(QuoteString(g))
+            groups_cmd = StringCommand(*mod_group_parts, _separator="")
             if append:
                 if not set(groups).issubset(existing_user["groups"]):
-                    args.append("-a")
-                    args.append("-G {0}".format(",".join(shlex.quote(g) for g in groups)))
+                    mod_args.append("-a")
+                    mod_args.extend(["-G", groups_cmd])
             elif set(existing_user["groups"]) != set(groups):
-                args.append("-G {0}".format(",".join(shlex.quote(g) for g in groups)))
+                mod_args.extend(["-G", groups_cmd])
 
         if comment and existing_user["comment"] != comment:
-            args.append("-c {0}".format(shlex.quote(comment)))
+            mod_args.extend(["-c", QuoteString(comment)])
 
         if password and existing_user["password"] != password:
             if os_type == "FreeBSD":
-                yield "echo {0} | pw usermod -n {1} -H 0".format(
-                    shlex.quote(password), shlex.quote(user)
+                yield StringCommand(
+                    "echo",
+                    QuoteString(password),
+                    "|",
+                    "pw",
+                    "usermod",
+                    "-n",
+                    QuoteString(user),
+                    "-H",
+                    "0",
                 )
             else:
-                args.append("-p {0}".format(shlex.quote(password)))
+                mod_args.extend(["-p", QuoteString(password)])
 
         # Need to mod the user?
-        if args:
+        if mod_args:
             if os_type == "FreeBSD":
-                yield "pw usermod -n {1} {0}".format(" ".join(args), shlex.quote(user))
+                yield StringCommand("pw", "usermod", "-n", QuoteString(user), *mod_args)
             else:
-                yield "usermod {0} {1}".format(" ".join(args), shlex.quote(user))
+                yield StringCommand("usermod", *mod_args, QuoteString(user))
 
     # Ensure home directory ownership
     if ensure_home and home:
