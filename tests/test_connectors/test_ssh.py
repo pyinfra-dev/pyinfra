@@ -387,9 +387,9 @@ class TestSSHConnector(TestCase):
 
         fake_ssh.exec_command.assert_called_with("sh -c 'echo Šablony'", get_pty=False)
 
-    @mock.patch("pyinfra.connectors.ssh.click")
+    @mock.patch("pyinfra.api.output._echo")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
-    def test_run_shell_command_masked(self, fake_ssh_client, fake_click):
+    def test_run_shell_command_masked(self, fake_ssh_client, fake_echo):
         fake_ssh = mock.MagicMock()
         fake_stdout = mock.MagicMock()
         fake_ssh.exec_command.return_value = (
@@ -419,7 +419,7 @@ class TestSSHConnector(TestCase):
             get_pty=False,
         )
 
-        fake_click.echo.assert_called_with(
+        fake_echo.assert_called_with(
             "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
             err=True,
         )

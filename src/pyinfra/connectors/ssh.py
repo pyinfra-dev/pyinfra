@@ -7,12 +7,12 @@ from socket import error as socket_error, gaierror
 from time import sleep
 from typing import IO, TYPE_CHECKING, Any, Iterable, Optional, Protocol, Tuple
 
-import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
 from paramiko.agent import Agent
 from typing_extensions import TypedDict, Unpack, override
 
 from pyinfra import logger
+from pyinfra.api.output import echo
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError
 from pyinfra.api.util import get_file_io, memoize
@@ -388,7 +388,7 @@ class SSHConnector(BaseConnector):
             )
 
             if print_input:
-                click.echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
+                echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
 
             # Run it! Get stdout, stderr & the underlying channel
             assert self.client is not None
@@ -520,7 +520,7 @@ class SSHConnector(BaseConnector):
             self._get_file(remote_filename, filename_or_io)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file downloaded: {1}".format(self.host.print_prefix, remote_filename),
                 err=True,
             )
@@ -626,7 +626,7 @@ class SSHConnector(BaseConnector):
             self._put_file(filename_or_io, remote_filename)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file uploaded: {1}".format(self.host.print_prefix, remote_filename),
                 err=True,
             )
@@ -714,7 +714,7 @@ class SSHConnector(BaseConnector):
         )
 
         if print_input:
-            click.echo("{0}>>> {1}".format(self.host.print_prefix, rsync_command), err=True)
+            echo("{0}>>> {1}".format(self.host.print_prefix, rsync_command), err=True)
 
         return_code, output = run_local_process(
             rsync_command,

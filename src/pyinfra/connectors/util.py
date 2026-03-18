@@ -8,10 +8,10 @@ from socket import timeout as timeout_error
 from subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
 
-import click
 import gevent
 
 from pyinfra import logger
+from pyinfra.api.output import echo, format_text
 from pyinfra.api import MaskString, QuoteString, StringCommand
 from pyinfra.api.util import memoize
 
@@ -130,7 +130,7 @@ def read_buffer(
         if print_func:
             line = print_func(line)
 
-        click.echo(line, err=True)
+        echo(line, err=True)
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings
@@ -172,7 +172,7 @@ def read_output_buffers(
         print_output=print_output,
         print_func=lambda line: "{0}{1}".format(
             print_prefix,
-            click.style(line, "red"),
+            format_text(line, "red"),
         ),
     )
 
