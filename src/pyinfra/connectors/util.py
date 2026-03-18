@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shlex
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
@@ -276,7 +275,9 @@ def _ensure_sudo_askpass_set_for_host(host: "Host"):
     _, output = host.run_shell_command(
         SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
     )
-    host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
+    host.connector_data["sudo_askpass_path"] = StringCommand(
+        QuoteString(output.stdout_lines[0])
+    ).get_raw_value()
 
 
 def _ensure_su_askpass_set_for_host(host: "Host"):
@@ -285,7 +286,9 @@ def _ensure_su_askpass_set_for_host(host: "Host"):
     _, output = host.run_shell_command(
         SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SU_ASKPASS_ENV_VAR)
     )
-    host.connector_data["su_askpass_path"] = shlex.quote(output.stdout_lines[0])
+    host.connector_data["su_askpass_path"] = StringCommand(
+        QuoteString(output.stdout_lines[0])
+    ).get_raw_value()
 
 
 def make_unix_command_for_host(
@@ -375,7 +378,12 @@ def make_unix_command(
             [
                 "env",
                 "SUDO_ASKPASS={0}".format(_sudo_askpass_path),
-                MaskString("{0}={1}".format(SUDO_ASKPASS_ENV_VAR, shlex.quote(_sudo_password))),
+                MaskString(
+                    "{0}={1}".format(
+                        SUDO_ASKPASS_ENV_VAR,
+                        StringCommand(QuoteString(_sudo_password)).get_raw_value(),
+                    )
+                ),
             ],
         )
 
@@ -401,7 +409,12 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
-                    MaskString("{0}={1}".format(SU_ASKPASS_ENV_VAR, shlex.quote(_su_password))),
+                    MaskString(
+                        "{0}={1}".format(
+                            SU_ASKPASS_ENV_VAR,
+                            StringCommand(QuoteString(_su_password)).get_raw_value(),
+                        )
+                    ),
                     _su_askpass_path,
                     "|",
                 ],
@@ -443,7 +456,6 @@ def make_win_command(command):
     """
 
     # Quote the command as a string
-    command = shlex.quote(str(command))
-    command = "{0}".format(command)
+    command = StringCommand(QuoteString(str(command))).get_raw_value()
 
     return command

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shlex
 from random import uniform
 from shutil import which
 from socket import error as socket_error, gaierror
@@ -671,18 +670,28 @@ class SSHConnector(BaseConnector):
         known_hosts_file = self.data["ssh_known_hosts_file"]
         if known_hosts_file:
             ssh_flags.append(
-                '-o \\"UserKnownHostsFile={0}\\"'.format(shlex.quote(known_hosts_file))
+                StringCommand(
+                    '-o \\"UserKnownHostsFile=',
+                    QuoteString(known_hosts_file),
+                    '\\"',
+                    _separator="",
+                ).get_raw_value()
             )  # never trust users
 
         strict_host_key_checking = self.data["ssh_strict_host_key_checking"]
         if strict_host_key_checking:
             ssh_flags.append(
-                '-o \\"StrictHostKeyChecking={0}\\"'.format(shlex.quote(strict_host_key_checking))
+                StringCommand(
+                    '-o \\"StrictHostKeyChecking=',
+                    QuoteString(strict_host_key_checking),
+                    '\\"',
+                    _separator="",
+                ).get_raw_value()
             )
 
         ssh_config_file = self.data["ssh_config_file"]
         if ssh_config_file:
-            ssh_flags.append("-F {0}".format(shlex.quote(ssh_config_file)))
+            ssh_flags.append(StringCommand("-F", QuoteString(ssh_config_file)).get_raw_value())
 
         port = self.data["ssh_port"]
         if port:

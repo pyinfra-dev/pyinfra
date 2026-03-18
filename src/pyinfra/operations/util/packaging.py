@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shlex
 from collections import defaultdict
 from io import StringIO
 from typing import Callable, NamedTuple, cast
@@ -10,7 +9,7 @@ from packaging.requirements import InvalidRequirement, Requirement
 
 from pyinfra import logger
 from pyinfra.api import Host, OperationValueError, State
-from pyinfra.api.command import StringCommand
+from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.facts.files import File
 from pyinfra.facts.rpm import RpmPackage
 from pyinfra.operations import files
@@ -51,11 +50,13 @@ class PkgInfo(NamedTuple):
         """
 
         if self.url:
-            return shlex.quote(self.url)
+            return StringCommand(QuoteString(self.url)).get_raw_value()
 
         if self.version:
-            return shlex.quote(self.inst_vers_format_fn(self.name, self.operator, self.version))
-        return shlex.quote(self.name)
+            return StringCommand(
+                QuoteString(self.inst_vers_format_fn(self.name, self.operator, self.version))
+            ).get_raw_value()
+        return StringCommand(QuoteString(self.name)).get_raw_value()
 
     @classmethod
     def from_possible_pair(cls, s: str, join: str | None) -> PkgInfo:
