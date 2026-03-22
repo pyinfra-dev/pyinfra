@@ -36,6 +36,7 @@ def container(
     restart_policy: str | None = None,
     auto_remove: bool = False,
     dns: list[str] | None = None,
+    command: str = "",
 ):
     """
     Manage Docker containers
@@ -55,6 +56,7 @@ def container(
     + restart_policy: restart policy to apply when a container exits
     + auto_remove: automatically remove the container and its associated anonymous volumes when it exits
     + dns: list of dns servers to be used by the container
+    + command: custom command to run on container start
 
     **Examples:**
 
@@ -89,6 +91,14 @@ def container(
             container="nginx",
             start=True,
         )
+
+        # Run a custom command on container start
+        # Note: you can omit the shell (sh -c) to use the default shell of the container
+        docker.container(
+            name="Run a custom command",
+            container="alpine",
+            command="sh -c 'echo Whatever you want",
+        )
     """
 
     want_spec = ContainerSpec(
@@ -103,6 +113,7 @@ def container(
         restart_policy,
         auto_remove,
         dns or list(),
+        command,
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 
