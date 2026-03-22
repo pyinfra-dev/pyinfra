@@ -13,6 +13,7 @@ import gevent
 
 from pyinfra import logger
 from pyinfra.api import MaskString, QuoteString, StringCommand
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
 if TYPE_CHECKING:
@@ -281,7 +282,18 @@ def _ensure_su_askpass_set_for_host(host: "Host"):
 def _ensure_askpass_set_for_host(host: "Host", key: str, env_var: str):
     if host.connector_data.get(key):
         return
-    _, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
+    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
+
+    if not ok:
+        raise PyinfraError("Failed to create sudo_askpass command: {0}".format(output.output))
+
+    if not output.stdout_lines:
+        raise PyinfraError(
+            "Failed to create sudo_askpass command: no output produced by command: {0}".format(
+                output.output,
+            )
+        )
+
     host.connector_data[key] = shlex.quote(output.stdout_lines[0])
 
 
