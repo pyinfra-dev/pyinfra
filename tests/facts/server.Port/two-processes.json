@@ -1,5 +1,5 @@
 {
-  "command": "ss -lptnH 'src :443'",
+  "command": "ss -lptn | grep ':443 ' || true",
   "arg": 443,
   "facts": {
     "server.Kernel": "Linux",

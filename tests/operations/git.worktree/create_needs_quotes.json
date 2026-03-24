@@ -1,0 +1,19 @@
+{
+    "args": ["/home/my worktree; whoami"],
+    "kwargs": {
+        "repo": "/home/main repo",
+        "commitish": "branch; rm -rf /"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/main repo": {},
+            "path=/home/main repo/.git": {
+                "mode": 0
+            },
+            "path=/home/my worktree; whoami": null
+        }
+    },
+    "commands": [
+        "cd '/home/main repo' && git worktree add '/home/my worktree; whoami' 'branch; rm -rf /'"
+    ]
+}

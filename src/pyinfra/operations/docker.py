@@ -35,6 +35,7 @@ def container(
     start: bool = True,
     restart_policy: str | None = None,
     auto_remove: bool = False,
+    dns: list[str] | None = None,
 ):
     """
     Manage Docker containers
@@ -53,6 +54,7 @@ def container(
     + start: start or stop the container
     + restart_policy: restart policy to apply when a container exits
     + auto_remove: automatically remove the container and its associated anonymous volumes when it exits
+    + dns: list of dns servers to be used by the container
 
     **Examples:**
 
@@ -100,6 +102,7 @@ def container(
         pull_always,
         restart_policy,
         auto_remove,
+        dns or list(),
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 

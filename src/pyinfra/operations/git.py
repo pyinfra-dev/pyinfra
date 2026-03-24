@@ -5,6 +5,7 @@ Manage git repositories and configuration.
 from __future__ import annotations
 
 import re
+import shlex
 
 from pyinfra import host
 from pyinfra.api import OperationError, operation
@@ -67,13 +68,13 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
     if repo is None:
         base_command = "git config" + (" --system" if system else " --global")
     else:
-        base_command = "cd {0} && git config --local".format(repo)
+        base_command = "cd {0} && git config --local".format(shlex.quote(repo))
 
     if not multi_value and existing_config.get(key) != [value]:
-        yield '{0} {1} "{2}"'.format(base_command, key, value)
+        yield '{0} {1} "{2}"'.format(base_command, shlex.quote(key), value)
 
     elif multi_value and value not in existing_config.get(key, []):
-        yield '{0} --add {1} "{2}"'.format(base_command, key, value)
+        yield '{0} --add {1} "{2}"'.format(base_command, shlex.quote(key), value)
 
     else:
         host.noop("git config {0} is set to {1}".format(key, value))
@@ -140,17 +141,19 @@ def repo(
     # Cloning new repo?
     if not is_repo:
         if branch:
-            git_commands.append("clone {0} --branch {1} .".format(src, branch))
+            git_commands.append(
+                "clone {0} --branch {1} .".format(shlex.quote(src), shlex.quote(branch))
+            )
         else:
-            git_commands.append("clone {0} .".format(src))
+            git_commands.append("clone {0} .".format(shlex.quote(src)))
     # Ensuring existing repo
     else:
         is_tag = False
         if branch and host.get_fact(GitBranch, repo=dest) != branch:
             git_commands.append("fetch")  # fetch to ensure we have the branch locally
-            git_commands.append("checkout {0}".format(branch))
+            git_commands.append("checkout {0}".format(shlex.quote(branch)))
         if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
-            git_commands.append("checkout {0}".format(branch))
+            git_commands.append("checkout {0}".format(shlex.quote(branch)))
             is_tag = True
         if pull and not is_tag:
             if rebase:
@@ -165,7 +168,7 @@ def repo(
             git_commands.append("submodule update --init")
 
     # Attach prefixes for directory
-    command_prefix = "cd {0} && git".format(dest)
+    command_prefix = "cd {0} && git".format(shlex.quote(dest))
     git_commands = ["{0} {1}".format(command_prefix, command) for command in git_commands]
 
     for cmd in git_commands:
@@ -326,20 +329,23 @@ def worktree(
                 "The following folder is not a valid GIT repository : {0}".format(repo),
             )
 
-        command_parts = ["cd {0} && git worktree add".format(repo)]
+        if repo is None:
+            raise OperationError("repo must be specified when creating a worktree")
+
+        command_parts = ["cd {0} && git worktree add".format(shlex.quote(repo))]
 
         if new_branch:
-            command_parts.append("-b {0}".format(new_branch))
+            command_parts.append("-b {0}".format(shlex.quote(new_branch)))
         elif detached:
             command_parts.append("--detach")
 
         if force:
             command_parts.append("--force")
 
-        command_parts.append(worktree)
+        command_parts.append(shlex.quote(worktree))
 
         if commitish:
-            command_parts.append(commitish)
+            command_parts.append(shlex.quote(commitish))
 
         yield " ".join(command_parts)
 
@@ -349,7 +355,7 @@ def worktree(
 
     # It exists and we don't want it
     elif host.get_fact(Directory, path=worktree) and not present:
-        command = "cd {0} && git worktree remove .".format(worktree)
+        command = "cd {0} && git worktree remove .".format(shlex.quote(worktree))
 
         if force:
             command += " --force"
@@ -364,7 +370,7 @@ def worktree(
         # pull the worktree only if it's already linked to a tracking branch or
         # if a remote branch is set
         elif host.get_fact(GitTrackingBranch, repo=worktree) or from_remote_branch:
-            command = "cd {0} && git pull".format(worktree)
+            command = "cd {0} && git pull".format(shlex.quote(worktree))
 
             if rebase:
                 command += " --rebase"
@@ -375,7 +381,9 @@ def worktree(
                         "The remote branch must be a 2-tuple (remote, branch) such as "
                         '("origin", "master")',
                     )
-                command += " {0} {1}".format(*from_remote_branch)
+                command += " {0} {1}".format(
+                    shlex.quote(from_remote_branch[0]), shlex.quote(from_remote_branch[1])
+                )
 
             yield command
 
@@ -412,7 +420,7 @@ def bare_repo(
         head_file = host.get_fact(File, path=head_filename)
 
         if not head_file:
-            yield "git init --bare {0}".format(path)
+            yield "git init --bare {0}".format(shlex.quote(path))
             if user or group:
                 yield chown(path, user, group, recursive=True)
         else:

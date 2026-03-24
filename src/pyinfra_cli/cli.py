@@ -169,6 +169,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     help="SSH Private key password.",
 )
 @click.option("--ssh-password", "--password", "ssh_password", help="SSH password.")
+@click.option(
+    "--ssh-password-prompt",
+    is_flag=True,
+    default=False,
+    help="Prompt for SSH password instead of passing it on the command line.",
+)
 # Eager commands (pyinfra --support)
 @click.option(
     "--support",
@@ -281,6 +287,7 @@ def _main(
     ssh_key,
     ssh_key_password: str,
     ssh_password: str,
+    ssh_password_prompt: bool,
     same_sudo_password: bool,
     shell_executable,
     sudo: bool,
@@ -344,6 +351,9 @@ def _main(
         retry,
         retry_delay,
     )
+    if ssh_password_prompt:
+        ssh_password = getpass("SSH password: ")
+
     override_data = _set_override_data(
         data,
         ssh_user,

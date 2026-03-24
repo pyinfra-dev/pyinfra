@@ -1,5 +1,6 @@
 {
-    "command": "/bin/opkg list-upgradable",
+    "command": "opkg list-upgradable",
+    "requires_command": "opkg",
     "output": [
         "",
         "rpcd-mod-iwinfo - 2019-12-10-aaa08366-2 - 2020-05-26-67c8a3fd-1",

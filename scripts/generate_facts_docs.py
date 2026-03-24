@@ -87,7 +87,7 @@ def build_facts_docs():
                     else {}
                 )
 
-                if len(argspec.args):
+                if len(argspec.args) and (argspec.args != ["self"]):
                     args_string_and_brackets = ", {0}".format(
                         ", ".join(
                             ("{0}={1}".format(arg, defaults.get(arg)) if arg in defaults else arg)

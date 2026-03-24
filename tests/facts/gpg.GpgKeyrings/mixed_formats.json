@@ -1,0 +1,64 @@
+{
+    "command": "find \"/etc/apt/trusted.gpg.d\" -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --list-keys --with-colons --keyring \"$1\" --no-default-keyring 2>/dev/null || true' _ {} \\; ; find \"/etc/apt/trusted.gpg.d\" -type f -name '*.asc' 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --with-colons \"$1\" 2>/dev/null || true' _ {} \\;",
+    "requires_command": "gpg",
+    "arg": [
+        "/etc/apt/trusted.gpg.d"
+    ],
+    "output": [
+        "KEYRING:/etc/apt/trusted.gpg.d/debian-archive.gpg",
+        "tru:t:1:1601454628:0:3:1:5",
+        "pub:-:4096:1:73A4F27B8DD47936:1663251644:::-:::scSC::::::23::0:",
+        "fpr:::::::::4D64390375060AA4D3E84D8F73A4F27B8DD47936:",
+        "uid:-::::1663251644::7B1EFED0F7198D8488DD53F0E95BB93FC4D0A10C::Debian Archive Automatic Signing Key (11/bullseye) <ftpmaster@debian.org>::::::::::0:",
+        "KEYRING:/etc/apt/trusted.gpg.d/ubuntu-keyring.asc",
+        "pub:-:4096:1:1E9377A2BA9EF27F:1336770936:::-:::scSC::::::23::0:",
+        "fpr:::::::::790BC7277767219C42C86F931E9377A2BA9EF27F:",
+        "uid:-::::1336770936::::Ubuntu Archive Signing Key <ubuntu-archive@lists.ubuntu.com>::::::::::0:",
+        "KEYRING:/etc/apt/trusted.gpg.d/docker.kbx",
+        "tru:t:1:1601454628:0:3:1:5",
+        "pub:-:4096:1:9DC858229FC7DD38:1498167007:::-:::scSC::::::23::0:",
+        "fpr:::::::::9DC858229FC7DD38B3088BD89DC858229FC7DD38:",
+        "uid:-::::1498167007::::Docker Release (CE deb) <docker@docker.com>::::::::::0:"
+    ],
+    "fact": {
+        "/etc/apt/trusted.gpg.d/debian-archive.gpg": {
+            "format": "gpg",
+            "keys": {
+                "73A4F27B8DD47936": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {},
+                    "fingerprint": "4D64390375060AA4D3E84D8F73A4F27B8DD47936",
+                    "uid_hash": "7B1EFED0F7198D8488DD53F0E95BB93FC4D0A10C",
+                    "uid": "Debian Archive Automatic Signing Key (11/bullseye) <ftpmaster@debian.org>"
+                }
+            }
+        },
+        "/etc/apt/trusted.gpg.d/ubuntu-keyring.asc": {
+            "format": "asc",
+            "keys": {
+                "1E9377A2BA9EF27F": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {},
+                    "fingerprint": "790BC7277767219C42C86F931E9377A2BA9EF27F",
+                    "uid_hash": "",
+                    "uid": "Ubuntu Archive Signing Key <ubuntu-archive@lists.ubuntu.com>"
+                }
+            }
+        },
+        "/etc/apt/trusted.gpg.d/docker.kbx": {
+            "format": "kbx",
+            "keys": {
+                "9DC858229FC7DD38": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {},
+                    "fingerprint": "9DC858229FC7DD38B3088BD89DC858229FC7DD38",
+                    "uid_hash": "",
+                    "uid": "Docker Release (CE deb) <docker@docker.com>"
+                }
+            }
+        }
+    }
+}

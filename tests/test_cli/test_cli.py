@@ -170,6 +170,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 ssh_key=None,
                 ssh_key_password=None,
                 ssh_password=None,
+                ssh_password_prompt=False,
                 same_sudo_password=False,
                 sudo=False,
                 sudo_user=None,

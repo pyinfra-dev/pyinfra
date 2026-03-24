@@ -54,6 +54,9 @@
             ],
             "path=/home/somedir/underthat": []
         },
+        "files.FindLinks": {
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, quote_path=True, regex=None, size=None": []
+        },
         "files.Link": {
             "path=/home/somedir": false
         }

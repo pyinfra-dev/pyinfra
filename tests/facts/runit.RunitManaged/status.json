@@ -1,6 +1,6 @@
 {
     "arg": [null, "/var/service"],
-    "command": "cd \"/var/service\" && find -mindepth 1 -maxdepth 1 -type l -printf \"%f\n\"",
+    "command": "[ -d \"/var/service\" ] && cd \"/var/service\" && find -mindepth 1 -maxdepth 1 -type l -printf \"%f\\n\" || true",
     "requires_command": "sv",
     "output": [
         "agetty-tty1",

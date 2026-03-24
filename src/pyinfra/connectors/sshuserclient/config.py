@@ -47,6 +47,22 @@ class FakeInvoke:
 paramiko.config.invoke = FakeInvoke  # type: ignore
 
 
+def _strip_inline_comment(line):
+    """Strip inline comments from SSH config lines, respecting quoted strings"""
+    in_quote = False
+    quote_char = None
+    for i, char in enumerate(line):
+        if char in ('"', "'") and not in_quote:
+            in_quote = True
+            quote_char = char
+        elif char == quote_char and in_quote:
+            in_quote = False
+            quote_char = None
+        elif char == "#" and not in_quote and i > 0 and line[i - 1] in (" ", "\t"):
+            return line[:i].rstrip()
+    return line
+
+
 def _expand_include_statements(file_obj, parsed_files=None):
     parsed_lines = []
 
@@ -54,6 +70,8 @@ def _expand_include_statements(file_obj, parsed_files=None):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
+
+        line = _strip_inline_comment(line)
 
         match = re.match(SETTINGS_REGEX, line)
         if not match:

@@ -1,0 +1,19 @@
+{
+    "args": ["evil; rm -rf /"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.Users": {
+            "evil; rm -rf /": {
+                "home": "/home",
+                "shell": "/bin/bash"
+            }
+        },
+        "server.Groups": {}
+    },
+    "commands": [
+        "userdel 'evil; rm -rf /'"
+    ]
+}

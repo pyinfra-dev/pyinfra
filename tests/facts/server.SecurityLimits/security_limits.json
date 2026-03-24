@@ -1,5 +1,5 @@
 {
-    "command": "cat /etc/security/limits.conf",
+    "command": "! test -e /etc/security/limits.conf || cat /etc/security/limits.conf",
     "output": [
         "# <domain>      <type>  <item>         <value>",
         "#*               soft    core            ",

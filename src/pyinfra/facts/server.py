@@ -338,7 +338,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
         if self._has_ss:
             self._tool = "ss"
             proto_flag = "t" if protocol == "tcp" else "u"
-            return f"ss -lp{proto_flag}nH 'src :{port}'"
+            return f"ss -lp{proto_flag}n | grep ':{port} ' || true"
         else:
             self._tool = "netstat"
             proto_flag = "t" if protocol == "tcp" else "u"
@@ -369,10 +369,12 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             if not line:
                 continue
             parts = line.split()
-            pid_prog = parts[-1]
-            if "/" in pid_prog:
-                pid_str, proc = pid_prog.split("/", 1)
-                return (proc, int(pid_str))
+            for part in parts:
+                if "/" in part:
+                    pid_str, proc = part.split("/", 1)
+                    if pid_str.isdigit():
+                        return (proc, int(pid_str))
+                    break
         return None, None
 
     def _process_sockstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
@@ -527,8 +529,8 @@ class Sysctl(FactBase):
     @override
     def command(self, keys=None):
         if keys is None:
-            return "sysctl -a"
-        return f"sysctl {' '.join(keys)}"
+            return "sysctl -a 2>/dev/null || true"
+        return f"sysctl {' '.join(keys)} 2>/dev/null || true"
 
     @override
     def process(self, output):
@@ -968,7 +970,7 @@ class SecurityLimits(FactBase):
 
     @override
     def command(self):
-        return "cat /etc/security/limits.conf"
+        return "! test -e /etc/security/limits.conf || cat /etc/security/limits.conf"
 
     default = list
 
