@@ -2176,17 +2176,15 @@ def unarchive(
         archive_path = src
 
     # Build extract command
-    cmd_parts = extract_cmd.split()
+    cmd_parts: list[str] = extract_cmd.split()
     if extra_opts:
         cmd_parts.extend(extra_opts)
 
     if extract_cmd.startswith("tar"):
-        cmd_parts.extend([QuoteString(archive_path), "-C", QuoteString(dest)])
+        yield StringCommand(*cmd_parts, QuoteString(archive_path), "-C", QuoteString(dest))
     else:
         # unzip: unzip -o <archive> -d <dest>
-        cmd_parts.extend([QuoteString(archive_path), "-d", QuoteString(dest)])
-
-    yield StringCommand(*cmd_parts)
+        yield StringCommand(*cmd_parts, QuoteString(archive_path), "-d", QuoteString(dest))
 
     # Clean up uploaded temp file
     if not remote_src:
