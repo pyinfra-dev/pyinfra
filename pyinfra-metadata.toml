@@ -39,18 +39,6 @@ path = "src/pyinfra/facts/brew.py"
 type = "fact"
 tags = ["package-manager", "system"]
 
-[pyinfra.plugins."choco-ops"]
-name = "choco"
-path = "src/pyinfra/operations/choco.py"
-type = "operation"
-tags = ["package-manager", "system"]
-
-[pyinfra.plugins."choco-facts"]
-name = "choco"
-path = "src/pyinfra/facts/choco.py"
-type = "fact"
-tags = ["package-manager", "system"]
-
 [pyinfra.plugins."dnf-ops"]
 name = "dnf"
 path = "src/pyinfra/operations/dnf.py"

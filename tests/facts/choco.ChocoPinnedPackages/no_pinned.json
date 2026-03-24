@@ -1,6 +1,0 @@
-{
-    "command": "choco pin list -r 2>$null",
-    "shell_executable": "ps",
-    "output": [],
-    "fact": []
-}

@@ -75,7 +75,6 @@ certificate
 cfg
 changelog
 chdir
-choco
 chown
 chroot
 cim
