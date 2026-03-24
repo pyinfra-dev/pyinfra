@@ -2159,8 +2159,9 @@ def unarchive(
     extract_cmd = _get_archive_command(src)
     if extract_cmd is None:
         raise OperationValueError(
-            "Unsupported archive format for {0}. "
-            "Supported: {1}".format(src, ", ".join(_ARCHIVE_FORMATS.keys()))
+            "Unsupported archive format for {0}. Supported: {1}".format(
+                src, ", ".join(_ARCHIVE_FORMATS.keys())
+            )
         )
 
     if not remote_src:
