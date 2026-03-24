@@ -11,7 +11,7 @@ from pyinfra.api import FactBase
 from .gpg import GpgFactBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class AptRepo:
     """Represents an APT repository configuration.
 
@@ -83,7 +83,7 @@ class AptRepo:
         return dict(self.items())
 
 
-@dataclass
+@dataclass(frozen=True)
 class AptSourcesFile:
     """Represents a deb822 sources file entry before expansion into individual repositories.
 
