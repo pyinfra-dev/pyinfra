@@ -6,6 +6,9 @@
     "facts": {
         "npm.NpmPackages": {
             "directory=/app dir; rm -rf /": {}
+        },
+        "npm.NpmOutdatedPackages": {
+            "directory=/app dir; rm -rf /": {}
         }
     },
     "commands": [
