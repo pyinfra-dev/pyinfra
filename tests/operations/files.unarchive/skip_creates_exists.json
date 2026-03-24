@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "src": "/tmp/app.tar.gz",
+        "dest": "/opt/app",
+        "remote_src": true,
+        "creates": "/opt/app/bin/start"
+    },
+    "facts": {
+        "files.File": {
+            "path=/opt/app/bin/start": true
+        }
+    },
+    "commands": [],
+    "noop_description": "archive already extracted (/opt/app/bin/start exists)"
+}

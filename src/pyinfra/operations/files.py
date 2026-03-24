@@ -2076,3 +2076,122 @@ def block(
         else:
             cmd = StringCommand(f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'")
             yield StringCommand(out_prep, cmd, q_path, "> $OUT", real_out)
+
+
+_ARCHIVE_FORMATS = {
+    ".tar": "tar xf",
+    ".tar.gz": "tar xzf",
+    ".tgz": "tar xzf",
+    ".tar.bz2": "tar xjf",
+    ".tbz2": "tar xjf",
+    ".tar.xz": "tar xJf",
+    ".txz": "tar xJf",
+    ".tar.zst": "tar --zstd -xf",
+    ".zip": "unzip -o",
+}
+
+
+def _get_archive_command(src: str) -> str | None:
+    lower = src.lower()
+    for ext, cmd in _ARCHIVE_FORMATS.items():
+        if lower.endswith(ext):
+            return cmd
+    return None
+
+
+@operation()
+def unarchive(
+    src: str,
+    dest: str,
+    remote_src: bool = False,
+    creates: str | None = None,
+    extra_opts: list[str] | None = None,
+    user: str | None = None,
+    group: str | None = None,
+):
+    """
+    Extract archive files on the remote system.
+
+    + src: path to the archive file (local or remote depending on ``remote_src``)
+    + dest: remote directory to extract into (must exist)
+    + remote_src: set to ``True`` if the archive is already on the remote system
+    + creates: if this path already exists, the operation is skipped (idempotency)
+    + extra_opts: list of additional arguments to pass to the extract command
+    + user: user to own the extracted files
+    + group: group to own the extracted files
+
+    Supported formats:
+        ``.tar``, ``.tar.gz``/``.tgz``, ``.tar.bz2``/``.tbz2``,
+        ``.tar.xz``/``.txz``, ``.tar.zst``, ``.zip``
+
+    **Examples:**
+
+    .. code:: python
+
+        # Extract a remote archive
+        files.unarchive(
+            name="Extract app tarball",
+            src="/tmp/app.tar.gz",
+            dest="/opt/app",
+            remote_src=True,
+        )
+
+        # Upload and extract a local archive
+        files.unarchive(
+            name="Deploy release",
+            src="releases/app-v1.0.tar.gz",
+            dest="/opt/app",
+            creates="/opt/app/bin/start",
+        )
+    """
+
+    # Idempotency: skip if creates path already exists
+    if creates:
+        if host.get_fact(File, path=creates) is not None:
+            host.noop("archive already extracted ({0} exists)".format(creates))
+            return
+
+    # Validate destination exists and is a directory
+    dest_info = host.get_fact(Directory, path=dest)
+    if not dest_info:
+        raise OperationError("Destination {0} is not an existing directory".format(dest))
+
+    extract_cmd = _get_archive_command(src)
+    if extract_cmd is None:
+        raise OperationValueError(
+            "Unsupported archive format for {0}. "
+            "Supported: {1}".format(src, ", ".join(_ARCHIVE_FORMATS.keys()))
+        )
+
+    if not remote_src:
+        # Upload the local archive to a temp location on the remote
+        temp_archive = host.get_temp_filename(src)
+        yield FileUploadCommand(src, temp_archive)
+        archive_path = temp_archive
+    else:
+        # Validate the remote archive exists
+        if host.get_fact(File, path=src) is None:
+            raise OperationError("Remote archive {0} does not exist".format(src))
+        archive_path = src
+
+    # Build extract command
+    cmd_parts = extract_cmd.split()
+    if extra_opts:
+        cmd_parts.extend(extra_opts)
+
+    if extract_cmd.startswith("tar"):
+        cmd_parts.extend([QuoteString(archive_path), "-C", QuoteString(dest)])
+    else:
+        # unzip: unzip -o <archive> -d <dest>
+        cmd_parts.extend([QuoteString(archive_path), "-d", QuoteString(dest)])
+
+    yield StringCommand(*cmd_parts)
+
+    # Clean up uploaded temp file
+    if not remote_src:
+        yield StringCommand("rm", "-f", QuoteString(temp_archive))
+
+    # Set ownership if requested
+    if user or group:
+        ownership = "{0}:{1}".format(user or "", group or "")
+        yield StringCommand("chown", "-R", ownership, QuoteString(dest))
