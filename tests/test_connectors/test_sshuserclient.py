@@ -102,10 +102,16 @@ class TestSSHUserConfigMissing(TestCase):
     def test_load_ssh_config_no_exist(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive, identity_agent = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("port") == 22
@@ -153,10 +159,16 @@ class TestSSHUserConfig(TestCase):
     def test_load_ssh_config(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive, identity_agent = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("key_filename") == ["/id_rsa", "/id_rsa2"]
@@ -192,9 +204,15 @@ class TestSSHUserConfig(TestCase):
         """Test that inline comments are stripped from SSH config values (issue #1568)."""
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive, identity_agent = (
-            client.parse_config("127.0.0.1")
-        )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config("127.0.0.1")
 
         assert config.get("key_filename") == ["/id_rsa"]
         assert config.get("username") == "testuser"

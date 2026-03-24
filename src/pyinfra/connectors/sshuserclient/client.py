@@ -317,7 +317,15 @@ class SSHClient(ParamikoClient):
                 sock = c.gateway(hostname, cfg["port"], target, target_config["port"])
             cfg["sock"] = sock
 
-        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_files, keep_alive, identity_agent
+        return (
+            hostname,
+            cfg,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_files,
+            keep_alive,
+            identity_agent,
+        )
 
     @staticmethod
     def derive_shorthand(ssh_config, host_string):
