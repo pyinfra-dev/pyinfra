@@ -341,6 +341,9 @@ def make_unix_command(
     # Doas config
     _doas=False,
     _doas_user=None,
+    # Dzdo config
+    _dzdo=False,
+    _dzdo_user=None,
     # Retry config (ignored in command generation but passed through)
     _retries=0,
     _retry_delay=0,
@@ -369,6 +372,12 @@ def make_unix_command(
 
         if _doas_user:
             command_bits.extend(["-u", _doas_user])
+
+    if _dzdo:
+        command_bits.extend(["dzdo", "-H", "-n"])
+
+        if _dzdo_user:
+            command_bits.extend(["-u", _dzdo_user])
 
     if _sudo_password and _sudo_askpass_path:
         command_bits.extend(

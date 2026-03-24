@@ -130,6 +130,13 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     help="Whether to use a password with sudo.",
 )
 @click.option("--su-user", help="Which user to su to.")
+@click.option(
+    "--dzdo",
+    is_flag=True,
+    default=False,
+    help="Whether to execute operations with dzdo.",
+)
+@click.option("--dzdo-user", help="Which user to dzdo when using dzdo.")
 @click.option("--shell-executable", help='Shell to use (ex: "sh", "cmd", "ps").')
 # Operation flow args
 @click.option("--parallel", type=int, help="Number of operations to run in parallel.")
@@ -294,6 +301,8 @@ def _main(
     sudo_user: str,
     use_sudo_password: bool,
     su_user: str,
+    dzdo: bool,
+    dzdo_user: str,
     parallel: int,
     fail_percent: int,
     data,
@@ -343,6 +352,8 @@ def _main(
         use_sudo_password,
         same_sudo_password,
         su_user,
+        dzdo,
+        dzdo_user,
         parallel,
         shell_executable,
         fail_percent,
@@ -589,6 +600,8 @@ def _set_config(
     use_sudo_password,
     same_sudo_password,
     su_user,
+    dzdo,
+    dzdo_user,
     parallel,
     shell_executable,
     fail_percent,
@@ -619,6 +632,11 @@ def _set_config(
 
     if su_user:
         config.SU_USER = su_user
+
+    if dzdo:
+        config.DZDO = True
+        if dzdo_user:
+            config.DZDO_USER = dzdo_user
 
     if parallel:
         config.PARALLEL = parallel

@@ -568,6 +568,8 @@ class SSHConnector(BaseConnector):
         _sudo_user = noauth_arguments.pop("_sudo_user", False)
         _doas = noauth_arguments.pop("_doas", False)
         _doas_user = noauth_arguments.pop("_doas_user", False)
+        _dzdo = noauth_arguments.pop("_dzdo", False)
+        _dzdo_user = noauth_arguments.pop("_dzdo_user", False)
         _su_user = noauth_arguments.pop("_su_user", None)
 
         # _chdir is the only one of the global arguments that could require _sudo to succeed
@@ -576,13 +578,13 @@ class SSHConnector(BaseConnector):
 
         # sudo/su are a little more complicated, as you can only sftp with the SSH
         # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
-        if _sudo or _doas or _su_user:
+        if _sudo or _doas or _dzdo or _su_user:
             # Get temp file location
             temp_file = remote_temp_filename or self.host.get_temp_filename(remote_filename)
             self._put_file(filename_or_io, temp_file)
 
             # Make sure our sudo/su user can access the file
-            other_user = _su_user or _sudo_user or _doas_user
+            other_user = _su_user or _sudo_user or _doas_user or _dzdo_user
             if other_user:
                 status, output = self.run_shell_command(
                     StringCommand("setfacl", "-m", f"u:{other_user}:r", temp_file),
