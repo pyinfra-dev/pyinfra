@@ -56,7 +56,7 @@ class UvPipPackages(FactBase[PackageVersionDict]):
     @override
     @staticmethod
     def default() -> PackageVersionDict:
-        return cast("PackageVersionDict",{})
+        return cast("PackageVersionDict", {})
 
     @override
     def requires_command(self, *args, **kwargs) -> str | None:
@@ -245,7 +245,7 @@ class UvTools(FactBase[PackageVersionDict]):
     @override
     @staticmethod
     def default() -> PackageVersionDict:
-        return cast("PackageVersionDict",{})
+        return cast("PackageVersionDict", {})
 
     @override
     def requires_command(self, *args, **kwargs) -> str:
