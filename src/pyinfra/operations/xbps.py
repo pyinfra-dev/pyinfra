@@ -17,6 +17,14 @@ def upgrade():
     Upgrades all XBPS packages.
     """
 
+    if not host.get_fact(XbpsPackages).has_updates():
+        return
+
+    yield "xbps-install -y -u"
+    """
+    Upgrades all XBPS packages.
+    """
+
     yield "xbps-install -y -u"
 
 
@@ -25,6 +33,11 @@ _upgrade = upgrade._inner  # noqa: E305
 
 @operation(is_idempotent=False)
 def update():
+    """
+    Update XBPS repositories.
+    """
+
+    yield "xbps-install -S"
     """
     Update XBPS repositories.
     """
@@ -68,11 +81,17 @@ def packages(
     if upgrade:
         yield from _upgrade()
 
-    yield from ensure_packages(
-        host,
-        packages,
-        host.get_fact(XbpsPackages),
-        present,
-        install_command="xbps-install -y -u",
-        uninstall_command="xbps-remove -y",
-    )
+    if update:
+    yield from _update()
+
+if upgrade:
+    yield from _upgrade()
+
+yield from ensure_packages(
+    host,
+    packages,
+    host.get_fact(XbpsPackages),
+    present,
+    install_command="xbps-install -y",
+    uninstall_command="xbps-remove -y",
+)
