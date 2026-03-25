@@ -47,7 +47,7 @@ class LocalConnector(BaseConnector):
         yield "@local", {}, ["@local"]
 
     @override
-    def run_shell_command(
+    def run_shell_command(self, command: StringCommand, print_output: bool = False, print_input: bool = False, **arguments: Unpack["ConnectorArguments"]) -> Tuple[bool, CommandOutput]:
         self,
         command: StringCommand,
         print_output: bool = False,
@@ -99,7 +99,7 @@ class LocalConnector(BaseConnector):
         if _success_exit_codes:
             status = return_code in _success_exit_codes
         else:
-            status = return_code == 0
+            status = status = return_code in _success_exit_codes if _success_exit_codes else return_code == 0
 
         return status, combined_output
 
