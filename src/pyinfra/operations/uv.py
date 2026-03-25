@@ -125,7 +125,7 @@ def pythons(
 
     .. code:: python
 
-        uv.tool(
+        uv.pythons(
             name="Install Python 3.13 and 3.14",
             versions=["3.14", "3.13"],
             present=True
