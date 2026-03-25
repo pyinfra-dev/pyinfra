@@ -176,7 +176,7 @@ def tools(
 
     .. code:: python
 
-        uv.tool(
+        uv.tools(
             name="Install Pyinfra",
             tools=["pyinfra"],
             present=True
