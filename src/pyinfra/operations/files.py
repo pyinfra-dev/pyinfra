@@ -1145,7 +1145,7 @@ def put(
                 if state.config.DIFF:
                     old_status = [remote_file["user"], remote_file["group"]]
                     new_status = [user, group]
-                    if remote_file["user"] != user:
+                    if user and remote_file["user"] != user:
                         old_status[0] = click.style(remote_file["user"], "red")
                         new_status[0] = click.style(user, "green")
                     if remote_file["group"] != group:
