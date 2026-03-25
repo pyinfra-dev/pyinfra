@@ -245,7 +245,7 @@ class UvTools(FactBase[PackageVersionDict]):
     @override
     @staticmethod
     def default() -> PackageVersionDict:
-        return cast("PackageVersionDict", dict)
+        return cast("PackageVersionDict",{})
 
     @override
     def requires_command(self, *args, **kwargs) -> str:
