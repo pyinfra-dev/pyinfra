@@ -1148,7 +1148,7 @@ def put(
                     if user and remote_file["user"] != user:
                         old_status[0] = click.style(remote_file["user"], "red")
                         new_status[0] = click.style(user, "green")
-                    if remote_file["group"] != group:
+                    if group and remote_file["group"] != group:
                         old_status[1] = click.style(remote_file["group"], "red")
                         new_status[1] = click.style(group, "green")
 
