@@ -8,6 +8,13 @@ from .util.packaging import parse_packages
 
 
 class XbpsPackages(FactBase):
+
+    @staticmethod
+    def has_updates():
+        """
+        Returns True if there are available updates for XBPS packages.
+        """
+        return host.run_shell_command("xbps-install -nu", hide=True)[0]
     """
     Returns a dict of installed XBPS packages:
 
