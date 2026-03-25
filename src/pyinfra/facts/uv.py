@@ -3,7 +3,7 @@ Present information provided by ``uv``:
     + available and installed versions of Python
     + installed Python packages and their versions
     + where the installed versions of Python are stored
-    + where `tools are installed
+    + where `tools are installed`
     + version of ``uv`` available
 
 
