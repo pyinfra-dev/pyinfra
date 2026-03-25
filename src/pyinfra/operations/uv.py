@@ -213,7 +213,7 @@ def tools_upgrade_all(*, extra_args: str | list[str] | None = None):
     """
     Upgrade all ``uv`` tools.
 
-        + extra_args: zero or more additional arguments to ``uv``. Default None.
+    + extra_args: zero or more additional arguments to ``uv``. Default None.
     """
     extras = addable_extras(extra_args)
     yield f"{UV_CMD} tool upgrade --all{extras}"
