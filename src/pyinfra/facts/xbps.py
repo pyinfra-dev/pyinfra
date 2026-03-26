@@ -8,19 +8,19 @@ from .util.packaging import parse_packages
 
 
 class XbpsPackages(FactBase):
-        """
-            Returns a dict of installed XBPS packages:
+    """
+    Returns a dict of installed XBPS packages:
 
-                .. code:: python
+    .. code:: python
 
-                        {
-                                    "package_name": ["version"],
-                                            }
-                                                """
+        {
+            "package_name": ["version"],
+        }
+    """
 
     @override
     def requires_command(self) -> str:
-                return "xbps-query"
+        return "xbps-query"
 
     default = dict
 
@@ -28,32 +28,32 @@ class XbpsPackages(FactBase):
 
     @override
     def command(self):
-                return "xbps-query -l"
+        return "xbps-query -l"
 
     @override
     def process(self, output):
-                return parse_packages(self.regex, output)
+        return parse_packages(self.regex, output)
 
 
 class XbpsUpdates(FactBase):
-        """
-            Returns True if there are available updates for xbps packages, False otherwise.
+    """
+    Returns True if there are available updates for xbps packages, False otherwise.
 
-                .. code:: python
+    .. code:: python
 
-                        True
-                            """
+        True
+    """
 
     @override
     def requires_command(self) -> str:
-                return "xbps-install"
+        return "xbps-install"
 
     default = bool
 
     @override
     def command(self):
-                return "xbps-install -nu 2>/dev/null | grep -q . && echo true || echo false"
+        return "xbps-install -nu 2>/dev/null | grep -q . && echo true || echo false"
 
     @override
     def process(self, output):
-                return any(line.strip() == "true" for line in output)
+        return any(line.strip() == "true" for line in output)
