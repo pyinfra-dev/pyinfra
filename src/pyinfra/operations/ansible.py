@@ -269,3 +269,14 @@ def module(
         {},
     )
 
+
+def __getattr__(name: str):
+    if name != "ansible":
+        raise AttributeError(name)
+
+    try:
+        import ansible as ansible_pkg  # type: ignore[import-not-found]
+    except ModuleNotFoundError as exc:
+        raise AttributeError("ansible is not installed") from exc
+
+    return ansible_pkg
