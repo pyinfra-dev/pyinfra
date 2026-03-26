@@ -388,6 +388,136 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
         return None, None
 
 
+class Ports(FactBase[List[dict[str, Union[int, str]]]]):
+    """
+    Returns a list of all listening ports with their processes and PIDs.
+
+    Uses ``ss`` on Linux (with ``netstat`` fallback) and ``sockstat`` on FreeBSD.
+
+    .. code:: python
+
+        host.get_fact(Ports)
+    """
+
+    default = list
+
+    @override
+    def command(self) -> str:
+        self._kernel = host.get_fact(Kernel)
+
+        if self._kernel.strip() == "FreeBSD":
+            self._tool = "sockstat"
+            return "sockstat -l"
+        self._has_ss = host.get_fact(Which, "ss")
+        if self._has_ss:
+            self._tool = "ss"
+            return "ss -lpuntn || true"
+        else:
+            self._tool = "netstat"
+            return "netstat -tunp 2>/dev/null || true"
+
+    @override
+    def process(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        if self._tool == "ss":
+            return self._process_ss(output)
+        elif self._tool == "netstat":
+            return self._process_netstat(output)
+        elif self._tool == "sockstat":
+            return self._process_sockstat(output)
+        return []
+
+    def _process_ss(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        results: List[dict[str, Union[int, str]]] = []
+
+        for line in output:
+            if '"' not in line or "pid=" not in line:
+                continue
+            parts = line.split('"')
+            if len(parts) < 2:
+                continue
+            proc = parts[1]
+            port_info = parts[0].split()
+            if len(port_info) < 2:
+                continue
+            state = port_info[0]
+            if state in ("LISTEN", "UNCONN", "ESTAB", "ESTABLISHED"):
+                protocol = "udp" if state == "UNCONN" else "tcp"
+                addr_idx = 3 if len(port_info) > 3 else 1
+            else:
+                protocol = "udp" if len(port_info) > 1 and port_info[1] == "UNCONN" else "tcp"
+                addr_idx = 4 if len(port_info) > 4 else 1
+            if addr_idx < len(port_info):
+                addr = port_info[addr_idx]
+                if ":" in addr:
+                    ip_port = addr.rsplit(":", 1)
+                    ip = ip_port[0]
+                    if ip.startswith("["):
+                        ip = ip[1 : ip.index("]")] if "]" in ip else ip[1:]
+                    if "%" in ip:
+                        ip = ip.split("%")[0]
+                    try:
+                        port = int(ip_port[-1])
+                    except ValueError:
+                        continue
+                    results.append({"port": port, "ip": ip, "protocol": protocol, "process": proc})
+        return results
+
+    def _process_netstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        results: List[dict[str, Union[int, str]]] = []
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            protocol = "tcp" if parts[0].startswith("tcp") else "udp"
+            for i, part in enumerate(parts):
+                if "/" in part:
+                    pid_str, proc = part.split("/", 1)
+                    if pid_str.isdigit():
+                        if i > 0:
+                            addr = parts[3]
+                            if ":" in addr:
+                                ip_port = addr.rsplit(":", 1)
+                                ip = ip_port[0]
+                                try:
+                                    port = int(ip_port[-1])
+                                except ValueError:
+                                    continue
+                                results.append(
+                                    {"port": port, "ip": ip, "protocol": protocol, "process": proc}
+                                )
+                        break
+        return results
+
+    def _process_sockstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        results: List[dict[str, Union[int, str]]] = []
+        for line in output:
+            line = line.strip()
+            if not line or line.startswith("USER"):
+                continue
+            parts = line.split()
+            if len(parts) >= 6:
+                try:
+                    local_addr = parts[5]
+                    ip = "*"
+                    port_str = local_addr
+                    if ":" in local_addr:
+                        ip_port = local_addr.rsplit(":", 1)
+                        ip = ip_port[0]
+                        port_str = ip_port[-1]
+                    elif local_addr.startswith("*."):
+                        port_str = local_addr[2:]
+                    else:
+                        continue
+                    port = int(port_str)
+                    proc = parts[1]
+                    protocol = parts[4]
+                    results.append({"port": port, "ip": ip, "protocol": protocol, "process": proc})
+                except (ValueError, IndexError):
+                    continue
+        return results
+
+
 class KernelModules(FactBase):
     """
     Returns a dictionary of kernel module name -> info.
