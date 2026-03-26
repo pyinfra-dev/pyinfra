@@ -13,12 +13,12 @@ from .util.packaging import ensure_packages
 
 @operation(is_idempotent=False)
 def upgrade():
-        """
-            Upgrades all XBPS packages.
-                """
+            """
+                Upgrades all XBPS packages.
+                    """
 
     if not host.get_fact(XbpsUpdates):
-                return
+                    return
 
     yield "xbps-install -y -u"
 
@@ -28,9 +28,9 @@ _upgrade = upgrade._inner  # noqa: E305
 
 @operation(is_idempotent=False)
 def update():
-        """
-            Update XBPS repositories.
-                """
+            """
+                Update XBPS repositories.
+                    """
 
     yield "xbps-install -S"
 
@@ -40,42 +40,42 @@ _update = update._inner  # noqa: E305
 
 @operation()
 def packages(
-        packages: str | list[str] | None = None,
-        present=True,
-        update=False,
-        upgrade=False,
+            packages: str | list[str] | None = None,
+            present=True,
+            update=False,
+            upgrade=False,
 ):
-        """
-            Install/remove/update XBPS packages.
+            """
+                Install/remove/update XBPS packages.
 
-                + packages: list of packages to ensure
-                    + present: whether the packages should be installed
-                        + update: run ``xbps-install -S`` before installing packages
-                            + upgrade: run ``xbps-install -y -u`` before installing packages
+                    + packages: list of packages to ensure
+                        + present: whether the packages should be installed
+                            + update: run ``xbps-install -S`` before installing packages
+                                + upgrade: run ``xbps-install -y -u`` before installing packages
 
-                                **Example:**
+                                    **Example:**
 
-                                    .. code:: python
+                                        .. code:: python
 
-                                            from pyinfra.operations import xbps
-                                                    xbps.packages(
-                                                                name="Install Vim and Vim Pager",
-                                                                            packages=["vimpager", "vim"],
-                                                                                    )
+                                                from pyinfra.operations import xbps
+                                                        xbps.packages(
+                                                                    name="Install Vim and Vim Pager",
+                                                                                packages=["vimpager", "vim"],
+                                                                                        )
 
-                                                                                        """
+                                                                                            """
 
     if update:
-                yield from _update()
+                    yield from _update()
 
     if upgrade:
-                yield from _upgrade()
+                    yield from _upgrade()
 
     yield from ensure_packages(
-                host,
-                packages,
-                host.get_fact(XbpsPackages),
-                present,
-                install_command="xbps-install -y",
-                uninstall_command="xbps-remove -y",
+                    host,
+                    packages,
+                    host.get_fact(XbpsPackages),
+                    present,
+                    install_command="xbps-install -y",
+                    uninstall_command="xbps-remove -y",
     )
