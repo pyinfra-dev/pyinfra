@@ -8,26 +8,19 @@ from .util.packaging import parse_packages
 
 
 class XbpsPackages(FactBase):
-
-    @staticmethod
-    def has_updates():
         """
-        Returns True if there are available updates for XBPS packages.
-        """
-        return host.run_shell_command("xbps-install -nu", hide=True)[0]
-    """
-    Returns a dict of installed XBPS packages:
+            Returns a dict of installed XBPS packages:
 
-    .. code:: python
+                .. code:: python
 
-        {
-            "package_name": ["version"],
-        }
-    """
+                        {
+                                    "package_name": ["version"],
+                                            }
+                                                """
 
     @override
     def requires_command(self) -> str:
-        return "xbps-query"
+                return "xbps-query"
 
     default = dict
 
@@ -35,8 +28,32 @@ class XbpsPackages(FactBase):
 
     @override
     def command(self):
-        return "xbps-query -l"
+                return "xbps-query -l"
 
     @override
     def process(self, output):
-        return parse_packages(self.regex, output)
+                return parse_packages(self.regex, output)
+
+
+class XbpsUpdates(FactBase):
+        """
+            Returns True if there are available updates for xbps packages, False otherwise.
+
+                .. code:: python
+
+                        True
+                            """
+
+    @override
+    def requires_command(self) -> str:
+                return "xbps-install"
+
+    default = bool
+
+    @override
+    def command(self):
+                return "xbps-install -nu 2>/dev/null | grep -q . && echo true || echo false"
+
+    @override
+    def process(self, output):
+                return any(line.strip() == "true" for line in output)
