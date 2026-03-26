@@ -269,25 +269,3 @@ def module(
         {},
     )
 
-
-@operation(is_idempotent=False, _set_in_op=False)
-def ansible_module(
-    src: str,
-    function: str = "main",
-    args=(),
-    kwargs: dict | None = None,
-    add_deploy_dir=True,
-    **module_kwargs,
-):
-    """
-    Backwards-compatible name for the Ansible module runner.
-    """
-
-    yield from module(
-        src=src,
-        function=function,
-        args=args,
-        kwargs=kwargs,
-        add_deploy_dir=add_deploy_dir,
-        **module_kwargs,
-    )
