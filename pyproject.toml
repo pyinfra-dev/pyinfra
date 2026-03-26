@@ -60,6 +60,7 @@ test = [
     "types-PyYAML>6,<7",
     "ruff>=0.13.1",
     "pyinfra-testgen==0.1.1",
+    "ansible>=8,<10",
 ]
 
 docs = [
@@ -79,6 +80,11 @@ dev = [
     # dev-only lint extras
     "typos>=1.36.2",
     "redbaron",
+]
+
+[project.optional-dependencies]
+ansible = [
+    "ansible>=8,<10",
 ]
 
 [project.scripts]

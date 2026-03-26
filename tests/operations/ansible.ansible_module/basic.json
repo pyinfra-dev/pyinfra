@@ -1,10 +1,10 @@
 {
-    "args": ["files/aptclean.py"],
+    "args": ["files/adapter_module.py"],
     "commands": [
         [
             "_execute_ansible_module",
             [
-                "files/aptclean.py",
+                "files/adapter_module.py",
                 "main",
                 [],
                 {},

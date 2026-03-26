@@ -1,5 +1,5 @@
 {
-    "args": ["files/aptclean.py", "aptclean", ["arg1"], {"hello": "world"}],
+    "args": ["files/adapter_module.py", "adapter_module", ["arg1"], {"hello": "world"}],
     "kwargs": {
         "add_deploy_dir": false
     },
@@ -7,8 +7,8 @@
         [
             "_execute_ansible_module",
             [
-                "files/aptclean.py",
-                "aptclean",
+                "files/adapter_module.py",
+                "adapter_module",
                 ["arg1"],
                 {"hello": "world"},
                 false

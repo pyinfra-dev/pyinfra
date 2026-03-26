@@ -4,10 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from pyinfra.connectors.util import CommandOutput, OutputLine
-from pyinfra.operations.python import (
-    AnsibleModuleAdapter,
-    _execute_ansible_module,
-)
+from pyinfra.operations.ansible import AnsibleModuleAdapter, _execute_ansible_module
 
 
 class FakeHost:
@@ -47,7 +44,7 @@ def test_ansible_module_adapter_run_command_list_uses_quoted_bits():
 def test_execute_ansible_module_exit_json_is_success(tmp_path: Path):
     module_file = tmp_path / "mod.py"
     module_file.write_text(
-        "def aptclean(m):\n"
+        "def adapter_module(m):\n"
         "    rc, out, err = m.run_command(['echo', 'done'])\n"
         "    if rc:\n"
         "        m.fail_json(msg='command failed', stdout=out, stderr=err)\n"
@@ -61,7 +58,7 @@ def test_execute_ansible_module_exit_json_is_success(tmp_path: Path):
         state,
         host,
         str(module_file),
-        "aptclean",
+        "adapter_module",
         (),
         {},
         False,
@@ -74,7 +71,7 @@ def test_execute_ansible_module_exit_json_is_success(tmp_path: Path):
 def test_execute_ansible_module_fail_json_raises_runtime_error(tmp_path: Path):
     module_file = tmp_path / "mod.py"
     module_file.write_text(
-        "def aptclean(m):\n"
+        "def adapter_module(m):\n"
         "    m.fail_json(msg='broken')\n",
     )
 
@@ -86,8 +83,9 @@ def test_execute_ansible_module_fail_json_raises_runtime_error(tmp_path: Path):
             state,
             host,
             str(module_file),
-            "aptclean",
+            "adapter_module",
             (),
             {},
             False,
         )
+

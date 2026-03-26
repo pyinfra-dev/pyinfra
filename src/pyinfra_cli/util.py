@@ -165,7 +165,7 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
 
     possible_modules = [mod_path]
     if prefix:
-        possible_modules.append(f"{prefix}.{mod_path}")
+        possible_modules.insert(0, f"{prefix}.{mod_path}")
 
     module = None
 

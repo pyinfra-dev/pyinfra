@@ -2,6 +2,7 @@
 Local integration tests - mostly checking for idempotency on file operations.
 """
 
+from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
 
@@ -151,24 +152,13 @@ def test_int_local_line_ensure_newline_false(helpers, tmp_path):
 
 @pytest.mark.end_to_end
 @pytest.mark.end_to_end_local
-def test_int_local_ansible_module_bridge_executes_module(helpers, temp_dir):
-    module_path = f"{temp_dir}/aptclean.py"
-    output_path = f"{temp_dir}/_ansible_bridge_output"
-
-    with open(module_path, "w", encoding="utf-8") as module_file:
-        module_file.write(
-            "def aptclean(m):\n"
-            "    rc, out, err = m.run_command(['sh', '-c', 'printf ansible-bridge > _ansible_bridge_output'])\n"  # noqa: E501
-            "    if rc:\n"
-            "        m.fail_json(msg='failed to write bridge output', stdout=out, stderr=err)\n"
-            "    m.exit_json(changed=True, stdout=out, stderr=err)\n",
-        )
+def test_int_local_ansible_module_executes_ping(helpers, temp_dir):
+    module_path = (
+        Path(__file__).resolve().parents[2] / "examples" / "ansible_modules" / "ping.py"
+    )
 
     helpers.run_check_output(
-        "pyinfra -y -v @local python.ansible_module aptclean.py function=aptclean",
+        "pyinfra -y -v @local ansible.module {0} data=pyinfra".format(module_path),
         expected_lines=["@local] Success"],
         cwd=temp_dir,
     )
-
-    with open(output_path, encoding="utf-8") as output_file:
-        assert output_file.read() == "ansible-bridge"

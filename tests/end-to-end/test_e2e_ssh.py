@@ -2,7 +2,9 @@
 SSH integration tests - mostly checking for idempotency on file operations.
 """
 
+import os
 import time
+from getpass import getuser
 
 import pytest
 
@@ -130,4 +132,33 @@ def test_int_local_line_no_changes(helpers):
     helpers.run_check_output(  # second run replace the line = no changes
         f"{PYINFRA_COMMAND} files.line _testfile someline replace=anotherline",
         expected_lines=["localhost] No changes"],
+    )
+
+
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_ssh
+@pytest.mark.skipif(
+    not os.getenv("PYINFRA_E2E_SSH_LOCALHOST"),
+    reason="Set PYINFRA_E2E_SSH_LOCALHOST=1 to enable localhost SSH test",
+)
+def test_e2e_ssh_localhost_ansible_module(helpers):
+    ssh_user = os.getenv("PYINFRA_E2E_SSH_USER", getuser())
+    ssh_key = os.path.expanduser(os.getenv("PYINFRA_E2E_SSH_KEY", "~/.ssh/id_ed25519"))
+
+    if not os.path.isfile(ssh_key):
+        pytest.skip(f"SSH key not found: {ssh_key}")
+
+    command = (
+        "pyinfra -y -v localhost "
+        f"--ssh-user {ssh_user} "
+        f"--ssh-key {ssh_key} "
+        "--data ssh_allow_agent=false "
+        "--data ssh_known_hosts_file=/dev/null "
+        "--data ssh_strict_host_key_checking=no "
+        "ansible.module examples/ansible_modules/ping.py data=pyinfra"
+    )
+
+    helpers.run_check_output(
+        command,
+        expected_lines=["localhost] Success"],
     )
