@@ -76,6 +76,6 @@ def packages(
         packages,
         host.get_fact(XbpsPackages),
         present,
-        install_command="xbps-install -y",
+        install_command="xbps-install -y -u",
         uninstall_command="xbps-remove -y",
     )
