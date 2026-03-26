@@ -29,7 +29,7 @@ def make_state(cwd: str, diff=False):
     return SimpleNamespace(cwd=cwd, config=SimpleNamespace(DIFF=diff))
 
 
-def test_ansible_module_adapter_run_command_list_uses_quoted_bits():
+def test_ansible_adapter_run_command_list_uses_quoted_bits():
     host = FakeHost()
     adapter = AnsibleModuleAdapter(make_state("/tmp"), host)
 
@@ -41,7 +41,7 @@ def test_ansible_module_adapter_run_command_list_uses_quoted_bits():
     assert host.commands == ["echo 'hello world'"]
 
 
-def test_execute_ansible_module_exit_json_is_success(tmp_path: Path):
+def test_execute_ansible_adapter_exit_json_is_success(tmp_path: Path):
     module_file = tmp_path / "mod.py"
     module_file.write_text(
         "def adapter_module(m):\n"
@@ -68,7 +68,7 @@ def test_execute_ansible_module_exit_json_is_success(tmp_path: Path):
     assert host.commands == ["echo done"]
 
 
-def test_execute_ansible_module_fail_json_raises_runtime_error(tmp_path: Path):
+def test_execute_ansible_adapter_fail_json_raises_runtime_error(tmp_path: Path):
     module_file = tmp_path / "mod.py"
     module_file.write_text(
         "def adapter_module(m):\n"
@@ -88,4 +88,3 @@ def test_execute_ansible_module_fail_json_raises_runtime_error(tmp_path: Path):
             {},
             False,
         )
-

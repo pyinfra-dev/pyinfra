@@ -152,7 +152,7 @@ def test_int_local_line_ensure_newline_false(helpers, tmp_path):
 
 @pytest.mark.end_to_end
 @pytest.mark.end_to_end_local
-def test_int_local_ansible_module_executes_ping(helpers, temp_dir):
+def test_int_local_ansible_executes_ping(helpers, temp_dir):
     module_path = (
         Path(__file__).resolve().parents[2] / "examples" / "ansible_modules" / "ping.py"
     )

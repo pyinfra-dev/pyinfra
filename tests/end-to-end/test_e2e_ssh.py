@@ -141,7 +141,7 @@ def test_int_local_line_no_changes(helpers):
     not os.getenv("PYINFRA_E2E_SSH_LOCALHOST"),
     reason="Set PYINFRA_E2E_SSH_LOCALHOST=1 to enable localhost SSH test",
 )
-def test_e2e_ssh_localhost_ansible_module(helpers):
+def test_e2e_ssh_localhost_ansible(helpers):
     ssh_user = os.getenv("PYINFRA_E2E_SSH_USER", getuser())
     ssh_key = os.path.expanduser(os.getenv("PYINFRA_E2E_SSH_KEY", "~/.ssh/id_ed25519"))
 
