@@ -48,6 +48,7 @@ html_theme_options = {
 }
 
 myst_heading_anchors = 3
+suppress_warnings = ["myst.header"]
 
 templates_path = ["templates"]
 

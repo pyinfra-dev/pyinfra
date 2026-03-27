@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import posixpath
+import re
 import sys
 import traceback
 from datetime import datetime, timedelta, timezone
@@ -457,6 +458,11 @@ def line(
 
     # Line(s) exists and we want to remove them
     elif present_lines and not present:
+        if state.config.DIFF:
+            host.log(f"Will Remove lines in {click.style(path, bold=True)}", logger.info)
+            for line in generate_color_diff(present_lines, []):
+                logger.info("  %s", line)
+            logger.info("")
         yield sed_delete(
             path,
             match_line,
@@ -470,6 +476,11 @@ def line(
     elif present_lines and present:
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
+            if state.config.DIFF:
+                host.log(f"Will replace lines in {click.style(path, bold=True)}", logger.info)
+                new_lines = [re.sub(match_line, replace, line) for line in present_lines]
+                for line in generate_color_diff(present_lines, new_lines):
+                    logger.info("  %s", line)
             yield sed_replace_command
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
@@ -1089,11 +1100,14 @@ def put(
         if state.config.DIFF:
             host.log(f"Will create {click.style(dest, bold=True)}", logger.info)
 
-            with get_file_io(src, "r") as f:
-                desired_lines = f.readlines()
+            try:
+                with get_file_io(src, "r") as f:
+                    desired_lines = f.readlines()
 
-            for line in generate_color_diff([], desired_lines):
-                logger.info(f"  {line}")
+                for line in generate_color_diff([], desired_lines):
+                    logger.info("  %s", line)
+            except UnicodeDecodeError:
+                logger.info("Binary file uploaded")
             logger.info("")
 
         yield FileUploadCommand(
@@ -1140,7 +1154,7 @@ def put(
                     desired_lines = f.readlines()
 
                 for line in generate_color_diff(current_lines, desired_lines):
-                    logger.info(f"  {line}")
+                    logger.info("  %s", line)
                 logger.info("")
 
             yield FileUploadCommand(
@@ -1174,11 +1188,27 @@ def put(
 
             # Check mode
             if mode and remote_file["mode"] != mode:
+                if state.config.DIFF:
+                    logger.info("mode %s", click.style(remote_file["mode"], "red"))
+                    logger.info("mode %s", click.style(mode, "green"))
                 yield file_utils.chmod(dest, mode)
                 changed = True
 
             # Check user/group
             if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
+                if state.config.DIFF:
+                    old_status = [remote_file["user"], remote_file["group"]]
+                    new_status = [user, group]
+                    if user and remote_file["user"] != user:
+                        old_status[0] = click.style(remote_file["user"], "red")
+                        new_status[0] = click.style(user, "green")
+                    if group and remote_file["group"] != group:
+                        old_status[1] = click.style(remote_file["group"], "red")
+                        new_status[1] = click.style(group, "green")
+
+                    logger.info("chown %s:%s", *old_status)
+                    logger.info("chown %s:%s", *new_status)
+
                 yield file_utils.chown(dest, user, group)
                 changed = True
 
@@ -1189,6 +1219,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("mtime %s", click.style(remote_file["mtime"], "red"))
+                        logger.info("mtime %s", click.style(canonical_mtime, "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.MTIME, canonical_mtime)
                     changed = True
 
@@ -1199,6 +1233,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("atime %s", click.style(remote_file["atime"], "red"))
+                        logger.info("atime %s", click.style(canonical_atime, "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.ATIME, canonical_atime)
                     changed = True
 
@@ -1238,8 +1276,9 @@ def template(
         a dict with arguments that will be passed as keyword args to the jinja2
         `Environment() <https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Environment>`_.
 
-    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template
-    if not set explicitly.
+    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template.
+    To pass additional data or variables, explicitly add them as keyword arguments to the operation
+    call itself.
 
     Notes:
         Common convention is to store templates in a "templates" directory and
@@ -1270,8 +1309,16 @@ def template(
             group="root",
         )
 
-        # Example showing how to pass python variable to template file. You can also
-        # use dicts and lists. The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        # You can use a (local) file path or an IO-like object as src:
+        files.template(
+            name="Create a templated file",
+            src=StringIO("This is a template file content"),
+            dest="/etc/somefile.conf",
+        )
+
+        # To pass variables to the template file, just add them to the operation call.
+        # You can also use dicts and lists. The .j2 file can use `{{ foo_variable }}`
+        # to interpolate them:
         foo_variable = 'This is some foo variable contents'
         foo_dict = {
             "str1": "This is string 1",
@@ -1302,7 +1349,8 @@ def template(
             foo_list=foo_list
         )
 
-        # Example showing how to use host and inventory in a template file.
+        # Host, state and inventory are automatically passed to the template,
+        # no need to explicitly pass them in the operation call:
         template = StringIO("""
         name: "{{ host.name }}"
         list_contents:

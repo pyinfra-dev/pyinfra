@@ -1,0 +1,11 @@
+{
+    "args": [],
+    "kwargs": {},
+    "facts": {
+        "uv.UvToolDir": "/home/someone/.local/bin",
+        "server.Path": "/somewhere/special:/usr/local/sbin:/usr/local/bin"
+    },
+    "commands": [
+        "uv tool update-shell"
+    ]
+}

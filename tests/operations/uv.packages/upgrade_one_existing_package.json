@@ -1,0 +1,13 @@
+{
+    "args": ["pyinfra"],
+    "kwargs": {
+        "present": true,
+        "latest": true
+    },
+    "facts": {
+        "uv.UvPipPackages": {"pyinfra": ["3.5.1"]}
+    },
+    "commands": [
+        "uv pip install --upgrade --no-progress  pyinfra"
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "args": ["/somewhere/useful"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/somewhere/useful/.venv/bin/activate": null
+        },
+        "files.Directory": {
+            "path=/somewhere/useful/.venv": null
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "venv does not exist at /somewhere/useful"
+}

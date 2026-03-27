@@ -1,0 +1,8 @@
+{
+    "command": "uv python dir 2>/dev/null",
+    "requires_command": "uv",
+    "output": [
+        "/home/guesswho/.local/share/uv/python"
+    ],
+    "fact":  "/home/guesswho/.local/share/uv/python"
+}

@@ -162,7 +162,7 @@ Facts are imported from ``pyinfra.facts.*`` and can be retrieved using the ``hos
 See :doc:`facts` for a full list of available facts and arguments.
 
 .. Important::
-    Only use immutable facts in deploy code (installed OS, Arch, etc) unless you are absolutely sure they will not change. See: :ref:`using host facts <deploy-process#using-host-facts>`_.
+    Only use immutable facts in deploy code (installed OS, Arch, etc) unless you are absolutely sure they will not change. See: :ref:`using host facts <deploy-process-using-host-facts>`.
 
 Fact Errors
 ^^^^^^^^^^^
@@ -237,7 +237,7 @@ Output & Callbacks
 ------------------
 
 pyinfra doesn't immediately execute operations, meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the :ref:`operations:python.call` operation. Callback functions may also call other operations which will be immediately executed.
-Why/how this works :ref:`is described here <deploy-process#how-pyinfra-detects-changes-orders-operations>`_.
+Why/how this works :ref:`is described here <deploy-process-detects-changes>`.
 
 .. code:: python
 
