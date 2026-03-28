@@ -4,6 +4,7 @@ import json
 import os
 import re
 import shutil
+import shlex
 from datetime import datetime
 from tempfile import mkdtemp
 from typing import Dict, Iterable, List, Optional, Tuple, Union
@@ -37,7 +38,19 @@ class Home(FactBase[Optional[str]]):
 
     @override
     def command(self, user=""):
-        return f"echo ~{user}"
+        if not user:
+            return "echo ~"
+        else:
+            # getent passwd returns: username:password:uid:gid:gecos:home_directory:shell
+            # We want the 6th field (index 5)
+            return f"getent passwd {shlex.quote(user)} | cut -d: -f6"
+
+    @override
+    def process(self, output: list[str]) -> Optional[str]:
+        if not output:
+            return None
+        home_dir = output[0].strip()
+        return home_dir if home_dir else None
 
 
 class Path(FactBase):
