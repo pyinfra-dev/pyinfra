@@ -1189,8 +1189,8 @@ def put(
             # Check mode
             if mode and remote_file["mode"] != mode:
                 if state.config.DIFF:
-                    logger.info("mode %s", format_text(remote_file["mode"], "red"))
-                    logger.info("mode %s", format_text(mode, "green"))
+                    logger.info("mode %s", format_text(str(remote_file["mode"]), "red"))
+                    logger.info("mode %s", format_text(str(mode), "green"))
                 yield file_utils.chmod(dest, mode)
                 changed = True
 
@@ -1220,8 +1220,8 @@ def put(
                     canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
                 ):
                     if state.config.DIFF:
-                        logger.info("mtime %s", format_text(remote_file["mtime"], "red"))
-                        logger.info("mtime %s", format_text(canonical_mtime, "green"))
+                        logger.info("mtime %s", format_text(str(remote_file["mtime"]), "red"))
+                        logger.info("mtime %s", format_text(str(canonical_mtime), "green"))
 
                     yield file_utils.touch(dest, MetadataTimeField.MTIME, canonical_mtime)
                     changed = True
@@ -1234,8 +1234,8 @@ def put(
                     canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
                 ):
                     if state.config.DIFF:
-                        logger.info("atime %s", format_text(remote_file["atime"], "red"))
-                        logger.info("atime %s", format_text(canonical_atime, "green"))
+                        logger.info("atime %s", format_text(str(remote_file["atime"]), "red"))
+                        logger.info("atime %s", format_text(str(canonical_atime), "green"))
 
                     yield file_utils.touch(dest, MetadataTimeField.ATIME, canonical_atime)
                     changed = True
