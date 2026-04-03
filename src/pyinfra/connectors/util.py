@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
 from socket import timeout as timeout_error
-from subprocess import PIPE, Popen
+from gevent.subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
 
 import click
