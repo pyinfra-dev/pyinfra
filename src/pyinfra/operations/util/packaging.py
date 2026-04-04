@@ -197,7 +197,7 @@ def ensure_packages(
     if present is True:
         for package in packages:
             has_package, expanded_packages = _has_package(
-                package.lkup_name, current_packages, expand_package_fact
+                package.lkup_name, current_packages, expand_package_fact, match_any=True
             )
 
             if not has_package:
