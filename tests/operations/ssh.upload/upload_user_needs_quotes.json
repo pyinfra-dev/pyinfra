@@ -1,0 +1,10 @@
+{
+    "args": ["remote-host.net", "/tmp/file.txt"],
+    "kwargs": {
+        "user": "admin; whoami"
+    },
+    "commands": [
+        "scp -P 22 /tmp/file.txt 'admin; whoami@remote-host.net':/tmp/file.txt"
+    ],
+    "idempotent": false
+}

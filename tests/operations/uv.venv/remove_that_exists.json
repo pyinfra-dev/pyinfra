@@ -1,0 +1,17 @@
+{
+    "args": ["/somewhere/useful"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/somewhere/useful/.venv/bin/activate": true
+        },
+        "files.Directory": {
+            "path=/somewhere/useful/.venv": true
+        }
+    },
+    "commands": [
+        "rm -rf /somewhere/useful/.venv"
+    ]
+}

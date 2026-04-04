@@ -5,6 +5,7 @@ import click
 import gevent
 
 import pyinfra
+from pyinfra.api.output import set_echo, set_formatter
 
 from .cli import cli
 
@@ -12,6 +13,10 @@ from .cli import cli
 def main():
     # Set CLI mode
     pyinfra.is_cli = True
+
+    # Wire click's styling/echo into the API output layer
+    set_formatter(click.style)
+    set_echo(click.echo)
 
     # Don't write out deploy.pyc/config.pyc etc
     sys.dont_write_bytecode = True

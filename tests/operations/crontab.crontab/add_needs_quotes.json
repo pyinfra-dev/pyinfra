@@ -1,0 +1,12 @@
+{
+    "args": ["backup /etc; rm -rf /"],
+    "facts": {
+        "crontab.Crontab": {
+            "user=None": {}
+        }
+    },
+    "commands": [
+        "echo '* * * * * backup /etc; rm -rf /' >> _tempfile_",
+        "crontab  _tempfile_"
+    ]
+}

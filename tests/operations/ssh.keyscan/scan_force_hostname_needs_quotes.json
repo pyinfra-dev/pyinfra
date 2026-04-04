@@ -1,0 +1,23 @@
+{
+    "args": ["evil; rm -rf /"],
+    "kwargs": {
+        "force": true
+    },
+    "facts": {
+        "server.Home": "/home/pyinfra",
+        "files.Directory": {
+            "path=/home/pyinfra/.ssh": {
+                "mode": 700
+            }
+        },
+        "files.FindInFile": {
+            "interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=evil; rm -rf /": [true]
+        }
+    },
+    "commands": [
+        "ssh-keygen -R 'evil; rm -rf /'",
+        "ssh-keyscan -p 22 'evil; rm -rf /' >> /home/pyinfra/.ssh/known_hosts"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "forced keyscans are always executed"
+}

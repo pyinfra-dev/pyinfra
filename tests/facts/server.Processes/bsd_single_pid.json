@@ -1,0 +1,21 @@
+{
+  "command": "LANG=C ps -p 742 -o pid,user,stat,%cpu,%mem,comm,args",
+  "arg": 742,
+  "facts": {
+    "server.Kernel": "FreeBSD"
+  },
+  "output": [
+    "  PID USER     STAT %CPU %MEM COMMAND         COMMAND",
+    "  742 root     Ss    0.0  0.2 sshd            /usr/sbin/sshd"
+  ],
+  "fact": {
+    "742": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.2,
+      "command": "sshd",
+      "args": "/usr/sbin/sshd"
+    }
+  }
+}

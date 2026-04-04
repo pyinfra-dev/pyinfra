@@ -1,0 +1,25 @@
+{
+    "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list.d/multipath.sources",
+        "Types: deb",
+        "URIs: http://deb.debian.org/debian",
+        "Suites: bookworm",
+        "Components: main",
+        "Signed-By: /usr/share/keyrings/key1.gpg",
+        " /usr/share/keyrings/key2.gpg",
+        ""
+    ],
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
+    "requires_command": "apt",
+    "fact": [
+        {
+            "type": "deb",
+            "url": "http://deb.debian.org/debian",
+            "distribution": "bookworm",
+            "components": ["main"],
+            "options": {
+                "signed-by": ["/usr/share/keyrings/key1.gpg", "/usr/share/keyrings/key2.gpg"]
+            }
+        }
+    ]
+}

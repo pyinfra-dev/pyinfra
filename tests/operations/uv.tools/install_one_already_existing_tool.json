@@ -1,0 +1,11 @@
+{
+    "args": ["ruff==0.14.4"],
+    "kwargs": {
+        "present": true
+    },
+    "facts": {
+        "uv.UvTools": {"ruff": ["0.14.4"]}
+    },
+    "commands": [],
+    "noop_description": "package ruff is installed (0.14.4)"
+}

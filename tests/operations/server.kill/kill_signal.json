@@ -1,0 +1,6 @@
+{
+  "args": [5678],
+  "kwargs": {"signal": "KILL"},
+  "commands": ["kill -KILL 5678"],
+  "idempotent": false
+}

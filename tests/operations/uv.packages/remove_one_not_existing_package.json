@@ -1,0 +1,12 @@
+{
+    "args": ["pyinfra"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "uv.UvPipPackages": {}
+    },
+    "commands": [
+    ],
+    "noop_description": "package pyinfra is not installed"
+}
