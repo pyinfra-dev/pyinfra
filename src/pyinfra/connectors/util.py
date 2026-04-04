@@ -293,9 +293,7 @@ def _ensure_askpass_set_for_host(host: "Host", key: str, env_var: str):
             )
         )
 
-    host.connector_data[key] = StringCommand(
-        QuoteString(output.stdout_lines[0])
-    ).get_raw_value()
+    host.connector_data[key] = StringCommand(QuoteString(output.stdout_lines[0])).get_raw_value()
 
 
 def make_unix_command_for_host(
