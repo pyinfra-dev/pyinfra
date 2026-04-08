@@ -324,7 +324,30 @@ __argument_docs__ = {
         """,
     ),
     "Operation meta & callbacks": (meta_argument_meta, "", ""),
-    "Execution strategy": (execution_argument_meta, "", ""),
+    "Execution strategy": (
+        execution_argument_meta,
+        """
+        Execution strategy arguments control how pyinfra executes operations across the inventory.
+        For example, you can run operations in parallel, serially, or skip idempotency checks.
+        """,
+        """
+        .. code:: python
+
+            # Run this operation serially
+            server.shell(
+                name="Run script serially",
+                commands=["/opt/script.sh"],
+                _serial=True,
+            )
+
+            # Skip idempotency checks and always execute this operation
+            server.shell(
+                name="Always run script",
+                commands=["/opt/script.sh"],
+                _execution_only=True,
+            )
+        """,
+    ),
     "Retry behavior": (
         retry_argument_meta,
         """
