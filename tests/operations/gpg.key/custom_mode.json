@@ -1,0 +1,24 @@
+{
+    "args": [],
+    "kwargs": {
+        "src": "/tmp/local-key.asc",
+        "dest": "/etc/apt/keyrings/test.gpg",
+        "mode": "0600"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/test.gpg": null
+        }
+    },
+    "commands": [
+        "mkdir -p /etc/apt/keyrings",
+        "chmod 755 /etc/apt/keyrings",
+        "if grep -q \"BEGIN PGP PUBLIC KEY BLOCK\" \"/tmp/local-key.asc\"; then gpg --batch --dearmor -o \"/etc/apt/keyrings/test.gpg\" \"/tmp/local-key.asc\"; else cp \"/tmp/local-key.asc\" \"/etc/apt/keyrings/test.gpg\"; fi",
+        "mkdir -p /etc/apt/keyrings",
+        "touch /etc/apt/keyrings/test.gpg",
+        "chmod 600 /etc/apt/keyrings/test.gpg"
+    ]
+}

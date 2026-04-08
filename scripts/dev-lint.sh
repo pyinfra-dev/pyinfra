@@ -3,7 +3,8 @@
 set -euo pipefail
 
 echo "Execute ruff check..."
-uv run ruff check
+uv run ruff check --diff
+uv run ruff format --diff
 
 echo "Execute mypy..."
 uv run mypy

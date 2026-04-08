@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "packages": ["flask"],
+        "virtualenv": "/opt/my venv"
+    },
+    "facts": {
+        "files.File": {
+            "path=/opt/my venv/bin/activate": true
+        },
+        "pip.PipPackages": {
+            "pip='/opt/my venv'/bin/pip": {}
+        }
+    },
+    "commands": [
+        "'/opt/my venv'/bin/pip install flask"
+    ]
+}

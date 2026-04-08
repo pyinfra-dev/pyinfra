@@ -2,7 +2,7 @@
 
 [Operations](../operations) are defined as Python functions. They are passed the current deploy state, the target host, and any operation arguments. Operation functions read state from the host, compare it to the arguments, and yield commands.
 
-### Input: arguments
+## Input: arguments
 
 Operations can accept any arguments except ``name`` and those starting with ``_`` which are reserved for internal use.
 
@@ -12,7 +12,7 @@ def my_operation(...):
     ...
 ```
 
-### Output: commands
+## Output: commands
 
 Operations are generator functions and ``yield`` three types of command:
 
@@ -44,7 +44,7 @@ yield from files.file._inner(
 )
 ```
 
-### Example: managing files
+## Example: managing files
 
 This is a simplified version of the ``files.file`` operation, which will create/remove a
 remote file based on the ``present`` kwargs:

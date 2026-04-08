@@ -548,3 +548,15 @@ name = "python"
 path = "src/pyinfra/operations/python.py"
 type = "operation"
 tags = ["system"]
+
+[pyinfra.plugins."uv-ops"]
+name = "uv"
+path = "src/pyinfra/operations/uv.py"
+type = "operation"
+tags = ["package-manager", "python"]
+
+[pyinfra.plugins."uv-facts"]
+name = "uv"
+path = "src/pyinfra/facts/uv.py"
+type = "fact"
+tags = ["package-manager", "python"]

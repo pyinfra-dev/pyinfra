@@ -1,0 +1,12 @@
+{
+    "args": ["my host; whoami"],
+    "facts": {
+        "server.Hostname": "nope",
+        "server.Which": {
+            "command=hostnamectl": "hostnamectl"
+        }
+    },
+    "commands": [
+        "hostnamectl set-hostname 'my host; whoami'"
+    ]
+}

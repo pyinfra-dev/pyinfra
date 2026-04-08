@@ -50,6 +50,9 @@ class ConfigDefaults:
     # Use doas and optional user
     DOAS: bool = False
     DOAS_USER: Optional[str] = None
+    # Use dzdo and optional user
+    DZDO: bool = False
+    DZDO_USER: Optional[str] = None
     # Only show errors but don't count as failure
     IGNORE_ERRORS: bool = False
     # Shell to use to execute commands

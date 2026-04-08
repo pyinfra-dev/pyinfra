@@ -1,0 +1,27 @@
+{
+    "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list.d/inline-key.sources",
+        "Types: deb",
+        "URIs: http://deb.debian.org/debian",
+        "Suites: trixie",
+        "Components: main",
+        "Signed-By:",
+        " -----BEGIN PGP PUBLIC KEY BLOCK-----",
+        " mQINBFABCDEFGH==",
+        " -----END PGP PUBLIC KEY BLOCK-----",
+        ""
+    ],
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
+    "requires_command": "apt",
+    "fact": [
+        {
+            "type": "deb",
+            "url": "http://deb.debian.org/debian",
+            "distribution": "trixie",
+            "components": ["main"],
+            "options": {
+                "signed-by": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nmQINBFABCDEFGH==\n-----END PGP PUBLIC KEY BLOCK-----"
+            }
+        }
+    ]
+}

@@ -1,8 +1,10 @@
 {
     "output": [
-        "deb http://archive.ubuntu.com/ubuntu trusty restricted pi4"
+        "##PYINFRA_FILE /etc/apt/sources.list",
+        "deb http://archive.ubuntu.com/ubuntu trusty restricted pi4",
+        ""
     ],
-    "command": "(! test -f /etc/apt/sources.list || cat /etc/apt/sources.list) && (cat /etc/apt/sources.list.d/*.list || true)",
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
     "requires_command": "apt",
     "fact": [
         {

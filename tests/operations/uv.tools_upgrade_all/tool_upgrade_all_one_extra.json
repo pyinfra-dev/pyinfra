@@ -1,0 +1,11 @@
+{
+    "args": [],
+    "kwargs": {
+        "extra_args": "--no-binary"
+    },
+    "facts": {
+    },
+    "commands": [
+        "uv tool upgrade --all --no-binary"
+    ]
+}

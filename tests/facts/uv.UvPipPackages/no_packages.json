@@ -1,0 +1,8 @@
+{
+    "command": "uv pip list --format json",
+    "requires_command": "uv",
+    "output": [
+    ],
+    "fact": {
+    }
+}

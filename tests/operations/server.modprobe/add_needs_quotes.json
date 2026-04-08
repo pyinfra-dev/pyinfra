@@ -1,0 +1,9 @@
+{
+    "args": ["evil; rm -rf /"],
+    "facts": {
+        "server.KernelModules": {}
+    },
+    "commands": [
+        "modprobe -a 'evil; rm -rf /'"
+    ]
+}

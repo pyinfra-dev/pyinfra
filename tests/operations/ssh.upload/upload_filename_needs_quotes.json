@@ -1,0 +1,7 @@
+{
+    "args": ["remote-host.net", "my file; rm -rf /"],
+    "commands": [
+        "scp -P 22 'my file; rm -rf /' remote-host.net:'my file; rm -rf /'"
+    ],
+    "idempotent": false
+}

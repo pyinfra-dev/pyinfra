@@ -1,0 +1,42 @@
+{
+    "args": [],
+    "kwargs": {
+        "keyserver": "hkps://keyserver.ubuntu.com",
+        "keyid": ["0xD88E42B4"],
+        "dest": "/etc/apt/keyrings/vendor.gpg"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/etc/apt/keyrings": {
+                "mode": "755",
+                "user": "root",
+                "group": "root"
+            },
+            "path=_tempfile_": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/vendor.gpg": {
+                "mode": "644",
+                "user": "root",
+                "group": "root"
+            }
+        },
+        "gpg.GpgKeyrings": {
+            "directories=['/etc/apt/keyrings']": {
+                "/etc/apt/keyrings/vendor.gpg": {
+                    "format": "gpg",
+                    "keys": {
+                        "D88E42B4": {
+                            "length": 4096,
+                            "uid": "Test Key <test@example.com>"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "commands": [
+        "chmod 644 /etc/apt/keyrings/vendor.gpg"
+    ],
+    "noop_description": "GPG keys ['0xD88E42B4'] already exist in /etc/apt/keyrings/vendor.gpg"
+}

@@ -1,0 +1,16 @@
+{
+    "args": ["myrepo", "/home/myrepo"],
+    "kwargs": {
+        "branch": "main; rm -rf /",
+        "pull": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null
+        }
+    },
+    "commands": [
+        "cd /home/myrepo && git clone myrepo --branch 'main; rm -rf /' ."
+    ]
+}

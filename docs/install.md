@@ -9,8 +9,8 @@ orphan: true
 
 ### Python Version Requirements
 
-- Python 3.9 or later is required
-- pyinfra 3.2+ supports Python 3.9, 3.10, 3.11, and 3.12
+- Python 3.10 or later is required
+- pyinfra 3.5.1+ supports Python 3.10, 3.11, 3.12 and 3.13
 - You can check your Python version with:
 
   ```sh
@@ -56,13 +56,13 @@ Now you can install pyinfra as a tool, or add it to your project's dependencies.
 
 First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't already.
 
-#### Install pyinfra
+#### Install pyinfra via pipx
 
    ```sh
    pipx install pyinfra
    ```
 
-#### Verify Installation
+#### Verify pipx Installation
 
    ```sh
    pyinfra --version
@@ -83,13 +83,13 @@ First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't a
    env\Scripts\activate
    ```
 
-#### Install pyinfra
+#### Install pyinfra via pip
 
    ```sh
    pip install pyinfra
    ```
 
-#### Verify Installation
+#### Verify pip Installation
 
    ```sh
    pyinfra --version
@@ -117,7 +117,7 @@ First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't a
   - C++/CLI support for v142...
   - C++ Modules for v142...
 
-#### Install pyinfra
+#### Install pyinfra on Windows
 
    ```sh
    python -m venv env

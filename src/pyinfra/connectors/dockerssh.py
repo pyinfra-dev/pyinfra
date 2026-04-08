@@ -2,10 +2,10 @@ import os
 from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
-import click
 from typing_extensions import Unpack, override
 
 from pyinfra import logger
+from pyinfra.api.output import echo, format_text
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
@@ -126,7 +126,7 @@ class DockerSSHConnector(BaseConnector):
             "{0}{1} build complete, image ID: {2}".format(
                 self.host.print_prefix,
                 self.docker_cmd,
-                click.style(image_id, bold=True),
+                format_text(image_id, bold=True),
             ),
         )
 
@@ -225,7 +225,7 @@ class DockerSSHConnector(BaseConnector):
             raise IOError(output.stderr)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file uploaded to container: {1}".format(
                     self.host.print_prefix,
                     remote_filename,
@@ -282,7 +282,7 @@ class DockerSSHConnector(BaseConnector):
             raise IOError(output.stderr)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file downloaded from container: {1}".format(
                     self.host.print_prefix,
                     remote_filename,
