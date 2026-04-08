@@ -342,7 +342,9 @@ def _wrap_operation(
             host.current_op_deploy_data = current_deploy_data
 
             try:
-                if getattr(state.config, "EXECUTION_ONLY", False):
+                if getattr(state.config, "EXECUTION_ONLY", False) or global_arguments.get(
+                    "_execution_only"
+                ):
                     if direct_execution:
                         logger.info(
                             f"[{host.name}] Running in EXECUTION_ONLY mode, running {get_operation_name_from_func(func)} without diffing"

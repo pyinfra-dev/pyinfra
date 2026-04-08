@@ -222,6 +222,7 @@ class ExecutionArguments(TypedDict):
     _parallel: int
     _run_once: bool
     _serial: bool
+    _execution_only: bool
 
 
 execution_argument_meta: dict[str, ArgumentMeta] = {
@@ -236,6 +237,10 @@ execution_argument_meta: dict[str, ArgumentMeta] = {
     "_serial": ArgumentMeta(
         "Run this operation host by host, rather than in parallel.",
         default=lambda _: False,
+    ),
+    "_execution_only": ArgumentMeta(
+        "Skip idempotency checks for this operation.",
+        default=lambda config: config.EXECUTION_ONLY,
     ),
 }
 
