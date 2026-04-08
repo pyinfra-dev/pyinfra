@@ -1,0 +1,13 @@
+{
+    "args": ["my service; whoami"],
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "my service; whoami": false
+            }
+        }
+    },
+    "commands": [
+        "rc-service 'my service; whoami' start"
+    ]
+}

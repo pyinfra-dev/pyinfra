@@ -1,0 +1,9 @@
+{
+    "args": [["ruff==0.14.4", "mypy", "sphinx >= 8.2"]],
+    "kwargs": {"present": true, "extra_args": "--no-cache"},
+    "facts": {"uv.UvTools": {"mypy": ["1.17.1"]}},
+    "commands": [
+        "uv tool install --no-progress --no-cache ruff==0.14.4",
+        "uv tool install --no-progress --no-cache 'sphinx>=8.2'",
+    ],
+}

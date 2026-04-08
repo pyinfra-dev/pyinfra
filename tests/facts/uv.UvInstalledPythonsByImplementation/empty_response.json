@@ -1,0 +1,9 @@
+{
+    "arg": true,
+    "command": "uv python list --managed-python --only-installed --output-format=json",
+    "requires_command": "uv",
+    "output": [
+    ],
+    "fact": {
+    }
+}

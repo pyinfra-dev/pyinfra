@@ -1262,6 +1262,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "python-dateutil" },
     { name = "typeguard" },
+    { name = "types-paramiko" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 
@@ -1318,10 +1319,11 @@ requires-dist = [
     { name = "gevent", specifier = ">=1.5" },
     { name = "jinja2", specifier = ">3,<4" },
     { name = "packaging", specifier = ">=16.1" },
-    { name = "paramiko", specifier = ">=2.7,<4" },
+    { name = "paramiko", specifier = ">=2.7,<5" },
     { name = "pydantic", specifier = ">=2.11,<3" },
     { name = "python-dateutil", specifier = ">2,<3" },
     { name = "typeguard", specifier = ">=4,<5" },
+    { name = "types-paramiko", specifier = ">=2.7,<5" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 

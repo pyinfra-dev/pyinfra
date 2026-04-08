@@ -1,0 +1,21 @@
+{
+  "command": "sockstat -l",
+  "facts": {
+    "server.Kernel": "FreeBSD"
+  },
+  "output": [
+    "USER COMMAND      PID FD PROTO   LOCAL ADDRESS         FOREIGN ADDRESS",
+    "root sshd        6674  6 tcp6    *:22                  *:*",
+    "root sshd        6674  7 tcp4    *:22                  *:*",
+    "ntpd ntpd        6593 20 udp6    *:123                 *:*",
+    "ntpd ntpd        6593 21 udp4    *:123                 *:*",
+    "root syslogd     6471  7 udp4    *:514                 *:*"
+  ],
+  "fact": [
+    {"port": 22, "ip": "*", "protocol": "tcp6", "process": "sshd"},
+    {"port": 22, "ip": "*", "protocol": "tcp4", "process": "sshd"},
+    {"port": 123, "ip": "*", "protocol": "udp6", "process": "ntpd"},
+    {"port": 123, "ip": "*", "protocol": "udp4", "process": "ntpd"},
+    {"port": 514, "ip": "*", "protocol": "udp4", "process": "syslogd"}
+  ]
+}

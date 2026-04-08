@@ -9,7 +9,6 @@ from pyinfra.facts.files import File
 from __future__ import annotations
 
 import re
-import shlex
 import stat
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
@@ -229,7 +228,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
     def command(self, path):
         if path.startswith("~/"):
             # Do not quote leading tilde to ensure that it gets properly expanded by the shell
-            path = f"~/{shlex.quote(path[2:])}"
+            path = StringCommand("~/", QuoteString(path[2:]), _separator="")
         else:
             path = QuoteString(path)
 

@@ -1,0 +1,18 @@
+{
+    "args": ["/somewhere/useful"],
+    "kwargs": {
+        "present": true,
+        "python": "3.15",
+        "allow_existing": true,
+        "seed": true
+    },
+    "facts": {
+        "files.File": {
+            "path=/somewhere/useful/.venv/bin/activate": null
+        },
+        "files.Directory": {
+            "path=/somewhere/useful.venv": null
+        }
+    },
+    "commands": ["uv venv --allow-existing --seed --python 3.15 /somewhere/useful"]
+}

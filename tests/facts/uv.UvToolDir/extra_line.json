@@ -1,0 +1,9 @@
+{
+    "command": "uv tool dir 2>/dev/null",
+    "requires_command": "uv",
+    "output": [
+        "/home/guesswho/.local/share/uv/tools",
+        "#%*#&$^$*^"
+    ],
+    "fact":  ""
+}

@@ -1,0 +1,10 @@
+{
+    "args": ["my group; whoami"],
+    "facts": {
+        "server.Groups": [],
+        "server.Os": "Linux"
+    },
+    "commands": [
+        "groupadd 'my group; whoami'"
+    ]
+}

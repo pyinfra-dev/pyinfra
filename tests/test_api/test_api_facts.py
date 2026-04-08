@@ -50,6 +50,23 @@ class TestFactsApi(PatchSSHTestCase):
             **_get_executor_defaults(state, anotherhost),
         )
 
+    def test_get_fact_missing_command_returns_the_default(self):
+        inventory = make_inventory(hosts=("anotherhost",))
+        state = State(inventory, Config())
+
+        anotherhost = inventory.get_host("anotherhost")
+
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (
+                True,
+                CommandOutput([]),
+            )
+            fact_data = get_facts(state, Command, ("nonexistent_command",))
+
+        assert fact_data == {anotherhost: None}
+
     def test_get_fact_current_op_global_arguments(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())

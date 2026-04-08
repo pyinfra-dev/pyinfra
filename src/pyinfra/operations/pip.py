@@ -6,7 +6,7 @@ a virtualenv (virtual environment).
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.files import File
 from pyinfra.facts.pip import PipPackages
 
@@ -56,13 +56,13 @@ def virtualenv(
     if present:
         if not host.get_fact(File, path=activate_script_path):
             # Create missing virtualenv
-            command = ["virtualenv"]
+            command: list[str | QuoteString] = ["virtualenv"]
 
             if venv:
-                command = [python or "python", "-m", "venv"]
+                command = [QuoteString(python) if python else "python", "-m", "venv"]
 
             if python and not venv:
-                command.append("-p {0}".format(python))
+                command.extend(["-p", QuoteString(python)])
 
             if site_packages:
                 command.append("--system-site-packages")
@@ -72,9 +72,9 @@ def virtualenv(
             elif always_copy and venv:
                 command.append("--copies")
 
-            command.append(path)
+            command.append(QuoteString(path))
 
-            yield " ".join(command)
+            yield StringCommand(*command)
         else:
             host.noop("virtualenv {0} exists".format(path))
 
@@ -168,7 +168,7 @@ def packages(
 
         # And update pip path
         virtualenv = virtualenv.rstrip("/")
-        pip = "{0}/bin/{1}".format(virtualenv, pip)
+        pip = StringCommand(QuoteString(virtualenv), "/bin/", pip, _separator="").get_raw_value()
 
     install_command_args = [pip, "install"]
     if extra_install_args:
@@ -181,9 +181,11 @@ def packages(
     # (un)Install requirements
     if requirements is not None:
         if present:
-            yield "{0} -r {1}".format(upgrade_command if latest else install_command, requirements)
+            yield StringCommand(
+                upgrade_command if latest else install_command, "-r", QuoteString(requirements)
+            )
         else:
-            yield "{0} -r {1}".format(uninstall_command, requirements)
+            yield StringCommand(uninstall_command, "-r", QuoteString(requirements))
 
     # Handle passed in packages
     if packages:

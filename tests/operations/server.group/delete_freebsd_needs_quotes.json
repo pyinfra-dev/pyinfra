@@ -1,0 +1,13 @@
+{
+    "args": ["my group; whoami"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "server.Groups": ["my group; whoami"],
+        "server.Os": "FreeBSD"
+    },
+    "commands": [
+        "pw groupdel -n 'my group; whoami'"
+    ]
+}

@@ -1,0 +1,29 @@
+{
+  "command": "LANG=C ps -eo pid,user,stat,%cpu,%mem,comm,args",
+  "facts": {
+    "server.Kernel": "FreeBSD"
+  },
+  "output": [
+    "  PID USER     STAT %CPU %MEM COMMAND         COMMAND",
+    "    1 root     SLs   0.0  0.0 init            /sbin/init --",
+    "  742 root     Ss    0.0  0.2 sshd            /usr/sbin/sshd"
+  ],
+  "fact": {
+    "1": {
+      "user": "root",
+      "state": "SLs",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.0,
+      "command": "init",
+      "args": "/sbin/init --"
+    },
+    "742": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.2,
+      "command": "sshd",
+      "args": "/usr/sbin/sshd"
+    }
+  }
+}

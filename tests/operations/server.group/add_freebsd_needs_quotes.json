@@ -1,0 +1,13 @@
+{
+    "args": ["my group; whoami"],
+    "kwargs": {
+        "gid": 1000
+    },
+    "facts": {
+        "server.Groups": [],
+        "server.Os": "FreeBSD"
+    },
+    "commands": [
+        "pw groupadd -n 'my group; whoami' -g 1000"
+    ]
+}

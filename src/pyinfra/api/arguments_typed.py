@@ -37,6 +37,8 @@ class PyinfraOperation(Generic[P], Protocol):
         _su_password: None | str = None,
         _doas: bool = False,
         _doas_user: None | str = None,
+        _dzdo: bool = False,
+        _dzdo_user: None | str = None,
         # Shell arguments
         _shell_executable: None | str = None,
         _chdir: None | str = None,

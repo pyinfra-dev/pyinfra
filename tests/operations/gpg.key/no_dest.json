@@ -1,0 +1,11 @@
+{
+    "args": [],
+    "kwargs": {
+        "src": "/tmp/test.asc"
+    },
+    "facts": {},
+    "exception": {
+        "names": ["OperationError"],
+        "message": "`dest` must be provided for installation"
+    }
+}

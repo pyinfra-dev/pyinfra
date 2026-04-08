@@ -3,8 +3,10 @@ from __future__ import annotations
 import re
 from typing import Iterable
 
+PackageVersionDict = dict[str, set[str]]
 
-def parse_packages(regex: str, output: Iterable[str]) -> dict[str, set[str]]:
+
+def parse_packages(regex: str, output: Iterable[str]) -> PackageVersionDict:
     packages: dict[str, set[str]] = {}
 
     for line in output:

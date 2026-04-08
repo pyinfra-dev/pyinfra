@@ -1,0 +1,14 @@
+{
+    "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list.d/disabled.sources",
+        "Types: deb",
+        "URIs: http://deb.debian.org/debian",
+        "Suites: bookworm",
+        "Components: main",
+        "Enabled: no",
+        ""
+    ],
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
+    "requires_command": "apt",
+    "fact": []
+}

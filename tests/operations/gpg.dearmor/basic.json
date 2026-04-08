@@ -1,0 +1,22 @@
+{
+    "args": [],
+    "kwargs": {
+        "src": "/tmp/test.asc",
+        "dest": "/tmp/test.gpg"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/tmp": {
+                "mode": 755
+            }
+        },
+        "files.File": {
+            "path=/tmp/test.gpg": null
+        }
+    },
+    "commands": [
+        "gpg --batch --dearmor -o \"/tmp/test.gpg\" \"/tmp/test.asc\"",
+        "touch /tmp/test.gpg",
+        "chmod 644 /tmp/test.gpg"
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "arg": "my;package",
+    "command": "pacman -S --print-format %n 'my;package' || true",
+    "requires_command": "pacman",
+    "output": [
+        "my-package"
+    ],
+    "fact": [
+        "my-package"
+    ]
+}

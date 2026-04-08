@@ -1,3 +1,6 @@
+---
+orphan: true
+---
 # Dynamic Execution during Deploy
 
 **Note:** this example is out of date (the code is valid, but there's better ways to do it), please see [using operations: operation output & callbacks](/using-operations).

@@ -1,0 +1,18 @@
+{
+    "args": ["3.10.19"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "uv.UvInstalledPythonsByVersion": {
+            "is_managed=True": {
+                "3.10.19": [
+                    "cpython-3.10.19-macos-aarch64-none"
+                ]
+            }
+        }
+    },
+    "commands": [
+        "uv python uninstall --no-progress --managed-python  3.10.19"
+    ]
+}

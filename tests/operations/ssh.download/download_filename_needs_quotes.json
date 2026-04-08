@@ -1,0 +1,11 @@
+{
+    "args": ["remote-host.net", "remote $(whoami).txt", "local $(whoami).txt"],
+    "facts": {
+        "files.File": {
+            "path=local $(whoami).txt": null
+        }
+    },
+    "commands": [
+        "scp -P 22 remote-host.net:'remote $(whoami).txt' 'local $(whoami).txt'"
+    ]
+}
