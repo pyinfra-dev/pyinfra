@@ -60,6 +60,8 @@ class ConfigDefaults:
     RETRY: int = 0
     # Delay in seconds between retry attempts
     RETRY_DELAY: int = 5
+    # Skip idempotency checks for all operations
+    EXECUTION_ONLY: bool = False
 
 
 config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() if key.isupper()}

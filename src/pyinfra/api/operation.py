@@ -242,6 +242,7 @@ def operation(
     idempotent_notice: Optional[str] = None,
     is_deprecated: bool = False,
     deprecated_for: Optional[str] = None,
+    direct_execution: Optional[Callable[..., Generator]] = None,
     _set_in_op: bool = True,
 ) -> Callable[[Callable[P, Generator]], PyinfraOperation[P]]:
     """
@@ -255,12 +256,16 @@ def operation(
         f.idempotent_notice = idempotent_notice  # type: ignore[attr-defined]
         f.is_deprecated = is_deprecated  # type: ignore[attr-defined]
         f.deprecated_for = deprecated_for  # type: ignore[attr-defined]
-        return _wrap_operation(f, _set_in_op=_set_in_op)
+        return _wrap_operation(f, _set_in_op=_set_in_op, direct_execution=direct_execution)
 
     return decorator
 
 
-def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> PyinfraOperation[P]:
+def _wrap_operation(
+    func: Callable[P, Generator],
+    _set_in_op: bool = True,
+    direct_execution: Optional[Callable[..., Generator]] = None,
+) -> PyinfraOperation[P]:
     @wraps(func)
     def decorated_func(*args: P.args, **kwargs: P.kwargs) -> OperationMeta:
         state = context.state
@@ -337,6 +342,24 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
             host.current_op_deploy_data = current_deploy_data
 
             try:
+                if getattr(state.config, "EXECUTION_ONLY", False):
+                    if direct_execution:
+                        logger.info(
+                            f"[{host.name}] Running in EXECUTION_ONLY mode, running {get_operation_name_from_func(func)} without diffing"
+                        )
+                        for command in direct_execution(*args, **kwargs):
+                            yield (
+                                StringCommand(command.strip())
+                                if isinstance(command, str)
+                                else command
+                            )
+                        return
+                    else:
+                        op_name = get_operation_name_from_func(func)
+                        logger.warning(
+                            f"[{host.name}] Op {op_name} is not yet supported in EXECUTION_ONLY mode. Falling back to normal execution."
+                        )
+
                 for command in func(*args, **kwargs):
                     if isinstance(command, str):
                         command = StringCommand(command.strip())
