@@ -342,8 +342,8 @@ def _wrap_operation(
             host.current_op_deploy_data = current_deploy_data
 
             try:
-                if getattr(state.config, "EXECUTION_ONLY", False) or global_arguments.get(
-                    "_execution_only"
+                if global_arguments.get(
+                    "_execution_only", getattr(state.config, "EXECUTION_ONLY", False)
                 ):
                     if direct_execution:
                         logger.info(
