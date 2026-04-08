@@ -337,6 +337,16 @@ Like ``host`` and ``inventory``, ``config`` can be used to set global defaults f
 
     # all operations below will use sudo by default (unless overridden by `_sudo=False`)
 
+You can also use ``config`` to skip idempotency checks and only execute the operations directly without checking state:
+
+.. code:: python
+
+    from pyinfra import config
+
+    config.EXECUTION_ONLY = True
+
+    # all operations below will be executed without checking their prior state
+
 Enforcing Requirements
 ~~~~~~~~~~~~~~~~~~~~~~
 
