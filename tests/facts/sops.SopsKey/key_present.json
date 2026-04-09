@@ -1,0 +1,9 @@
+{
+    "arg": ["/path/to/secrets.enc.json", "gitlab_runner_token"],
+    "command": "sops --decrypt --extract '[\"gitlab_runner_token\"]' \"/path/to/secrets.enc.json\" 2>/dev/null || true",
+    "requires_command": "sops",
+    "output": [
+        "glrt-ZokUexVvEmNaC3oHY1lTqG86MQpwOnMKdDozCnU6eQ8"
+    ],
+    "fact": "glrt-ZokUexVvEmNaC3oHY1lTqG86MQpwOnMKdDozCnU6eQ8"
+}

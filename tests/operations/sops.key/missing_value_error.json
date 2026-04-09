@@ -1,0 +1,12 @@
+{
+    "args": [],
+    "kwargs": {
+        "secrets_file": "/path/to/secrets.enc.json",
+        "key": "my_key"
+    },
+    "facts": {},
+    "exception": {
+        "name": "OperationError",
+        "message": "`value` is required when `present=True`"
+    }
+}

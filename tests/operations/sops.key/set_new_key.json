@@ -1,0 +1,16 @@
+{
+    "args": [],
+    "kwargs": {
+        "secrets_file": "/path/to/secrets.enc.json",
+        "key": "gitlab_runner_token",
+        "value": "glrt-newtoken123"
+    },
+    "facts": {
+        "sops.SopsKey": {
+            "key=gitlab_runner_token, secrets_file=/path/to/secrets.enc.json": null
+        }
+    },
+    "commands": [
+        "sops --set '[\"gitlab_runner_token\"] \"glrt-newtoken123\"' \"/path/to/secrets.enc.json\""
+    ]
+}

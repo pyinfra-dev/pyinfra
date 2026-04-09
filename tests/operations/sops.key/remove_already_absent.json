@@ -1,0 +1,15 @@
+{
+    "args": [],
+    "kwargs": {
+        "secrets_file": "/path/to/secrets.enc.json",
+        "key": "missing_key",
+        "present": false
+    },
+    "facts": {
+        "sops.SopsKey": {
+            "key=missing_key, secrets_file=/path/to/secrets.enc.json": null
+        }
+    },
+    "commands": [],
+    "noop_description": "Key 'missing_key' already absent (null) in /path/to/secrets.enc.json"
+}
