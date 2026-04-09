@@ -46,3 +46,45 @@ class DnfRepositories(FactBase):
     @override
     def process(self, output):
         return parse_yum_repositories(output)
+
+
+class DnfEnabledModules(FactBase):
+    """
+    Returns a dict mapping enabled dnf module names to their enabled stream:
+
+    .. code:: python
+
+        {
+            "postgresql": "16",
+            "nodejs": "20",
+        }
+    """
+
+    @override
+    def command(self) -> str:
+        return "dnf module list --enabled"
+
+    @override
+    def requires_command(self) -> str:
+        return "dnf"
+
+    default = dict
+
+    @override
+    def process(self, output):
+        result: dict[str, str] = {}
+        for line in output:
+            # Every data row from `--enabled` carries the [e] flag; this is the
+            # cheapest way to skip repo-section headers, the column header, the
+            # Hint legend and any blank lines.
+            if "[e]" not in line:
+                continue
+            tokens = line.split()
+            if len(tokens) < 2:
+                continue
+            name, stream = tokens[0], tokens[1]
+            # Defensive: ignore the column header if dnf ever decorates it.
+            if name == "Name" or name.startswith("Hint:"):
+                continue
+            result[name] = stream
+        return result
