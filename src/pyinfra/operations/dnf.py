@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from pyinfra import host, state
 from pyinfra.api import operation
+from pyinfra.facts.dnf import DnfEnabledModules
 from pyinfra.facts.rpm import RpmPackageProvides, RpmPackages
 
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
@@ -211,3 +212,37 @@ def packages(
         latest=latest,
         expand_package_fact=lambda package: host.get_fact(RpmPackageProvides, package=package),
     )
+
+
+@operation()
+def module(module: str, stream: str):
+    """
+    Enable a dnf module stream (application stream).
+
+    + module: name of the dnf module
+    + stream: name of the stream to enable
+
+    Application streams let you install multiple parallel versions of the same
+    component. Only one stream of a module can be enabled at a time; enabling
+    a different stream than the one currently active replaces it.
+
+    **Example:**
+
+    .. code:: python
+
+        from pyinfra.operations import dnf
+
+        dnf.module(
+            name="Enable PostgreSQL 16 module stream",
+            module="postgresql",
+            stream="16",
+            _sudo=True,
+        )
+    """
+
+    enabled = host.get_fact(DnfEnabledModules)
+    if enabled.get(module) == stream:
+        host.noop(f"dnf module {module}:{stream} is already enabled")
+        return
+
+    yield f"dnf module enable -y {module}:{stream}"
