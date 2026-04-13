@@ -52,6 +52,134 @@ def jsonify(data, *args, **kwargs):
     return json.dumps(data, *args, **kwargs)
 
 
+def print_json(payload) -> None:
+    click.echo(jsonify(payload, default=json_encode))
+
+
+def _host_to_dict(host: Host) -> Dict:
+    return {
+        "name": host.name,
+        "groups": list(host.groups),
+        "data": host.data,
+    }
+
+
+def print_inventory_json(state: "State") -> None:
+    print_json([_host_to_dict(host) for host in state.inventory])
+
+
+def print_facts_json(fact_data: Dict) -> None:
+    print_json(fact_data)
+
+
+def print_state_operations_json(state: "State") -> None:
+    state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
+    payload = {
+        "operations": state_ops,
+        "op_meta": state.op_meta,
+        "op_order": [
+            {
+                "op_hash": op_hash,
+                "names": sorted(state.op_meta[op_hash].names),
+                "hosts": sorted(
+                    host.name for host, ops in state.ops.items() if op_hash in ops
+                ),
+            }
+            for op_hash in state.get_op_order()
+        ],
+    }
+    print_json(payload)
+
+
+def build_plan_json(state: "State") -> List[Dict]:
+    operations: List[Dict] = []
+    for op_hash in state.get_op_order():
+        hosts_in_op: List[str] = []
+        hosts_maybe_in_op: List[str] = []
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash not in state.ops[host]:
+                continue
+            op_data = state.get_op_data_for_host(host, op_hash)
+            if not op_data.operation_meta._maybe_is_change:
+                continue
+            if op_data.global_arguments["_if"]:
+                hosts_maybe_in_op.append(host.name)
+            else:
+                hosts_in_op.append(host.name)
+
+        meta = state.op_meta[op_hash]
+        operations.append(
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(meta),
+                "names": sorted(meta.names),
+                "args": list(meta.args),
+                "hosts_with_change": sorted(hosts_in_op),
+                "hosts_with_conditional_change": sorted(hosts_maybe_in_op),
+            }
+        )
+    return operations
+
+
+def build_results_json(state: "State") -> Dict:
+    operations: List[Dict] = []
+    totals = {"hosts": 0, "success": 0, "error": 0, "no_change": 0}
+
+    for op_hash in state.get_op_order():
+        hosts_in_op = 0
+        success: List[str] = []
+        error: List[str] = []
+        no_change: List[str] = []
+
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash not in state.ops[host]:
+                continue
+
+            hosts_in_op += 1
+            op_meta = state.ops[host][op_hash].operation_meta
+            if op_meta.did_succeed(_raise_if_not_complete=False):
+                if op_meta.did_change():
+                    success.append(host.name)
+                else:
+                    no_change.append(host.name)
+            else:
+                error.append(host.name)
+
+        meta = state.op_meta[op_hash]
+        operations.append(
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(meta),
+                "names": sorted(meta.names),
+                "args": list(meta.args),
+                "hosts": hosts_in_op,
+                "success": sorted(success),
+                "error": sorted(error),
+                "no_change": sorted(no_change),
+            }
+        )
+
+        totals["hosts"] += hosts_in_op
+        totals["success"] += len(success)
+        totals["error"] += len(error)
+        totals["no_change"] += len(no_change)
+
+    return {
+        "operations": operations,
+        "totals": totals,
+        "failed_hosts": sorted(host.name for host in state.failed_hosts),
+    }
+
+
+def print_run_json(state: "State", dry: bool) -> None:
+    payload: Dict = {"plan": build_plan_json(state)}
+    if dry:
+        payload["results"] = None
+    else:
+        payload["results"] = build_results_json(state)
+    print_json(payload)
+
+
 def print_state_operations(state: "State"):
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
 
