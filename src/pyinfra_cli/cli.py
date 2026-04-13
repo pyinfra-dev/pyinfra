@@ -224,7 +224,10 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     "json_output",
     is_flag=True,
     default=False,
-    help="Emit pure JSON output on stdout (for facts, debug-inventory, debug-operations, dry runs and deploy results).",
+    help=(
+        "Emit pure JSON output on stdout (for facts, debug-inventory, "
+        "debug-operations, dry runs and deploy results)."
+    ),
 )
 @click.version_option(
     version=__version__,

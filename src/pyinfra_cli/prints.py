@@ -81,9 +81,7 @@ def print_state_operations_json(state: "State") -> None:
             {
                 "op_hash": op_hash,
                 "names": sorted(state.op_meta[op_hash].names),
-                "hosts": sorted(
-                    host.name for host, ops in state.ops.items() if op_hash in ops
-                ),
+                "hosts": sorted(host.name for host, ops in state.ops.items() if op_hash in ops),
             }
             for op_hash in state.get_op_order()
         ],
