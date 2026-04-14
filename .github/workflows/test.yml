@@ -23,9 +23,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - uses: astral-sh/ruff-action@v3
+        with:
+          args: "check --diff"
       - uses: astral-sh/ruff-action@v3
         with:
-          args: "format --check"
+          args: "format --diff"
 
   type-check:
     runs-on: ubuntu-24.04

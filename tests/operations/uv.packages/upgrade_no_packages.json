@@ -1,0 +1,12 @@
+{
+    "args": [[]],
+    "kwargs": {
+        "present": true,
+        "latest": true
+    },
+    "facts": {
+    },
+    "commands": [
+    ],
+    "noop_description": "neither packages nor requirements requested to be (un)installed"
+}

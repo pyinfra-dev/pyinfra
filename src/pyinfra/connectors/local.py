@@ -3,10 +3,10 @@ from shutil import which
 from tempfile import mkstemp
 from typing import TYPE_CHECKING, Tuple
 
-import click
 from typing_extensions import Unpack, override
 
 from pyinfra import logger
+from pyinfra.api.output import echo
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import get_file_io
@@ -80,7 +80,7 @@ class LocalConnector(BaseConnector):
             logger.debug("--> Running command on localhost: %s", unix_command)
 
             if print_input:
-                click.echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
+                echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
 
             return run_local_process(
                 actual_command,
@@ -148,7 +148,7 @@ class LocalConnector(BaseConnector):
             os.remove(temp_filename)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file copied: {1}".format(self.host.print_prefix, remote_filename),
                 err=True,
             )
@@ -203,7 +203,7 @@ class LocalConnector(BaseConnector):
             os.remove(temp_filename)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file copied: {1}".format(self.host.print_prefix, remote_filename),
                 err=True,
             )

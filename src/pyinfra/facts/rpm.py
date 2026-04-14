@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import re
-import shlex
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString
+from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
 
@@ -25,8 +25,10 @@ class RpmPackages(FactBase):
     """
 
     @override
-    def command(self) -> str:
-        return "rpm --queryformat {0} -qa".format(shlex.quote(rpm_query_format))
+    def command(self):
+        return make_formatted_string_command(
+            "rpm --queryformat {0} -qa", QuoteString(rpm_query_format)
+        )
 
     @override
     def requires_command(self) -> str:
@@ -56,12 +58,14 @@ class RpmPackage(FactBase):
         return "rpm"
 
     @override
-    def command(self, package) -> str:
-        return (
+    def command(self, package):
+        return make_formatted_string_command(
             "rpm --queryformat {0} -q {1} || "
             "! test -e {1} || "
-            "rpm --queryformat {0} -qp {1} 2> /dev/null"
-        ).format(shlex.quote(rpm_query_format), shlex.quote(package))
+            "rpm --queryformat {0} -qp {1} 2> /dev/null",
+            QuoteString(rpm_query_format),
+            QuoteString(package),
+        )
 
     @override
     def process(self, output):
@@ -88,9 +92,10 @@ class RpmPackageProvides(FactBase):
     @override
     def command(self, package):
         # Accept failure here (|| true) for invalid/unknown packages
-        return "repoquery --queryformat {0} --whatprovides {1} || true".format(
-            shlex.quote(rpm_query_format),
-            shlex.quote(package),
+        return make_formatted_string_command(
+            "repoquery --queryformat {0} --whatprovides {1} || true",
+            QuoteString(rpm_query_format),
+            QuoteString(package),
         )
 
     @override

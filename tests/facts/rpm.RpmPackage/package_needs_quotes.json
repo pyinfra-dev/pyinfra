@@ -1,0 +1,12 @@
+{
+    "arg": "/tmp/my package; whoami.rpm",
+    "command": "rpm --queryformat '%{NAME} %{VERSION}-%{RELEASE}\\n' -q '/tmp/my package; whoami.rpm' || ! test -e '/tmp/my package; whoami.rpm' || rpm --queryformat '%{NAME} %{VERSION}-%{RELEASE}\\n' -qp '/tmp/my package; whoami.rpm' 2> /dev/null",
+    "requires_command": "rpm",
+    "output": [
+        "my-package 1.0.0-1.el8"
+    ],
+    "fact": {
+        "name": "my-package",
+        "version": "1.0.0-1.el8"
+    }
+}

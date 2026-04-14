@@ -1,0 +1,24 @@
+{
+  "command": "ss -lpuntn || true",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
+  "output": [
+    "Netid  State   Recv-Q  Send-Q                       Local Address:Port      Peer Address:Port  Process",
+    "udp    UNCONN  0       0                               127.0.0.54:53             0.0.0.0:*      users:((\"systemd-resolve\",pid=289,fd=24))",
+    "udp    UNCONN  0       0                            127.0.0.53%lo:53             0.0.0.0:*      users:((\"systemd-resolve\",pid=289,fd=22))",
+    "tcp    LISTEN  0       128                                0.0.0.0:22             0.0.0.0:*      users:((\"sshd\",pid=365,fd=6),(\"systemd\",pid=1,fd=133))",
+    "tcp    LISTEN  0       4096                             127.0.0.1:37447          0.0.0.0:*      users:((\"containerd\",pid=380,fd=14))",
+    "tcp    LISTEN  0       128                                 [::]:22                [::]:*      users:((\"sshd\",pid=365,fd=7))"
+  ],
+  "fact": [
+    {"port": 53, "ip": "127.0.0.54", "protocol": "udp", "process": "systemd-resolve"},
+    {"port": 53, "ip": "127.0.0.53", "protocol": "udp", "process": "systemd-resolve"},
+    {"port": 22, "ip": "0.0.0.0", "protocol": "tcp", "process": "sshd"},
+    {"port": 37447, "ip": "127.0.0.1", "protocol": "tcp", "process": "containerd"},
+    {"port": 22, "ip": "::", "protocol": "tcp", "process": "sshd"}
+  ]
+}

@@ -1,16 +1,22 @@
 #!/usr/bin/env python
 
 import sys
-from glob import glob
 from importlib import import_module
 from inspect import getmembers, isclass, signature
 from os import makedirs, path
+from pathlib import Path
 from types import FunctionType
 
 from pyinfra.api.facts import FactBase
 
 sys.path.append(".")
-from docs.utils import format_doc_line, title_line  # noqa: E402
+from docs.utils import (
+    format_doc_line,
+    get_module_names,
+    including_sub_modules,
+    remove_dups,
+    title_line,
+)  # noqa: E402
 
 MODULE_DEF_LINE_MAX = 90
 
@@ -18,17 +24,11 @@ MODULE_DEF_LINE_MAX = 90
 def build_operations_docs():
     this_dir = path.dirname(path.realpath(__file__))
     docs_dir = path.abspath(path.join(this_dir, "..", "docs"))
-    operations_dir = path.join(this_dir, "..", "src", "pyinfra", "operations", "*.py")
+    pyinfra_dir = Path(docs_dir).parent / "src" / "pyinfra"
 
     makedirs(path.join(docs_dir, "operations"), exist_ok=True)
 
-    op_module_names = [
-        path.basename(name)[:-3]
-        for name in glob(operations_dir)
-        if not name.endswith("__init__.py")
-    ]
-
-    for module_name in op_module_names:
+    for module_name in get_module_names(pyinfra_dir / "operations"):
         lines = []
 
         print("--> Doing module: {0}".format(module_name))
@@ -44,7 +44,8 @@ def build_operations_docs():
 
         operation_facts = [
             (key, value)
-            for key, value in getmembers(module)
+            for m in including_sub_modules(module)
+            for key, value in getmembers(m)
             if (isclass(value) and issubclass(value, FactBase))
         ]
 
@@ -59,17 +60,20 @@ def build_operations_docs():
             lines.append("Facts used in these operations: {0}.".format(", ".join(items)))
             lines.append("")
 
-        operation_functions = [
-            (key, value._inner)
-            for key, value in getmembers(module)
+        all_operation_functions = [
+            (f"{m.__name__.split('.')[-1]}.{key}" if m != module else key, value._inner)
+            for m in including_sub_modules(module)
+            for key, value in getmembers(m)
             if (
                 isinstance(value, FunctionType)
-                and value.__module__ == module.__name__
+                and value.__module__.startswith(m.__name__)
                 and getattr(value, "_inner", False)
                 and not value.__name__.startswith("_")
                 and not key.startswith("_")
             )
         ]
+        # remove duplicates in case functions imported by __init__.py and then also seen where defined
+        operation_functions = remove_dups(all_operation_functions)
 
         for name, func in operation_functions:
             decorated_func = getattr(func, "_inner", None)

@@ -1,0 +1,17 @@
+{
+    "args": ["user.name; whoami", "Anon"],
+    "kwargs": {
+        "repo": "/my/repo"
+    },
+    "facts": {
+        "git.GitConfig": {
+            "repo=/my/repo, system=False": {}
+        },
+        "files.Directory": {
+            "path=/my/repo/.git": true
+        }
+    },
+    "commands": [
+        "cd /my/repo && git config --local 'user.name; whoami' \"Anon\""
+    ]
+}

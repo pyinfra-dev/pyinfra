@@ -1,0 +1,20 @@
+{
+    "args": ["   "],
+    "kwargs": {
+        "present": true
+    },
+    "facts": {
+        "files.File": {
+            "path=   /.venv/bin/activate": null
+        },
+        "files.Directory": {
+            "path=   /.venv": null
+        }
+    },
+    "commands": [
+    ],
+    "exception": {
+        "names": ["ValueError"],
+        "message": "must provide path in which .venv is to be created"
+    }
+}

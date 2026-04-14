@@ -1,0 +1,15 @@
+{
+    "args": [["3.11.14", "3.13.9", "3.14.0"]],
+    "kwargs": {"present": true, "extra_args": ["--no-cache", "--no-python-downloads"]},
+    "facts": {
+        "uv.UvInstalledPythonsByVersion": {
+            "is_managed=True": {
+                "3.11.14": ["cpython-3.11.14-macos-aarch64-none"],
+                "3.14.0": ["cpython-3.14.0-macos-aarch64-none"],
+            }
+        }
+    },
+    "commands": [
+        "uv python install --no-progress --managed-python --no-cache --no-python-downloads 3.13.9"
+    ],
+}
