@@ -1,8 +1,11 @@
 from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State
 from pyinfra.connectors.util import (
+    CommandOutput,
+    OutputLine,
+    _ensure_askpass_set_for_host,
     make_unix_command,
     make_unix_command_for_host,
     remove_any_sudo_askpass_file,
@@ -278,3 +281,98 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         remove_any_sudo_askpass_file(host)
 
         host.run_shell_command.assert_not_called()
+
+
+class TestEnsureAskpassTempDir(TestCase):
+    """
+    The askpass helper must honour the resolved temp directory (issue #1623):
+    operation-level ``_temp_dir`` > ``config.TEMP_DIR`` > ``config.DEFAULT_TEMP_DIR``.
+    Per-host defaults for ``_temp_dir`` come through the standard global-argument
+    cascade (``host.data._temp_dir``), not via a separate code path here.
+    """
+
+    _counter = 0
+
+    @classmethod
+    def _next_host(cls):
+        cls._counter += 1
+        return "askpass-temp-dir-test-host-{0}".format(cls._counter)
+
+    def _make_host(self, config=None):
+        name = self._next_host()
+        state = State(make_inventory(hosts=(name,)), config or Config())
+        host = state.inventory.get_host(name)
+        host.init(state)
+        return host
+
+    def _captured_script_run(self, host, temp_dir=None, stdout="/some/askpass/path"):
+        """
+        Call ``_ensure_askpass_set_for_host`` with ``host.run_shell_command``
+        patched so we can assert on the remote script text (whose first
+        argument to the mkstemp template is the temp directory).
+        """
+        captured = {}
+
+        def fake_run(command, *args, **kwargs):
+            captured["command"] = command
+            return (True, CommandOutput([OutputLine("stdout", stdout)]))
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+        _ensure_askpass_set_for_host(
+            host,
+            key="sudo_askpass_path",
+            env_var="PYINFRA_SUDO_PASSWORD",
+            temp_dir=temp_dir,
+        )
+        return captured["command"]
+
+    def test_default_temp_dir(self):
+        host = self._make_host()
+        script = self._captured_script_run(host)
+        assert "${TMPDIR:=/tmp}" in script
+
+    def test_config_temp_dir(self):
+        host = self._make_host(Config(TEMP_DIR="/var/tmp"))
+        script = self._captured_script_run(host)
+        assert "${TMPDIR:=/var/tmp}" in script
+
+    def test_op_temp_dir_wins_over_config(self):
+        host = self._make_host(Config(TEMP_DIR="/var/tmp"))
+        script = self._captured_script_run(host, temp_dir="/dev/shm/pyinfra")
+        assert "${TMPDIR:=/dev/shm/pyinfra}" in script
+
+    def test_cache_invalidates_when_temp_dir_changes(self):
+        host = self._make_host()
+        first = self._captured_script_run(host, temp_dir="/a", stdout="/a/askpass")
+        assert "${TMPDIR:=/a}" in first
+        second = self._captured_script_run(host, temp_dir="/b", stdout="/b/askpass")
+        assert "${TMPDIR:=/b}" in second
+        assert host.connector_data["sudo_askpass_path"] == "/b/askpass"
+
+    def test_make_unix_command_for_host_threads_temp_dir(self):
+        host = self._make_host()
+        host.connector_data["prompted_sudo_password"] = "supersecret"
+
+        captured = {}
+
+        def fake_run(command, *args, **kwargs):
+            captured["command"] = command
+            return (
+                True,
+                CommandOutput([OutputLine("stdout", "/op/tmp/pyinfra-askpass-XYZ")]),
+            )
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+
+        with patch("pyinfra.connectors.util.make_unix_command") as fake_make:
+            fake_make.return_value = "mocked"
+            make_unix_command_for_host(
+                host.state,
+                host,
+                "uptime",
+                _sudo=True,
+                _sudo_password="supersecret",
+                _temp_dir="/op/tmp",
+            )
+
+        assert "${TMPDIR:=/op/tmp}" in captured["command"]

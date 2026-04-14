@@ -277,18 +277,37 @@ def extract_control_arguments(arguments: ConnectorArguments) -> ConnectorArgumen
     return control_arguments
 
 
-def _ensure_sudo_askpass_set_for_host(host: Host):
-    return _ensure_askpass_set_for_host(host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR)
+def _ensure_sudo_askpass_set_for_host(host: Host, temp_dir: str | None = None):
+    return _ensure_askpass_set_for_host(
+        host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR, temp_dir=temp_dir
+    )
 
 
-def _ensure_su_askpass_set_for_host(host: Host):
-    return _ensure_askpass_set_for_host(host, "su_askpass_path", SU_ASKPASS_ENV_VAR)
+def _ensure_su_askpass_set_for_host(host: Host, temp_dir: str | None = None):
+    return _ensure_askpass_set_for_host(
+        host, "su_askpass_path", SU_ASKPASS_ENV_VAR, temp_dir=temp_dir
+    )
 
 
-def _ensure_askpass_set_for_host(host: Host, key: str, env_var: str):
-    if host.connector_data.get(key):
+def _ensure_askpass_set_for_host(
+    host: Host, key: str, env_var: str, temp_dir: str | None = None
+):
+    # Operation-level _temp_dir (if any) overrides the host-level/global
+    # temp directory resolution so `server.shell(..., _temp_dir=X)` places
+    # the askpass script under X rather than /tmp.
+    effective_temp_dir = temp_dir or host.get_temp_dir_config()
+
+    # Invalidate the cache if the resolved temp_dir changed since the path
+    # was created, otherwise we'd hand out a stale path under the wrong dir.
+    # If the tracker is missing (older code path or external population),
+    # trust the existing path to preserve backward compatibility.
+    temp_dir_cache_key = f"{key}_temp_dir"
+    existing_path = host.connector_data.get(key)
+    existing_temp_dir = host.connector_data.get(temp_dir_cache_key)
+    if existing_path and (existing_temp_dir is None or existing_temp_dir == effective_temp_dir):
         return
-    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
+
+    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(effective_temp_dir, env_var))
 
     if not ok:
         raise PyinfraError(f"Failed to create sudo_askpass command: {output.output}")
@@ -299,6 +318,7 @@ def _ensure_askpass_set_for_host(host: Host, key: str, env_var: str):
         )
 
     host.connector_data[key] = output.stdout_lines[0]
+    host.connector_data[temp_dir_cache_key] = effective_temp_dir
 
 
 def make_unix_command_for_host(
@@ -307,6 +327,11 @@ def make_unix_command_for_host(
     command: StringCommand,
     **command_arguments,
 ) -> StringCommand:
+    # Operation-level temp directory override, if any. Passed through to the
+    # askpass helpers so the generated SUDO_ASKPASS / SU_ASKPASS script lands
+    # under the same directory the operation asked for.
+    op_temp_dir = command_arguments.get("_temp_dir")
+
     # Handle sudo password
     if command_arguments.get("_sudo"):
         # If the sudo password is not set in the direct arguments,
@@ -316,13 +341,13 @@ def make_unix_command_for_host(
 
         if command_arguments.get("_sudo_password"):
             # Ensure the askpass path is correctly set and passed through
-            _ensure_sudo_askpass_set_for_host(host)
+            _ensure_sudo_askpass_set_for_host(host, temp_dir=op_temp_dir)
             command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
 
     # Handle su password
     if command_arguments.get("_su_user"):
         if command_arguments.get("_su_password"):
-            _ensure_su_askpass_set_for_host(host)
+            _ensure_su_askpass_set_for_host(host, temp_dir=op_temp_dir)
             command_arguments["_su_askpass_path"] = host.connector_data["su_askpass_path"]
 
     return make_unix_command(command, **command_arguments)
