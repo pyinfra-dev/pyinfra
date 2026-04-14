@@ -91,6 +91,13 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         sleep(delay)
         max_retries = round(reboot_timeout / interval)
 
+        # The remote askpass files (if any) live on a host that has just
+        # rebooted — the SSH session is dead and there is nothing to clean up.
+        # Clear the stored paths before disconnecting so the disconnect path
+        # does not attempt an ``rm -f`` over the broken connection.
+        host.connector_data["sudo_askpass_path"] = None
+        host.connector_data["su_askpass_path"] = None
+
         host.disconnect()  # make sure we are properly disconnected
         retries = 0
 
