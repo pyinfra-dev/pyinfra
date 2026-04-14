@@ -1,0 +1,23 @@
+{
+    "args": ["myrepo", "/home/myrepo"],
+    "kwargs": {
+        "branch": "feature/evil; rm -rf /",
+        "pull": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": {"mode": 0}
+        },
+        "git.GitBranch": {
+            "repo=/home/myrepo": "main"
+        },
+        "git.GitTag": {
+            "repo=/home/myrepo": []
+        }
+    },
+    "commands": [
+        "cd /home/myrepo && git fetch",
+        "cd /home/myrepo && git checkout 'feature/evil; rm -rf /'"
+    ]
+}

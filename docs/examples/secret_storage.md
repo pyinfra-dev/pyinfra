@@ -1,3 +1,6 @@
+---
+orphan: true
+---
 # Using Secrets in pyinfra
 
 Encrypting sensitive information can be achieved using Python packages such as [privy](https://pypi.org/project/privy/).

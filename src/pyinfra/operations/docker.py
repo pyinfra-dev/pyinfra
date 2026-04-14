@@ -43,6 +43,7 @@ def container(
     cpus: float | None = None,
     memory: str | None = None,
     extra_args: list[str] | None = None,
+    dns: list[str] | None = None,
 ):
     """
     Manage Docker containers
@@ -69,6 +70,7 @@ def container(
     + cpus: number of CPUs (e.g. ``1.5``)
     + memory: memory limit (e.g. ``512m``, ``1g``)
     + extra_args: list of additional raw arguments passed to ``docker container create``
+    + dns: list of dns servers to be used by the container
 
     **Examples:**
 
@@ -139,6 +141,7 @@ def container(
         cpus,
         memory,
         extra_args or list(),
+        dns or list(),
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 

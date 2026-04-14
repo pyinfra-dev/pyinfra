@@ -1,0 +1,12 @@
+{
+    "args": ["ruff"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "uv.UvTools": {"ruff":  ["0.13.5"]}
+    },
+    "commands": [
+        "uv tool uninstall --no-progress  ruff"
+    ]
+}

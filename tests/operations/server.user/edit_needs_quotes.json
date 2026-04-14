@@ -1,0 +1,27 @@
+{
+    "args": ["some user; whoami"],
+    "kwargs": {
+        "home": "/home/evil $(id)",
+        "shell": "/bin/bash; rm -rf /",
+        "group": "mygroup; inject",
+        "comment": "Full Name; rm -rf /",
+        "ensure_home": false
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.Users": {
+            "some user; whoami": {
+                "comment": "Old Name",
+                "home": "/home/old",
+                "shell": "/bin/sh",
+                "group": "oldgroup",
+                "groups": [],
+                "password": ""
+            }
+        },
+        "server.Groups": {}
+    },
+    "commands": [
+        "usermod -d '/home/evil $(id)' -s '/bin/bash; rm -rf /' -g 'mygroup; inject' -c 'Full Name; rm -rf /' 'some user; whoami'"
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "args": ["testuser"],
+    "kwargs": {
+        "groups": ["group one", "group; two"],
+        "ensure_home": false
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.Users": {},
+        "server.Groups": {}
+    },
+    "commands": [
+        "useradd -d /home/testuser -G 'group one','group; two' -M testuser"
+    ]
+}

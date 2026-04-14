@@ -1,0 +1,10 @@
+{
+    "command": "uv pip list --format json",
+    "requires_command": "uv",
+    "output": [
+        "[{\"name\": \"pydash\", \"version\": \"3.48\"}]"
+    ],
+    "fact": {
+        "pydash": ["3.48"]
+    }
+}

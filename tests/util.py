@@ -279,17 +279,19 @@ class FakeFile:
 
 class patch_files:
     def __init__(self, local_files):
-        directories, files, files_data = self._parse_local_files(local_files)
+        directories, files, files_data, symlinks = self._parse_local_files(local_files)
 
         self._files = files
         self._files_data = files_data
         self._directories = directories
+        self._symlinks = symlinks  # dict mapping path -> link_target
 
     @staticmethod
     def _parse_local_files(local_files, prefix=FakeState.cwd):
         files = []
         files_data = {}
         directories = {}
+        symlinks = {}
 
         prefix = path.normpath(prefix)
 
@@ -298,29 +300,40 @@ class patch_files:
             files.append(filepath)
             files_data[filepath] = file_data
 
+        # Parse symlinks - these are stored as {"name": "target"}
+        for linkname, link_target in local_files.get("links", {}).items():
+            linkpath = path.join(prefix, linkname)
+            symlinks[linkpath] = link_target
+
         for dirname, dir_files in local_files.get("dirs", {}).items():
             sub_dirname = path.join(prefix, dirname)
-            sub_directories, sub_files, sub_files_data = patch_files._parse_local_files(
-                dir_files,
-                sub_dirname,
+            sub_directories, sub_files, sub_files_data, sub_symlinks = (
+                patch_files._parse_local_files(
+                    dir_files,
+                    sub_dirname,
+                )
             )
 
             files.extend(sub_files)
             files_data.update(sub_files_data)
+            symlinks.update(sub_symlinks)
 
             directories[sub_dirname] = {
-                "files": list(dir_files["files"].keys()),
-                "dirs": list(dir_files["dirs"].keys()),
+                "files": list(dir_files.get("files", {}).keys()),
+                "dirs": list(dir_files.get("dirs", {}).keys()),
+                "links": list(dir_files.get("links", {}).keys()),
             }
             directories.update(sub_directories)
 
-        return directories, files, files_data
+        return directories, files, files_data, symlinks
 
     def __enter__(self):
         self.patches = [
             patch("pyinfra.operations.files.os.path.exists", self.exists),
             patch("pyinfra.operations.files.os.path.isfile", self.isfile),
             patch("pyinfra.operations.files.os.path.isdir", self.isdir),
+            patch("pyinfra.operations.files.os.path.islink", self.islink),
+            patch("pyinfra.operations.files.os.readlink", self.readlink),
             patch("pyinfra.operations.files.os.walk", self.walk),
             patch("pyinfra.operations.files.os.stat", self.stat),
             patch("pyinfra.operations.files.os.makedirs", lambda path: True),
@@ -346,7 +359,7 @@ class patch_files:
         raise IOError("Missing FakeFile: {0}".format(filename))
 
     def exists(self, filename, *args):
-        return self.isfile(filename) or self.isdir(filename)
+        return self.isfile(filename) or self.isdir(filename) or self.islink(filename)
 
     def isfile(self, filename, *args):
         normalized_path = path.normpath(filename)
@@ -355,6 +368,16 @@ class patch_files:
     def isdir(self, dirname, *args):
         normalized_path = path.normpath(dirname)
         return normalized_path in self._directories
+
+    def islink(self, pathname, *args):
+        normalized_path = path.normpath(pathname)
+        return normalized_path in self._symlinks
+
+    def readlink(self, pathname, *args):
+        normalized_path = path.normpath(pathname)
+        if normalized_path in self._symlinks:
+            return self._symlinks[normalized_path]
+        raise OSError("No such file or directory: {0}".format(pathname))
 
     def stat(self, pathname):
         try:
@@ -456,13 +479,25 @@ class patch_files:
 
         normalized_path = path.normpath(dirname)
         dir_definition = self._directories[normalized_path]
-        child_dirs = dir_definition.get("dirs", [])
-        child_files = dir_definition.get("files", [])
+        child_dirs = list(dir_definition.get("dirs", []))
+        child_files = list(dir_definition.get("files", []))
+        child_links = dir_definition.get("links", [])
+
+        # os.walk reports symlinks in filenames (for file symlinks) or dirnames (for dir symlinks)
+        # We add all links to filenames since os.walk includes symlinks to files in filenames
+        # and symlinks to directories in dirnames (but won't traverse them if followlinks=False)
+        for link_name in child_links:
+            # For simplicity, we add all symlinks to filenames since that's what our sync code
+            # handles. The sync code then checks os.path.islink() to identify them.
+            child_files.append(link_name)
 
         yield dirname, child_dirs, child_files
 
         for child in child_dirs:
             full_child = path.join(dirname, child)
+            # Don't traverse symlinked directories when followlinks=False
+            if not followlinks and self.islink(full_child):
+                continue
             for recursive_return in self.walk(full_child, topdown, onerror, followlinks):
                 yield recursive_return
 

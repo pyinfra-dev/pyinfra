@@ -1,0 +1,38 @@
+{
+    "kwargs": {
+        "dest": "/etc/apt/trusted.gpg.d/multi-key.asc",
+        "keyid": "0xABCDEF12",
+        "present": false
+    },
+    "facts": {
+        "gpg.GpgKeyrings": {
+            "directories=['/etc/apt/trusted.gpg.d']": {
+                "/etc/apt/trusted.gpg.d/multi-key.asc": {
+                    "format": "asc",
+                    "keys": {
+                        "ABCDEF1234567890": {
+                            "validity": "-",
+                            "length": 4096,
+                            "subkeys": {},
+                            "fingerprint": "ABCDEF1234567890FEDCBA0987654321ABCDEF12",
+                            "uid_hash": "ABC123DEF456",
+                            "uid": "Key One <one@example.com>"
+                        },
+                        "111111111111AAAA": {
+                            "validity": "-",
+                            "length": 4096,
+                            "subkeys": {},
+                            "fingerprint": "111111111111AAAA222222222222BBBB33333333",
+                            "uid_hash": "DEF456GHI789",
+                            "uid": "Key Two <two@example.com>"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "exception": {
+        "names": ["OperationError"],
+        "message": "Cannot remove individual keys from armored keyring '/etc/apt/trusted.gpg.d/multi-key.asc': the file contains other keys and cannot be edited in-place. Remove the file explicitly with present=False and no keyid."
+    }
+}

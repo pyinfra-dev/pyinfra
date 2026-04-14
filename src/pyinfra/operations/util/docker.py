@@ -176,6 +176,7 @@ class ContainerSpec:
     cpus: float | None = None
     memory: str | None = None
     extra_args: list[str] = field(default_factory=list)
+    dns: list[str] = field(default_factory=list)
 
     def container_create_args(self):
         args = []
@@ -229,6 +230,9 @@ class ContainerSpec:
 
         for extra_arg in self.extra_args:
             args.append(extra_arg)
+
+        for dns in self.dns:
+            args.append("--dns {0}".format(dns))
 
         args.append(self.image)
 

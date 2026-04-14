@@ -1,0 +1,28 @@
+{
+    "args": [],
+    "kwargs": {
+        "keyserver": "hkps://keyserver.ubuntu.com",
+        "keyid": ["0xD88E42B4"],
+        "dest": "/etc/apt/keyrings/vendor.gpg"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null,
+            "path=_tempfile_": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/vendor.gpg": null
+        }
+    },
+    "commands": [
+        "mkdir -p /etc/apt/keyrings",
+        "chmod 755 /etc/apt/keyrings",
+        "mkdir -p _tempfile_",
+        "chmod 700 _tempfile_",
+        "export GNUPGHOME=\"_tempfile_\" && gpg --batch --keyserver \"hkps://keyserver.ubuntu.com\" --recv-keys 0xD88E42B4",
+        "export GNUPGHOME=\"_tempfile_\" && gpg --batch --export 0xD88E42B4 > \"/etc/apt/keyrings/vendor.gpg\"",
+        "mkdir -p /etc/apt/keyrings",
+        "touch /etc/apt/keyrings/vendor.gpg",
+        "chmod 644 /etc/apt/keyrings/vendor.gpg"
+    ]
+}

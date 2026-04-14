@@ -1,0 +1,24 @@
+{
+  "command": "LANG=C ps -o pid,user,vsz,stat,args | awk 'NR==1 || $1==1'",
+  "arg": 1,
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=busybox": "/bin/busybox"
+    }
+  },
+  "output": [
+    "  PID USER       VSZ STAT ARGS",
+    "    1 root      2108 S    /sbin/init"
+  ],
+  "fact": {
+    "1": {
+      "user": "root",
+      "state": "S",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.0,
+      "command": "init",
+      "args": "/sbin/init"
+    }
+  }
+}

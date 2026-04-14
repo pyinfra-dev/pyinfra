@@ -1,0 +1,28 @@
+{
+    "command": "find \"/custom/keyring/path\" -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --list-keys --with-colons --keyring \"$1\" --no-default-keyring 2>/dev/null || true' _ {} \\; ; find \"/custom/keyring/path\" -type f -name '*.asc' 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --with-colons \"$1\" 2>/dev/null || true' _ {} \\;",
+    "requires_command": "gpg",
+    "arg": [
+        "/custom/keyring/path"
+    ],
+    "output": [
+        "KEYRING:/custom/keyring/path/custom.asc",
+        "pub:-:4096:1:9A3B3C4D5E6F7890:1622505600:::-:::scSC::::::23::0:",
+        "fpr:::::::::1234567890ABCDEF1234567890ABCDEF12345678:",
+        "uid:-::::1622505600::::Custom Key <custom@example.com>::::::::::0:"
+    ],
+    "fact": {
+        "/custom/keyring/path/custom.asc": {
+            "format": "asc",
+            "keys": {
+                "9A3B3C4D5E6F7890": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {},
+                    "fingerprint": "1234567890ABCDEF1234567890ABCDEF12345678",
+                    "uid_hash": "",
+                    "uid": "Custom Key <custom@example.com>"
+                }
+            }
+        }
+    }
+}

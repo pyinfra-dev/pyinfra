@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import posixpath
+import re
 import sys
 import traceback
 from datetime import datetime, timedelta, timezone
@@ -14,10 +15,10 @@ from io import StringIO
 from pathlib import Path
 from typing import IO, Any, Union
 
-import click
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
+from pyinfra.api.output import format_text
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -50,6 +51,7 @@ from pyinfra.facts.files import (
     FileContents,
     FindFiles,
     FindInFile,
+    FindLinks,
     Flags,
     Link,
     Md5File,
@@ -245,7 +247,7 @@ def download(
             yield make_formatted_string_command(
                 (
                     "(( sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0} ) "
-                    "| grep {1}) || ( echo {2} && exit 1 )"
+                    "| grep {1} ) || ( echo {2} && exit 1 )"
                 ),
                 QuoteString(dest),
                 sha256sum,
@@ -256,7 +258,7 @@ def download(
             yield make_formatted_string_command(
                 (
                     "(( sha384sum {0} 2> /dev/null || shasum -a 384 {0} ) "
-                    "| grep {1}) || ( echo {2} && exit 1 )"
+                    "| grep {1} ) || ( echo {2} && exit 1 )"
                 ),
                 QuoteString(dest),
                 sha384sum,
@@ -265,7 +267,7 @@ def download(
 
         if md5sum:
             yield make_formatted_string_command(
-                ("(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) || ( echo {2} && exit 1 )"),
+                ("(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1} ) || ( echo {2} && exit 1 )"),
                 QuoteString(dest),
                 md5sum,
                 QuoteString("MD5 did not match!"),
@@ -456,6 +458,11 @@ def line(
 
     # Line(s) exists and we want to remove them
     elif present_lines and not present:
+        if state.config.DIFF:
+            host.log(f"Will Remove lines in {format_text(path, bold=True)}", logger.info)
+            for line in generate_color_diff(present_lines, []):
+                logger.info("  %s", line)
+            logger.info("")
         yield sed_delete(
             path,
             match_line,
@@ -469,6 +476,11 @@ def line(
     elif present_lines and present:
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
+            if state.config.DIFF:
+                host.log(f"Will replace lines in {format_text(path, bold=True)}", logger.info)
+                new_lines = [re.sub(match_line, replace, line) for line in present_lines]
+                for line in generate_color_diff(present_lines, new_lines):
+                    logger.info("  %s", line)
             yield sed_replace_command
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
@@ -563,15 +575,16 @@ def sync(
 ):
     """
     Syncs a local directory with a remote one, with delete support. Note that delete will
-    remove extra files on the remote side, but not extra directories.
+    remove extra files and symlinks on the remote side, but not extra directories.
 
     + src: local directory to sync
     + dest: remote directory to sync to
     + user: user to own the files and directories
     + group: group to own the files and directories
-    + mode: permissions of the files
+    + mode: permissions of the files (also used as fallback for directories if ``dir_mode``
+      is not specified)
     + dir_mode: permissions of the directories
-    + delete: delete remote files not present locally
+    + delete: delete remote files and symlinks not present locally
     + exclude: string or list/tuple of strings to match & exclude files (eg ``*.pyc``)
     + exclude_dir: string or list/tuple of strings to match & exclude directories (eg node_modules)
     + add_deploy_dir: interpret src as relative to deploy directory instead of current directory
@@ -594,6 +607,11 @@ def sync(
       Since fnmatch does not treat path separators (``/`` or ``\\``) as special characters,
       excluding all directories matching a given name, however deep under ``src`` they are,
       can be done for example with ``exclude_dir=["__pycache__", "*/__pycache__"]``
+
+    Symlinks:
+        Local symlinks (both to files and directories) are synced to the remote as symlinks,
+        preserving the link target as-is (relative or absolute). Symlinked directories are not
+        traversed. When ``delete=True``, remote symlinks not present locally are also removed.
 
     """
     original_src = src  # Keep a copy to reference in errors
@@ -618,15 +636,31 @@ def sync(
             exclude_dir = [exclude_dir]
 
     put_files = []
+    put_links = []  # List of (remote_path, link_target) tuples
     ensure_dirnames = []
-    for dirpath, dirnames, filenames in os.walk(src, topdown=True):
+    for dirpath, dirnames, filenames in os.walk(src, topdown=True, followlinks=False):
         remote_dirpath = Path(os.path.normpath(os.path.relpath(dirpath, src))).as_posix()
 
-        # Filter excluded dirs
+        # Filter excluded dirs and detect directory symlinks
         for child_dir in dirnames[:]:
             child_path = os.path.normpath(os.path.join(remote_dirpath, child_dir))
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
+                continue
+
+            # Check if this directory is actually a symlink
+            local_dir_path = os.path.join(dirpath, child_dir)
+            if os.path.islink(local_dir_path):
+                remote_link_path = unix_path_join(
+                    *[
+                        item
+                        for item in (dest, remote_dirpath, child_dir)
+                        if item and item != os.path.curdir
+                    ]
+                )
+                link_target = os.readlink(local_dir_path)
+                put_links.append((remote_link_path, link_target))
+                dirnames.remove(child_dir)  # Don't traverse into symlinked directories
 
         if remote_dirpath and remote_dirpath != os.path.curdir:
             ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
@@ -645,7 +679,13 @@ def sync(
                     if item and item != os.path.curdir
                 ]
             )
-            put_files.append((full_filename, remote_full_filename))
+
+            # Check if this is a symlink
+            if os.path.islink(full_filename):
+                link_target = os.readlink(full_filename)
+                put_links.append((remote_full_filename, link_target))
+            else:
+                put_files.append((full_filename, remote_full_filename))
 
     # Ensure the destination directory - if the destination is a link, ensure
     # the link target is a directory.
@@ -658,7 +698,7 @@ def sync(
         path=dest_to_ensure,
         user=user,
         group=group,
-        mode=dir_mode or get_path_permissions_mode(src),
+        mode=dir_mode or mode or get_path_permissions_mode(src),
     )
 
     # Ensure any remote dirnames
@@ -667,7 +707,19 @@ def sync(
             path=unix_path_join(dest, dir_path_curr),
             user=user,
             group=group,
-            mode=dir_mode or dir_mode_curr,
+            mode=dir_mode or mode or dir_mode_curr,
+        )
+
+    # Create symlinks on remote (do this after directories but before files
+    # so that symlinks to directories are created before we try to put files in them)
+    for remote_link, link_target in put_links:
+        yield from link._inner(
+            path=remote_link,
+            target=link_target,
+            user=user,
+            group=group,
+            create_remote_dir=False,  # handled above
+            # Note: symlink permissions are typically ignored on most Unix systems
         )
 
     # Put each file combination
@@ -682,10 +734,14 @@ def sync(
             create_remote_dir=False,  # handled above
         )
 
-    # Delete any extra files
+    # Delete any extra files and symlinks
     if delete:
         remote_filenames = set(host.get_fact(FindFiles, path=dest) or [])
+        remote_links = set(host.get_fact(FindLinks, path=dest) or [])
         wanted_filenames = set([remote_filename for _, remote_filename in put_files])
+        wanted_links = set([remote_link for remote_link, _ in put_links])
+
+        # Delete extra files
         files_to_delete = remote_filenames - wanted_filenames
         for filename in files_to_delete:
             # Should we exclude this file?
@@ -693,6 +749,15 @@ def sync(
                 continue
 
             yield from file._inner(path=filename, present=False)
+
+        # Delete extra symlinks
+        links_to_delete = remote_links - wanted_links
+        for linkname in links_to_delete:
+            # Should we exclude this link?
+            if exclude and any(fnmatch(linkname, match) for match in exclude):
+                continue
+
+            yield from link._inner(path=linkname, present=False)
 
 
 @memoize
@@ -1033,13 +1098,16 @@ def put(
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
         if state.config.DIFF:
-            host.log(f"Will create {click.style(dest, bold=True)}", logger.info)
+            host.log(f"Will create {format_text(dest, bold=True)}", logger.info)
 
-            with get_file_io(src, "r") as f:
-                desired_lines = f.readlines()
+            try:
+                with get_file_io(src, "r") as f:
+                    desired_lines = f.readlines()
 
-            for line in generate_color_diff([], desired_lines):
-                logger.info(f"  {line}")
+                for line in generate_color_diff([], desired_lines):
+                    logger.info("  %s", line)
+            except UnicodeDecodeError:
+                logger.info("Binary file uploaded")
             logger.info("")
 
         yield FileUploadCommand(
@@ -1080,13 +1148,13 @@ def put(
                 else:
                     current_lines = []
 
-                host.log(f"Will modify {click.style(dest, bold=True)}", logger.info)
+                host.log(f"Will modify {format_text(dest, bold=True)}", logger.info)
 
                 with get_file_io(src, "r") as f:
                     desired_lines = f.readlines()
 
                 for line in generate_color_diff(current_lines, desired_lines):
-                    logger.info(f"  {line}")
+                    logger.info("  %s", line)
                 logger.info("")
 
             yield FileUploadCommand(
@@ -1120,11 +1188,27 @@ def put(
 
             # Check mode
             if mode and remote_file["mode"] != mode:
+                if state.config.DIFF:
+                    logger.info("mode %s", format_text(str(remote_file["mode"]), "red"))
+                    logger.info("mode %s", format_text(str(mode), "green"))
                 yield file_utils.chmod(dest, mode)
                 changed = True
 
             # Check user/group
             if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
+                if state.config.DIFF:
+                    old_status = [remote_file["user"], remote_file["group"]]
+                    new_status = [user, group]
+                    if user and remote_file["user"] != user:
+                        old_status[0] = format_text(remote_file["user"], "red")
+                        new_status[0] = format_text(user, "green")
+                    if group and remote_file["group"] != group:
+                        old_status[1] = format_text(remote_file["group"], "red")
+                        new_status[1] = format_text(group, "green")
+
+                    logger.info("chown %s:%s", *old_status)
+                    logger.info("chown %s:%s", *new_status)
+
                 yield file_utils.chown(dest, user, group)
                 changed = True
 
@@ -1135,6 +1219,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("mtime %s", format_text(str(remote_file["mtime"]), "red"))
+                        logger.info("mtime %s", format_text(str(canonical_mtime), "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.MTIME, canonical_mtime)
                     changed = True
 
@@ -1145,6 +1233,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("atime %s", format_text(str(remote_file["atime"]), "red"))
+                        logger.info("atime %s", format_text(str(canonical_atime), "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.ATIME, canonical_atime)
                     changed = True
 
@@ -1184,8 +1276,9 @@ def template(
         a dict with arguments that will be passed as keyword args to the jinja2
         `Environment() <https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Environment>`_.
 
-    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template
-    if not set explicitly.
+    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template.
+    To pass additional data or variables, explicitly add them as keyword arguments to the operation
+    call itself.
 
     Notes:
         Common convention is to store templates in a "templates" directory and
@@ -1216,8 +1309,16 @@ def template(
             group="root",
         )
 
-        # Example showing how to pass python variable to template file. You can also
-        # use dicts and lists. The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        # You can use a (local) file path or an IO-like object as src:
+        files.template(
+            name="Create a templated file",
+            src=StringIO("This is a template file content"),
+            dest="/etc/somefile.conf",
+        )
+
+        # To pass variables to the template file, just add them to the operation call.
+        # You can also use dicts and lists. The .j2 file can use `{{ foo_variable }}`
+        # to interpolate them:
         foo_variable = 'This is some foo variable contents'
         foo_dict = {
             "str1": "This is string 1",
@@ -1248,7 +1349,8 @@ def template(
             foo_list=foo_list
         )
 
-        # Example showing how to use host and inventory in a template file.
+        # Host, state and inventory are automatically passed to the template,
+        # no need to explicitly pass them in the operation call:
         template = StringIO("""
         name: "{{ host.name }}"
         list_contents:

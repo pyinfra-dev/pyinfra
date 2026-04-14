@@ -1,0 +1,50 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/somedir/", "/home/somedir"],
+    "kwargs": {
+        "mode": "644"
+    },
+    "local_files": {
+        "files": {},
+        "dirs": {
+            "somedir": {
+                "files": {
+                    "testfile.txt": {"mode": "777"}
+                },
+                "dirs": {
+                    "subdir": {
+                        "files": {
+                            "subfile.txt": {"mode": "777"}
+                        },
+                        "dirs": {}
+                    }
+                }
+            }
+        }
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somedir/testfile.txt": null,
+            "path=/home/somedir/subdir/subfile.txt": null
+        },
+        "files.Directory": {
+            "path=/home/somedir/testfile.txt": null,
+            "path=/home/somedir/subdir/subfile.txt": null,
+            "path=/home/somedir": null,
+            "path=/home/somedir/subdir": null
+        },
+        "files.Link": {
+            "path=/home/somedir": false
+        }
+    },
+    "commands": [
+        "mkdir -p /home/somedir",
+        "chmod 644 /home/somedir",
+        "mkdir -p /home/somedir/subdir",
+        "chmod 644 /home/somedir/subdir",
+        ["upload", "/somedir/testfile.txt", "/home/somedir/testfile.txt"],
+        "chmod 644 /home/somedir/testfile.txt",
+        ["upload", "/somedir/subdir/subfile.txt", "/home/somedir/subdir/subfile.txt"],
+        "chmod 644 /home/somedir/subdir/subfile.txt"
+    ]
+}

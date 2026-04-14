@@ -1,0 +1,52 @@
+{
+    "require_platform": ["Darwin", "Linux"],
+    "args": ["/somedir/", "/home/somedir"],
+    "kwargs": {
+        "delete": true
+    },
+    "local_files": {
+        "files": {},
+        "dirs": {
+            "somedir": {
+                "files": {
+                    "keepfile.txt": null
+                },
+                "dirs": {},
+                "links": {
+                    "keeplink": "../target"
+                }
+            }
+        }
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/somedir/keepfile.txt": null
+        },
+        "files.Directory": {
+            "path=/home/somedir/keepfile.txt": null,
+            "path=/home/somedir": null
+        },
+        "files.FindFiles": {
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, quote_path=True, regex=None, size=None": []
+        },
+        "files.FindLinks": {
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, quote_path=True, regex=None, size=None": [
+                "/home/somedir/deletelink",
+                "/home/somedir/keeplink"
+            ]
+        },
+        "files.Link": {
+            "path=/home/somedir": false,
+            "path=/home/somedir/keeplink": null,
+            "path=/home/somedir/deletelink": {"link_target": "/old/target", "user": "root", "group": "root", "mode": 777}
+        }
+    },
+    "commands": [
+        "mkdir -p /home/somedir",
+        "chmod 755 /home/somedir",
+        "ln -s ../target /home/somedir/keeplink",
+        ["upload", "/somedir/keepfile.txt", "/home/somedir/keepfile.txt"],
+        "chmod 644 /home/somedir/keepfile.txt",
+        "rm -f /home/somedir/deletelink"
+    ]
+}

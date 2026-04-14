@@ -19,6 +19,13 @@ Host 127.0.0.1
 Include other_file
 """
 
+SSH_CONFIG_INLINE_COMMENTS = """
+Host 127.0.0.1
+    IdentityFile /id_rsa   # my main key
+    User testuser # the test user
+    Port 33 # custom port
+"""
+
 SSH_CONFIG_OTHER_FILE = """
 Host 192.168.1.1
     User "otheruser"
@@ -160,6 +167,23 @@ class TestSSHUserConfig(TestCase):
         assert forward_agent is True
         assert isinstance(missing_host_key_policy, AskPolicy)
         assert host_keys_file == ("~/.ssh/test3",)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_INLINE_COMMENTS),
+        create=True,
+    )
+    def test_load_ssh_config_inline_comments(self):
+        """Test that inline comments are stripped from SSH config values (issue #1568)."""
+        client = SSHClient()
+
+        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
+            client.parse_config("127.0.0.1")
+        )
+
+        assert config.get("key_filename") == ["/id_rsa"]
+        assert config.get("username") == "testuser"
+        assert config.get("port") == 33
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",

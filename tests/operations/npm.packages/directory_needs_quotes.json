@@ -1,0 +1,14 @@
+{
+    "args": [["react"]],
+    "kwargs": {
+        "directory": "/app dir; rm -rf /"
+    },
+    "facts": {
+        "npm.NpmPackages": {
+            "directory=/app dir; rm -rf /": {}
+        }
+    },
+    "commands": [
+        "cd '/app dir; rm -rf /' && npm install react"
+    ]
+}

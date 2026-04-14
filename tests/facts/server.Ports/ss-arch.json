@@ -1,0 +1,19 @@
+{
+  "command": "ss -lpuntn || true",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": "/usr/sbin/ss"
+    }
+  },
+  "output": [
+    "LISTEN 0       4096                             0.0.0.0:5355           0.0.0.0:*      users:((\"systemd-resolve\",pid=289,fd=14))",
+    "LISTEN 0       128                                0.0.0.0:22             0.0.0.0:*      users:((\"sshd\",pid=365,fd=6))",
+    "UNCONN 0       0                               127.0.0.54:53             0.0.0.0:*      users:((\"systemd-resolve\",pid=289,fd=24))"
+  ],
+  "fact": [
+    {"port": 5355, "ip": "0.0.0.0", "protocol": "tcp", "process": "systemd-resolve"},
+    {"port": 22, "ip": "0.0.0.0", "protocol": "tcp", "process": "sshd"},
+    {"port": 53, "ip": "127.0.0.54", "protocol": "udp", "process": "systemd-resolve"}
+  ]
+}

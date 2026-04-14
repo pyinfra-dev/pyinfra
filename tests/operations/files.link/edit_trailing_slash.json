@@ -1,0 +1,19 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "target": "target"
+    },
+    "facts": {
+        "files.Link": {
+            "path=testlink": {
+                "link_target": "target/",
+                "user": "root",
+                "group": "root"
+            }
+        }
+    },
+    "commands": [
+        "rm -f testlink",
+        "ln -s target testlink"
+    ]
+}

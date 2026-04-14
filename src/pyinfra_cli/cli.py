@@ -130,6 +130,13 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     help="Whether to use a password with sudo.",
 )
 @click.option("--su-user", help="Which user to su to.")
+@click.option(
+    "--dzdo",
+    is_flag=True,
+    default=False,
+    help="Whether to execute operations with dzdo.",
+)
+@click.option("--dzdo-user", help="Which user to dzdo when using dzdo.")
 @click.option("--shell-executable", help='Shell to use (ex: "sh", "cmd", "ps").')
 # Operation flow args
 @click.option("--parallel", type=int, help="Number of operations to run in parallel.")
@@ -169,6 +176,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     help="SSH Private key password.",
 )
 @click.option("--ssh-password", "--password", "ssh_password", help="SSH password.")
+@click.option(
+    "--ssh-password-prompt",
+    is_flag=True,
+    default=False,
+    help="Prompt for SSH password instead of passing it on the command line.",
+)
 # Eager commands (pyinfra --support)
 @click.option(
     "--support",
@@ -281,12 +294,15 @@ def _main(
     ssh_key,
     ssh_key_password: str,
     ssh_password: str,
+    ssh_password_prompt: bool,
     same_sudo_password: bool,
     shell_executable,
     sudo: bool,
     sudo_user: str,
     use_sudo_password: bool,
     su_user: str,
+    dzdo: bool,
+    dzdo_user: str,
     parallel: int,
     fail_percent: int,
     data,
@@ -336,6 +352,8 @@ def _main(
         use_sudo_password,
         same_sudo_password,
         su_user,
+        dzdo,
+        dzdo_user,
         parallel,
         shell_executable,
         fail_percent,
@@ -344,6 +362,9 @@ def _main(
         retry,
         retry_delay,
     )
+    if ssh_password_prompt:
+        ssh_password = getpass("SSH password: ")
+
     override_data = _set_override_data(
         data,
         ssh_user,
@@ -579,6 +600,8 @@ def _set_config(
     use_sudo_password,
     same_sudo_password,
     su_user,
+    dzdo,
+    dzdo_user,
     parallel,
     shell_executable,
     fail_percent,
@@ -609,6 +632,11 @@ def _set_config(
 
     if su_user:
         config.SU_USER = su_user
+
+    if dzdo:
+        config.DZDO = True
+        if dzdo_user:
+            config.DZDO_USER = dzdo_user
 
     if parallel:
         config.PARALLEL = parallel

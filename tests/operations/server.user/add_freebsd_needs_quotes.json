@@ -1,0 +1,17 @@
+{
+    "args": ["evil; whoami"],
+    "kwargs": {
+        "home": "/home/evil $(id)",
+        "shell": "/bin/bash",
+        "password": "$evil;password$",
+        "ensure_home": false
+    },
+    "facts": {
+        "server.Os": "FreeBSD",
+        "server.Users": {},
+        "server.Groups": {}
+    },
+    "commands": [
+        "echo '$evil;password$' | pw useradd -n 'evil; whoami' -H 0 -d '/home/evil $(id)' -s /bin/bash"
+    ]
+}

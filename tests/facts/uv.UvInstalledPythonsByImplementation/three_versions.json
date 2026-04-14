@@ -1,0 +1,19 @@
+{
+    "arg": true,
+    "command": "uv python list --managed-python --only-installed --output-format=json",
+    "requires_command": "uv",
+    "output": [
+        "[{\"key\": \"cpython-3.14.0-macos-aarch64-none\",\"version\": \"3.14.0\"},{\"key\": \"cpython-3.15.0-macos-aarch64-none\",\"version\": \"3.15.0\"}, {\"key\": \"cpython-3.16.0-macos-aarch64-none\",\"version\": \"3.16.0\"}]"
+    ],
+    "fact": {
+        "cpython-3.14.0-macos-aarch64-none": [
+            "3.14.0"
+        ],
+        "cpython-3.15.0-macos-aarch64-none": [
+            "3.15.0"
+        ],
+        "cpython-3.16.0-macos-aarch64-none": [
+            "3.16.0"
+        ]
+    }
+}

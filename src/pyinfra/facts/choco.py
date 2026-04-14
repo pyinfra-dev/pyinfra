@@ -21,10 +21,12 @@ class ChocoPackages(FactBase):
     """
 
     @override
+    def requires_command(self) -> str:
+        return "choco"
+
+    @override
     def command(self) -> str:
         return "choco list"
-
-    shell_executable = "ps"
 
     default = dict
 
@@ -37,6 +39,10 @@ class ChocoVersion(FactBase):
     """
     Returns the choco (Chocolatey) version.
     """
+
+    @override
+    def requires_command(self) -> str:
+        return "choco"
 
     @override
     def command(self) -> str:

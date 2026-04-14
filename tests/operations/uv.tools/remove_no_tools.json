@@ -1,0 +1,12 @@
+{
+    "args": [null],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "uv.UvTools": {}
+    },
+    "commands": [
+    ],
+    "noop_description": "no tools requested to be (un)installed"
+}

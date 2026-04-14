@@ -1,0 +1,17 @@
+{
+    "args": ["some user; whoami"],
+    "kwargs": {
+        "home": "/home/evil $(id)",
+        "shell": "/bin/bash",
+        "comment": "Full Name; rm -rf /",
+        "ensure_home": false
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.Users": {},
+        "server.Groups": {}
+    },
+    "commands": [
+        "useradd -d '/home/evil $(id)' -s /bin/bash -c 'Full Name; rm -rf /' -M 'some user; whoami'"
+    ]
+}

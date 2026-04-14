@@ -5,8 +5,11 @@ Gather the information provided by ``opkg`` on OpenWrt systems:
     + list of installed packages
     + list of packages with available upgrades
 
+See https://openwrt.org/docs/guide-user/additional-software/opkg
 
-    see https://openwrt.org/docs/guide-user/additional-software/opkg
+**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
+
+.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
 """
 
 import re
@@ -65,6 +68,10 @@ class OpkgConf(FactBase):
         )
 
     """
+
+    @override
+    def requires_command(self) -> str:
+        return "opkg"
 
     regex = re.compile(
         r"""
@@ -133,6 +140,10 @@ class OpkgFeeds(FactBase):
     default = dict
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
         return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
 
@@ -172,8 +183,12 @@ class OpkgInstallableArchitectures(FactBase):
     default = dict
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
-        return "/bin/opkg print-architecture"
+        return "opkg print-architecture"
 
     @override
     def process(self, output):
@@ -205,8 +220,12 @@ class OpkgPackages(FactBase):
     default = dict
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
-        return "/bin/opkg list-installed"
+        return "opkg list-installed"
 
     @override
     def process(self, output):
@@ -230,8 +249,12 @@ class OpkgUpgradeablePackages(FactBase):
     use_default_on_error = True
 
     @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
     def command(self) -> str:
-        return "/bin/opkg list-upgradable"  # yes, really spelled that way
+        return "opkg list-upgradable"  # yes, really spelled that way
 
     @override
     def process(self, output):

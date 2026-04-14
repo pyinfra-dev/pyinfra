@@ -1,6 +1,11 @@
 {
-    "require_platform": ["Windows"],
-    "args": ["\\somedir\\", "/home/somedir"],
+    "require_platform": [
+        "Windows"
+    ],
+    "args": [
+        "\\somedir\\",
+        "/home/somedir"
+    ],
     "kwargs": {
         "delete": true,
         "exclude": "*.pyc",
@@ -65,6 +70,9 @@
             "path=/home/somedir/underthat": [],
             "path=/home/somedir/underthat/evendeeper": []
         },
+        "files.FindLinks": {
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, quote_path=True, regex=None, size=None": []
+        },
         "files.Link": {
             "path=/home/somedir": false
         }
@@ -76,9 +84,17 @@
         "chmod 755 /home/somedir/underthat",
         "mkdir -p /home/somedir/underthat/evendeeper",
         "chmod 755 /home/somedir/underthat/evendeeper",
-        ["upload", "\\somedir\\somefile.txt", "/home/somedir/somefile.txt"],
+        [
+            "upload",
+            "\\somedir\\somefile.txt",
+            "/home/somedir/somefile.txt"
+        ],
         "chmod 644 /home/somedir/somefile.txt",
-        ["upload", "\\somedir\\anotherfile.txt", "/home/somedir/anotherfile.txt"],
+        [
+            "upload",
+            "\\somedir\\anotherfile.txt",
+            "/home/somedir/anotherfile.txt"
+        ],
         "chmod 644 /home/somedir/anotherfile.txt",
         [
             "upload",

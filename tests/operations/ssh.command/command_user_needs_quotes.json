@@ -1,0 +1,10 @@
+{
+    "args": ["host.example.com", "ls"],
+    "kwargs": {
+        "user": "admin; whoami"
+    },
+    "commands": [
+        "ssh -p 22 'admin; whoami@host.example.com' ls"
+    ],
+    "idempotent": false
+}

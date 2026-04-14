@@ -87,7 +87,7 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
         elif isinstance(services, Iterable):
             service_strs = [QuoteString(s) for s in services]
 
-        return StringCommand(
+        cmd = StringCommand(
             fact_cmd,
             "show",
             "--all",
@@ -97,6 +97,14 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
             self.state_key,
             *service_strs,
         )
+
+        if user_mode:
+            # In the planning stage, user managers might not be available yet. We
+            # swallow the error `Failed to connect to user scope bus ...`, so that the
+            # preparation stage does not fail.
+            return StringCommand("(", cmd, "2>/dev/null", "||", "true", ")")
+
+        return cmd
 
     @override
     def process(self, output) -> Dict[str, bool]:

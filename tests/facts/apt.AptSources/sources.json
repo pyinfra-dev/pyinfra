@@ -1,11 +1,13 @@
 {
     "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list",
         "deb http://archive.ubuntu.com/ubuntu trusty restricted",
+        "##PYINFRA_FILE /etc/apt/sources.list.d/mongodb.list",
         "deb-src [arch=amd64,i386] http://archive.ubuntu.com/ubuntu trusty main",
         "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse",
         "nope"
     ],
-    "command": "(! test -f /etc/apt/sources.list || cat /etc/apt/sources.list) && (cat /etc/apt/sources.list.d/*.list || true)",
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
     "requires_command": "apt",
     "fact": [
         {
