@@ -1,0 +1,12 @@
+{
+    "args": ["my service; whoami"],
+    "facts": {
+        "server.Os": "FreeBSD",
+        "bsdinit.RcdStatus": {
+            "my service; whoami": false
+        }
+    },
+    "commands": [
+        "test -e /etc/rc.d/'my service; whoami' && /etc/rc.d/'my service; whoami' start || /usr/local/etc/rc.d/'my service; whoami' start"
+    ]
+}

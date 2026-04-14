@@ -1,0 +1,11 @@
+{
+    "arg": "my;package",
+    "command": "repoquery --queryformat '%{NAME} %{VERSION}-%{RELEASE}\\n' --whatprovides 'my;package' || true",
+    "requires_command": "repoquery",
+    "output": [
+        "my-package 1.0.0-1.el8"
+    ],
+    "fact": [
+        ["my-package", "1.0.0-1.el8"]
+    ]
+}

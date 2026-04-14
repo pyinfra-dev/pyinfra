@@ -1,0 +1,19 @@
+{
+    "command": "uv tool list 2>/dev/null",
+    "requires_command": "uv",
+    "output": [
+        "colorpedia v1.2.2",
+        "- color",
+        "- colorpedia",
+        "pyinfra v3.5.1",
+        "- pyinfra"
+    ],
+    "fact": {
+        "colorpedia": [
+        "1.2.2"
+        ],
+        "pyinfra": [
+            "3.5.1"
+        ]
+    }
+}

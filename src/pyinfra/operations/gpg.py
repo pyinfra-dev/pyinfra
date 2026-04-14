@@ -241,21 +241,23 @@ def key(
     """
     Install or remove GPG keys from various sources.
 
-    Args:
-        src: filename or URL to a key (ASCII .asc or binary .gpg)
-        dest: destination path for the key file (required for installation, optional for removal)
-        keyserver: keyserver URL for fetching keys by ID
-        keyid: key ID or list of key IDs (required with keyserver, optional for removal)
-        dearmor: whether to convert ASCII armored keys to binary format
-        mode: file permissions for the installed key
-        present: whether the key should be present (True) or absent (False)
-        working_dirs: dirs to search for existing keyrings (required for removal without dest)
-                When False: if dest is provided, removes from specific keyring;
-                           if dest is None, removes from keyrings found in working_dirs;
-                           if keyid is provided, removes specific key(s);
-                           if keyid is None, removes entire keyring file(s)
+    + src: filename or URL to a key (ASCII .asc or binary .gpg)
+    + dest: destination path for the key file (required for installation, optional for removal)
+    + keyserver: keyserver URL for fetching keys by ID
+    + keyid: key ID or list of key IDs (required with keyserver, optional for removal)
+    + dearmor: whether to convert ASCII armored keys to binary format
+    + mode: file permissions for the installed key
+    + present: whether the key should be present (True) or absent (False)
+    + working_dirs: dirs to search for existing keyrings (required for removal without dest).
+      When False: if dest is provided, removes from specific keyring;
+      if dest is None, removes from keyrings found in working_dirs;
+      if keyid is provided, removes specific key(s);
+      if keyid is None, removes entire keyring file(s)
 
-    Examples:
+    **Examples:**
+
+    .. code:: python
+
         gpg.key(
             name="Install Docker GPG key",
             src="https://download.docker.com/linux/debian/gpg",
@@ -402,12 +404,14 @@ def dearmor(src: str, dest: str, mode: str = "0644"):
     """
     Convert ASCII armored GPG key to binary format.
 
-    Args:
-        src: source ASCII armored key file
-        dest: destination binary key file
-        mode: file permissions for the output file
+    + src: source ASCII armored key file
+    + dest: destination binary key file
+    + mode: file permissions for the output file
 
-    Example:
+    **Example:**
+
+    .. code:: python
+
         gpg.dearmor(
             name="Convert key to binary",
             src="/tmp/key.asc",

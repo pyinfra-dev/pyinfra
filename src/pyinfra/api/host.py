@@ -16,10 +16,10 @@ from typing import (
 )
 from uuid import uuid4
 
-import click
 from typing_extensions import Unpack, override
 
 from pyinfra import logger
+from pyinfra.api.output import format_text
 from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
 
@@ -205,22 +205,22 @@ class Host:
     def print_prefix(self) -> str:
         if self.nested_executing_op_hash:
             return "{0}[{1}] {2}{3} ".format(
-                click.style(""),  # reset
-                click.style(self.name, bold=True),
-                click.style("nested", "blue"),
+                format_text(""),  # reset
+                format_text(self.name, bold=True),
+                format_text("nested", "blue"),
                 self.print_prefix_padding,
             )
 
         return "{0}[{1}]{2} ".format(
-            click.style(""),  # reset
-            click.style(self.name, bold=True),
+            format_text(""),  # reset
+            format_text(self.name, bold=True),
             self.print_prefix_padding,
         )
 
     def style_print_prefix(self, *args, **kwargs) -> str:
         return "{0}[{1}]{2} ".format(
-            click.style(""),  # reset
-            click.style(self.name, *args, **kwargs),
+            format_text(""),  # reset
+            format_text(self.name, *args, **kwargs),
             self.print_prefix_padding,
         )
 
@@ -230,7 +230,7 @@ class Host:
     def log_styled(
         self, message: str, log_func: Callable[[str], Any] = logger.info, **kwargs
     ) -> None:
-        message_styled = click.style(message, **kwargs)
+        message_styled = format_text(message, **kwargs)
         self.log(message_styled, log_func=log_func)
 
     def get_deploy_data(self):
@@ -391,7 +391,7 @@ class Host:
                 if show_errors:
                     log_message = "{0}{1}".format(
                         self.print_prefix,
-                        click.style(e.args[0], "red"),
+                        format_text(e.args[0], "red"),
                     )
                     logger.error(log_message)
 
@@ -402,7 +402,7 @@ class Host:
             else:
                 log_message = "{0}{1}".format(
                     self.print_prefix,
-                    click.style("Connected", "green"),
+                    format_text("Connected", "green"),
                 )
                 if reason:
                     log_message = "{0}{1}".format(

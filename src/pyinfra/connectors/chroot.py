@@ -2,10 +2,10 @@ import os
 from tempfile import mkstemp
 from typing import TYPE_CHECKING, Optional
 
-import click
 from typing_extensions import Unpack, override
 
 from pyinfra import local, logger
+from pyinfra.api.output import echo
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
@@ -146,7 +146,7 @@ class ChrootConnector(BaseConnector):
             raise IOError(output.stderr)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file uploaded to chroot: {1}".format(
                     self.host.print_prefix,
                     remote_filename,
@@ -201,7 +201,7 @@ class ChrootConnector(BaseConnector):
             raise IOError(output.stderr)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file downloaded from chroot: {1}".format(
                     self.host.print_prefix,
                     remote_filename,

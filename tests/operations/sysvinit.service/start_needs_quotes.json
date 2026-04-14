@@ -1,0 +1,11 @@
+{
+    "args": ["my service; whoami"],
+    "facts": {
+        "sysvinit.InitdStatus": {
+            "my service; whoami": false
+        }
+    },
+    "commands": [
+        "/etc/init.d/'my service; whoami' start"
+    ]
+}

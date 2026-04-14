@@ -1,0 +1,48 @@
+{
+    "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list.d/test.sources",
+        "Types: deb deb-src",
+        "URIs: http://deb.debian.org/debian",
+        "Suites: bookworm",
+        "Components: main contrib",
+        "Architectures: amd64",
+        "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg",
+        "",
+        "Types: deb",
+        "URIs: https://packages.microsoft.com/repos/code",
+        "Suites: stable",
+        "Components: main",
+        ""
+    ],
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
+    "requires_command": "apt",
+    "fact": [
+        {
+            "type": "deb",
+            "url": "http://deb.debian.org/debian",
+            "distribution": "bookworm",
+            "components": ["main", "contrib"],
+            "options": {
+                "arch": "amd64",
+                "signed-by": "/usr/share/keyrings/debian-archive-keyring.gpg"
+            }
+        },
+        {
+            "type": "deb-src", 
+            "url": "http://deb.debian.org/debian",
+            "distribution": "bookworm",
+            "components": ["main", "contrib"],
+            "options": {
+                "arch": "amd64",
+                "signed-by": "/usr/share/keyrings/debian-archive-keyring.gpg"
+            }
+        },
+        {
+            "type": "deb",
+            "url": "https://packages.microsoft.com/repos/code",
+            "distribution": "stable",
+            "components": ["main"],
+            "options": {}
+        }
+    ]
+}

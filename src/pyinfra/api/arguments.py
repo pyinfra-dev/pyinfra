@@ -61,6 +61,8 @@ class ConnectorArguments(TypedDict, total=False):
     _su_password: str
     _doas: bool
     _doas_user: str
+    _dzdo: bool
+    _dzdo_user: str
 
     # Shell arguments
     _shell_executable: str
@@ -138,6 +140,14 @@ auth_argument_meta: dict[str, ArgumentMeta] = {
     "_doas_user": ArgumentMeta(
         "Execute/apply any changes with doas as a non-root user.",
         default=lambda config: config.DOAS_USER,
+    ),
+    "_dzdo": ArgumentMeta(
+        "Execute/apply any changes with dzdo.",
+        default=lambda config: config.DZDO,
+    ),
+    "_dzdo_user": ArgumentMeta(
+        "Execute/apply any changes with dzdo as a non-root user.",
+        default=lambda config: config.DZDO_USER,
     ),
 }
 
@@ -282,7 +292,7 @@ __argument_docs__ = {
         """
         .. caution::
             When combining privilege escalation arguments it is important to know the order they
-            are applied: ``doas`` -> ``sudo`` -> ``su``. For example
+            are applied: ``doas`` -> ``dzdo`` -> ``sudo`` -> ``su``. For example
             ``_sudo=True,_su_user="pyinfra"`` yields a command like ``sudo su pyinfra..``.
         """,
         """

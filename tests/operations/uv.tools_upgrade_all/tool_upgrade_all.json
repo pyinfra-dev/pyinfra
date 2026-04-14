@@ -1,0 +1,10 @@
+{
+    "args": [],
+    "kwargs": {
+    },
+    "facts": {
+    },
+    "commands": [
+        "uv tool upgrade --all"
+    ]
+}
