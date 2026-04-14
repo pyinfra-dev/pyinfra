@@ -36,6 +36,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Systems Administration",
     "Topic :: System :: Installation/Setup",
     "Topic :: Utilities",
@@ -134,7 +135,6 @@ markers = [
 ]
 
 [tool.coverage.run]
-concurrency = ["gevent"]
 
 [tool.coverage.report]
 show_missing = true
