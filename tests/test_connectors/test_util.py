@@ -67,7 +67,15 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_su_shell_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _su_shell="bash")
-        assert command.get_raw_value() == "su -s `which bash` pyinfra -c 'sh -c uptime'"
+        assert command.get_raw_value() == "su -s $(command -v bash) pyinfra -c 'sh -c uptime'"
+
+    def test_su_shell_command_with_injection_attempt(self):
+        command = make_unix_command("uptime", _su_user="pyinfra", _su_shell="bash$(id)")
+        # The injected `$(id)` must be safely quoted as a literal argument to
+        # `command -v` rather than executed as a subshell.
+        assert (
+            command.get_raw_value() == "su -s $(command -v 'bash$(id)') pyinfra -c 'sh -c uptime'"
+        )
 
     def test_su_password_command(self):
         command = make_unix_command(
@@ -90,9 +98,21 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             },
         )
         assert command.get_raw_value() in [
-            'sh -c \'export "key=value" "anotherkey=anothervalue" && uptime\'',
-            'sh -c \'export "anotherkey=anothervalue" "key=value" && uptime\'',
+            "sh -c 'export key=value anotherkey=anothervalue && uptime'",
+            "sh -c 'export anotherkey=anothervalue key=value && uptime'",
         ]
+
+    def test_command_env_injection_attempt(self):
+        command = make_unix_command(
+            "uptime",
+            _env={"KEY": 'value"; id; echo "'},
+        )
+        # The value contains shell metacharacters; it must be quoted as a
+        # single literal token so it cannot inject additional commands.
+        assert (
+            command.get_raw_value()
+            == "sh -c 'export '\"'\"'KEY=value\"; id; echo \"'\"'\"' && uptime'"
+        )
 
     def test_command_chdir(self):
         command = make_unix_command("uptime", _chdir="/opt/somedir")
@@ -116,7 +136,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         assert command.get_raw_value() == (
             "sudo -H -n -E -u root "  # sudo bit
             "su pyinfra -c "  # su bit
-            "'bash -c '\"'\"'cd /opt/somedir && export \"key=value\" "  # shell and export bit
+            "'bash -c '\"'\"'cd /opt/somedir && export key=value "  # shell and export bit
             "&& echo hi'\"'\"''"  # command bit
         )
 

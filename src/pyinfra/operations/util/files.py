@@ -146,7 +146,7 @@ def chown(
     dereference=True,
 ) -> StringCommand:
     command = "chown"
-    user_group = None
+    user_group: str | None = None
 
     if user and group:
         user_group = "{0}:{1}".format(user, group)
@@ -158,6 +158,8 @@ def chown(
         command = "chgrp"
         user_group = group
 
+    assert user_group is not None, "chown() requires at least one of user or group"
+
     args = [command]
     if recursive:
         args.append("-R")
@@ -165,7 +167,7 @@ def chown(
     if not dereference:
         args.append("-h")
 
-    return StringCommand(" ".join(args), user_group, QuoteString(target))
+    return StringCommand(" ".join(args), QuoteString(user_group), QuoteString(target))
 
 
 # like the touch command, but only supports setting one field at a time, and expects any
