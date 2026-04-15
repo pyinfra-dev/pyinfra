@@ -62,7 +62,7 @@ def _print_spinner(stop_event, progress_queue):
         if not IS_WINDOWS:
             sys.stderr.write("\033[K")
 
-        gevent.sleep(WAIT_TIME)
+        stop_event.wait(timeout=WAIT_TIME)
 
 
 @contextmanager
