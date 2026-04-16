@@ -38,6 +38,24 @@ class DockerSystemInfo(DockerFactBase):
         return 'docker system info --format="{{json .}}"'
 
 
+class DockerVersion(FactBase[str]):
+    """
+    Returns the Docker version.
+    """
+
+    @override
+    def requires_command(self) -> str:
+        return "docker"
+
+    @override
+    def command(self) -> str:
+        return "docker --version"
+
+    @override
+    def process(self, output):
+        return "".join(output).replace("\n", "")
+
+
 # All Docker objects
 #
 
