@@ -1423,6 +1423,59 @@ class Last(FactBase[List[LastRecordDict]]):
         return records
 
 
+class LoadAverage(FactBase[Dict[str, float]]):
+    """
+    Returns the system load average keyed by window (1, 5 and 15 minutes).
+
+    Reads ``/proc/loadavg`` when available (Linux) and falls back to parsing
+    ``uptime`` output on systems without procfs (e.g. FreeBSD).
+
+    .. code:: python
+
+        {
+            "1": 0.12,
+            "5": 0.21,
+            "15": 0.22,
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self) -> str:
+        return "cat /proc/loadavg 2>/dev/null || uptime"
+
+    @override
+    def process(self, output: Iterable[str]) -> Dict[str, float]:
+        for raw in output:
+            line = raw.strip()
+            if not line:
+                continue
+
+            tokens = line.split()
+            # /proc/loadavg: "0.00 0.00 0.00 1/145 71536"
+            if len(tokens) >= 3:
+                try:
+                    return {
+                        "1": float(tokens[0]),
+                        "5": float(tokens[1]),
+                        "15": float(tokens[2]),
+                    }
+                except ValueError:
+                    pass
+
+            # uptime: "... load average[s]: 0.12, 0.21, 0.22"
+            match = re.search(r"load averages?:\s*([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)", line)
+            if match:
+                return {
+                    "1": float(match.group(1)),
+                    "5": float(match.group(2)),
+                    "15": float(match.group(3)),
+                }
+
+        return {}
+
+
 class Lastb(Last):
     """
     Returns failed login records parsed from ``lastb`` (``/var/log/btmp``).
