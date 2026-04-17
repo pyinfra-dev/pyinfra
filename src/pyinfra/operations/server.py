@@ -17,6 +17,7 @@ from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory, FindInFile, Link
 from pyinfra.facts.server import (
+    AuthorizedKeys,
     Groups,
     Home,
     Hostname,
@@ -794,25 +795,36 @@ def user_authorized_keys(
 
     authorized_key_file = f"{authorized_key_directory}/{authorized_key_filename}"
 
-    if delete_keys:
-        # Create a whole new authorized_keys file
-        keys_file = StringIO(
-            "{0}\n".format(
-                "\n".join(public_keys),
-            ),
-        )
+    # Pull the currently installed keys once; individual files.line calls otherwise
+    # issue one FindInFile fact per key, which dominates the cost for users with many
+    # keys.
+    current_keys = host.get_fact(AuthorizedKeys, user=user, path=authorized_key_file)
 
-        # And ensure it exists
-        yield from files.put._inner(
-            src=keys_file,
-            dest=authorized_key_file,
-            user=user,
-            group=group or user,
-            mode=600,
-        )
+    if delete_keys:
+        if current_keys == public_keys:
+            # Still ensure the file and its ownership/mode stay correct.
+            yield from files.file._inner(
+                path=authorized_key_file,
+                user=user,
+                group=group or user,
+                mode=600,
+            )
+        else:
+            keys_file = StringIO(
+                "{0}\n".format(
+                    "\n".join(public_keys),
+                ),
+            )
+            yield from files.put._inner(
+                src=keys_file,
+                dest=authorized_key_file,
+                user=user,
+                group=group or user,
+                mode=600,
+            )
 
     else:
-        # Ensure authorized_keys exists
+        # Ensure authorized_keys exists with the right ownership and mode.
         yield from files.file._inner(
             path=authorized_key_file,
             user=user,
@@ -820,8 +832,12 @@ def user_authorized_keys(
             mode=600,
         )
 
-        # And every public key is present
+        # Only append the keys that the fact says are missing; an empty fact result
+        # also covers the "file does not exist yet" case.
+        current_key_set = set(current_keys)
         for key in public_keys:
+            if key in current_key_set:
+                continue
             yield from files.line._inner(path=authorized_key_file, line=key, ensure_newline=True)
 
 
