@@ -1418,3 +1418,20 @@ class Last(FactBase[List[LastRecordDict]]):
             )
 
         return records
+
+
+class Lastb(Last):
+    """
+    Returns failed login records parsed from ``lastb`` (``/var/log/btmp``).
+
+    Output shape matches :class:`Last`; see that fact for details. ``lastb`` usually
+    requires root to read ``/var/log/btmp``.
+    """
+
+    @override
+    def requires_command(self) -> str:
+        return "lastb"
+
+    @override
+    def command(self) -> str:
+        return "lastb -F 2>/dev/null || lastb 2>/dev/null || true"
