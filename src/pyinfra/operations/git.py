@@ -93,6 +93,7 @@ def repo(
     ssh_keyscan=False,
     update_submodules=False,
     recursive_submodules=False,
+    depth: int | None = None,
 ):
     """
     Clone/pull git repositories.
@@ -107,6 +108,7 @@ def repo(
     + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
+    + depth: create a shallow clone with a history truncated to the specified number of commits
 
     **Example:**
 
@@ -141,12 +143,14 @@ def repo(
 
     # Cloning new repo?
     if not is_repo:
+        options: list[str | QuoteString] = []
+        if depth is not None:
+            options.extend(["--depth", str(depth)])
         if branch:
-            git_commands.append(
-                StringCommand("clone", QuoteString(src), "--branch", QuoteString(branch), ".")
-            )
-        else:
-            git_commands.append(StringCommand("clone", QuoteString(src), "."))
+            options.extend(["--branch", QuoteString(branch)])
+
+        git_commands.append(StringCommand("clone", QuoteString(src), *options, "."))
+
     # Ensuring existing repo
     else:
         is_tag = False
