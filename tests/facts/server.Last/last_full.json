@@ -1,5 +1,5 @@
 {
-    "command": "last -F 2>/dev/null || last 2>/dev/null || true",
+    "command": "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true",
     "requires_command": "last",
     "output": [
         "alice    pts/0        192.168.1.5      Thu Apr 17 14:00:00 2026   still logged in",

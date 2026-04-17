@@ -1,5 +1,5 @@
 {
-    "command": "lastb -F 2>/dev/null || lastb 2>/dev/null || true",
+    "command": "lastb -Fwi 2>/dev/null || lastb 2>/dev/null || true",
     "requires_command": "lastb",
     "output": [
         "root     ssh:notty    10.0.0.99        Thu Apr 17 13:59:00 2026 - Thu Apr 17 13:59:00 2026  (00:00)",

@@ -1369,7 +1369,10 @@ class Last(FactBase[List[LastRecordDict]]):
 
     @override
     def command(self) -> str:
-        return "last -F 2>/dev/null || last 2>/dev/null || true"
+        # -Fwi (util-linux): full timestamps, wide columns, IPs instead of hostnames.
+        # -w alone works on FreeBSD; busybox last rejects all flags, so also fall back
+        # to the bare command.
+        return "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true"
 
     @override
     def process(self, output: Iterable[str]) -> List[LastRecordDict]:
@@ -1434,4 +1437,5 @@ class Lastb(Last):
 
     @override
     def command(self) -> str:
-        return "lastb -F 2>/dev/null || lastb 2>/dev/null || true"
+        # lastb only ships with util-linux; -Fwi matches the Last fact.
+        return "lastb -Fwi 2>/dev/null || lastb 2>/dev/null || true"
