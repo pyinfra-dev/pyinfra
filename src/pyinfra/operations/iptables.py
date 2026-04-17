@@ -4,10 +4,18 @@ The iptables modules handles iptables rules
 
 from __future__ import annotations
 
+import shlex
+
 from pyinfra import host
 from pyinfra.api import operation
 from pyinfra.api.exceptions import OperationError
-from pyinfra.facts.iptables import Ip6tablesChains, Ip6tablesRules, IptablesChains, IptablesRules
+from pyinfra.facts.iptables import (
+    Ip6tablesChains,
+    Ip6tablesRules,
+    IptablesChains,
+    IptablesRules,
+    parse_extras,
+)
 
 
 @operation()
@@ -147,15 +155,15 @@ def rule(
     if source_port:
         extras = f"{extras} --sport {source_port}"
 
-    # Convert the extras string into a set to enable comparison with the fact
-    extras_set = set(extras.split())
+    # Parse the extras string into a sorted list of [flag, value] pairs for comparison with the fact
+    extras_list = parse_extras(shlex.split(extras))
 
     # When protocol is set, the extension is automagically added by iptables (which shows
     # in iptables-save): http://ipset.netfilter.org/iptables-extensions.man.html
     if protocol:
         protocol = protocol.lower()
-        extras_set.add("-m")
-        extras_set.add(protocol)
+        extras_list.append(["-m", protocol])
+        extras_list.sort()
 
     # --dport and --sport do not work without a protocol (because they need -m [tcp|udp]
     elif destination_port or source_port:
@@ -208,7 +216,7 @@ def rule(
         "to_destination": to_destination,
         "to_source": to_source,
         "to_ports": to_ports,
-        "extras": extras_set,
+        "extras": sorted(extras_list),
     }
 
     definition = {
