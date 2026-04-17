@@ -1,0 +1,63 @@
+{
+    "command": "ufw show added 2>/dev/null || true",
+    "requires_command": "ufw",
+    "output": [
+        "Added user rules (see 'ufw status' for running firewall):",
+        "ufw limit 22/tcp",
+        "ufw allow 51312",
+        "ufw allow in on eth0 from 10.0.0.0/8 to any port 443 proto tcp",
+        "ufw deny from 1.2.3.4",
+        "",
+        "junk line we ignore"
+    ],
+    "fact": [
+        {
+            "action": "limit",
+            "direction": null,
+            "interface": null,
+            "from_": null,
+            "to": null,
+            "port": "22",
+            "proto": "tcp",
+            "app": null,
+            "log": null,
+            "comment": null
+        },
+        {
+            "action": "allow",
+            "direction": null,
+            "interface": null,
+            "from_": null,
+            "to": null,
+            "port": "51312",
+            "proto": null,
+            "app": null,
+            "log": null,
+            "comment": null
+        },
+        {
+            "action": "allow",
+            "direction": "in",
+            "interface": "eth0",
+            "from_": "10.0.0.0/8",
+            "to": "any",
+            "port": "443",
+            "proto": "tcp",
+            "app": null,
+            "log": null,
+            "comment": null
+        },
+        {
+            "action": "deny",
+            "direction": null,
+            "interface": null,
+            "from_": "1.2.3.4",
+            "to": null,
+            "port": null,
+            "proto": null,
+            "app": null,
+            "log": null,
+            "comment": null
+        }
+    ]
+}

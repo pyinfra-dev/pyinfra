@@ -1,0 +1,10 @@
+{
+    "command": "ufw status verbose 2>/dev/null || true",
+    "requires_command": "ufw",
+    "output": [
+        "Status: inactive"
+    ],
+    "fact": {
+        "active": false
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "args": ["allow"],
+    "kwargs": {
+        "port": 22,
+        "proto": "tcp"
+    },
+    "facts": {
+        "ufw.UfwRules": []
+    },
+    "commands": [
+        "ufw allow 22/tcp"
+    ]
+}

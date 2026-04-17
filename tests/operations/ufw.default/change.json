@@ -1,0 +1,16 @@
+{
+    "args": ["deny"],
+    "facts": {
+        "ufw.UfwStatus": {
+            "active": true,
+            "default": {
+                "incoming": "allow",
+                "outgoing": "allow",
+                "routed": "disabled"
+            }
+        }
+    },
+    "commands": [
+        "ufw default deny incoming"
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "args": ["low"],
+    "facts": {
+        "ufw.UfwStatus": {
+            "active": true,
+            "logging": "low"
+        }
+    },
+    "commands": [],
+    "noop_description": "ufw logging is already low"
+}

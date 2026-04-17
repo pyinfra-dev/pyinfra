@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "enabled": true,
+        "reload": true
+    },
+    "facts": {
+        "ufw.UfwStatus": {"active": true}
+    },
+    "commands": [
+        "ufw reload"
+    ]
+}

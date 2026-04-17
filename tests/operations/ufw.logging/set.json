@@ -1,0 +1,12 @@
+{
+    "args": ["low"],
+    "facts": {
+        "ufw.UfwStatus": {
+            "active": true,
+            "logging": null
+        }
+    },
+    "commands": [
+        "ufw logging low"
+    ]
+}

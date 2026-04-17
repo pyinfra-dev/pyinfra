@@ -1,0 +1,11 @@
+{
+    "kwargs": {
+        "enabled": false
+    },
+    "facts": {
+        "ufw.UfwStatus": {"active": true}
+    },
+    "commands": [
+        "ufw disable"
+    ]
+}

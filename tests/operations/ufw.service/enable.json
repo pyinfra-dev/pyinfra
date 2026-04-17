@@ -1,0 +1,11 @@
+{
+    "kwargs": {
+        "enabled": true
+    },
+    "facts": {
+        "ufw.UfwStatus": {"active": false}
+    },
+    "commands": [
+        "ufw --force enable"
+    ]
+}

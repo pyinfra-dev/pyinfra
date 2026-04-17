@@ -1,0 +1,10 @@
+{
+    "kwargs": {
+        "enabled": true
+    },
+    "facts": {
+        "ufw.UfwStatus": {"active": true}
+    },
+    "commands": [],
+    "noop_description": "ufw service is already enabled"
+}

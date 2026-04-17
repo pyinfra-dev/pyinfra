@@ -1,0 +1,24 @@
+{
+    "command": "ufw status verbose 2>/dev/null || true",
+    "requires_command": "ufw",
+    "output": [
+        "Status: active",
+        "Logging: on (low)",
+        "Default: deny (incoming), allow (outgoing), disabled (routed)",
+        "New profiles: skip",
+        "",
+        "To                         Action      From",
+        "--                         ------      ----",
+        "22/tcp                     LIMIT IN    Anywhere"
+    ],
+    "fact": {
+        "active": true,
+        "logging": "low",
+        "default": {
+            "incoming": "deny",
+            "outgoing": "allow",
+            "routed": "disabled"
+        },
+        "new_profiles": "skip"
+    }
+}

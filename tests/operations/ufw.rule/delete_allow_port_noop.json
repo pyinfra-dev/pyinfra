@@ -1,0 +1,13 @@
+{
+    "args": ["allow"],
+    "kwargs": {
+        "port": 22,
+        "proto": "tcp",
+        "present": false
+    },
+    "facts": {
+        "ufw.UfwRules": []
+    },
+    "commands": [],
+    "noop_description": "ufw rule is already absent"
+}

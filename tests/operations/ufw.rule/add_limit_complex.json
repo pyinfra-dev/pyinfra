@@ -1,0 +1,18 @@
+{
+    "args": ["limit"],
+    "kwargs": {
+        "direction": "in",
+        "interface": "eth0",
+        "from_ip": "10.0.0.0/8",
+        "to_ip": "any",
+        "port": 22,
+        "proto": "tcp",
+        "comment": "ssh mgmt"
+    },
+    "facts": {
+        "ufw.UfwRules": []
+    },
+    "commands": [
+        "ufw limit in on eth0 from 10.0.0.0/8 to any port 22 proto tcp comment 'ssh mgmt'"
+    ]
+}

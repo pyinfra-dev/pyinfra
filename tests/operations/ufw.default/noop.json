@@ -1,0 +1,15 @@
+{
+    "args": ["deny"],
+    "facts": {
+        "ufw.UfwStatus": {
+            "active": true,
+            "default": {
+                "incoming": "deny",
+                "outgoing": "allow",
+                "routed": "disabled"
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "ufw default incoming is already deny"
+}

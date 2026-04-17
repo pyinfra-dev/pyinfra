@@ -1,0 +1,12 @@
+{
+    "args": ["off"],
+    "facts": {
+        "ufw.UfwStatus": {
+            "active": true,
+            "logging": "low"
+        }
+    },
+    "commands": [
+        "ufw logging off"
+    ]
+}
