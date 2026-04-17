@@ -1289,9 +1289,10 @@ class Processes(FactBase["Dict[int, ProcessDict]"]):
 
 class EtcHosts(FactBase[Dict[str, List[str]]]):
     """
-    Returns ``/etc/hosts`` parsed as a mapping of IP address to the list of hostnames
-    declared on the matching lines. Comments and empty lines are ignored; when the same
-    IP is listed more than once, hostnames are merged in file order.
+    Returns ``/etc/hosts`` (or the file at ``path``) parsed as a mapping of IP address
+    to the list of hostnames declared on the matching lines. Comments and empty lines
+    are ignored; when the same IP is listed more than once, hostnames are merged in
+    file order.
 
     .. code:: python
 
@@ -1305,8 +1306,8 @@ class EtcHosts(FactBase[Dict[str, List[str]]]):
     default = dict
 
     @override
-    def command(self) -> str:
-        return "cat /etc/hosts 2>/dev/null || true"
+    def command(self, path: str = "/etc/hosts") -> str:
+        return "cat {0} 2>/dev/null || true".format(path)
 
     @override
     def process(self, output: Iterable[str]) -> Dict[str, List[str]]:
