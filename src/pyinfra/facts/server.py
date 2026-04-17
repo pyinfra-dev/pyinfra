@@ -1285,3 +1285,136 @@ class Processes(FactBase["Dict[int, ProcessDict]"]):
                 }
 
         return processes
+
+
+class EtcHosts(FactBase[Dict[str, List[str]]]):
+    """
+    Returns ``/etc/hosts`` parsed as a mapping of IP address to the list of hostnames
+    declared on the matching lines. Comments and empty lines are ignored; when the same
+    IP is listed more than once, hostnames are merged in file order.
+
+    .. code:: python
+
+        {
+            "127.0.0.1": ["localhost", "localhost.localdomain"],
+            "::1": ["localhost"],
+            "192.168.1.10": ["db.internal"],
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self) -> str:
+        return "cat /etc/hosts 2>/dev/null || true"
+
+    @override
+    def process(self, output: Iterable[str]) -> Dict[str, List[str]]:
+        entries: Dict[str, List[str]] = {}
+        for raw in output:
+            line = raw.split("#", 1)[0].strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            ip, hostnames = parts[0], parts[1:]
+            existing = entries.setdefault(ip, [])
+            for name in hostnames:
+                if name not in existing:
+                    existing.append(name)
+        return entries
+
+
+class LastRecordDict(TypedDict):
+    user: str
+    tty: str
+    host: str
+    time: str
+
+
+class Last(FactBase[List[LastRecordDict]]):
+    """
+    Returns login records parsed from ``last`` as a list of dicts.
+
+    Parsing is intentionally light: ``time`` holds the raw trailing string from the
+    ``last`` output (e.g. ``"Thu Apr 17 14:00   still logged in"``) so that callers can
+    re-parse the date format that matches their system if needed.
+
+    .. code:: python
+
+        [
+            {
+                "user": "alice",
+                "tty": "pts/0",
+                "host": "192.168.1.5",
+                "time": "Thu Apr 17 14:00   still logged in",
+            },
+            {
+                "user": "reboot",
+                "tty": "system boot",
+                "host": "6.19.10-arch1-1",
+                "time": "Thu Apr 17 11:00 - 12:00  (01:00)",
+            },
+        ]
+    """
+
+    default = list
+
+    _WEEKDAYS = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+
+    @override
+    def requires_command(self) -> str:
+        return "last"
+
+    @override
+    def command(self) -> str:
+        return "last -F 2>/dev/null || last 2>/dev/null || true"
+
+    @override
+    def process(self, output: Iterable[str]) -> List[LastRecordDict]:
+        records: List[LastRecordDict] = []
+        for raw in output:
+            line = raw.rstrip()
+            if not line:
+                continue
+
+            lower = line.lower()
+            if lower.startswith(("wtmp begins", "btmp begins")):
+                continue
+            # util-linux may emit a "user tty ..." header with -x; skip it
+            if lower.startswith(("user ", "username ")):
+                continue
+
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+
+            user = parts[0]
+            if user == "reboot" and parts[1] == "system" and parts[2] == "boot":
+                tty = "system boot"
+                rest = parts[3:]
+            else:
+                tty = parts[1]
+                rest = parts[2:]
+
+            if not rest:
+                continue
+
+            if rest[0] in self._WEEKDAYS:
+                host = ""
+                time_parts = rest
+            else:
+                host = rest[0]
+                time_parts = rest[1:]
+
+            records.append(
+                {
+                    "user": user,
+                    "tty": tty,
+                    "host": host,
+                    "time": " ".join(time_parts),
+                }
+            )
+
+        return records
