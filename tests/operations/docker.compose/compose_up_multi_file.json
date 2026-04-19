@@ -1,0 +1,6 @@
+{
+    "args": [["/srv/app/base.yml", "/srv/app/override.yml"]],
+    "commands": [
+        "docker compose -f /srv/app/base.yml -f /srv/app/override.yml up -d --remove-orphans"
+    ]
+}
