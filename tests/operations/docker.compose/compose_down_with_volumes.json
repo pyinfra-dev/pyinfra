@@ -1,0 +1,10 @@
+{
+    "args": ["/srv/app/docker-compose.yml"],
+    "kwargs": {
+        "present": false,
+        "remove_volumes": true
+    },
+    "commands": [
+        "docker compose -f /srv/app/docker-compose.yml down -v --remove-orphans"
+    ]
+}
