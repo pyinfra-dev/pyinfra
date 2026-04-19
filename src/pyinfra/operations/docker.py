@@ -6,8 +6,10 @@ as inventory directly.
 
 from __future__ import annotations
 
+from shlex import quote as shlex_quote
+
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
     DockerContainer,
     DockerImage,
@@ -543,3 +545,63 @@ def plugin(
             command="remove",
             plugin=plugin_name,
         )
+
+
+@operation(is_idempotent=False)
+def login(
+    username: str,
+    password: str,
+    server: str = "",
+):
+    """
+    Log in to a Docker registry.
+
+    + username: username to authenticate with
+    + password: password to authenticate with
+    + server: registry server to log in to (defaults to Docker Hub)
+
+    The password is piped to ``docker login --password-stdin`` so it is not
+    exposed on the command line, and is masked in pyinfra's command log.
+
+    This operation is not idempotent: ``docker login`` is run every time,
+    because the on-disk credential store can be delegated to an external
+    helper (``credsStore``), so pyinfra cannot reliably detect an existing
+    session.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Log in to a private registry
+        docker.login(
+            name="Log in to private registry",
+            server="myregistry.io:5000",
+            username="ci",
+            password="s3cret",
+        )
+
+        # Log in to Docker Hub
+        docker.login(
+            name="Log in to Docker Hub",
+            username="ci",
+            password="s3cret",
+        )
+    """
+    if not username:
+        raise OperationError("docker.login requires a username")
+    if not password:
+        raise OperationError("docker.login requires a password")
+
+    command_bits: list = [
+        "printf '%s'",
+        MaskString(shlex_quote(password)),
+        "| docker login --username",
+        QuoteString(username),
+        "--password-stdin",
+    ]
+    if server:
+        command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)
