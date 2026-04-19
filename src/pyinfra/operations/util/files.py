@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Callable, Generator
 
-from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api import OperationError, QuoteString, StringCommand
 from pyinfra.api.output import format_text
 
 
@@ -158,7 +158,8 @@ def chown(
         command = "chgrp"
         user_group = group
 
-    assert user_group is not None, "chown() requires at least one of user or group"
+    if user_group is None:
+        raise OperationError("chown() requires at least one of user or group")
 
     args = [command]
     if recursive:
