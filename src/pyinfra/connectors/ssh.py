@@ -310,7 +310,7 @@ class SSHConnector(BaseConnector):
             return False
 
         # Honor IdentityAgent from SSH config
-        identity_agent = getattr(self.client, "_identity_agent", None)
+        identity_agent = getattr(self.client, "identity_agent", None)
         old_auth_sock = os.environ.get("SSH_AUTH_SOCK")
         if isinstance(identity_agent, str):
             os.environ["SSH_AUTH_SOCK"] = identity_agent

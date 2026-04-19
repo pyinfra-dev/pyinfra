@@ -190,7 +190,7 @@ class SSHClient(ParamikoClient):
             config.update(_pyinfra_ssh_paramiko_connect_kwargs)
 
         self._ssh_config = config
-        self._identity_agent = identity_agent
+        self.identity_agent = identity_agent
 
         # Honor IdentityAgent from SSH config by temporarily setting SSH_AUTH_SOCK
         # so Paramiko's Agent class connects to the correct socket.
