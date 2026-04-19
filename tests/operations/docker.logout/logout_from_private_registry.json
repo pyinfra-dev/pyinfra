@@ -1,0 +1,11 @@
+{
+    "kwargs": {
+        "server": "myregistry.io:5000"
+    },
+    "facts": {
+        "docker.DockerAuths": ["myregistry.io:5000"]
+    },
+    "commands": [
+        "docker logout myregistry.io:5000"
+    ]
+}
