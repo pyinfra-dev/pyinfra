@@ -213,19 +213,19 @@ class ContainerSpec:
         if self.privileged:
             args.append("--privileged")
 
-        if self.hostname:
+        if self.hostname is not None:
             args.append("--hostname {0}".format(self.hostname))
 
-        if self.entrypoint:
+        if self.entrypoint is not None:
             args.append("--entrypoint {0}".format(self.entrypoint))
 
-        if self.user:
+        if self.user is not None:
             args.append("--user {0}".format(self.user))
 
         if self.cpus is not None:
             args.append("--cpus {0}".format(self.cpus))
 
-        if self.memory:
+        if self.memory is not None:
             args.append("--memory {0}".format(self.memory))
 
         for extra_arg in self.extra_args:
