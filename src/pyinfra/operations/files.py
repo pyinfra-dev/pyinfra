@@ -90,6 +90,7 @@ def download(
     headers: dict[str, str] | None = None,
     insecure=False,
     proxy: str | None = None,
+    limit_rate: str | None = None,
     temp_dir: str | Path | None = None,
     extra_curl_args: dict[str, str] | None = None,
     extra_wget_args: dict[str, str] | None = None,
@@ -111,6 +112,7 @@ def download(
     + headers: optional dictionary of headers to set for the HTTP request
     + insecure: disable SSL verification for the HTTP request
     + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
+    + limit_rate: cap the download bandwidth, accepts the curl/wget format (e.g. ``1M``, ``500k``)
     + temp_dir: use this custom temporary directory during the download
     + extra_curl_args: optional dictionary with custom arguments for curl
     + extra_wget_args: optional dictionary with custom arguments for wget
@@ -197,6 +199,10 @@ def download(
         if insecure:
             curl_args.append("--insecure")
             wget_args.append("--no-check-certificate")
+
+        if limit_rate:
+            curl_args.append(StringCommand("--limit-rate", QuoteString(limit_rate)))
+            wget_args.append(StringCommand("--limit-rate", QuoteString(limit_rate)))
 
         if headers:
             for key, value in headers.items():
