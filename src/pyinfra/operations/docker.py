@@ -35,6 +35,14 @@ def container(
     start: bool = True,
     restart_policy: str | None = None,
     auto_remove: bool = False,
+    mounts: list[str] | None = None,
+    privileged: bool = False,
+    hostname: str | None = None,
+    entrypoint: str | None = None,
+    user: str | None = None,
+    cpus: float | None = None,
+    memory: str | None = None,
+    extra_args: list[str] | None = None,
     dns: list[str] | None = None,
 ):
     """
@@ -54,6 +62,14 @@ def container(
     + start: start or stop the container
     + restart_policy: restart policy to apply when a container exits
     + auto_remove: automatically remove the container and its associated anonymous volumes when it exits
+    + mounts: list of ``--mount`` specifications (e.g. ``type=bind,source=/src,target=/app``)
+    + privileged: give extended privileges to the container
+    + hostname: container hostname
+    + entrypoint: override the default entrypoint
+    + user: username or UID to run as
+    + cpus: number of CPUs (e.g. ``1.5``)
+    + memory: memory limit (e.g. ``512m``, ``1g``)
+    + extra_args: list of additional raw arguments passed to ``docker container create``
     + dns: list of dns servers to be used by the container
 
     **Examples:**
@@ -74,6 +90,21 @@ def container(
             pull_always=True,
             restart_policy="unless-stopped",
             auto_remove=True,
+        )
+
+        # Run a container with mounts and resource limits
+        docker.container(
+            name="Deploy app container",
+            container="myapp",
+            image="myapp:latest",
+            mounts=["type=bind,source=/host/data,target=/app/data"],
+            privileged=True,
+            hostname="myapp-host",
+            entrypoint="/bin/sh",
+            user="1000:1000",
+            cpus=2.0,
+            memory="512m",
+            extra_args=["--cap-add", "NET_ADMIN"],
         )
 
         # Stop a container
@@ -102,6 +133,14 @@ def container(
         pull_always,
         restart_policy,
         auto_remove,
+        mounts or list(),
+        privileged,
+        hostname,
+        entrypoint,
+        user,
+        cpus,
+        memory,
+        extra_args or list(),
         dns or list(),
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)

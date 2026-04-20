@@ -60,8 +60,12 @@ def boolean(bool_name: str, value: Boolean, persistent=False):
         raise OperationValueError(f"Invalid value '{value}' for boolean operation")
 
     if host.get_fact(SEBoolean, boolean=bool_name) != value_str:
-        persist = "-P " if persistent else ""
-        yield StringCommand("setsebool", f"{persist}{bool_name}", value_str)
+        command_bits: list = ["setsebool"]
+        if persistent:
+            command_bits.append("-P")
+        command_bits.append(QuoteString(bool_name))
+        command_bits.append(value_str)
+        yield StringCommand(*command_bits)
     else:
         host.noop(f"boolean '{bool_name}' already had the value '{value_str}'")
 

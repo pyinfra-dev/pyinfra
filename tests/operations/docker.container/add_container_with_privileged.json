@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "container": "myapp",
+        "image": "myapp:latest",
+        "privileged": true,
+        "present": "true",
+        "start": false
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=myapp": []
+        }
+    },
+    "commands": [
+        "docker container create --name myapp --privileged myapp:latest"
+    ]
+}
