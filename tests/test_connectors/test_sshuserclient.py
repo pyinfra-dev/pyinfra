@@ -46,6 +46,18 @@ Host 192.168.1.3
     UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.infra ~/.ssh/known_hosts.webservers
 """
 
+SSH_CONFIG_IDENTITY_AGENT = """
+Host 10.0.0.1
+    User agentuser
+    IdentityAgent ~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock
+"""
+
+SSH_CONFIG_IDENTITY_AGENT_NONE = """
+Host 10.0.0.2
+    User agentuser
+    IdentityAgent none
+"""
+
 BAD_SSH_CONFIG_DATA = """
 &
 """
@@ -90,13 +102,20 @@ class TestSSHUserConfigMissing(TestCase):
     def test_load_ssh_config_no_exist(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("port") == 22
+        assert identity_agent is None
 
 
 @patch(
@@ -140,10 +159,16 @@ class TestSSHUserConfig(TestCase):
     def test_load_ssh_config(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("key_filename") == ["/id_rsa", "/id_rsa2"]
@@ -153,6 +178,7 @@ class TestSSHUserConfig(TestCase):
         assert forward_agent is False
         assert isinstance(missing_host_key_policy, AskPolicy)
         assert host_keys_file == ("~/.ssh/known_hosts",)  # OpenSSH default
+        assert identity_agent is None
 
         (
             _,
@@ -161,6 +187,7 @@ class TestSSHUserConfig(TestCase):
             missing_host_key_policy,
             host_keys_file,
             keep_alive,
+            identity_agent,
         ) = client.parse_config("192.168.1.1")
 
         assert other_config.get("username") == "otheruser"
@@ -177,9 +204,15 @@ class TestSSHUserConfig(TestCase):
         """Test that inline comments are stripped from SSH config values (issue #1568)."""
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
-            client.parse_config("127.0.0.1")
-        )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config("127.0.0.1")
 
         assert config.get("key_filename") == ["/id_rsa"]
         assert config.get("username") == "testuser"
@@ -206,6 +239,7 @@ class TestSSHUserConfig(TestCase):
             missing_host_key_policy,
             host_keys_files,
             keep_alive,
+            identity_agent,
         ) = client.parse_config("192.168.1.3")
 
         # Verify multiple known hosts files are parsed as a tuple
@@ -214,6 +248,34 @@ class TestSSHUserConfig(TestCase):
             "~/.ssh/known_hosts.infra",
             "~/.ssh/known_hosts.webservers",
         )
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_IDENTITY_AGENT),
+        create=True,
+    )
+    def test_load_ssh_config_identity_agent(self):
+        """Test that IdentityAgent is parsed from SSH config."""
+        client = SSHClient()
+
+        _, config, _, _, _, _, identity_agent = client.parse_config("10.0.0.1")
+
+        assert config.get("username") == "agentuser"
+        assert identity_agent == "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_IDENTITY_AGENT_NONE),
+        create=True,
+    )
+    def test_load_ssh_config_identity_agent_none(self):
+        """Test that IdentityAgent set to 'none' is ignored."""
+        client = SSHClient()
+
+        _, config, _, _, _, _, identity_agent = client.parse_config("10.0.0.2")
+
+        assert config.get("username") == "agentuser"
+        assert identity_agent is None
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
@@ -262,7 +324,7 @@ class TestSSHUserConfig(TestCase):
         client = SSHClient()
 
         # Load the SSH config with ProxyJump configured
-        _, config, forward_agent, _, _, _ = client.parse_config(
+        _, config, forward_agent, _, _, _, _ = client.parse_config(
             "192.168.1.2",
             {"port": 1022},
             ssh_config_file="other_file",

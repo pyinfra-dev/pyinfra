@@ -3,6 +3,7 @@ This file as originally part of the "sshuserclient" pypi package. The GitHub
 source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
+import os
 from os import path
 
 from gevent.lock import BoundedSemaphore
@@ -166,6 +167,7 @@ class SSHClient(ParamikoClient):
             missing_host_key_policy,
             host_keys_files,
             keep_alive,
+            identity_agent,
         ) = self.parse_config(
             hostname,
             kwargs,
@@ -188,7 +190,21 @@ class SSHClient(ParamikoClient):
             config.update(_pyinfra_ssh_paramiko_connect_kwargs)
 
         self._ssh_config = config
-        super().connect(hostname, **config)
+        self.identity_agent = identity_agent
+
+        # Honor IdentityAgent from SSH config by temporarily setting SSH_AUTH_SOCK
+        # so Paramiko's Agent class connects to the correct socket.
+        old_auth_sock = os.environ.get("SSH_AUTH_SOCK")
+        if identity_agent:
+            os.environ["SSH_AUTH_SOCK"] = identity_agent
+        try:
+            super().connect(hostname, **config)
+        finally:
+            if identity_agent:
+                if old_auth_sock is not None:
+                    os.environ["SSH_AUTH_SOCK"] = old_auth_sock
+                else:
+                    os.environ.pop("SSH_AUTH_SOCK", None)
 
         if _pyinfra_ssh_forward_agent is not None:
             forward_agent = _pyinfra_ssh_forward_agent
@@ -225,6 +241,7 @@ class SSHClient(ParamikoClient):
 
         keep_alive = 0
         forward_agent = False
+        identity_agent = None
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
         host_keys_files = (path.expanduser("~/.ssh/known_hosts"),)
 
@@ -237,6 +254,7 @@ class SSHClient(ParamikoClient):
                 missing_host_key_policy,
                 host_keys_files,
                 keep_alive,
+                identity_agent,
             )
 
         host_config = ssh_config.lookup(hostname)
@@ -269,6 +287,11 @@ class SSHClient(ParamikoClient):
         if "serveraliveinterval" in host_config:
             keep_alive = int(host_config["serveraliveinterval"])
 
+        if "identityagent" in host_config:
+            agent_path = host_config["identityagent"]
+            if agent_path.lower() != "none":
+                identity_agent = path.expanduser(agent_path)
+
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
 
@@ -294,7 +317,15 @@ class SSHClient(ParamikoClient):
                 sock = c.gateway(hostname, cfg["port"], target, target_config["port"])
             cfg["sock"] = sock
 
-        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_files, keep_alive
+        return (
+            hostname,
+            cfg,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_files,
+            keep_alive,
+            identity_agent,
+        )
 
     @staticmethod
     def derive_shorthand(ssh_config, host_string):

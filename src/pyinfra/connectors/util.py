@@ -240,7 +240,7 @@ def remove_any_sudo_askpass_file(host) -> None:
     sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
     if sudo_askpass_path:
         try:
-            host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
+            host.run_shell_command(StringCommand("rm", "-f", QuoteString(sudo_askpass_path)))
         except Exception as e:
             logger.debug("Could not remove sudo askpass file %s: %s", sudo_askpass_path, e)
         host.connector_data["sudo_askpass_path"] = None
@@ -248,7 +248,7 @@ def remove_any_sudo_askpass_file(host) -> None:
     su_askpass_path = host.connector_data.get("su_askpass_path")
     if su_askpass_path:
         try:
-            host.run_shell_command("rm -f {0}".format(su_askpass_path))
+            host.run_shell_command(StringCommand("rm", "-f", QuoteString(su_askpass_path)))
         except Exception as e:
             logger.debug("Could not remove su askpass file %s: %s", su_askpass_path, e)
         host.connector_data["su_askpass_path"] = None
@@ -303,7 +303,7 @@ def _ensure_askpass_set_for_host(host: "Host", key: str, env_var: str):
             )
         )
 
-    host.connector_data[key] = StringCommand(QuoteString(output.stdout_lines[0])).get_raw_value()
+    host.connector_data[key] = output.stdout_lines[0]
 
 
 def make_unix_command_for_host(
@@ -377,11 +377,18 @@ def make_unix_command(
         _shell_executable = "sh"
 
     if _env:
-        env_string = " ".join(['"{0}={1}"'.format(key, value) for key, value in _env.items()])
-        command = StringCommand("export", env_string, "&&", command)
+        env_bits: list[Union[str, StringCommand, QuoteString]] = ["export"]
+        for key, value in _env.items():
+            # Quote the whole `key=value` pair so arbitrary values cannot break
+            # out into additional shell tokens. Invalid identifiers in `key` will
+            # fail safely when the shell rejects the resulting `export` statement.
+            env_bits.append(QuoteString("{0}={1}".format(key, value)))
+        env_bits.append("&&")
+        env_bits.append(command)
+        command = StringCommand(*env_bits)
 
     if _chdir:
-        command = StringCommand("cd", _chdir, "&&", command)
+        command = StringCommand("cd", QuoteString(_chdir), "&&", command)
 
     command_bits: list[Union[str, StringCommand, QuoteString]] = []
 
@@ -389,19 +396,19 @@ def make_unix_command(
         command_bits.extend(["doas", "-n"])
 
         if _doas_user:
-            command_bits.extend(["-u", _doas_user])
+            command_bits.extend(["-u", QuoteString(_doas_user)])
 
     if _dzdo:
         command_bits.extend(["dzdo", "-H", "-n"])
 
         if _dzdo_user:
-            command_bits.extend(["-u", _dzdo_user])
+            command_bits.extend(["-u", QuoteString(_dzdo_user)])
 
     if _sudo_password and _sudo_askpass_path:
         command_bits.extend(
             [
                 "env",
-                "SUDO_ASKPASS={0}".format(_sudo_askpass_path),
+                StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
                 MaskString(
                     "{0}={1}".format(
                         SUDO_ASKPASS_ENV_VAR,
@@ -426,7 +433,7 @@ def make_unix_command(
             command_bits.append("-E")
 
         if _sudo_user:
-            command_bits.extend(("-u", _sudo_user))
+            command_bits.extend(("-u", QuoteString(_sudo_user)))
 
     if _su_user:
         if _su_password and _su_askpass_path:
@@ -439,7 +446,7 @@ def make_unix_command(
                             StringCommand(QuoteString(_su_password)).get_raw_value(),
                         )
                     ),
-                    _su_askpass_path,
+                    QuoteString(_su_askpass_path),
                     "|",
                 ],
             )
@@ -454,9 +461,16 @@ def make_unix_command(
             command_bits.append("-m")
 
         if _su_shell:
-            command_bits.extend(["-s", "`which {0}`".format(_su_shell)])
+            # Resolve the shell via `command -v`, with the user-supplied shell
+            # name safely quoted so it cannot inject extra shell syntax.
+            command_bits.extend(
+                [
+                    "-s",
+                    StringCommand("$(command -v ", QuoteString(_su_shell), ")", _separator=""),
+                ]
+            )
 
-        command_bits.extend([_su_user, "-c"])
+        command_bits.extend([QuoteString(_su_user), "-c"])
 
         if _shell_executable is not None:
             # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
