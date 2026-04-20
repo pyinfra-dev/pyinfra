@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "path": "/srv/app",
+        "tags": "registry.io/app:arm64",
+        "platform": "linux/arm64",
+        "builder": "docker buildx build"
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=registry.io/app:arm64": []
+        }
+    },
+    "commands": [
+        "docker buildx build -t registry.io/app:arm64 --platform linux/arm64 /srv/app"
+    ]
+}
