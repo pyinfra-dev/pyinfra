@@ -509,9 +509,9 @@ def plugin(
 @operation(is_idempotent=False)
 def compose(
     src: str | list[str],
-    project: str = "",
+    project: str | None = None,
     present: bool = True,
-    pull: str = "",
+    pull: str | None = None,
     build: bool = False,
     force_recreate: bool = False,
     remove_orphans: bool = True,
@@ -524,7 +524,7 @@ def compose(
     + src: path (or list of paths) to compose file(s) already present on the target
     + project: compose project name (maps to ``--project-name``; defaults to compose's own default)
     + present: ``True`` runs ``up -d``, ``False`` runs ``down``
-    + pull: policy for ``up -d --pull`` (``""``, ``"always"``, ``"missing"``, ``"never"``)
+    + pull: policy for ``up -d --pull`` (``None``, ``"always"``, ``"missing"``, ``"never"``)
     + build: pass ``--build`` on ``up``
     + force_recreate: pass ``--force-recreate`` on ``up``
     + remove_orphans: pass ``--remove-orphans`` on ``up`` / ``down``
@@ -570,9 +570,9 @@ def compose(
     if not src:
         raise OperationError("docker.compose requires at least one compose file via src")
 
-    if pull and pull not in ("always", "missing", "never"):
+    if pull is not None and pull not in ("always", "missing", "never"):
         raise OperationError(
-            'docker.compose pull must be one of "", "always", "missing", "never"',
+            'docker.compose pull must be one of None, "always", "missing", "never"',
         )
 
     srcs = [src] if isinstance(src, str) else list(src)
