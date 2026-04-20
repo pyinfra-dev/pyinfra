@@ -41,6 +41,26 @@ Host 192.168.1.2
     ForwardAgent yes
 """
 
+SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT = """
+Host jump
+    HostName jump.example.com
+    User jumpuser
+    ConnectTimeout 7
+
+Host device
+    HostName 10.0.0.170
+    ProxyJump jump
+    ConnectTimeout 5
+    User deviceuser
+"""
+
+SSH_CONFIG_CONNECTTIMEOUT = """
+Host slowhost
+    HostName slow.example.com
+    User slowuser
+    ConnectTimeout 12
+"""
+
 SSH_CONFIG_MULTIPLE_KNOWN_HOSTS = """
 Host 192.168.1.3
     UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.infra ~/.ssh/known_hosts.webservers
@@ -337,7 +357,51 @@ class TestSSHUserConfig(TestCase):
             sock=None,
             username="nottestuser",
         )
-        fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022)
+        fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022, timeout=None)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_CONNECTTIMEOUT),
+        create=True,
+    )
+    def test_connecttimeout_sets_timeout_kwarg(self):
+        """Regression test for #971: ``ConnectTimeout`` in ssh_config must be
+        propagated so paramiko doesn't hang on its own default."""
+        client = SSHClient()
+        _, config, *_ = client.parse_config("slowhost")
+        assert config.get("timeout") == 12
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_propagates_connecttimeout(self, fake_gateway, fake_ssh_connect):
+        """Regression test for #971: ``ConnectTimeout`` on both the target and
+        the hop must be honored so neither the hop connect nor the direct-tcpip
+        channel can hang forever."""
+        client = SSHClient()
+
+        _, config, *_ = client.parse_config("device")
+
+        # Target's ConnectTimeout wins for the channel open.
+        assert config.get("timeout") == 5
+        # Hop connect receives the hop's own ConnectTimeout (7s, per its own
+        # ssh_config block) rather than inheriting the target's 5s.
+        fake_ssh_connect.assert_called_once()
+        _, kwargs = fake_ssh_connect.call_args
+        assert kwargs["timeout"] == 7
+        # Channel open (gateway) uses the target's ConnectTimeout.
+        fake_gateway.assert_called_once()
+        _, gw_kwargs = fake_gateway.call_args
+        assert gw_kwargs["timeout"] == 5
 
     @patch("pyinfra.connectors.sshuserclient.client.open", mock_open(), create=True)
     @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
