@@ -7,7 +7,7 @@ as inventory directly.
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
     DockerContainer,
     DockerImage,
@@ -504,3 +504,100 @@ def plugin(
             command="remove",
             plugin=plugin_name,
         )
+
+
+@operation(is_idempotent=False)
+def compose(
+    src: str | list[str],
+    project: str | None = None,
+    present: bool = True,
+    pull: str | None = None,
+    build: bool = False,
+    force_recreate: bool = False,
+    remove_orphans: bool = True,
+    remove_volumes: bool = False,
+    compose_command: str = "docker compose",
+):
+    """
+    Deploy a Docker Compose stack on the target.
+
+    + src: path (or list of paths) to compose file(s) already present on the target
+    + project: compose project name (maps to ``--project-name``; defaults to compose's own default)
+    + present: ``True`` runs ``up -d``, ``False`` runs ``down``
+    + pull: policy for ``up -d --pull`` (``None``, ``"always"``, ``"missing"``, ``"never"``)
+    + build: pass ``--build`` on ``up``
+    + force_recreate: pass ``--force-recreate`` on ``up``
+    + remove_orphans: pass ``--remove-orphans`` on ``up`` / ``down``
+    + remove_volumes: pass ``-v`` on ``down`` (only honored when ``present=False``)
+    + compose_command: compose binary to invoke; use ``"docker-compose"`` for v1
+
+    This operation is not idempotent from pyinfra's perspective: it always shells out
+    to compose. Docker itself skips services whose definition has not changed, so
+    re-runs are safe and cheap.
+
+    ``_env`` and ``_chdir`` are the standard pyinfra global operation kwargs and
+    work here without any special handling, which is useful for compose variable
+    interpolation.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker, files
+
+        # Upload the compose file then bring the stack up
+        files.put(
+            name="Upload compose file",
+            src="files/docker-compose.yml",
+            dest="/srv/app/docker-compose.yml",
+        )
+        docker.compose(
+            name="Deploy app stack",
+            src="/srv/app/docker-compose.yml",
+            project="app",
+            _env={"DIR_STORAGE": "/srv/app/data"},
+        )
+
+        # Tear the stack down, including named volumes
+        docker.compose(
+            name="Remove app stack",
+            src="/srv/app/docker-compose.yml",
+            project="app",
+            present=False,
+            remove_volumes=True,
+        )
+    """
+    if not src:
+        raise OperationError("docker.compose requires at least one compose file via src")
+
+    if pull is not None and pull not in ("always", "missing", "never"):
+        raise OperationError(
+            'docker.compose pull must be one of None, "always", "missing", "never"',
+        )
+
+    srcs = [src] if isinstance(src, str) else list(src)
+
+    command_bits: list = [compose_command]
+    if project:
+        command_bits.extend(["--project-name", QuoteString(project)])
+    for compose_file in srcs:
+        command_bits.extend(["-f", QuoteString(compose_file)])
+
+    if present:
+        command_bits.append("up -d")
+        if pull:
+            command_bits.extend(["--pull", pull])
+        if build:
+            command_bits.append("--build")
+        if force_recreate:
+            command_bits.append("--force-recreate")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
+    else:
+        command_bits.append("down")
+        if remove_volumes:
+            command_bits.append("-v")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
+
+    yield StringCommand(*command_bits)
