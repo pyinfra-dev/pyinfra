@@ -515,7 +515,7 @@ def plugin(
 def login(
     username: str,
     password: str,
-    server: str = "",
+    server: str | None = None,
     force: bool = False,
 ):
     """
@@ -582,7 +582,7 @@ def login(
 
 
 @operation()
-def logout(server: str = ""):
+def logout(server: str | None = None):
     """
     Log out of a Docker registry.
 
