@@ -15,51 +15,53 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_doas_command(self):
         command = make_unix_command("uptime", _doas=True)
-        assert command.get_raw_value() == "doas -n sh -c uptime"
+        assert command.get_raw_value() == "env LC_ALL=C doas -n sh -c uptime"
 
     def test_doas_user_command(self):
         command = make_unix_command("uptime", _doas=True, _doas_user="pyinfra")
-        assert command.get_raw_value() == "doas -n -u pyinfra sh -c uptime"
+        assert command.get_raw_value() == "env LC_ALL=C doas -n -u pyinfra sh -c uptime"
 
     def test_sudo_command(self):
         command = make_unix_command("uptime", _sudo=True)
-        assert command.get_raw_value() == "sudo -H -n sh -c uptime"
+        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n sh -c uptime"
 
     def test_sudo_multi_arg_command(self):
         command = make_unix_command("echo hi", _sudo=True, _preserve_sudo_env=True)
-        assert command.get_raw_value() == "sudo -H -n -E sh -c 'echo hi'"
+        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -E sh -c 'echo hi'"
 
     def test_sudo_preserve_env_command(self):
         command = make_unix_command("uptime", _sudo=True, _preserve_sudo_env=True)
-        assert command.get_raw_value() == "sudo -H -n -E sh -c uptime"
+        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -E sh -c uptime"
 
     def test_use_sudo_login_command(self):
         command = make_unix_command("uptime", _sudo=True, _use_sudo_login=True)
-        assert command.get_raw_value() == "sudo -H -n -i sh -c uptime"
+        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -i sh -c uptime"
 
     def test_sudo_user_command(self):
         command = make_unix_command("uptime", _sudo=True, _sudo_user="pyinfra")
-        assert command.get_raw_value() == "sudo -H -n -u pyinfra sh -c uptime"
+        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -u pyinfra sh -c uptime"
 
     def test_su_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra")
-        assert command.get_raw_value() == "su pyinfra -c 'sh -c uptime'"
+        assert command.get_raw_value() == "env LC_ALL=C su pyinfra -c 'sh -c uptime'"
 
     def test_su_multi_arg_command(self):
         command = make_unix_command("echo hi", _su_user="pyinfra")
-        assert command.get_raw_value() == "su pyinfra -c 'sh -c '\"'\"'echo hi'\"'\"''"
+        assert command.get_raw_value() == "env LC_ALL=C su pyinfra -c 'sh -c '\"'\"'echo hi'\"'\"''"
 
     def test_use_su_login_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _use_su_login=True)
-        assert command.get_raw_value() == "su -l pyinfra -c 'sh -c uptime'"
+        assert command.get_raw_value() == "env LC_ALL=C su -l pyinfra -c 'sh -c uptime'"
 
     def test_preserve_su_env_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _preserve_su_env=True)
-        assert command.get_raw_value() == "su -m pyinfra -c 'sh -c uptime'"
+        assert command.get_raw_value() == "env LC_ALL=C su -m pyinfra -c 'sh -c uptime'"
 
     def test_su_shell_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _su_shell="bash")
-        assert command.get_raw_value() == "su -s `which bash` pyinfra -c 'sh -c uptime'"
+        assert (
+            command.get_raw_value() == "env LC_ALL=C su -s `which bash` pyinfra -c 'sh -c uptime'"
+        )
 
     def test_su_password_command(self):
         command = make_unix_command(
@@ -69,7 +71,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             _su_askpass_path="/tmp/pyinfra-su-askpass-XXXX",
         )
         assert command.get_raw_value() == (
-            "env PYINFRA_SU_PASSWORD=mypassword /tmp/pyinfra-su-askpass-XXXX "
+            "env LC_ALL=C PYINFRA_SU_PASSWORD=mypassword /tmp/pyinfra-su-askpass-XXXX "
             "| su pyinfra -c 'sh -c uptime'"
         )
 
@@ -106,7 +108,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             _shell_executable="bash",
         )
         assert command.get_raw_value() == (
-            "sudo -H -n -E -u root "  # sudo bit
+            "env LC_ALL=C sudo -H -n -E -u root "  # sudo bit
             "su pyinfra -c "  # su bit
             "'bash -c '\"'\"'cd /opt/somedir && export \"key=value\" "  # shell and export bit
             "&& echo hi'\"'\"''"  # command bit

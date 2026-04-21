@@ -9,8 +9,8 @@ import pyinfra
 from pyinfra.api import Config, Host, MaskString, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
-from pyinfra.context import ctx_state
 from pyinfra.connectors import ssh
+from pyinfra.context import ctx_state
 
 from ..util import make_inventory
 
@@ -642,11 +642,13 @@ class TestSSHConnector(TestCase):
         status, output = out
         assert status is True
 
-        fake_ssh.exec_command.assert_any_call(("sudo -H -n sh -c 'echo Šablony'"), get_pty=False)
+        fake_ssh.exec_command.assert_any_call(
+            ("env LC_ALL=C sudo -H -n sh -c 'echo Šablony'"), get_pty=False
+        )
 
         fake_ssh.exec_command.assert_called_with(
             (
-                "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
+                "env LC_ALL=C SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
                 "PYINFRA_SUDO_PASSWORD=password "
                 "sudo -H -A -k sh -c 'echo Šablony'"
             ),
@@ -705,11 +707,13 @@ class TestSSHConnector(TestCase):
         status, output = out
         assert status is True
 
-        fake_ssh.exec_command.assert_any_call(("sudo -H -n sh -c 'echo Šablony'"), get_pty=False)
+        fake_ssh.exec_command.assert_any_call(
+            ("env LC_ALL=C sudo -H -n sh -c 'echo Šablony'"), get_pty=False
+        )
 
         fake_ssh.exec_command.assert_called_with(
             (
-                "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
+                "env LC_ALL=C SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
                 """PYINFRA_SUDO_PASSWORD='p@ss'"'"'word'"'"';' """
                 "sudo -H -A -k sh -c 'echo Šablony'"
             ),
@@ -751,7 +755,7 @@ class TestSSHConnector(TestCase):
         assert out[0] is True
         assert fake_getpass.called
         fake_ssh.exec_command.assert_called_with(
-            "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
+            "env LC_ALL=C SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
             "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
             get_pty=False,
         )
@@ -824,7 +828,7 @@ class TestSSHConnector(TestCase):
                 ),
                 mock.call(
                     (
-                        "sudo -H -n -u ubuntu sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
+                        "env LC_ALL=C sudo -H -n -u ubuntu sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
                     ),
                     get_pty=False,
                 ),
@@ -881,7 +885,7 @@ class TestSSHConnector(TestCase):
                 ),
                 mock.call(
                     (
-                        "doas -n -u ubuntu sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
+                        "env LC_ALL=C doas -n -u ubuntu sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
                     ),
                     get_pty=False,
                 ),
@@ -975,7 +979,7 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client().exec_command.assert_any_call(
             (
-                "su centos -c 'sh -c '\"'\"'cp "
+                "env LC_ALL=C su centos -c 'sh -c '\"'\"'cp "
                 "/tmp/pyinfra-43db9984686317089fefcf2e38de527e4cb44487 "
                 "not-another-file'\"'\"''"
             ),
@@ -1087,14 +1091,14 @@ class TestSSHConnector(TestCase):
             [
                 mock.call(
                     (
-                        "sudo -H -n -u ubuntu sh -c 'cp not-a-file "
+                        "env LC_ALL=C sudo -H -n -u ubuntu sh -c 'cp not-a-file "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r /tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"  # noqa
                     ),
                     get_pty=False,
                 ),
                 mock.call(
                     (
-                        "sudo -H -n -u ubuntu sh -c 'rm -f "
+                        "env LC_ALL=C sudo -H -n -u ubuntu sh -c 'rm -f "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
                     ),
                     get_pty=False,
@@ -1138,7 +1142,7 @@ class TestSSHConnector(TestCase):
             [
                 mock.call(
                     (
-                        "sudo -H -n -u ubuntu sh -c 'cp not-a-file "
+                        "env LC_ALL=C sudo -H -n -u ubuntu sh -c 'cp not-a-file "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r /tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"  # noqa
                     ),
                     get_pty=False,
@@ -1179,14 +1183,14 @@ class TestSSHConnector(TestCase):
             [
                 mock.call(
                     (
-                        "sudo -H -n -u ubuntu sh -c 'cp not-a-file "
+                        "env LC_ALL=C sudo -H -n -u ubuntu sh -c 'cp not-a-file "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r /tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"  # noqa
                     ),
                     get_pty=False,
                 ),
                 mock.call(
                     (
-                        "sudo -H -n -u ubuntu sh -c 'rm -f "
+                        "env LC_ALL=C sudo -H -n -u ubuntu sh -c 'rm -f "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'"
                     ),
                     get_pty=False,
@@ -1232,7 +1236,7 @@ class TestSSHConnector(TestCase):
             [
                 mock.call(
                     (
-                        "su centos -c 'sh -c '\"'\"'cp not-a-file "
+                        "env LC_ALL=C su centos -c 'sh -c '\"'\"'cp not-a-file "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508 && chmod +r "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'\"'\"''"
                     ),
@@ -1240,7 +1244,7 @@ class TestSSHConnector(TestCase):
                 ),
                 mock.call(
                     (
-                        "su centos -c 'sh -c '\"'\"'rm -f "
+                        "env LC_ALL=C su centos -c 'sh -c '\"'\"'rm -f "
                         "/tmp/pyinfra-e9c0d3c8ffca943daa0e75511b0a09c84b59c508'\"'\"''"
                     ),
                     get_pty=False,
