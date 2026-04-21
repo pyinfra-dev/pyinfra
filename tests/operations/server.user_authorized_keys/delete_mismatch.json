@@ -1,0 +1,48 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "public_keys": ["ssh-ed25519 new alice"],
+        "delete_keys": true
+    },
+    "facts": {
+        "server.Home": {
+            "user=someuser": "/home/someuser"
+        },
+        "files.Directory": {
+            "path=/home/someuser/.ssh": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 700
+            }
+        },
+        "files.File": {
+            "path=/home/someuser/.ssh/authorized_keys": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 600
+            }
+        },
+        "server.AuthorizedKeys": {
+            "path=/home/someuser/.ssh/authorized_keys, user=someuser": [
+                "ssh-ed25519 old bob"
+            ]
+        },
+        "files.Sha1File": {
+            "path=/home/someuser/.ssh/authorized_keys": null
+        },
+        "files.Md5File": {
+            "path=/home/someuser/.ssh/authorized_keys": null
+        },
+        "files.Sha256File": {
+            "path=/home/someuser/.ssh/authorized_keys": null
+        },
+        "files.FileContents": {
+            "path=/home/someuser/.ssh/authorized_keys": null
+        }
+    },
+    "commands": [
+        ["upload", "ssh-ed25519 new alice\n", "/home/someuser/.ssh/authorized_keys"],
+        "chown someuser:someuser /home/someuser/.ssh/authorized_keys",
+        "chmod 600 /home/someuser/.ssh/authorized_keys"
+    ]
+}

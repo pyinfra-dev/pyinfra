@@ -1,10 +1,9 @@
 from os import path
 from typing import Optional
 
-import click
-
 import pyinfra
 from pyinfra import config, host, logger, state
+from pyinfra.api.output import echo
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_path
 from pyinfra.connectors.util import run_local_process
@@ -75,7 +74,7 @@ def shell(
         print_prefix = "localhost: "
 
         if print_input:
-            click.echo("{0}>>> {1}".format(print_prefix, command), err=True)
+            echo("{0}>>> {1}".format(print_prefix, command), err=True)
 
         return_code, output = run_local_process(
             command,

@@ -2,10 +2,10 @@ import os
 from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
-import click
 from typing_extensions import Unpack, override
 
 from pyinfra import logger
+from pyinfra.api.output import echo, format_text
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
@@ -90,7 +90,7 @@ class DockerSSHConnector(BaseConnector):
                         self.docker_cmd,
                         "run",
                         "-d",
-                        self.host.data.docker_image,
+                        QuoteString(self.host.data.docker_image),
                         "tail",
                         "-f",
                         "/dev/null",
@@ -111,7 +111,7 @@ class DockerSSHConnector(BaseConnector):
 
         with progress_spinner({f"{self.docker_cmd} commit"}):
             _, output = self.ssh.run_shell_command(
-                StringCommand(self.docker_cmd, "commit", container_id)
+                StringCommand(self.docker_cmd, "commit", QuoteString(container_id))
             )
 
             # Last line is the image ID, get sha256:[XXXXXXXXXX]...
@@ -119,14 +119,14 @@ class DockerSSHConnector(BaseConnector):
 
         with progress_spinner({f"{self.docker_cmd} rm"}):
             self.ssh.run_shell_command(
-                StringCommand(self.docker_cmd, "rm", "-f", container_id),
+                StringCommand(self.docker_cmd, "rm", "-f", QuoteString(container_id)),
             )
 
         logger.info(
             "{0}{1} build complete, image ID: {2}".format(
                 self.host.print_prefix,
                 self.docker_cmd,
-                click.style(image_id, bold=True),
+                format_text(image_id, bold=True),
             ),
         )
 
@@ -150,7 +150,7 @@ class DockerSSHConnector(BaseConnector):
             self.docker_cmd,
             "exec",
             docker_flags,
-            container_id,
+            QuoteString(container_id),
             "sh",
             "-c",
             command,
@@ -203,8 +203,8 @@ class DockerSSHConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                remote_temp_filename,
-                f"{docker_id}:{remote_filename}",
+                QuoteString(remote_temp_filename),
+                QuoteString(f"{docker_id}:{remote_filename}"),
             )
 
             status, output = self.ssh.run_shell_command(
@@ -225,7 +225,7 @@ class DockerSSHConnector(BaseConnector):
             raise IOError(output.stderr)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file uploaded to container: {1}".format(
                     self.host.print_prefix,
                     remote_filename,
@@ -257,8 +257,8 @@ class DockerSSHConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                f"{docker_id}:{remote_filename}",
-                remote_temp_filename,
+                QuoteString(f"{docker_id}:{remote_filename}"),
+                QuoteString(remote_temp_filename),
             )
 
             status, output = self.ssh.run_shell_command(
@@ -282,7 +282,7 @@ class DockerSSHConnector(BaseConnector):
             raise IOError(output.stderr)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file downloaded from container: {1}".format(
                     self.host.print_prefix,
                     remote_filename,

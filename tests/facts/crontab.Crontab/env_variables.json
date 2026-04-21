@@ -1,0 +1,34 @@
+{
+    "command": "crontab -l || true",
+    "requires_command": "crontab",
+    "output": [
+        "MAILTO=me@example.com",
+        "CRON_TZ=Europe/Amsterdam",
+        "@reboot echo rebooted",
+        "0 0 * * * apt update"
+    ],
+    "fact": [
+        {
+            "env": "MAILTO=me@example.com",
+            "comments": []
+        },
+        {
+            "env": "CRON_TZ=Europe/Amsterdam",
+            "comments": []
+        },
+        {
+            "command": "echo rebooted",
+            "special_time": "@reboot",
+            "comments": []
+        },
+        {
+            "command": "apt update",
+            "minute": 0,
+            "hour": 0,
+            "month": "*",
+            "day_of_month": "*",
+            "day_of_week": "*",
+            "comments": []
+        }
+    ]
+}

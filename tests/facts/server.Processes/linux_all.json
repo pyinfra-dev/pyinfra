@@ -1,0 +1,40 @@
+{
+  "command": "LANG=C ps -eo pid,user,stat,%cpu,%mem,comm,args --no-headers",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=busybox": null
+    }
+  },
+  "output": [
+    "    1 root     Ss    0.0  0.1 init            /sbin/init",
+    "  200 www-data S     1.2  3.4 nginx           nginx: worker process",
+    " 1500 postgres Ss    0.5  2.0 postgres        /usr/lib/postgresql/14/bin/postgres -D /var/lib/postgresql/14/main"
+  ],
+  "fact": {
+    "1": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.1,
+      "command": "init",
+      "args": "/sbin/init"
+    },
+    "200": {
+      "user": "www-data",
+      "state": "S",
+      "cpu_percent": 1.2,
+      "mem_percent": 3.4,
+      "command": "nginx",
+      "args": "nginx: worker process"
+    },
+    "1500": {
+      "user": "postgres",
+      "state": "Ss",
+      "cpu_percent": 0.5,
+      "mem_percent": 2.0,
+      "command": "postgres",
+      "args": "/usr/lib/postgresql/14/bin/postgres -D /var/lib/postgresql/14/main"
+    }
+  }
+}

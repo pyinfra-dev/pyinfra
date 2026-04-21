@@ -1,0 +1,15 @@
+{
+    "command": "ids=$(docker ps -qa) && [ -n \"$ids\" ] && docker container inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"abc123\", \"NetworkSettings\": {\"Networks\": {\"bridge\": {\"IPAddress\": \"172.17.0.2\", \"Gateway\": \"172.17.0.1\", \"MacAddress\": \"02:42:ac:11:00:02\"}}}}, {\"Id\": \"def456\", \"NetworkSettings\": {}}]"],
+    "fact": {
+        "abc123": {
+            "bridge": {
+                "IPAddress": "172.17.0.2",
+                "Gateway": "172.17.0.1",
+                "MacAddress": "02:42:ac:11:00:02"
+            }
+        },
+        "def456": {}
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "arg": {
+        "user": "alice"
+    },
+    "command": "cat ~alice/.ssh/authorized_keys 2>/dev/null || true",
+    "output": [
+        "# some comment",
+        "",
+        "ssh-ed25519 AAAAC3Nz...key1 user@host",
+        "   ",
+        "ssh-rsa AAAAB3Nz...key2 other@host"
+    ],
+    "fact": [
+        "ssh-ed25519 AAAAC3Nz...key1 user@host",
+        "ssh-rsa AAAAB3Nz...key2 other@host"
+    ]
+}

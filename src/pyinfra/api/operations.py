@@ -6,11 +6,11 @@ from itertools import product
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, cast
 
-import click
 import gevent
 from paramiko import SSHException
 
 from pyinfra import logger
+from pyinfra.api.output import format_text
 from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
@@ -39,7 +39,7 @@ def run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
-        logger.info("{0}{1}".format(host.print_prefix, click.style("Skipped", "blue")))
+        logger.info("{0}{1}".format(host.print_prefix, format_text("Skipped", "blue")))
         return True
 
     op_meta = state.get_op_meta(op_hash)
@@ -103,7 +103,12 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
 
             if isinstance(command, FunctionCommand):
                 try:
-                    status = command.execute(state, host, connector_arguments)
+                    with gevent.Timeout(timeout, exception=TimeoutError):
+                        status = command.execute(state, host, connector_arguments)
+
+                except TimeoutError as e:
+                    log_host_command_error(host, e, timeout=timeout)
+
                 except NestedOperationError:
                     host.log_styled("Error in nested operation", fg="red", log_func=logger.error)
                 except Exception as e:
@@ -200,8 +205,8 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
         if retry_attempt > 0:
             _status_text = f"{_status_text} on retry {retry_attempt}"
 
-        _click_log_status = click.style(_status_text, "green" if executed_commands > 0 else "cyan")
-        logger.info("{0}{1}".format(host.print_prefix, _click_log_status))
+        _log_status = format_text(_status_text, "green" if executed_commands > 0 else "cyan")
+        logger.info("{0}{1}".format(host.print_prefix, _log_status))
 
         state.trigger_callbacks("operation_host_success", host, op_hash, retry_attempt)
     else:

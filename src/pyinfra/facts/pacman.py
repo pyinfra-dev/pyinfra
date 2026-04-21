@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import shlex
-
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString
+from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
 
@@ -32,7 +31,9 @@ class PacmanUnpackGroup(FactBase):
     @override
     def command(self, package):
         # Accept failure here (|| true) for invalid/unknown packages
-        return 'pacman -S --print-format "%n" {0} || true'.format(shlex.quote(package))
+        return make_formatted_string_command(
+            'pacman -S --print-format "%n" {0} || true', QuoteString(package)
+        )
 
     @override
     def process(self, output):

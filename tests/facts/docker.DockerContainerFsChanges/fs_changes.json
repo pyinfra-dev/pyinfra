@@ -1,0 +1,16 @@
+{
+    "arg": "abc123",
+    "command": "docker container diff abc123 2>&- || true",
+    "requires_command": "docker",
+    "output": [
+        "C /etc",
+        "A /etc/new_file",
+        "D /tmp/old_file",
+        ""
+    ],
+    "fact": [
+        {"change": "C", "path": "/etc"},
+        {"change": "A", "path": "/etc/new_file"},
+        {"change": "D", "path": "/tmp/old_file"}
+    ]
+}

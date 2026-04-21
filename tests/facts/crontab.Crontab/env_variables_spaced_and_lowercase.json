@@ -1,0 +1,33 @@
+{
+    "command": "crontab -l || true",
+    "requires_command": "crontab",
+    "output": [
+        "MAILTO = me@example.com",
+        "cron_tz = Europe/Amsterdam",
+        "SHELL=/bin/bash",
+        "0 * * * * echo hi"
+    ],
+    "fact": [
+        {
+            "env": "MAILTO = me@example.com",
+            "comments": []
+        },
+        {
+            "env": "cron_tz = Europe/Amsterdam",
+            "comments": []
+        },
+        {
+            "env": "SHELL=/bin/bash",
+            "comments": []
+        },
+        {
+            "command": "echo hi",
+            "minute": 0,
+            "hour": "*",
+            "month": "*",
+            "day_of_month": "*",
+            "day_of_week": "*",
+            "comments": []
+        }
+    ]
+}

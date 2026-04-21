@@ -1,0 +1,18 @@
+{
+    "kwargs": {
+        "container": "myapp",
+        "image": "myapp:latest",
+        "cpus": 2.0,
+        "memory": "512m",
+        "present": "true",
+        "start": false
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=myapp": []
+        }
+    },
+    "commands": [
+        "docker container create --name myapp --cpus 2.0 --memory 512m myapp:latest"
+    ]
+}

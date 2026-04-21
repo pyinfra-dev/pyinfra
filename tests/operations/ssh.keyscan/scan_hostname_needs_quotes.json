@@ -1,0 +1,17 @@
+{
+    "args": ["evil; rm -rf /"],
+    "facts": {
+        "server.Home": "/home/pyinfra",
+        "files.Directory": {
+            "path=/home/pyinfra/.ssh": {
+                "mode": 700
+            }
+        },
+        "files.FindInFile": {
+            "interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=evil; rm -rf /": []
+        }
+    },
+    "commands": [
+        "ssh-keyscan -p 22 'evil; rm -rf /' >> /home/pyinfra/.ssh/known_hosts"
+    ]
+}

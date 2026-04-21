@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-import shlex
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
 from socket import timeout as timeout_error
-from subprocess import PIPE, Popen
+from gevent.subprocess import PIPE, Popen
 from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
 
-import click
 import gevent
 
 from pyinfra import logger
+from pyinfra.api.output import echo, format_text
 from pyinfra.api import MaskString, QuoteString, StringCommand
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SU_ASKPASS_ENV_VAR = "PYINFRA_SU_PASSWORD"
 
 
-SUDO_ASKPASS_COMMAND = r"""
+ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
@@ -130,7 +130,7 @@ def read_buffer(
         if print_func:
             line = print_func(line)
 
-        click.echo(line, err=True)
+        echo(line, err=True)
 
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings
@@ -172,7 +172,7 @@ def read_output_buffers(
         print_output=print_output,
         print_func=lambda line: "{0}{1}".format(
             print_prefix,
-            click.style(line, "red"),
+            format_text(line, "red"),
         ),
     )
 
@@ -233,14 +233,24 @@ def write_stdin(stdin, buffer):
 
 
 def remove_any_sudo_askpass_file(host) -> None:
+    # Best-effort cleanup: this is called from host.disconnect(), and the
+    # connection may already be broken (e.g. after `server.reboot`). Swallow
+    # any errors from the remote ``rm`` and still clear the local state so a
+    # reconnect will regenerate a fresh askpass file.
     sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
     if sudo_askpass_path:
-        host.run_shell_command("rm -f {0}".format(sudo_askpass_path))
+        try:
+            host.run_shell_command(StringCommand("rm", "-f", QuoteString(sudo_askpass_path)))
+        except Exception as e:
+            logger.debug("Could not remove sudo askpass file %s: %s", sudo_askpass_path, e)
         host.connector_data["sudo_askpass_path"] = None
 
     su_askpass_path = host.connector_data.get("su_askpass_path")
     if su_askpass_path:
-        host.run_shell_command("rm -f {0}".format(su_askpass_path))
+        try:
+            host.run_shell_command(StringCommand("rm", "-f", QuoteString(su_askpass_path)))
+        except Exception as e:
+            logger.debug("Could not remove su askpass file %s: %s", su_askpass_path, e)
         host.connector_data["su_askpass_path"] = None
 
 
@@ -271,21 +281,29 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
 
 
 def _ensure_sudo_askpass_set_for_host(host: "Host"):
-    if host.connector_data.get("sudo_askpass_path"):
-        return
-    _, output = host.run_shell_command(
-        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SUDO_ASKPASS_ENV_VAR)
-    )
-    host.connector_data["sudo_askpass_path"] = shlex.quote(output.stdout_lines[0])
+    return _ensure_askpass_set_for_host(host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR)
 
 
 def _ensure_su_askpass_set_for_host(host: "Host"):
-    if host.connector_data.get("su_askpass_path"):
+    return _ensure_askpass_set_for_host(host, "su_askpass_path", SU_ASKPASS_ENV_VAR)
+
+
+def _ensure_askpass_set_for_host(host: "Host", key: str, env_var: str):
+    if host.connector_data.get(key):
         return
-    _, output = host.run_shell_command(
-        SUDO_ASKPASS_COMMAND.format(host.get_temp_dir_config(), SU_ASKPASS_ENV_VAR)
-    )
-    host.connector_data["su_askpass_path"] = shlex.quote(output.stdout_lines[0])
+    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
+
+    if not ok:
+        raise PyinfraError("Failed to create sudo_askpass command: {0}".format(output.output))
+
+    if not output.stdout_lines:
+        raise PyinfraError(
+            "Failed to create sudo_askpass command: no output produced by command: {0}".format(
+                output.output,
+            )
+        )
+
+    host.connector_data[key] = output.stdout_lines[0]
 
 
 def make_unix_command_for_host(
@@ -341,6 +359,9 @@ def make_unix_command(
     # Doas config
     _doas=False,
     _doas_user=None,
+    # Dzdo config
+    _dzdo=False,
+    _dzdo_user=None,
     # Retry config (ignored in command generation but passed through)
     _retries=0,
     _retry_delay=0,
@@ -356,11 +377,18 @@ def make_unix_command(
         _shell_executable = "sh"
 
     if _env:
-        env_string = " ".join(['"{0}={1}"'.format(key, value) for key, value in _env.items()])
-        command = StringCommand("export", env_string, "&&", command)
+        env_bits: list[Union[str, StringCommand, QuoteString]] = ["export"]
+        for key, value in _env.items():
+            # Quote the whole `key=value` pair so arbitrary values cannot break
+            # out into additional shell tokens. Invalid identifiers in `key` will
+            # fail safely when the shell rejects the resulting `export` statement.
+            env_bits.append(QuoteString("{0}={1}".format(key, value)))
+        env_bits.append("&&")
+        env_bits.append(command)
+        command = StringCommand(*env_bits)
 
     if _chdir:
-        command = StringCommand("cd", _chdir, "&&", command)
+        command = StringCommand("cd", QuoteString(_chdir), "&&", command)
 
     command_bits: list[Union[str, StringCommand, QuoteString]] = []
 
@@ -368,14 +396,25 @@ def make_unix_command(
         command_bits.extend(["doas", "-n"])
 
         if _doas_user:
-            command_bits.extend(["-u", _doas_user])
+            command_bits.extend(["-u", QuoteString(_doas_user)])
+
+    if _dzdo:
+        command_bits.extend(["dzdo", "-H", "-n"])
+
+        if _dzdo_user:
+            command_bits.extend(["-u", QuoteString(_dzdo_user)])
 
     if _sudo_password and _sudo_askpass_path:
         command_bits.extend(
             [
                 "env",
-                "SUDO_ASKPASS={0}".format(_sudo_askpass_path),
-                MaskString("{0}={1}".format(SUDO_ASKPASS_ENV_VAR, shlex.quote(_sudo_password))),
+                StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
+                MaskString(
+                    "{0}={1}".format(
+                        SUDO_ASKPASS_ENV_VAR,
+                        StringCommand(QuoteString(_sudo_password)).get_raw_value(),
+                    )
+                ),
             ],
         )
 
@@ -394,15 +433,20 @@ def make_unix_command(
             command_bits.append("-E")
 
         if _sudo_user:
-            command_bits.extend(("-u", _sudo_user))
+            command_bits.extend(("-u", QuoteString(_sudo_user)))
 
     if _su_user:
         if _su_password and _su_askpass_path:
             command_bits.extend(
                 [
                     "env",
-                    MaskString("{0}={1}".format(SU_ASKPASS_ENV_VAR, shlex.quote(_su_password))),
-                    _su_askpass_path,
+                    MaskString(
+                        "{0}={1}".format(
+                            SU_ASKPASS_ENV_VAR,
+                            StringCommand(QuoteString(_su_password)).get_raw_value(),
+                        )
+                    ),
+                    QuoteString(_su_askpass_path),
                     "|",
                 ],
             )
@@ -417,9 +461,16 @@ def make_unix_command(
             command_bits.append("-m")
 
         if _su_shell:
-            command_bits.extend(["-s", "`which {0}`".format(_su_shell)])
+            # Resolve the shell via `command -v`, with the user-supplied shell
+            # name safely quoted so it cannot inject extra shell syntax.
+            command_bits.extend(
+                [
+                    "-s",
+                    StringCommand("$(command -v ", QuoteString(_su_shell), ")", _separator=""),
+                ]
+            )
 
-        command_bits.extend([_su_user, "-c"])
+        command_bits.extend([QuoteString(_su_user), "-c"])
 
         if _shell_executable is not None:
             # Quote the whole shell -c 'command' as BSD `su` does not have a shell option
@@ -443,7 +494,6 @@ def make_win_command(command):
     """
 
     # Quote the command as a string
-    command = shlex.quote(str(command))
-    command = "{0}".format(command)
+    command = StringCommand(QuoteString(str(command))).get_raw_value()
 
     return command
