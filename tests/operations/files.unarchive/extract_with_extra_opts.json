@@ -14,6 +14,6 @@
         }
     },
     "commands": [
-        "tar xzf --strip-components=1 /tmp/app.tar.gz -C /opt/app"
+        "tar -xz --strip-components=1 -f /tmp/app.tar.gz -C /opt/app"
     ]
 }

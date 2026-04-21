@@ -10,7 +10,7 @@
     },
     "commands": [
         ["upload", "releases/app.tar.gz", "_tempfile_"],
-        "tar xzf _tempfile_ -C /opt/app",
+        "tar -xz -f _tempfile_ -C /opt/app",
         "rm -f _tempfile_"
     ]
 }

@@ -2078,24 +2078,28 @@ def block(
             yield StringCommand(out_prep, cmd, q_path, "> $OUT", real_out)
 
 
-_ARCHIVE_FORMATS = {
-    ".tar": "tar xf",
-    ".tar.gz": "tar xzf",
-    ".tgz": "tar xzf",
-    ".tar.bz2": "tar xjf",
-    ".tbz2": "tar xjf",
-    ".tar.xz": "tar xJf",
-    ".txz": "tar xJf",
-    ".tar.zst": "tar --zstd -xf",
-    ".zip": "unzip -o",
+_TAR_FORMATS = {
+    ".tar": ["-x"],
+    ".tar.gz": ["-xz"],
+    ".tgz": ["-xz"],
+    ".tar.bz2": ["-xj"],
+    ".tbz2": ["-xj"],
+    ".tar.xz": ["-xJ"],
+    ".txz": ["-xJ"],
+    ".tar.zst": ["-x", "--zstd"],
 }
+_ZIP_FORMATS = (".zip",)
+_ARCHIVE_EXTENSIONS = tuple(_TAR_FORMATS.keys()) + _ZIP_FORMATS
 
 
-def _get_archive_command(src: str) -> str | None:
+def _get_archive_format(src: str) -> tuple[str, list[str]] | None:
     lower = src.lower()
-    for ext, cmd in _ARCHIVE_FORMATS.items():
+    for ext, flags in _TAR_FORMATS.items():
         if lower.endswith(ext):
-            return cmd
+            return "tar", flags
+    for ext in _ZIP_FORMATS:
+        if lower.endswith(ext):
+            return "unzip", ["-o"]
     return None
 
 
@@ -2156,13 +2160,15 @@ def unarchive(
     if not dest_info:
         raise OperationError("Destination {0} is not an existing directory".format(dest))
 
-    extract_cmd = _get_archive_command(src)
-    if extract_cmd is None:
+    archive_format = _get_archive_format(src)
+    if archive_format is None:
         raise OperationValueError(
             "Unsupported archive format for {0}. Supported: {1}".format(
-                src, ", ".join(_ARCHIVE_FORMATS.keys())
+                src, ", ".join(_ARCHIVE_EXTENSIONS)
             )
         )
+
+    tool, flags = archive_format
 
     if not remote_src:
         # Upload the local archive to a temp location on the remote
@@ -2175,16 +2181,30 @@ def unarchive(
             raise OperationError("Remote archive {0} does not exist".format(src))
         archive_path = src
 
-    # Build extract command
-    cmd_parts: list[str] = extract_cmd.split()
-    if extra_opts:
-        cmd_parts.extend(extra_opts)
+    extras = list(extra_opts) if extra_opts else []
 
-    if extract_cmd.startswith("tar"):
-        yield StringCommand(*cmd_parts, QuoteString(archive_path), "-C", QuoteString(dest))
+    if tool == "tar":
+        # tar <flags> <extras> -f <archive> -C <dest>
+        # Keep -f adjacent to the archive path so extras never get mistaken for it.
+        yield StringCommand(
+            tool,
+            *flags,
+            *extras,
+            "-f",
+            QuoteString(archive_path),
+            "-C",
+            QuoteString(dest),
+        )
     else:
-        # unzip: unzip -o <archive> -d <dest>
-        yield StringCommand(*cmd_parts, QuoteString(archive_path), "-d", QuoteString(dest))
+        # unzip <flags> <extras> <archive> -d <dest>
+        yield StringCommand(
+            tool,
+            *flags,
+            *extras,
+            QuoteString(archive_path),
+            "-d",
+            QuoteString(dest),
+        )
 
     # Clean up uploaded temp file
     if not remote_src:
@@ -2192,5 +2212,4 @@ def unarchive(
 
     # Set ownership if requested
     if user or group:
-        ownership = "{0}:{1}".format(user or "", group or "")
-        yield StringCommand("chown", "-R", ownership, QuoteString(dest))
+        yield file_utils.chown(dest, user, group, recursive=True)

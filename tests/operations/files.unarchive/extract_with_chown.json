@@ -15,7 +15,7 @@
         }
     },
     "commands": [
-        "tar xzf /tmp/app.tar.gz -C /opt/app",
+        "tar -xz -f /tmp/app.tar.gz -C /opt/app",
         "chown -R www-data:www-data /opt/app"
     ]
 }
