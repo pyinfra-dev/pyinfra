@@ -28,7 +28,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_doas_user_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _doas=True, _doas_user="root; rm -rf /")
-        assert command.get_raw_value() == ("doas -n -u 'root; rm -rf /' sh -c uptime")
+        assert command.get_raw_value() == ("env LC_ALL=C doas -n -u 'root; rm -rf /' sh -c uptime")
 
     def test_dzdo_command(self):
         command = make_unix_command("uptime", _dzdo=True)
@@ -64,7 +64,9 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_sudo_user_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _sudo=True, _sudo_user="root; touch /tmp/pwn")
-        assert command.get_raw_value() == ("sudo -H -n -u 'root; touch /tmp/pwn' sh -c uptime")
+        assert command.get_raw_value() == (
+            "env LC_ALL=C sudo -H -n -u 'root; touch /tmp/pwn' sh -c uptime"
+        )
 
     def test_sudo_password_askpass_path_quoted(self):
         command = make_unix_command(
@@ -83,7 +85,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_su_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _su_user="root$(id)")
-        assert command.get_raw_value() == ("su 'root$(id)' -c 'sh -c uptime'")
+        assert command.get_raw_value() == ("env LC_ALL=C su 'root$(id)' -c 'sh -c uptime'")
 
     def test_su_multi_arg_command(self):
         command = make_unix_command("echo hi", _su_user="pyinfra")
@@ -99,14 +101,18 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_su_shell_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _su_shell="bash")
-        assert command.get_raw_value() == "env LC_ALL=C su -s $(command -v bash) pyinfra -c 'sh -c uptime'"
+        assert (
+            command.get_raw_value()
+            == "env LC_ALL=C su -s $(command -v bash) pyinfra -c 'sh -c uptime'"
+        )
 
     def test_su_shell_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _su_shell="bash$(id)")
         # The injected `$(id)` must be safely quoted as a literal argument to
         # `command -v` rather than executed as a subshell.
         assert (
-            command.get_raw_value() == "env LC_ALL=C su -s $(command -v 'bash$(id)') pyinfra -c 'sh -c uptime'"
+            command.get_raw_value()
+            == "env LC_ALL=C su -s $(command -v 'bash$(id)') pyinfra -c 'sh -c uptime'"
         )
 
     def test_su_password_command(self):
@@ -211,7 +217,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
         remove_any_sudo_askpass_file(host)
 
-        assert commands == ["rm -f '/tmp/weird path; id'"]
+        assert commands == ["rm -f '/tmp/weird path; id' '/tmp/weird path; id.*.called'"]
         assert host.connector_data["sudo_askpass_path"] is None
 
     def test_command_exists_su_config_only(self):
@@ -239,8 +245,8 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         remove_any_sudo_askpass_file(host)
 
         assert commands == [
-            "rm -f /tmp/sudo-askpass",
-            "rm -f /tmp/su-askpass",
+            "rm -f /tmp/sudo-askpass '/tmp/sudo-askpass.*.called'",
+            "rm -f /tmp/su-askpass '/tmp/su-askpass.*.called'",
         ]
         assert host.connector_data["sudo_askpass_path"] is None
         assert host.connector_data["su_askpass_path"] is None
