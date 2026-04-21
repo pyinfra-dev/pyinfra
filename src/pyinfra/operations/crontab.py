@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import shlex
-
 from pyinfra import logger
-from pyinfra.api.command import StringCommand
+from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.operation import operation
 from pyinfra.api.util import try_int
 from pyinfra.context import host
@@ -131,17 +129,11 @@ def crontab(
             edit_commands.append("echo '' >> {0}".format(temp_filename))
         if cron_name:
             edit_commands.append(
-                "echo {0} >> {1}".format(
-                    shlex.quote(name_comment),
-                    temp_filename,
-                ),
+                StringCommand("echo", QuoteString(name_comment), ">>", temp_filename),
             )
 
         edit_commands.append(
-            "echo {0} >> {1}".format(
-                shlex.quote(new_crontab_line),
-                temp_filename,
-            ),
+            StringCommand("echo", QuoteString(new_crontab_line), ">>", temp_filename),
         )
 
     # We have the cron and it exists, do it's details? If not, replace the line

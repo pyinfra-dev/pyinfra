@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import posixpath
+import re
 import sys
 import traceback
 from datetime import datetime, timedelta, timezone
@@ -14,10 +15,10 @@ from io import StringIO
 from pathlib import Path
 from typing import IO, Any, Union
 
-import click
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
+from pyinfra.api.output import format_text
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -89,6 +90,7 @@ def download(
     headers: dict[str, str] | None = None,
     insecure=False,
     proxy: str | None = None,
+    limit_rate: str | None = None,
     temp_dir: str | Path | None = None,
     extra_curl_args: dict[str, str] | None = None,
     extra_wget_args: dict[str, str] | None = None,
@@ -110,6 +112,7 @@ def download(
     + headers: optional dictionary of headers to set for the HTTP request
     + insecure: disable SSL verification for the HTTP request
     + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
+    + limit_rate: cap the download bandwidth, accepts the curl/wget format (e.g. ``1M``, ``500k``)
     + temp_dir: use this custom temporary directory during the download
     + extra_curl_args: optional dictionary with custom arguments for curl
     + extra_wget_args: optional dictionary with custom arguments for wget
@@ -197,6 +200,10 @@ def download(
             curl_args.append("--insecure")
             wget_args.append("--no-check-certificate")
 
+        if limit_rate:
+            curl_args.append(StringCommand("--limit-rate", QuoteString(limit_rate)))
+            wget_args.append(StringCommand("--limit-rate", QuoteString(limit_rate)))
+
         if headers:
             for key, value in headers.items():
                 header_arg = StringCommand("--header", QuoteString(f"{key}: {value}"))
@@ -246,7 +253,7 @@ def download(
             yield make_formatted_string_command(
                 (
                     "(( sha256sum {0} 2> /dev/null || shasum -a 256 {0} || sha256 {0} ) "
-                    "| grep {1}) || ( echo {2} && exit 1 )"
+                    "| grep {1} ) || ( echo {2} && exit 1 )"
                 ),
                 QuoteString(dest),
                 sha256sum,
@@ -257,7 +264,7 @@ def download(
             yield make_formatted_string_command(
                 (
                     "(( sha384sum {0} 2> /dev/null || shasum -a 384 {0} ) "
-                    "| grep {1}) || ( echo {2} && exit 1 )"
+                    "| grep {1} ) || ( echo {2} && exit 1 )"
                 ),
                 QuoteString(dest),
                 sha384sum,
@@ -266,7 +273,7 @@ def download(
 
         if md5sum:
             yield make_formatted_string_command(
-                ("(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1}) || ( echo {2} && exit 1 )"),
+                ("(( md5sum {0} 2> /dev/null || md5 {0} ) | grep {1} ) || ( echo {2} && exit 1 )"),
                 QuoteString(dest),
                 md5sum,
                 QuoteString("MD5 did not match!"),
@@ -457,6 +464,11 @@ def line(
 
     # Line(s) exists and we want to remove them
     elif present_lines and not present:
+        if state.config.DIFF:
+            host.log(f"Will Remove lines in {format_text(path, bold=True)}", logger.info)
+            for line in generate_color_diff(present_lines, []):
+                logger.info("  %s", line)
+            logger.info("")
         yield sed_delete(
             path,
             match_line,
@@ -470,6 +482,11 @@ def line(
     elif present_lines and present:
         # If any of lines are different, sed replace them
         if replace and any(line != replace for line in present_lines):
+            if state.config.DIFF:
+                host.log(f"Will replace lines in {format_text(path, bold=True)}", logger.info)
+                new_lines = [re.sub(match_line, replace, line) for line in present_lines]
+                for line in generate_color_diff(present_lines, new_lines):
+                    logger.info("  %s", line)
             yield sed_replace_command
         else:
             host.noop('line "{0}" exists in {1}'.format(replace or line, path))
@@ -1087,13 +1104,16 @@ def put(
     # No remote file, always upload and user/group/mode if supplied
     if not remote_file or force:
         if state.config.DIFF:
-            host.log(f"Will create {click.style(dest, bold=True)}", logger.info)
+            host.log(f"Will create {format_text(dest, bold=True)}", logger.info)
 
-            with get_file_io(src, "r") as f:
-                desired_lines = f.readlines()
+            try:
+                with get_file_io(src, "r") as f:
+                    desired_lines = f.readlines()
 
-            for line in generate_color_diff([], desired_lines):
-                logger.info(f"  {line}")
+                for line in generate_color_diff([], desired_lines):
+                    logger.info("  %s", line)
+            except UnicodeDecodeError:
+                logger.info("Binary file uploaded")
             logger.info("")
 
         yield FileUploadCommand(
@@ -1134,13 +1154,13 @@ def put(
                 else:
                     current_lines = []
 
-                host.log(f"Will modify {click.style(dest, bold=True)}", logger.info)
+                host.log(f"Will modify {format_text(dest, bold=True)}", logger.info)
 
                 with get_file_io(src, "r") as f:
                     desired_lines = f.readlines()
 
                 for line in generate_color_diff(current_lines, desired_lines):
-                    logger.info(f"  {line}")
+                    logger.info("  %s", line)
                 logger.info("")
 
             yield FileUploadCommand(
@@ -1174,11 +1194,27 @@ def put(
 
             # Check mode
             if mode and remote_file["mode"] != mode:
+                if state.config.DIFF:
+                    logger.info("mode %s", format_text(str(remote_file["mode"]), "red"))
+                    logger.info("mode %s", format_text(str(mode), "green"))
                 yield file_utils.chmod(dest, mode)
                 changed = True
 
             # Check user/group
             if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
+                if state.config.DIFF:
+                    old_status = [remote_file["user"], remote_file["group"]]
+                    new_status = [user, group]
+                    if user and remote_file["user"] != user:
+                        old_status[0] = format_text(remote_file["user"], "red")
+                        new_status[0] = format_text(user, "green")
+                    if group and remote_file["group"] != group:
+                        old_status[1] = format_text(remote_file["group"], "red")
+                        new_status[1] = format_text(group, "green")
+
+                    logger.info("chown %s:%s", *old_status)
+                    logger.info("chown %s:%s", *new_status)
+
                 yield file_utils.chown(dest, user, group)
                 changed = True
 
@@ -1189,6 +1225,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("mtime %s", format_text(str(remote_file["mtime"]), "red"))
+                        logger.info("mtime %s", format_text(str(canonical_mtime), "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.MTIME, canonical_mtime)
                     changed = True
 
@@ -1199,6 +1239,10 @@ def put(
                 if _times_differ_in_s(
                     canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
                 ):
+                    if state.config.DIFF:
+                        logger.info("atime %s", format_text(str(remote_file["atime"]), "red"))
+                        logger.info("atime %s", format_text(str(canonical_atime), "green"))
+
                     yield file_utils.touch(dest, MetadataTimeField.ATIME, canonical_atime)
                     changed = True
 
@@ -1238,8 +1282,9 @@ def template(
         a dict with arguments that will be passed as keyword args to the jinja2
         `Environment() <https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Environment>`_.
 
-    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template
-    if not set explicitly.
+    The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template.
+    To pass additional data or variables, explicitly add them as keyword arguments to the operation
+    call itself.
 
     Notes:
         Common convention is to store templates in a "templates" directory and
@@ -1270,8 +1315,16 @@ def template(
             group="root",
         )
 
-        # Example showing how to pass python variable to template file. You can also
-        # use dicts and lists. The .j2 file can use `{{ foo_variable }}` to be interpolated.
+        # You can use a (local) file path or an IO-like object as src:
+        files.template(
+            name="Create a templated file",
+            src=StringIO("This is a template file content"),
+            dest="/etc/somefile.conf",
+        )
+
+        # To pass variables to the template file, just add them to the operation call.
+        # You can also use dicts and lists. The .j2 file can use `{{ foo_variable }}`
+        # to interpolate them:
         foo_variable = 'This is some foo variable contents'
         foo_dict = {
             "str1": "This is string 1",
@@ -1302,7 +1355,8 @@ def template(
             foo_list=foo_list
         )
 
-        # Example showing how to use host and inventory in a template file.
+        # Host, state and inventory are automatically passed to the template,
+        # no need to explicitly pass them in the operation call:
         template = StringIO("""
         name: "{{ host.name }}"
         list_contents:
@@ -2066,3 +2120,140 @@ def block(
         else:
             cmd = StringCommand(f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'")
             yield StringCommand(out_prep, cmd, q_path, "> $OUT", real_out)
+
+
+_TAR_FORMATS = {
+    ".tar": ["-x"],
+    ".tar.gz": ["-xz"],
+    ".tgz": ["-xz"],
+    ".tar.bz2": ["-xj"],
+    ".tbz2": ["-xj"],
+    ".tar.xz": ["-xJ"],
+    ".txz": ["-xJ"],
+    ".tar.zst": ["-x", "--zstd"],
+}
+_ZIP_FORMATS = (".zip",)
+_ARCHIVE_EXTENSIONS = tuple(_TAR_FORMATS.keys()) + _ZIP_FORMATS
+
+
+def _get_archive_format(src: str) -> tuple[str, list[str]] | None:
+    lower = src.lower()
+    for ext, flags in _TAR_FORMATS.items():
+        if lower.endswith(ext):
+            return "tar", flags
+    for ext in _ZIP_FORMATS:
+        if lower.endswith(ext):
+            return "unzip", ["-o"]
+    return None
+
+
+@operation()
+def unarchive(
+    src: str,
+    dest: str,
+    remote_src: bool = False,
+    creates: str | None = None,
+    extra_opts: list[str] | None = None,
+    user: str | None = None,
+    group: str | None = None,
+):
+    """
+    Extract archive files on the remote system.
+
+    + src: path to the archive file (local or remote depending on ``remote_src``)
+    + dest: remote directory to extract into (must exist)
+    + remote_src: set to ``True`` if the archive is already on the remote system
+    + creates: if this path already exists, the operation is skipped (idempotency)
+    + extra_opts: list of additional arguments to pass to the extract command
+    + user: user to own the extracted files
+    + group: group to own the extracted files
+
+    Supported formats:
+        ``.tar``, ``.tar.gz``/``.tgz``, ``.tar.bz2``/``.tbz2``,
+        ``.tar.xz``/``.txz``, ``.tar.zst``, ``.zip``
+
+    **Examples:**
+
+    .. code:: python
+
+        # Extract a remote archive
+        files.unarchive(
+            name="Extract app tarball",
+            src="/tmp/app.tar.gz",
+            dest="/opt/app",
+            remote_src=True,
+        )
+
+        # Upload and extract a local archive
+        files.unarchive(
+            name="Deploy release",
+            src="releases/app-v1.0.tar.gz",
+            dest="/opt/app",
+            creates="/opt/app/bin/start",
+        )
+    """
+
+    # Idempotency: skip if creates path already exists
+    if creates:
+        if host.get_fact(File, path=creates) is not None:
+            host.noop("archive already extracted ({0} exists)".format(creates))
+            return
+
+    # Validate destination exists and is a directory
+    dest_info = host.get_fact(Directory, path=dest)
+    if not dest_info:
+        raise OperationError("Destination {0} is not an existing directory".format(dest))
+
+    archive_format = _get_archive_format(src)
+    if archive_format is None:
+        raise OperationValueError(
+            "Unsupported archive format for {0}. Supported: {1}".format(
+                src, ", ".join(_ARCHIVE_EXTENSIONS)
+            )
+        )
+
+    tool, flags = archive_format
+
+    if not remote_src:
+        # Upload the local archive to a temp location on the remote
+        temp_archive = host.get_temp_filename(src)
+        yield FileUploadCommand(src, temp_archive)
+        archive_path = temp_archive
+    else:
+        # Validate the remote archive exists
+        if host.get_fact(File, path=src) is None:
+            raise OperationError("Remote archive {0} does not exist".format(src))
+        archive_path = src
+
+    extras = list(extra_opts) if extra_opts else []
+
+    if tool == "tar":
+        # tar <flags> <extras> -f <archive> -C <dest>
+        # Keep -f adjacent to the archive path so extras never get mistaken for it.
+        yield StringCommand(
+            tool,
+            *flags,
+            *extras,
+            "-f",
+            QuoteString(archive_path),
+            "-C",
+            QuoteString(dest),
+        )
+    else:
+        # unzip <flags> <extras> <archive> -d <dest>
+        yield StringCommand(
+            tool,
+            *flags,
+            *extras,
+            QuoteString(archive_path),
+            "-d",
+            QuoteString(dest),
+        )
+
+    # Clean up uploaded temp file
+    if not remote_src:
+        yield StringCommand("rm", "-f", QuoteString(temp_archive))
+
+    # Set ownership if requested
+    if user or group:
+        yield file_utils.chown(dest, user, group, recursive=True)

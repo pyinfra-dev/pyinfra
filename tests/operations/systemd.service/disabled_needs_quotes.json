@@ -1,0 +1,21 @@
+{
+    "args": ["my-service; whoami"],
+    "kwargs": {
+        "enabled": false
+    },
+    "facts": {
+        "systemd.SystemdStatus": {
+            "machine=None, services=['my-service; whoami.service'], user_mode=False, user_name=None": {
+                "my-service; whoami.service": true
+            }
+        },
+        "systemd.SystemdEnabled": {
+            "machine=None, services=['my-service; whoami.service'], user_mode=False, user_name=None": {
+                "my-service; whoami.service": true
+            }
+        }
+    },
+    "commands": [
+        "systemctl disable 'my-service; whoami.service'"
+    ]
+}

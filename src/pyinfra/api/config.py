@@ -4,7 +4,7 @@ except ImportError:
     import importlib.metadata as importlib_metadata  # type: ignore[no-redef]
 
 from os import path
-from typing import Iterable, Optional, Set
+from typing import Iterable, Optional, Sequence, Set
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
@@ -50,6 +50,9 @@ class ConfigDefaults:
     # Use doas and optional user
     DOAS: bool = False
     DOAS_USER: Optional[str] = None
+    # Use dzdo and optional user
+    DZDO: bool = False
+    DZDO_USER: Optional[str] = None
     # Only show errors but don't count as failure
     IGNORE_ERRORS: bool = False
     # Shell to use to execute commands
@@ -60,6 +63,9 @@ class ConfigDefaults:
     RETRY: int = 0
     # Delay in seconds between retry attempts
     RETRY_DELAY: int = 5
+    # List of environment variable names to inherit from the local process environment.
+    # These are passed to every shell command, with lower priority than config.ENV.
+    INHERIT_ENV: Sequence[str] = ()
 
 
 config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() if key.isupper()}

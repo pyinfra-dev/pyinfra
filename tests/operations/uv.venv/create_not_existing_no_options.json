@@ -1,0 +1,9 @@
+{
+    "args": ["/somewhere/useful"],
+    "kwargs": {"present": true, "extra_args": ["--offline", "--native-tls"]},
+    "facts": {
+        "files.File": {"path=/somewhere/useful/.venv/bin/activate": null},
+        "files.Directory": {"path=/somewhere/useful.venv": null},
+    },
+    "commands": ["uv venv --offline --native-tls /somewhere/useful"],
+}

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import re
-import shlex
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString
+from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
 
@@ -74,8 +74,9 @@ class DebPackage(FactBase):
 
     @override
     def command(self, package):
-        return "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}".format(
-            shlex.quote(package)
+        return make_formatted_string_command(
+            "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}",
+            QuoteString(package),
         )
 
     @override

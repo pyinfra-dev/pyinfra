@@ -210,6 +210,15 @@ class MacosVersion(FactBase[str]):
         return "sw_vers -productVersion"
 
 
+class ProcessDict(TypedDict):
+    user: str
+    state: str
+    cpu_percent: float
+    mem_percent: float
+    command: str
+    args: str
+
+
 class MountsDict(TypedDict):
     device: str
     type: str
@@ -386,6 +395,136 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             if len(parts) >= 3:
                 return (parts[1], int(parts[2]))
         return None, None
+
+
+class Ports(FactBase[List[dict[str, Union[int, str]]]]):
+    """
+    Returns a list of all listening ports with their processes and PIDs.
+
+    Uses ``ss`` on Linux (with ``netstat`` fallback) and ``sockstat`` on FreeBSD.
+
+    .. code:: python
+
+        host.get_fact(Ports)
+    """
+
+    default = list
+
+    @override
+    def command(self) -> str:
+        self._kernel = host.get_fact(Kernel)
+
+        if self._kernel.strip() == "FreeBSD":
+            self._tool = "sockstat"
+            return "sockstat -l"
+        self._has_ss = host.get_fact(Which, "ss")
+        if self._has_ss:
+            self._tool = "ss"
+            return "ss -lpuntn || true"
+        else:
+            self._tool = "netstat"
+            return "netstat -tunp 2>/dev/null || true"
+
+    @override
+    def process(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        if self._tool == "ss":
+            return self._process_ss(output)
+        elif self._tool == "netstat":
+            return self._process_netstat(output)
+        elif self._tool == "sockstat":
+            return self._process_sockstat(output)
+        return []
+
+    def _process_ss(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        results: List[dict[str, Union[int, str]]] = []
+
+        for line in output:
+            if '"' not in line or "pid=" not in line:
+                continue
+            parts = line.split('"')
+            if len(parts) < 2:
+                continue
+            proc = parts[1]
+            port_info = parts[0].split()
+            if len(port_info) < 2:
+                continue
+            state = port_info[0]
+            if state in ("LISTEN", "UNCONN", "ESTAB", "ESTABLISHED"):
+                protocol = "udp" if state == "UNCONN" else "tcp"
+                addr_idx = 3 if len(port_info) > 3 else 1
+            else:
+                protocol = "udp" if len(port_info) > 1 and port_info[1] == "UNCONN" else "tcp"
+                addr_idx = 4 if len(port_info) > 4 else 1
+            if addr_idx < len(port_info):
+                addr = port_info[addr_idx]
+                if ":" in addr:
+                    ip_port = addr.rsplit(":", 1)
+                    ip = ip_port[0]
+                    if ip.startswith("["):
+                        ip = ip[1 : ip.index("]")] if "]" in ip else ip[1:]
+                    if "%" in ip:
+                        ip = ip.split("%")[0]
+                    try:
+                        port = int(ip_port[-1])
+                    except ValueError:
+                        continue
+                    results.append({"port": port, "ip": ip, "protocol": protocol, "process": proc})
+        return results
+
+    def _process_netstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        results: List[dict[str, Union[int, str]]] = []
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            protocol = "tcp" if parts[0].startswith("tcp") else "udp"
+            for i, part in enumerate(parts):
+                if "/" in part:
+                    pid_str, proc = part.split("/", 1)
+                    if pid_str.isdigit():
+                        if i > 0:
+                            addr = parts[3]
+                            if ":" in addr:
+                                ip_port = addr.rsplit(":", 1)
+                                ip = ip_port[0]
+                                try:
+                                    port = int(ip_port[-1])
+                                except ValueError:
+                                    continue
+                                results.append(
+                                    {"port": port, "ip": ip, "protocol": protocol, "process": proc}
+                                )
+                        break
+        return results
+
+    def _process_sockstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+        results: List[dict[str, Union[int, str]]] = []
+        for line in output:
+            line = line.strip()
+            if not line or line.startswith("USER"):
+                continue
+            parts = line.split()
+            if len(parts) >= 6:
+                try:
+                    local_addr = parts[5]
+                    ip = "*"
+                    port_str = local_addr
+                    if ":" in local_addr:
+                        ip_port = local_addr.rsplit(":", 1)
+                        ip = ip_port[0]
+                        port_str = ip_port[-1]
+                    elif local_addr.startswith("*."):
+                        port_str = local_addr[2:]
+                    else:
+                        continue
+                    port = int(port_str)
+                    proc = parts[1]
+                    protocol = parts[4]
+                    results.append({"port": port, "ip": ip, "protocol": protocol, "process": proc})
+                except (ValueError, IndexError):
+                    continue
+        return results
 
 
 class KernelModules(FactBase):
@@ -669,6 +808,39 @@ class Users(FactBase):
                 }
 
         return users
+
+
+class AuthorizedKeys(FactBase[List[str]]):
+    """
+    Returns the SSH public keys listed in a user's ``~/.ssh/authorized_keys`` file as a
+    list of full key strings. Empty lines and lines starting with ``#`` are skipped; the
+    file's order is preserved.
+
+    .. code:: python
+
+        [
+            "ssh-ed25519 AAAAC3Nz... user@host",
+            "ssh-rsa AAAAB3Nz... other@host",
+        ]
+    """
+
+    default = list
+
+    @override
+    def command(self, user: str, path: Optional[str] = None) -> str:
+        # Tilde expansion resolves the user's home without another fact round-trip.
+        target = path if path is not None else "~{0}/.ssh/authorized_keys".format(user)
+        return "cat {0} 2>/dev/null || true".format(target)
+
+    @override
+    def process(self, output: Iterable[str]) -> List[str]:
+        keys: List[str] = []
+        for raw in output:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            keys.append(line)
+        return keys
 
 
 class LinuxDistributionDict(TypedDict):
@@ -1045,3 +1217,104 @@ echo "no_reboot_required"
     @override
     def process(self, output) -> bool:
         return list(output)[0].strip() == "reboot_required"
+
+
+class Processes(FactBase["Dict[int, ProcessDict]"]):
+    """
+    Returns a dictionary of running processes keyed by PID.
+
+    .. code:: python
+
+        {
+            1: {
+                "user": "root",
+                "state": "Ss",
+                "cpu_percent": 0.0,
+                "mem_percent": 0.1,
+                "command": "init",
+                "args": "/sbin/init",
+            },
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self, pid: int | None = None) -> str:
+        self._kernel = host.get_fact(Kernel)
+        is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
+
+        # BusyBox ps (Alpine) only supports limited columns.
+        # Detect by checking if busybox exists on the system.
+        if not is_bsd:
+            self._is_busybox = bool(host.get_fact(Which, "busybox"))
+        else:
+            self._is_busybox = False
+
+        if not self._is_busybox:
+            fields = "pid,user,stat,%cpu,%mem,comm,args"
+        else:
+            # BusyBox ps: only pid, user/uid, vsz, stat, args are reliable
+            fields = "pid,user,vsz,stat,args"
+
+        if pid is not None:
+            if self._is_busybox:
+                return f"LANG=C ps -o {fields} | awk 'NR==1 || $1=={pid}'"
+            return f"LANG=C ps -p {pid} -o {fields}"
+
+        if is_bsd:
+            return f"LANG=C ps -eo {fields}"
+        elif self._is_busybox:
+            return f"LANG=C ps -o {fields}"
+        else:
+            return f"LANG=C ps -eo {fields} --no-headers"
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        processes: dict[int, ProcessDict] = {}
+
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("PID"):
+                continue
+
+            if not self._is_busybox:
+                parts = line.split(None, 6)
+                if len(parts) < 6:
+                    continue
+                try:
+                    pid = int(parts[0])
+                except ValueError:
+                    continue
+                args = parts[6] if len(parts) > 6 else parts[5]
+                processes[pid] = {
+                    "user": parts[1],
+                    "state": parts[2],
+                    "cpu_percent": float(parts[3]),
+                    "mem_percent": float(parts[4]),
+                    "command": parts[5],
+                    "args": args,
+                }
+            else:
+                # BusyBox format: pid, user, vsz, stat, args
+                parts = line.split(None, 4)
+                if len(parts) < 5:
+                    continue
+                try:
+                    pid = int(parts[0])
+                except ValueError:
+                    continue
+                args = parts[4]
+                command = args.split()[0].rsplit("/", 1)[-1] if args else ""
+                processes[pid] = {
+                    "user": parts[1],
+                    "state": parts[3],
+                    "cpu_percent": 0.0,
+                    "mem_percent": 0.0,
+                    "command": command,
+                    "args": args,
+                }
+
+        return processes

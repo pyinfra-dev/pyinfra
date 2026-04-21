@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "src": "/tmp/app.tar.gz",
+        "dest": "/opt/missing",
+        "remote_src": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/opt/missing": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Destination /opt/missing is not an existing directory"
+    }
+}

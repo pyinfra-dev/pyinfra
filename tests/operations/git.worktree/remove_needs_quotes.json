@@ -1,0 +1,16 @@
+{
+    "args": ["/home/my worktree; whoami"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/my worktree; whoami": {
+                "mode": 0
+            }
+        }
+    },
+    "commands": [
+        "cd '/home/my worktree; whoami' && git worktree remove ."
+    ]
+}

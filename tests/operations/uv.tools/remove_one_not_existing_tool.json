@@ -1,0 +1,12 @@
+{
+    "args": ["ruff"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "uv.UvTools": {}
+    },
+    "commands": [
+    ],
+    "noop_description": "package ruff is not installed"
+}

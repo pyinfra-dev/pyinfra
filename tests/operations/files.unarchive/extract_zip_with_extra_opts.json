@@ -1,0 +1,19 @@
+{
+    "kwargs": {
+        "src": "/tmp/app.zip",
+        "dest": "/opt/app",
+        "remote_src": true,
+        "extra_opts": ["-q"]
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/opt/app": true
+        },
+        "files.File": {
+            "path=/tmp/app.zip": true
+        }
+    },
+    "commands": [
+        "unzip -o -q /tmp/app.zip -d /opt/app"
+    ]
+}

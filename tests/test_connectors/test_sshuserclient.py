@@ -19,6 +19,13 @@ Host 127.0.0.1
 Include other_file
 """
 
+SSH_CONFIG_INLINE_COMMENTS = """
+Host 127.0.0.1
+    IdentityFile /id_rsa   # my main key
+    User testuser # the test user
+    Port 33 # custom port
+"""
+
 SSH_CONFIG_OTHER_FILE = """
 Host 192.168.1.1
     User "otheruser"
@@ -34,9 +41,41 @@ Host 192.168.1.2
     ForwardAgent yes
 """
 
+SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT = """
+Host jump
+    HostName jump.example.com
+    User jumpuser
+    ConnectTimeout 7
+
+Host device
+    HostName 10.0.0.170
+    ProxyJump jump
+    ConnectTimeout 5
+    User deviceuser
+"""
+
+SSH_CONFIG_CONNECTTIMEOUT = """
+Host slowhost
+    HostName slow.example.com
+    User slowuser
+    ConnectTimeout 12
+"""
+
 SSH_CONFIG_MULTIPLE_KNOWN_HOSTS = """
 Host 192.168.1.3
     UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.infra ~/.ssh/known_hosts.webservers
+"""
+
+SSH_CONFIG_IDENTITY_AGENT = """
+Host 10.0.0.1
+    User agentuser
+    IdentityAgent ~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock
+"""
+
+SSH_CONFIG_IDENTITY_AGENT_NONE = """
+Host 10.0.0.2
+    User agentuser
+    IdentityAgent none
 """
 
 BAD_SSH_CONFIG_DATA = """
@@ -83,13 +122,20 @@ class TestSSHUserConfigMissing(TestCase):
     def test_load_ssh_config_no_exist(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("port") == 22
+        assert identity_agent is None
 
 
 @patch(
@@ -133,10 +179,16 @@ class TestSSHUserConfig(TestCase):
     def test_load_ssh_config(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("key_filename") == ["/id_rsa", "/id_rsa2"]
@@ -146,6 +198,7 @@ class TestSSHUserConfig(TestCase):
         assert forward_agent is False
         assert isinstance(missing_host_key_policy, AskPolicy)
         assert host_keys_file == ("~/.ssh/known_hosts",)  # OpenSSH default
+        assert identity_agent is None
 
         (
             _,
@@ -154,12 +207,36 @@ class TestSSHUserConfig(TestCase):
             missing_host_key_policy,
             host_keys_file,
             keep_alive,
+            identity_agent,
         ) = client.parse_config("192.168.1.1")
 
         assert other_config.get("username") == "otheruser"
         assert forward_agent is True
         assert isinstance(missing_host_key_policy, AskPolicy)
         assert host_keys_file == ("~/.ssh/test3",)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_INLINE_COMMENTS),
+        create=True,
+    )
+    def test_load_ssh_config_inline_comments(self):
+        """Test that inline comments are stripped from SSH config values (issue #1568)."""
+        client = SSHClient()
+
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config("127.0.0.1")
+
+        assert config.get("key_filename") == ["/id_rsa"]
+        assert config.get("username") == "testuser"
+        assert config.get("port") == 33
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
@@ -182,6 +259,7 @@ class TestSSHUserConfig(TestCase):
             missing_host_key_policy,
             host_keys_files,
             keep_alive,
+            identity_agent,
         ) = client.parse_config("192.168.1.3")
 
         # Verify multiple known hosts files are parsed as a tuple
@@ -190,6 +268,34 @@ class TestSSHUserConfig(TestCase):
             "~/.ssh/known_hosts.infra",
             "~/.ssh/known_hosts.webservers",
         )
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_IDENTITY_AGENT),
+        create=True,
+    )
+    def test_load_ssh_config_identity_agent(self):
+        """Test that IdentityAgent is parsed from SSH config."""
+        client = SSHClient()
+
+        _, config, _, _, _, _, identity_agent = client.parse_config("10.0.0.1")
+
+        assert config.get("username") == "agentuser"
+        assert identity_agent == "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_IDENTITY_AGENT_NONE),
+        create=True,
+    )
+    def test_load_ssh_config_identity_agent_none(self):
+        """Test that IdentityAgent set to 'none' is ignored."""
+        client = SSHClient()
+
+        _, config, _, _, _, _, identity_agent = client.parse_config("10.0.0.2")
+
+        assert config.get("username") == "agentuser"
+        assert identity_agent is None
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
@@ -238,7 +344,7 @@ class TestSSHUserConfig(TestCase):
         client = SSHClient()
 
         # Load the SSH config with ProxyJump configured
-        _, config, forward_agent, _, _, _ = client.parse_config(
+        _, config, forward_agent, _, _, _, _ = client.parse_config(
             "192.168.1.2",
             {"port": 1022},
             ssh_config_file="other_file",
@@ -251,7 +357,51 @@ class TestSSHUserConfig(TestCase):
             sock=None,
             username="nottestuser",
         )
-        fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022)
+        fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022, timeout=None)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_CONNECTTIMEOUT),
+        create=True,
+    )
+    def test_connecttimeout_sets_timeout_kwarg(self):
+        """Regression test for #971: ``ConnectTimeout`` in ssh_config must be
+        propagated so paramiko doesn't hang on its own default."""
+        client = SSHClient()
+        _, config, *_ = client.parse_config("slowhost")
+        assert config.get("timeout") == 12
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_propagates_connecttimeout(self, fake_gateway, fake_ssh_connect):
+        """Regression test for #971: ``ConnectTimeout`` on both the target and
+        the hop must be honored so neither the hop connect nor the direct-tcpip
+        channel can hang forever."""
+        client = SSHClient()
+
+        _, config, *_ = client.parse_config("device")
+
+        # Target's ConnectTimeout wins for the channel open.
+        assert config.get("timeout") == 5
+        # Hop connect receives the hop's own ConnectTimeout (7s, per its own
+        # ssh_config block) rather than inheriting the target's 5s.
+        fake_ssh_connect.assert_called_once()
+        _, kwargs = fake_ssh_connect.call_args
+        assert kwargs["timeout"] == 7
+        # Channel open (gateway) uses the target's ConnectTimeout.
+        fake_gateway.assert_called_once()
+        _, gw_kwargs = fake_gateway.call_args
+        assert gw_kwargs["timeout"] == 5
 
     @patch("pyinfra.connectors.sshuserclient.client.open", mock_open(), create=True)
     @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")

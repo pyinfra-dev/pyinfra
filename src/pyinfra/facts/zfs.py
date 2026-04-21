@@ -26,6 +26,8 @@ class ZfsPools(FactBase):
     def requires_command(self) -> str:
         return "zpool"
 
+    default = dict
+
     @override
     def process(self, output):
         return _process_zfs_props_table(output)
@@ -39,6 +41,8 @@ class ZfsDatasets(FactBase):
     @override
     def requires_command(self) -> str:
         return "zfs"
+
+    default = dict
 
     @override
     def process(self, output):

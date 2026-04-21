@@ -1,0 +1,8 @@
+{
+    "command": "uv --version",
+    "requires_command": "uv",
+    "output": [
+        "uv 0.9.8 (Homebrew 2025-11-07)"
+    ],
+    "fact":  "uv 0.9.8 (Homebrew 2025-11-07)"
+}

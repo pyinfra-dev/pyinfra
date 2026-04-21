@@ -1,0 +1,14 @@
+{
+    "args": [[]],
+    "kwargs": {
+        "present": true
+    },
+    "facts": {
+        "uv.UvInstalledPythonsByVersion": {
+            "is_managed=True": {}
+        }
+    },
+    "commands": [
+    ],
+    "noop_description": "no Python versions requested to be (un)installed"
+}

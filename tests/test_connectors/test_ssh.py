@@ -314,10 +314,6 @@ class TestSSHConnector(TestCase):
         with (
             mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
             mock.patch(
-                "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
-                fake_fail_from_private_key_file,
-            ),
-            mock.patch(
                 "pyinfra.connectors.ssh_util.ECDSAKey.from_private_key_file",
                 fake_fail_from_private_key_file,
             ),
@@ -345,121 +341,7 @@ class TestSSHConnector(TestCase):
 
             assert e.exception.args[0] == "Invalid private key file: testkey"
 
-        assert fake_fail_from_private_key_file.call_count == 3
-
-    def test_connect_with_dss_ssh_key(self):
-        state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
-
-        with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
-            mock.patch(
-                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-            ) as fake_rsa_key_open,
-            mock.patch(
-                "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
-            ) as fake_key_open,
-        ):  # noqa
-            fake_rsa_key_open.side_effect = make_raise_exception_function(SSHException)
-
-            fake_key = mock.MagicMock()
-            fake_key_open.return_value = fake_key
-
-            connect_all(state)
-
-            # Check the key was created properly
-            fake_key_open.assert_called_with(filename="testkey")
-
-            # And check the Paramiko SSH call was correct
-            self.fake_connect_mock.assert_called_with(
-                "somehost",
-                allow_agent=False,
-                look_for_keys=False,
-                pkey=fake_key,
-                timeout=10,
-                username="vagrant",
-                _pyinfra_ssh_forward_agent=False,
-                _pyinfra_ssh_config_file=None,
-                _pyinfra_ssh_known_hosts_file=None,
-                _pyinfra_ssh_strict_host_key_checking="accept-new",
-                _pyinfra_ssh_paramiko_connect_kwargs=None,
-            )
-
-        # Check that loading the same key again is cached in the state
-        second_state = State(
-            make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)),
-            Config(),
-        )
-        second_state.private_keys = state.private_keys
-
-        connect_all(second_state)
-
-    def test_connect_with_dss_ssh_key_password(self):
-        state = State(
-            make_inventory(
-                hosts=(
-                    (
-                        "somehost",
-                        {"ssh_key": "testkey", "ssh_key_password": "testpass"},
-                    ),
-                ),
-            ),
-            Config(),
-        )
-
-        with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
-            mock.patch(
-                "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
-            ) as fake_rsa_key_open,
-            mock.patch(
-                "pyinfra.connectors.ssh_util.DSSKey.from_private_key_file",
-            ) as fake_dss_key_open,
-        ):  # noqa
-
-            def fake_rsa_key_open_fail(*args, **kwargs):
-                if "password" not in kwargs:
-                    raise PasswordRequiredException
-                raise SSHException
-
-            fake_rsa_key_open.side_effect = fake_rsa_key_open_fail
-
-            fake_dss_key = mock.MagicMock()
-
-            def fake_dss_key_func(*args, **kwargs):
-                if "password" not in kwargs:
-                    raise PasswordRequiredException
-                return fake_dss_key
-
-            fake_dss_key_open.side_effect = fake_dss_key_func
-
-            connect_all(state)
-
-            # Check the key was created properly
-            fake_dss_key_open.assert_called_with(filename="testkey", password="testpass")
-
-            # And check the Paramiko SSH call was correct
-            self.fake_connect_mock.assert_called_with(
-                "somehost",
-                allow_agent=False,
-                look_for_keys=False,
-                pkey=fake_dss_key,
-                timeout=10,
-                username="vagrant",
-                _pyinfra_ssh_forward_agent=False,
-                _pyinfra_ssh_config_file=None,
-                _pyinfra_ssh_known_hosts_file=None,
-                _pyinfra_ssh_strict_host_key_checking="accept-new",
-                _pyinfra_ssh_paramiko_connect_kwargs=None,
-            )
-
-        # Check that loading the same key again is cached in the state
-        second_state = State(
-            make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)),
-            Config(),
-        )
-        second_state.private_keys = state.private_keys
-
-        connect_all(second_state)
+        assert fake_fail_from_private_key_file.call_count == 2
 
     def test_connect_with_missing_ssh_key(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
@@ -505,9 +387,9 @@ class TestSSHConnector(TestCase):
 
         fake_ssh.exec_command.assert_called_with("sh -c 'echo Šablony'", get_pty=False)
 
-    @mock.patch("pyinfra.connectors.ssh.click")
+    @mock.patch("pyinfra.api.output._echo")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
-    def test_run_shell_command_masked(self, fake_ssh_client, fake_click):
+    def test_run_shell_command_masked(self, fake_ssh_client, fake_echo):
         fake_ssh = mock.MagicMock()
         fake_stdout = mock.MagicMock()
         fake_ssh.exec_command.return_value = (
@@ -537,7 +419,7 @@ class TestSSHConnector(TestCase):
             get_pty=False,
         )
 
-        fake_click.echo.assert_called_with(
+        fake_echo.assert_called_with(
             "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
             err=True,
         )

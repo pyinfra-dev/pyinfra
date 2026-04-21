@@ -1,0 +1,23 @@
+{
+    "arg": "sha256:img1",
+    "command": "docker image history --no-trunc --format '{{json .}}' sha256:img1 2>&- || true",
+    "requires_command": "docker",
+    "output": [
+        "{\"ID\": \"sha256:l2\", \"CreatedBy\": \"CMD [nginx -g daemon off;]\", \"Size\": \"0B\", \"Comment\": \"\"}",
+        "{\"ID\": \"sha256:l1\", \"CreatedBy\": \"ADD rootfs\", \"Size\": \"5MB\", \"Comment\": \"\"}"
+    ],
+    "fact": [
+        {
+            "ID": "sha256:l2",
+            "CreatedBy": "CMD [nginx -g daemon off;]",
+            "Size": "0B",
+            "Comment": ""
+        },
+        {
+            "ID": "sha256:l1",
+            "CreatedBy": "ADD rootfs",
+            "Size": "5MB",
+            "Comment": ""
+        }
+    ]
+}

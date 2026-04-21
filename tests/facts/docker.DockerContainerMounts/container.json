@@ -1,0 +1,18 @@
+{
+    "command": "ids=$(docker ps -qa) && [ -n \"$ids\" ] && docker container inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"abc123\", \"Mounts\": [{\"Type\": \"bind\", \"Source\": \"/host\", \"Destination\": \"/container\", \"Mode\": \"\", \"RW\": true, \"Propagation\": \"rprivate\"}]}, {\"Id\": \"def456\"}]"],
+    "fact": {
+        "abc123": [
+            {
+                "Type": "bind",
+                "Source": "/host",
+                "Destination": "/container",
+                "Mode": "",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ],
+        "def456": []
+    }
+}

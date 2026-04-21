@@ -18,7 +18,7 @@ from pyinfra.api import (
     RsyncCommand,
     StringCommand,
 )
-from pyinfra.api.command import PyinfraCommand
+from pyinfra.api.command import PyinfraCommand, make_formatted_string_command
 
 
 class TestBaseCommand(TestCase):
@@ -91,6 +91,50 @@ class TestFileCommands(TestCase):
     def test_rsync_command_repr(self):
         cmd = RsyncCommand("src", "dest", ["-a"])
         assert repr(cmd) == "RsyncCommand(src, dest, ['-a'])"
+
+
+class TestMakeFormattedStringCommand(TestCase):
+    def test_basic_formatting(self):
+        cmd = make_formatted_string_command("echo {0}", "hello")
+        assert str(cmd) == "echo hello"
+
+    def test_adjacent_args_no_extra_spaces(self):
+        """Regression test for https://github.com/pyinfra-dev/pyinfra/issues/1603"""
+        cmd = make_formatted_string_command("cat /{0}/{1}", "etc", "passwd")
+        assert str(cmd) == "cat /etc/passwd"
+
+    def test_adjacent_args_no_literal_separator(self):
+        cmd = make_formatted_string_command("{0}{1}", "hello", "world")
+        assert str(cmd) == "helloworld"
+
+    def test_prefix_with_arg(self):
+        cmd = make_formatted_string_command("prefix{0}", "value")
+        assert str(cmd) == "prefixvalue"
+
+    def test_arg_with_suffix(self):
+        cmd = make_formatted_string_command("{0}.txt", "myfile")
+        assert str(cmd) == "myfile.txt"
+
+    def test_multiple_separate_args(self):
+        cmd = make_formatted_string_command("curl -sSLf {0} -o {1}", "http://example.com", "/tmp/f")
+        assert str(cmd) == "curl -sSLf http://example.com -o /tmp/f"
+
+    def test_kwargs(self):
+        cmd = make_formatted_string_command("echo {msg}", msg="hello")
+        assert str(cmd) == "echo hello"
+
+    def test_quoted_arg(self):
+        cmd = make_formatted_string_command("echo {0}", QuoteString("hello world"))
+        assert str(cmd) == "echo 'hello world'"
+
+    def test_masked_arg(self):
+        cmd = make_formatted_string_command("echo {0}", MaskString("secret"))
+        assert cmd.get_raw_value() == "echo secret"
+        assert str(cmd) == "echo ***"
+
+    def test_path_with_multiple_segments(self):
+        cmd = make_formatted_string_command("ls /{0}/{1}/{2}", "home", "user", "docs")
+        assert str(cmd) == "ls /home/user/docs"
 
 
 class TestFunctionCommand(TestCase):

@@ -68,8 +68,8 @@ class TestLocalConnector(TestCase):
             stdin=PIPE,
         )
 
-    @patch("pyinfra.connectors.local.click")
-    def test_run_shell_command_masked(self, fake_click):
+    @patch("pyinfra.api.output._echo")
+    def test_run_shell_command_masked(self, fake_echo):
         inventory = make_inventory(hosts=("@local",))
         State(inventory, Config())
         host = inventory.get_host("@local")
@@ -91,7 +91,7 @@ class TestLocalConnector(TestCase):
             stdin=PIPE,
         )
 
-        fake_click.echo.assert_called_with(
+        fake_echo.assert_called_with(
             "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
             err=True,
         )

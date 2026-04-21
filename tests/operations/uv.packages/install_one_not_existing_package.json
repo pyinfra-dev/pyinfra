@@ -1,0 +1,12 @@
+{
+    "args": ["pyinfra"],
+    "kwargs": {
+        "present": true
+    },
+    "facts": {
+        "uv.UvPipPackages": {}
+    },
+    "commands": [
+        "uv pip install --no-progress  pyinfra"
+    ]
+}

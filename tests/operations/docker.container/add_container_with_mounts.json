@@ -1,0 +1,20 @@
+{
+    "kwargs": {
+        "container": "myapp",
+        "image": "myapp:latest",
+        "mounts": [
+            "type=bind,source=/host/data,target=/app/data",
+            "type=tmpfs,target=/tmp"
+        ],
+        "present": "true",
+        "start": false
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=myapp": []
+        }
+    },
+    "commands": [
+        "docker container create --name myapp --mount type=bind,source=/host/data,target=/app/data --mount type=tmpfs,target=/tmp myapp:latest"
+    ]
+}

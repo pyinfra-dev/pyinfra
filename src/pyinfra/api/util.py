@@ -9,13 +9,13 @@ from os import getcwd, path, stat
 from socket import error as socket_error, timeout as timeout_error
 from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
 
-import click
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
 from paramiko import SSHException
 from typeguard import TypeCheckError, check_type
 
 import pyinfra
 from pyinfra import logger
+from pyinfra.api.output import format_text
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -188,7 +188,7 @@ def format_exception(e: Exception) -> str:
 def print_host_combined_output(host: "Host", output: "CommandOutput") -> None:
     for line in output:
         if line.buffer_name == "stderr":
-            logger.error(f"{host.print_prefix}{click.style(line.line, 'red')}")
+            logger.error(f"{host.print_prefix}{format_text(line.line, 'red')}")
         else:
             logger.error(f"{host.print_prefix}{line.line}")
 
@@ -208,14 +208,14 @@ def log_operation_start(
 
     logger.info(
         "{0} {1} {2}".format(
-            click.style(
+            format_text(
                 "{0}Starting{1}operation:".format(
                     prefix,
                     " {0} ".format(", ".join(op_types)) if op_types else " ",
                 ),
                 "blue",
             ),
-            click.style(", ".join(op_meta.names), bold=True),
+            format_text(", ".join(op_meta.names), bold=True),
             args,
         ),
     )
@@ -247,25 +247,25 @@ def log_error_or_warning(
         log_func(
             "{0}{1}".format(
                 host.print_prefix,
-                click.style(exc_text, log_color),
+                format_text(exc_text, log_color),
             ),
         )
 
     log_func(
         "{0}{1}{2}".format(
             host.print_prefix,
-            click.style(log_text, log_color),
+            format_text(log_text, log_color),
             description,
         ),
     )
 
 
 def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) -> None:
-    if isinstance(e, timeout_error):
+    if isinstance(e, (TimeoutError, timeout_error)):
         logger.error(
             "{0}{1}".format(
                 host.print_prefix,
-                click.style(
+                format_text(
                     "Command timed out after {0}s".format(
                         timeout,
                     ),
@@ -278,7 +278,7 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
         logger.error(
             "{0}{1}".format(
                 host.print_prefix,
-                click.style(
+                format_text(
                     "Command socket/SSH error: {0}".format(format_exception(e)),
                     "red",
                 ),
@@ -289,7 +289,7 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
         logger.error(
             "{0}{1}".format(
                 host.print_prefix,
-                click.style(
+                format_text(
                     "Command IO error: {0}".format(format_exception(e)),
                     "red",
                 ),

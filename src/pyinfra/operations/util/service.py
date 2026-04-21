@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import shlex
-
-from pyinfra.api import Host
+from pyinfra.api import Host, QuoteString
+from pyinfra.api.command import make_formatted_string_command
 
 
 def handle_service_control(
@@ -21,26 +20,26 @@ def handle_service_control(
     # Need down but running
     if running is False:
         if is_running:
-            yield formatter.format(shlex.quote(name), "stop")
+            yield make_formatted_string_command(formatter, QuoteString(name), "stop")
         else:
             host.noop("service {0} is stopped".format(name))
 
     # Need running but down
     if running is True:
         if not is_running:
-            yield formatter.format(shlex.quote(name), "start")
+            yield make_formatted_string_command(formatter, QuoteString(name), "start")
         else:
             host.noop("service {0} is running".format(name))
 
     # Only restart if the service is already running
     if restarted and is_running:
-        yield formatter.format(shlex.quote(name), "restart")
+        yield make_formatted_string_command(formatter, QuoteString(name), "restart")
 
     # Only reload if the service is already reloaded
     if reloaded and is_running:
-        yield formatter.format(shlex.quote(name), "reload")
+        yield make_formatted_string_command(formatter, QuoteString(name), "reload")
 
     # Always execute arbitrary commands as these may or may not rely on the service
     # being up or down
     if command:
-        yield formatter.format(shlex.quote(name), command)
+        yield make_formatted_string_command(formatter, QuoteString(name), command)

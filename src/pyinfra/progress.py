@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import gevent
 from gevent.event import Event
 
-import pyinfra
+from pyinfra.api.output import is_output_active
 
 IS_WINDOWS = platform.system() == "Windows"
 
@@ -62,14 +62,14 @@ def _print_spinner(stop_event, progress_queue):
         if not IS_WINDOWS:
             sys.stderr.write("\033[K")
 
-        gevent.sleep(WAIT_TIME)
+        stop_event.wait(timeout=WAIT_TIME)
 
 
 @contextmanager
 def progress_spinner(items, prefix_message=None):
     # If there's no current state context we're not in CLI mode, so just return a noop
     # handler and exit.
-    if not pyinfra.is_cli:
+    if not is_output_active():
         yield lambda complete_item: None
         return
 

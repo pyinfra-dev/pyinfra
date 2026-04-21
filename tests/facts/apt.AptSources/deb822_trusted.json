@@ -1,0 +1,22 @@
+{
+    "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list.d/trusted.sources",
+        "Types: deb",
+        "URIs: http://internal.example.com/debian",
+        "Suites: stable",
+        "Components: main",
+        "Trusted: yes",
+        ""
+    ],
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
+    "requires_command": "apt",
+    "fact": [
+        {
+            "type": "deb",
+            "url": "http://internal.example.com/debian",
+            "distribution": "stable",
+            "components": ["main"],
+            "options": {"trusted": "yes"}
+        }
+    ]
+}

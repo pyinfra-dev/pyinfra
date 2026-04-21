@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-import shlex
+import os
 from random import uniform
 from shutil import which
 from socket import error as socket_error, gaierror
 from time import sleep
 from typing import IO, TYPE_CHECKING, Any, Iterable, Optional, Protocol, Tuple
 
-import click
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
 from paramiko.agent import Agent
 from typing_extensions import TypedDict, Unpack, override
 
 from pyinfra import logger
+from pyinfra.api.output import echo
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError
 from pyinfra.api.util import get_file_io, memoize
@@ -309,10 +309,23 @@ class SSHConnector(BaseConnector):
         if not kwargs.get("allow_agent"):
             return False
 
+        # Honor IdentityAgent from SSH config
+        identity_agent = getattr(self.client, "identity_agent", None)
+        old_auth_sock = os.environ.get("SSH_AUTH_SOCK")
+        if isinstance(identity_agent, str):
+            os.environ["SSH_AUTH_SOCK"] = identity_agent
+        else:
+            identity_agent = None
         try:
             agent_keys = list(Agent().get_keys())
         except Exception:
             return False
+        finally:
+            if identity_agent:
+                if old_auth_sock is not None:
+                    os.environ["SSH_AUTH_SOCK"] = old_auth_sock
+                else:
+                    os.environ.pop("SSH_AUTH_SOCK", None)
 
         if not agent_keys:
             return False
@@ -388,7 +401,7 @@ class SSHConnector(BaseConnector):
             )
 
             if print_input:
-                click.echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
+                echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
 
             # Run it! Get stdout, stderr & the underlying channel
             assert self.client is not None
@@ -520,7 +533,7 @@ class SSHConnector(BaseConnector):
             self._get_file(remote_filename, filename_or_io)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file downloaded: {1}".format(self.host.print_prefix, remote_filename),
                 err=True,
             )
@@ -568,6 +581,8 @@ class SSHConnector(BaseConnector):
         _sudo_user = noauth_arguments.pop("_sudo_user", False)
         _doas = noauth_arguments.pop("_doas", False)
         _doas_user = noauth_arguments.pop("_doas_user", False)
+        _dzdo = noauth_arguments.pop("_dzdo", False)
+        _dzdo_user = noauth_arguments.pop("_dzdo_user", False)
         _su_user = noauth_arguments.pop("_su_user", None)
 
         # _chdir is the only one of the global arguments that could require _sudo to succeed
@@ -576,13 +591,13 @@ class SSHConnector(BaseConnector):
 
         # sudo/su are a little more complicated, as you can only sftp with the SSH
         # user connected, so upload to tmp and copy/chown w/sudo and/or su_user
-        if _sudo or _doas or _su_user:
+        if _sudo or _doas or _dzdo or _su_user:
             # Get temp file location
             temp_file = remote_temp_filename or self.host.get_temp_filename(remote_filename)
             self._put_file(filename_or_io, temp_file)
 
             # Make sure our sudo/su user can access the file
-            other_user = _su_user or _sudo_user or _doas_user
+            other_user = _su_user or _sudo_user or _doas_user or _dzdo_user
             if other_user:
                 status, output = self.run_shell_command(
                     StringCommand("setfacl", "-m", f"u:{other_user}:r", temp_file),
@@ -626,7 +641,7 @@ class SSHConnector(BaseConnector):
             self._put_file(filename_or_io, remote_filename)
 
         if print_output:
-            click.echo(
+            echo(
                 "{0}file uploaded: {1}".format(self.host.print_prefix, remote_filename),
                 err=True,
             )
@@ -671,18 +686,28 @@ class SSHConnector(BaseConnector):
         known_hosts_file = self.data["ssh_known_hosts_file"]
         if known_hosts_file:
             ssh_flags.append(
-                '-o \\"UserKnownHostsFile={0}\\"'.format(shlex.quote(known_hosts_file))
+                StringCommand(
+                    '-o \\"UserKnownHostsFile=',
+                    QuoteString(known_hosts_file),
+                    '\\"',
+                    _separator="",
+                ).get_raw_value()
             )  # never trust users
 
         strict_host_key_checking = self.data["ssh_strict_host_key_checking"]
         if strict_host_key_checking:
             ssh_flags.append(
-                '-o \\"StrictHostKeyChecking={0}\\"'.format(shlex.quote(strict_host_key_checking))
+                StringCommand(
+                    '-o \\"StrictHostKeyChecking=',
+                    QuoteString(strict_host_key_checking),
+                    '\\"',
+                    _separator="",
+                ).get_raw_value()
             )
 
         ssh_config_file = self.data["ssh_config_file"]
         if ssh_config_file:
-            ssh_flags.append("-F {0}".format(shlex.quote(ssh_config_file)))
+            ssh_flags.append(StringCommand("-F", QuoteString(ssh_config_file)).get_raw_value())
 
         port = self.data["ssh_port"]
         if port:
@@ -714,7 +739,7 @@ class SSHConnector(BaseConnector):
         )
 
         if print_input:
-            click.echo("{0}>>> {1}".format(self.host.print_prefix, rsync_command), err=True)
+            echo("{0}>>> {1}".format(self.host.print_prefix, rsync_command), err=True)
 
         return_code, output = run_local_process(
             rsync_command,

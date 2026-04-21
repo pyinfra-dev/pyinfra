@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -61,6 +62,8 @@ class ConnectorArguments(TypedDict, total=False):
     _su_password: str
     _doas: bool
     _doas_user: str
+    _dzdo: bool
+    _dzdo_user: str
 
     # Shell arguments
     _shell_executable: str
@@ -83,7 +86,8 @@ class ConnectorArguments(TypedDict, total=False):
 
 
 def generate_env(config: "Config", value: dict) -> dict:
-    env = config.ENV.copy()
+    env = {key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ}
+    env.update(config.ENV)
     env.update(value)
     return env
 
@@ -138,6 +142,14 @@ auth_argument_meta: dict[str, ArgumentMeta] = {
     "_doas_user": ArgumentMeta(
         "Execute/apply any changes with doas as a non-root user.",
         default=lambda config: config.DOAS_USER,
+    ),
+    "_dzdo": ArgumentMeta(
+        "Execute/apply any changes with dzdo.",
+        default=lambda config: config.DZDO,
+    ),
+    "_dzdo_user": ArgumentMeta(
+        "Execute/apply any changes with dzdo as a non-root user.",
+        default=lambda config: config.DZDO_USER,
     ),
 }
 
@@ -282,7 +294,7 @@ __argument_docs__ = {
         """
         .. caution::
             When combining privilege escalation arguments it is important to know the order they
-            are applied: ``doas`` -> ``sudo`` -> ``su``. For example
+            are applied: ``doas`` -> ``dzdo`` -> ``sudo`` -> ``su``. For example
             ``_sudo=True,_su_user="pyinfra"`` yields a command like ``sudo su pyinfra..``.
         """,
         """

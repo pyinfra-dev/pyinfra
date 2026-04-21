@@ -1,0 +1,13 @@
+{
+    "args": ["ruff"],
+    "kwargs": {
+        "present": true,
+        "latest": true
+    },
+    "facts": {
+        "uv.UvTools": {"ruff": "0.14.4"}
+    },
+    "commands": [
+        "uv tool install --upgrade --no-progress  ruff"
+    ]
+}

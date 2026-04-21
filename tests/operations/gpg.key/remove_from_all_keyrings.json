@@ -1,0 +1,33 @@
+{
+    "kwargs": {
+        "keyid": "0xCOMPROMISED123",
+        "present": false,
+        "working_dirs": ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
+    },
+    "facts": {
+        "gpg.GpgKeyrings": {
+            "directories=['/etc/apt/trusted.gpg.d', '/etc/apt/keyrings', '/usr/share/keyrings']": {
+                "/etc/apt/trusted.gpg.d/compromised.gpg": {
+                    "format": "gpg",
+                    "keys": {
+                        "COMPROMISED123567890": {
+                            "validity": "-",
+                            "length": 4096,
+                            "subkeys": {},
+                            "fingerprint": "COMPROMISED123567890FEDCBA0987654321COMPROMISED123",
+                            "uid_hash": "ABC123DEF456",
+                            "uid": "Compromised Key <compromised@example.com>"
+                        }
+                    }
+                }
+            }
+        },
+        "files.File": {
+            "path=/etc/apt/trusted.gpg.d/compromised.gpg": {"mode": 644}
+        }
+    },
+    "commands": [
+        "gpg --batch --yes --no-default-keyring --keyring \"/etc/apt/trusted.gpg.d/compromised.gpg\" --delete-keys COMPROMISED123567890FEDCBA0987654321COMPROMISED123",
+        "gpg --batch --no-default-keyring --keyring \"/etc/apt/trusted.gpg.d/compromised.gpg\" --list-keys 2>/dev/null | grep -q \"^pub\" || rm -f \"/etc/apt/trusted.gpg.d/compromised.gpg\""
+    ]
+}

@@ -19,13 +19,15 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - uses: astral-sh/ruff-action@v3
+        with:
+          args: "check --diff"
       - uses: astral-sh/ruff-action@v3
         with:
-          args: "format --check"
+          args: "format --diff"
 
   type-check:
     runs-on: ubuntu-24.04
@@ -33,7 +35,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - run: uv sync --group test --no-default-groups
@@ -55,9 +57,11 @@ jobs:
     strategy:
       matrix:
         os: [macos-26, macos-15, macos-14, windows-2025, windows-2022, ubuntu-24.04, ubuntu-22.04]
-        # Test every OS vs. Python 3.13, and only one for 3.1[012]
-        python-version: ["3.13"]
+        # Test every OS vs. Python 3.14, and only one for 3.1[012]
+        python-version: ["3.14"]
         include:
+          - os: ubuntu-24.04
+            python-version: "3.13"
           - os: ubuntu-24.04
             python-version: "3.12"
           - os: ubuntu-24.04
@@ -75,7 +79,7 @@ jobs:
       - run: uv sync --group test --no-default-groups --python=${{ matrix.python-version }}
       - run: uv run pytest --cov --disable-warnings
       - name: Upload coverage report to codecov
-        if: ${{ matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.14' }}
         uses: codecov/codecov-action@v5
 
   # End-to-end tests
@@ -108,7 +112,31 @@ jobs:
       - run: uv sync --group test --no-default-groups --python=${{ matrix.python-version }}
       - run: uv run pytest -m end_to_end_${{ matrix.test-name }}
 
-  # Finally, single jon to check if all completed, for use in protected branch
+  docs-build:
+    needs:
+      - lint
+      - type-check
+      - spell-check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Fetch git tags
+        run: git fetch --tags origin
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Install
+        run: |
+          uv sync --group docs --no-default-groups
+          uv pip install 'jinja2<3.1'
+      - name: Generate documentation
+        run: scripts/build-public-docs.sh
+        env:
+          PYTHONPATH: '.'
+
+  # Finally, single job to check if all completed, for use in protected branch
 
   tests-done:
     if: ${{ always() }}
@@ -118,6 +146,7 @@ jobs:
       - spell-check
       - unit-test
       - end-to-end-test
+      - docs-build
     runs-on: ubuntu-latest
     steps:
       - uses: matrix-org/done-action@v3

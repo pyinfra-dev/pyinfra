@@ -1,0 +1,32 @@
+{
+    "arg": "abc123",
+    "command": "docker container top abc123 2>&- || true",
+    "requires_command": "docker",
+    "output": [
+        "UID   PID   PPID  C STIME TTY   TIME     CMD",
+        "root  1234  1222  0 12:00 pts/0 00:00:00 nginx: master process",
+        "nginx 1250  1234  0 12:00 pts/0 00:00:00 nginx: worker process"
+    ],
+    "fact": [
+        {
+            "UID": "root",
+            "PID": "1234",
+            "PPID": "1222",
+            "C": "0",
+            "STIME": "12:00",
+            "TTY": "pts/0",
+            "TIME": "00:00:00",
+            "CMD": "nginx: master process"
+        },
+        {
+            "UID": "nginx",
+            "PID": "1250",
+            "PPID": "1234",
+            "C": "0",
+            "STIME": "12:00",
+            "TTY": "pts/0",
+            "TIME": "00:00:00",
+            "CMD": "nginx: worker process"
+        }
+    ]
+}

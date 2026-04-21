@@ -3,7 +3,6 @@ from os import path
 from typing import TYPE_CHECKING, Type, Union
 
 from paramiko import (
-    DSSKey,
     ECDSAKey,
     Ed25519Key,
     PasswordRequiredException,
@@ -28,9 +27,9 @@ def raise_connect_error(host: "Host", message, data):
 def _load_private_key_file(filename: str, key_filename: str, key_password: str):
     exception: Union[PyinfraError, SSHException] = PyinfraError("Invalid key: {0}".format(filename))
 
-    key_cls: Union[Type[RSAKey], Type[DSSKey], Type[ECDSAKey], Type[Ed25519Key]]
+    key_cls: Union[Type[RSAKey], Type[ECDSAKey], Type[Ed25519Key]]
 
-    for key_cls in (RSAKey, DSSKey, ECDSAKey, Ed25519Key):
+    for key_cls in (RSAKey, ECDSAKey, Ed25519Key):
         try:
             return key_cls.from_private_key_file(
                 filename=filename,
