@@ -120,5 +120,6 @@ How pyinfra Works
     contributing
     compatibility
     performance
+    llms
     changes
     api/reference

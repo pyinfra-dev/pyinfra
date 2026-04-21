@@ -82,3 +82,18 @@ Use the :ref:`retry behavior arguments <arguments-retry-behavior>` to automatica
         _retries=3,
         _retry_until=should_retry_download,
     )
+
+Does pyinfra publish an ``llms.txt``?
+-------------------------------------
+
+Yes. ``llms.txt`` is the `llmstxt.org <https://llmstxt.org>`_ convention for exposing documentation in a plain-text format that AI assistants, agents, and crawlers can consume without scraping the rendered HTML site. pyinfra publishes two files on every doc build:
+
++ ``llms.txt`` (~15 KB): a curated index with one-line summaries and absolute links for every guide, operation, fact and connector.
++ ``llms-full.txt`` (~250 KB): a single-file monolith inlining the hand-written guides and every built-in operation/fact/connector docstring and signature.
+
+Both live at the root of each versioned doc tree:
+
++ `docs.pyinfra.com/en/latest/llms.txt <https://docs.pyinfra.com/en/latest/llms.txt>`_
++ `docs.pyinfra.com/en/latest/llms-full.txt <https://docs.pyinfra.com/en/latest/llms-full.txt>`_
+
+Swap ``latest`` for a release tag to pin against a known version. See :doc:`llms` for consumption examples.

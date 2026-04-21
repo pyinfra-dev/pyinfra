@@ -27,6 +27,7 @@ docs/connectors/
 docs/facts/
 docs/operations/
 docs/apidoc/
+docs/extra/
 docs/_deploy_globals.rst
 
 .idea/

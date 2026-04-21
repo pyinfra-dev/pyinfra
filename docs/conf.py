@@ -37,6 +37,10 @@ html_short_title = "Home"
 html_theme = "guzzle_sphinx_theme"
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_static_path = ["static"]
+# Files under html_extra_path are copied verbatim to the build root.
+# Used for llms.txt / llms-full.txt which need to sit at site root to follow
+# the llmstxt.org convention.
+html_extra_path = ["extra"]
 html_theme_options = {
     "docsearch_api_key": "25a25b5f5310f306641f9ce07dcb06eb",
     "docsearch_app_id": "XXGX6EX4KA",
@@ -96,7 +100,7 @@ def setup(app):
     }
     app.config.html_context = html_context
 
-    for auto_docs_name in ("operations", "facts", "apidoc", "connectors"):
+    for auto_docs_name in ("operations", "facts", "apidoc", "connectors", "extra"):
         auto_docs_path = path.join(this_dir, auto_docs_name)
         if path.exists(auto_docs_path):
             rmtree(auto_docs_path)
@@ -109,6 +113,7 @@ def setup(app):
             "python {0}/generate_connectors_docs.py".format(scripts_dir),
             "python {0}/generate_facts_docs.py".format(scripts_dir),
             "python {0}/generate_operations_docs.py".format(scripts_dir),
+            "python {0}/generate_llms_txt.py".format(scripts_dir),
         ),
         print_input=True,
     )
