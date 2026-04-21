@@ -215,9 +215,11 @@ def execute_command_with_sudo_retry(
         requires_password = False
         for line in reversed(output.combined_lines):
             line_stripped = line.line.strip()
-            if line_stripped == "sudo: a password is required" or (
-                line_stripped.startswith("sudo: ") and "incorrect password attempt" in line_stripped
-            ):
+
+            if line_stripped.startswith("sudo:") and "incorrect password attempt" in line_stripped:
+                break
+
+            if line_stripped == "sudo: a password is required":
                 if attempts != 0:
                     break
                 requires_password = True
