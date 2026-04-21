@@ -147,6 +147,7 @@ def ensure_packages(
     upgrade_command: str | StringCommand | None = None,
     version_join: str | None = None,
     expand_package_fact: Callable[[str], list[str | list[str]]] | None = None,
+    expand_match_any: bool = False,
 ):
     """
     Handles this common scenario:
@@ -197,7 +198,7 @@ def ensure_packages(
     if present is True:
         for package in packages:
             has_package, expanded_packages = _has_package(
-                package.lkup_name, current_packages, expand_package_fact, match_any=True
+                package.lkup_name, current_packages, expand_package_fact, match_any=expand_match_any
             )
 
             if not has_package:
