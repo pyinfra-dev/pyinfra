@@ -1,10 +1,12 @@
 {
-    "command": "(! test -f /etc/dnf.conf || cat /etc/dnf.conf) && (cat /etc/dnf.repos.d/*.repo || true) && (cat /etc/yum.repos.d/*.repo || true)",
+    "command": "for f in /etc/dnf.conf /etc/dnf.repos.d/*.repo /etc/yum.repos.d/*.repo; do [ -f \"$f\" ] && { printf \"#pyinfra-filename: %s\\n\" \"$f\"; cat \"$f\"; }; done || true",
     "requires_command": "dnf",
     "output": [
+        "#pyinfra-filename: /etc/yum.repos.d/somerepo.repo",
         "",
         "[somerepo]",
         "baseurl=abc",
+        "#pyinfra-filename: /etc/yum.repos.d/anotherrepo.repo",
         "",
         "[anotherrepo]"
     ],
@@ -12,11 +14,13 @@
         {
             "repoid": "somerepo",
             "name": "somerepo",
+            "filename": "/etc/yum.repos.d/somerepo.repo",
             "baseurl": "abc"
         },
         {
             "repoid": "anotherrepo",
-            "name": "anotherrepo"
+            "name": "anotherrepo",
+            "filename": "/etc/yum.repos.d/anotherrepo.repo"
         }
     ]
 }
