@@ -260,13 +260,11 @@ def remove_any_sudo_askpass_file(host) -> None:
     sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
     if sudo_askpass_path:
         try:
+            wildcard_path = StringCommand(
+                QuoteString(sudo_askpass_path), ".*.called", _separator=""
+            )
             host.run_shell_command(
-                StringCommand(
-                    "rm",
-                    "-f",
-                    QuoteString(sudo_askpass_path),
-                    QuoteString(f"{sudo_askpass_path}.*.called"),
-                )
+                StringCommand("rm", "-f", QuoteString(sudo_askpass_path), wildcard_path)
             )
         except Exception as e:
             logger.debug("Could not remove sudo askpass file %s: %s", sudo_askpass_path, e)
@@ -275,13 +273,9 @@ def remove_any_sudo_askpass_file(host) -> None:
     su_askpass_path = host.connector_data.get("su_askpass_path")
     if su_askpass_path:
         try:
+            wildcard_path = StringCommand(QuoteString(su_askpass_path), ".*.called", _separator="")
             host.run_shell_command(
-                StringCommand(
-                    "rm",
-                    "-f",
-                    QuoteString(su_askpass_path),
-                    QuoteString(f"{su_askpass_path}.*.called"),
-                )
+                StringCommand("rm", "-f", QuoteString(su_askpass_path), wildcard_path)
             )
         except Exception as e:
             logger.debug("Could not remove su askpass file %s: %s", su_askpass_path, e)

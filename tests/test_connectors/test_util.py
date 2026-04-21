@@ -217,7 +217,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
         remove_any_sudo_askpass_file(host)
 
-        assert commands == ["rm -f '/tmp/weird path; id' '/tmp/weird path; id.*.called'"]
+        assert commands == ["rm -f '/tmp/weird path; id' '/tmp/weird path; id'.*.called"]
         assert host.connector_data["sudo_askpass_path"] is None
 
     def test_command_exists_su_config_only(self):
@@ -245,8 +245,8 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         remove_any_sudo_askpass_file(host)
 
         assert commands == [
-            "rm -f /tmp/sudo-askpass '/tmp/sudo-askpass.*.called'",
-            "rm -f /tmp/su-askpass '/tmp/su-askpass.*.called'",
+            "rm -f /tmp/sudo-askpass /tmp/sudo-askpass.*.called",
+            "rm -f /tmp/su-askpass /tmp/su-askpass.*.called",
         ]
         assert host.connector_data["sudo_askpass_path"] is None
         assert host.connector_data["su_askpass_path"] is None
