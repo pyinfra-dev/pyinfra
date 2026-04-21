@@ -572,17 +572,20 @@ def service(
     elif host.get_fact(Which, command="sv"):
         service_operation = runit.service
 
+    # NOTE: important that we are not Linux here because /etc/rc.d will exist but checking it's
+    # contents may trigger things (like a reboot: https://github.com/Fizzadar/pyinfra/issues/819).
+    # Must also run before the sysvinit check: BSDs ship `service` in base (distinct from the
+    # Linux sysvinit wrapper), so matching on Which command="service" first would misroute FreeBSD
+    # hosts to sysvinit. See https://github.com/pyinfra-dev/pyinfra/issues/1496.
+    elif host.get_fact(Os) != "Linux" and bool(host.get_fact(Directory, path="/etc/rc.d")):
+        service_operation = bsdinit.service
+
     elif (
         host.get_fact(Which, command="service")
         or host.get_fact(Link, path="/etc/init.d")
         or host.get_fact(Directory, path="/etc/init.d")
     ):
         service_operation = sysvinit.service
-
-    # NOTE: important that we are not Linux here because /etc/rc.d will exist but checking it's
-    # contents may trigger things (like a reboot: https://github.com/Fizzadar/pyinfra/issues/819)
-    elif host.get_fact(Os) != "Linux" and bool(host.get_fact(Directory, path="/etc/rc.d")):
-        service_operation = bsdinit.service
 
     else:
         raise OperationError(
