@@ -67,7 +67,7 @@ def _get_imported_names(filename: str) -> Set[str]:
         tree = ast.parse(f.read(), filename=filename)
 
     names: Set[str] = set()
-    for node in ast.walk(tree):
+    for node in tree.body:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 names.add(alias.asname or alias.name.split(".")[0])
