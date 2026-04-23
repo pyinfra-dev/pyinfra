@@ -1,0 +1,33 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "public_keys": ["ssh-ed25519 AAAAkey1 alice", "ssh-rsa AAAAkey2 bob"]
+    },
+    "facts": {
+        "server.Home": {
+            "user=someuser": "/home/someuser"
+        },
+        "files.Directory": {
+            "path=/home/someuser/.ssh": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 700
+            }
+        },
+        "files.File": {
+            "path=/home/someuser/.ssh/authorized_keys": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 600
+            }
+        },
+        "server.AuthorizedKeys": {
+            "path=/home/someuser/.ssh/authorized_keys, user=someuser": [
+                "ssh-ed25519 AAAAkey1 alice",
+                "ssh-rsa AAAAkey2 bob"
+            ]
+        }
+    },
+    "commands": [],
+    "noop_description": "file /home/someuser/.ssh/authorized_keys already exists"
+}

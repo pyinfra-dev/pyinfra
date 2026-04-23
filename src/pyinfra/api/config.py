@@ -4,7 +4,7 @@ except ImportError:
     import importlib.metadata as importlib_metadata  # type: ignore[no-redef]
 
 from os import path
-from typing import Iterable, Optional, Set
+from typing import Iterable, Optional, Sequence, Set
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
@@ -65,6 +65,9 @@ class ConfigDefaults:
     RETRY_DELAY: int = 5
     # Skip idempotency checks for all operations
     EXECUTION_ONLY: bool = False
+    # List of environment variable names to inherit from the local process environment.
+    # These are passed to every shell command, with lower priority than config.ENV.
+    INHERIT_ENV: Sequence[str] = ()
 
 
 config_defaults = {key: value for key, value in ConfigDefaults.__dict__.items() if key.isupper()}

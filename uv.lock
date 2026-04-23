@@ -1319,7 +1319,7 @@ requires-dist = [
     { name = "gevent", specifier = ">=1.5" },
     { name = "jinja2", specifier = ">3,<4" },
     { name = "packaging", specifier = ">=16.1" },
-    { name = "paramiko", specifier = ">=2.7,<5" },
+    { name = "paramiko", specifier = ">=2.11,<5" },
     { name = "pydantic", specifier = ">=2.11,<3" },
     { name = "python-dateutil", specifier = ">2,<3" },
     { name = "typeguard", specifier = ">=4,<5" },

@@ -1,0 +1,12 @@
+{
+    "command": "ids=$(docker images -q) && [ -n \"$ids\" ] && docker image inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"sha256:img1\", \"Config\": {\"Labels\": {\"maintainer\": \"nginx\", \"version\": \"1.25\"}}}, {\"Id\": \"sha256:img2\", \"Config\": {\"Labels\": null}}]"],
+    "fact": {
+        "sha256:img1": {
+            "maintainer": "nginx",
+            "version": "1.25"
+        },
+        "sha256:img2": {}
+    }
+}

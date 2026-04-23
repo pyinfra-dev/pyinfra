@@ -33,6 +33,9 @@
         "files.FindInFile": {
             "interpolate_variables=False, path=/root/.ssh/authorized_keys, pattern=^.*abc.*$": []
         },
+        "server.AuthorizedKeys": {
+            "path=/root/.ssh/authorized_keys, user=root": []
+        },
         "server.Groups": {}
     },
     "commands": [

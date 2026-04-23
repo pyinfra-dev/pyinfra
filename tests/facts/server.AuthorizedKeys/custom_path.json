@@ -1,0 +1,9 @@
+{
+    "arg": {
+        "user": "alice",
+        "path": "/etc/ssh/keys/alice"
+    },
+    "command": "cat /etc/ssh/keys/alice 2>/dev/null || true",
+    "output": [],
+    "fact": []
+}
