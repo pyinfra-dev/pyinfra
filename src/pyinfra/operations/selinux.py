@@ -173,7 +173,7 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
         current = host.get_fact(SEPort, protocol=protocol, port=port_num)
     else:
         port_info = host.get_fact(SEPorts)
-        current = port_info.get(protocol, {}).get(str(port_num), "")
+        current = port_info.get(protocol, {}).get(port_num, "")
 
     if present:
         option = "-a" if current == "" else ("-m" if current != se_type else "")
@@ -191,4 +191,4 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
         if not direct_get:
             if protocol not in port_info:
                 port_info[protocol] = {}
-            port_info[protocol][str(port_num)] = new_type
+            port_info[protocol][port_num] = new_type

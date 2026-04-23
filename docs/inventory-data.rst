@@ -158,3 +158,21 @@ External Sources for Data
 -------------------------
 
 Because pyinfra is configured in Python, you can pull in data from pretty much anywhere just using other Python packages.
+
+Environment Variables
+~~~~~~~~~~~~~~~~~~~~~
+
+``config.INHERIT_ENV`` lets you forward specific environment variables from the machine running pyinfra to all remote operations. This is useful for tools that authenticate via environment variables (SOPS, cloud CLIs, etc.):
+
+.. code:: python
+
+    # deploy.py
+    from pyinfra import config
+
+    config.INHERIT_ENV = ["SOPS_AGE_KEY_FILE", "AWS_PROFILE", "GITLAB_TOKEN"]
+
+The priority for environment variables passed to operations is (lowest to highest):
+
+1. ``config.INHERIT_ENV`` — inherited from the caller's ``os.environ``
+2. ``config.ENV`` — explicitly set globally in the deploy script
+3. ``_env`` per-operation argument — overrides for a single operation

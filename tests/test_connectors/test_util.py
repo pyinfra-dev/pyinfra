@@ -224,3 +224,59 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         host = state.inventory.get_host("somehost")
         command = make_unix_command_for_host(state, host, "echo Šablony")
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
+
+
+class TestRemoveAnySudoAskpassFile(TestCase):
+    def test_clears_state_and_runs_rm(self):
+        commands = []
+        host = MagicMock()
+        host.connector_data = {
+            "sudo_askpass_path": "/tmp/sudo-askpass",
+            "su_askpass_path": "/tmp/su-askpass",
+        }
+        host.run_shell_command = lambda cmd: commands.append(cmd.get_raw_value())
+
+        remove_any_sudo_askpass_file(host)
+
+        assert commands == [
+            "rm -f /tmp/sudo-askpass",
+            "rm -f /tmp/su-askpass",
+        ]
+        assert host.connector_data["sudo_askpass_path"] is None
+        assert host.connector_data["su_askpass_path"] is None
+
+    def test_swallows_errors_and_clears_state(self):
+        """
+        Regression test for #1645: `host.disconnect()` → `remove_any_sudo_askpass_file`
+        is called after ``server.reboot`` when the SSH session is already dead.
+        The remote ``rm`` must fail gracefully and the stored path must still
+        be cleared so a reconnect will regenerate a fresh askpass file.
+        """
+        host = MagicMock()
+        host.connector_data = {
+            "sudo_askpass_path": "/tmp/sudo-askpass",
+            "su_askpass_path": "/tmp/su-askpass",
+        }
+
+        def failing_run(cmd):
+            raise Exception("SSH session not active")
+
+        host.run_shell_command = failing_run
+
+        # Must not raise — this is a best-effort cleanup.
+        remove_any_sudo_askpass_file(host)
+
+        assert host.connector_data["sudo_askpass_path"] is None
+        assert host.connector_data["su_askpass_path"] is None
+
+    def test_noop_when_no_state(self):
+        host = MagicMock()
+        host.connector_data = {
+            "sudo_askpass_path": None,
+            "su_askpass_path": None,
+        }
+        host.run_shell_command = MagicMock()
+
+        remove_any_sudo_askpass_file(host)
+
+        host.run_shell_command.assert_not_called()

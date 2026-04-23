@@ -220,13 +220,14 @@ class SSHClient(ParamikoClient):
             session = transport.open_session()
             AgentRequestHandler(session)
 
-    def gateway(self, hostname, host_port, target, target_port):
+    def gateway(self, hostname, host_port, target, target_port, timeout=None):
         transport = self.get_transport()
         assert transport is not None, "No transport"
         return transport.open_channel(
             "direct-tcpip",
             (target, target_port),
             (hostname, host_port),
+            timeout=timeout,
         )
 
     def parse_config(
@@ -284,6 +285,12 @@ class SSHClient(ParamikoClient):
         if "port" in host_config:
             cfg["port"] = int(host_config["port"])
 
+        # Respect ``ConnectTimeout`` from ssh_config (issue #971): without this,
+        # paramiko waits on its own default and a ProxyJump hop can hang for
+        # minutes before failing.
+        if "connecttimeout" in host_config and "timeout" not in cfg:
+            cfg["timeout"] = int(host_config["connecttimeout"])
+
         if "serveraliveinterval" in host_config:
             keep_alive = int(host_config["serveraliveinterval"])
 
@@ -298,14 +305,26 @@ class SSHClient(ParamikoClient):
         elif "proxyjump" in host_config:
             hops = host_config["proxyjump"].split(",")
             sock = None
+            # Propagate the target's timeout down so hop connections and the
+            # direct-tcpip channel don't hang forever when the network misbehaves
+            # (issue #971). Individual hops can still override via their own
+            # ``ConnectTimeout`` in ssh_config.
+            target_timeout = cfg.get("timeout")
 
             for i, hop in enumerate(hops):
                 hop_hostname, hop_config = self.derive_shorthand(ssh_config, hop)
                 logger.debug("SSH ProxyJump through %s:%s", hop_hostname, hop_config["port"])
 
+                hop_connect_kwargs = dict(hop_config)
+                if "timeout" not in hop_connect_kwargs and target_timeout is not None:
+                    hop_connect_kwargs["timeout"] = target_timeout
+
                 c = SSHClient()
                 c.connect(
-                    hop_hostname, _pyinfra_ssh_config_file=ssh_config_file, sock=sock, **hop_config
+                    hop_hostname,
+                    _pyinfra_ssh_config_file=ssh_config_file,
+                    sock=sock,
+                    **hop_connect_kwargs,
                 )
 
                 if i == len(hops) - 1:
@@ -314,7 +333,13 @@ class SSHClient(ParamikoClient):
                 else:
                     target, target_config = self.derive_shorthand(ssh_config, hops[i + 1])
 
-                sock = c.gateway(hostname, cfg["port"], target, target_config["port"])
+                sock = c.gateway(
+                    hostname,
+                    cfg["port"],
+                    target,
+                    target_config["port"],
+                    timeout=target_timeout,
+                )
             cfg["sock"] = sock
 
         return (
@@ -354,6 +379,8 @@ class SSHClient(ParamikoClient):
             "port": base_config.get("port", 22),
             "username": base_config.get("user"),
         }
+        if "connecttimeout" in base_config:
+            config["timeout"] = int(base_config["connecttimeout"])
         config.update(shorthand_config)
 
         return hostname, config

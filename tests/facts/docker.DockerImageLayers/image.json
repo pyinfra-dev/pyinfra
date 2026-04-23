@@ -1,0 +1,12 @@
+{
+    "command": "ids=$(docker images -q) && [ -n \"$ids\" ] && docker image inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"sha256:img1\", \"RootFS\": {\"Type\": \"layers\", \"Layers\": [\"sha256:l1\", \"sha256:l2\"]}}, {\"Id\": \"sha256:img2\", \"RootFS\": {}}]"],
+    "fact": {
+        "sha256:img1": [
+            "sha256:l1",
+            "sha256:l2"
+        ],
+        "sha256:img2": []
+    }
+}

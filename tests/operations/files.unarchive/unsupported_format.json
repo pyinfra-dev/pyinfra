@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "src": "/tmp/app.rar",
+        "dest": "/opt/app",
+        "remote_src": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/opt/app": true
+        }
+    },
+    "exception": {
+        "name": "OperationValueError",
+        "message": "Unsupported archive format for /tmp/app.rar. Supported: .tar, .tar.gz, .tgz, .tar.bz2, .tbz2, .tar.xz, .txz, .tar.zst, .zip"
+    }
+}
