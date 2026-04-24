@@ -56,7 +56,7 @@ def print_json(payload) -> None:
     click.echo(jsonify(payload, default=json_encode))
 
 
-def _host_to_dict(host: Host) -> Dict:
+def _host_to_dict(host: Host) -> dict:
     return {
         "name": host.name,
         "groups": list(host.groups),
@@ -64,15 +64,15 @@ def _host_to_dict(host: Host) -> Dict:
     }
 
 
-def print_inventory_json(state: "State") -> None:
+def print_inventory_json(state: State) -> None:
     print_json([_host_to_dict(host) for host in state.inventory])
 
 
-def print_facts_json(fact_data: Dict) -> None:
+def print_facts_json(fact_data: dict) -> None:
     print_json(fact_data)
 
 
-def print_state_operations_json(state: "State") -> None:
+def print_state_operations_json(state: State) -> None:
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
     payload = {
         "operations": state_ops,
@@ -89,11 +89,11 @@ def print_state_operations_json(state: "State") -> None:
     print_json(payload)
 
 
-def build_plan_json(state: "State") -> List[Dict]:
-    operations: List[Dict] = []
+def build_plan_json(state: State) -> list[dict]:
+    operations: list[dict] = []
     for op_hash in state.get_op_order():
-        hosts_in_op: List[str] = []
-        hosts_maybe_in_op: List[str] = []
+        hosts_in_op: list[str] = []
+        hosts_maybe_in_op: list[str] = []
         for host in state.inventory.iter_activated_hosts():
             if op_hash not in state.ops[host]:
                 continue
@@ -119,15 +119,15 @@ def build_plan_json(state: "State") -> List[Dict]:
     return operations
 
 
-def build_results_json(state: "State") -> Dict:
-    operations: List[Dict] = []
+def build_results_json(state: State) -> dict:
+    operations: list[dict] = []
     totals = {"hosts": 0, "success": 0, "error": 0, "no_change": 0}
 
     for op_hash in state.get_op_order():
         hosts_in_op = 0
-        success: List[str] = []
-        error: List[str] = []
-        no_change: List[str] = []
+        success: list[str] = []
+        error: list[str] = []
+        no_change: list[str] = []
 
         for host in state.inventory.iter_activated_hosts():
             if op_hash not in state.ops[host]:
@@ -169,8 +169,8 @@ def build_results_json(state: "State") -> Dict:
     }
 
 
-def print_run_json(state: "State", dry: bool) -> None:
-    payload: Dict = {"plan": build_plan_json(state)}
+def print_run_json(state: State, dry: bool) -> None:
+    payload: dict = {"plan": build_plan_json(state)}
     if dry:
         payload["results"] = None
     else:
