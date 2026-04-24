@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "container": "myapp",
+        "image": "myapp:latest",
+        "user": "1000:1000",
+        "present": "true",
+        "start": false
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=myapp": []
+        }
+    },
+    "commands": [
+        "docker container create --name myapp --user 1000:1000 myapp:latest"
+    ]
+}

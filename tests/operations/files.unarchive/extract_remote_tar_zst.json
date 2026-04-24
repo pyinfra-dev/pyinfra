@@ -1,0 +1,18 @@
+{
+    "kwargs": {
+        "src": "/tmp/app.tar.zst",
+        "dest": "/opt/app",
+        "remote_src": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/opt/app": true
+        },
+        "files.File": {
+            "path=/tmp/app.tar.zst": true
+        }
+    },
+    "commands": [
+        "tar -x --zstd -f /tmp/app.tar.zst -C /opt/app"
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "command": "docker network inspect `docker network ls -q`",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"net1\", \"Labels\": {\"env\": \"prod\"}}, {\"Id\": \"net2\", \"Labels\": null}]"],
+    "fact": {
+        "net1": {
+            "env": "prod"
+        },
+        "net2": {}
+    }
+}

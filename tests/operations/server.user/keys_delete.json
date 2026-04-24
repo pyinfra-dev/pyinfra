@@ -45,7 +45,10 @@
             "path=homedir/.ssh/authorized_keys": null
         },
         "files.FileContents": {
-            "path=homedir/.ssh/authorized_keys": null 
+            "path=homedir/.ssh/authorized_keys": null
+        },
+        "server.AuthorizedKeys": {
+            "path=homedir/.ssh/authorized_keys, user=someuser": []
         },
         "server.Groups": {}
     },

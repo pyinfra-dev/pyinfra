@@ -90,7 +90,7 @@ class DockerSSHConnector(BaseConnector):
                         self.docker_cmd,
                         "run",
                         "-d",
-                        self.host.data.docker_image,
+                        QuoteString(self.host.data.docker_image),
                         "tail",
                         "-f",
                         "/dev/null",
@@ -111,7 +111,7 @@ class DockerSSHConnector(BaseConnector):
 
         with progress_spinner({f"{self.docker_cmd} commit"}):
             _, output = self.ssh.run_shell_command(
-                StringCommand(self.docker_cmd, "commit", container_id)
+                StringCommand(self.docker_cmd, "commit", QuoteString(container_id))
             )
 
             # Last line is the image ID, get sha256:[XXXXXXXXXX]...
@@ -119,7 +119,7 @@ class DockerSSHConnector(BaseConnector):
 
         with progress_spinner({f"{self.docker_cmd} rm"}):
             self.ssh.run_shell_command(
-                StringCommand(self.docker_cmd, "rm", "-f", container_id),
+                StringCommand(self.docker_cmd, "rm", "-f", QuoteString(container_id)),
             )
 
         logger.info(
@@ -150,7 +150,7 @@ class DockerSSHConnector(BaseConnector):
             self.docker_cmd,
             "exec",
             docker_flags,
-            container_id,
+            QuoteString(container_id),
             "sh",
             "-c",
             command,
@@ -203,8 +203,8 @@ class DockerSSHConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                remote_temp_filename,
-                f"{docker_id}:{remote_filename}",
+                QuoteString(remote_temp_filename),
+                QuoteString(f"{docker_id}:{remote_filename}"),
             )
 
             status, output = self.ssh.run_shell_command(
@@ -257,8 +257,8 @@ class DockerSSHConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                f"{docker_id}:{remote_filename}",
-                remote_temp_filename,
+                QuoteString(f"{docker_id}:{remote_filename}"),
+                QuoteString(remote_temp_filename),
             )
 
             status, output = self.ssh.run_shell_command(

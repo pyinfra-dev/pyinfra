@@ -1,0 +1,18 @@
+{
+    "args": ["testfile"],
+    "kwargs": {
+        "user": "root; rm -rf /",
+        "group": "wheel$(id)",
+        "mode": "777"
+    },
+    "facts": {
+        "files.File": {
+            "path=testfile": null
+        }
+    },
+    "commands": [
+        "touch testfile",
+        "chmod 777 testfile",
+        "chown 'root; rm -rf /:wheel$(id)' testfile"
+    ]
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
@@ -106,12 +107,13 @@ class DockerConnector(BaseConnector):
 
     # 2 helper functions
     def _find_start_docker_container(self, container_id) -> tuple[str, bool]:
-        docker_info = local.shell(f"{self.docker_cmd} container inspect {container_id}")
+        quoted_container_id = shlex.quote(container_id)
+        docker_info = local.shell(f"{self.docker_cmd} container inspect {quoted_container_id}")
         assert isinstance(docker_info, str)
         docker_info = json.loads(docker_info)[0]
         if docker_info["State"]["Running"] is False:
             logger.info(f"Starting stopped container: {container_id}")
-            local.shell(f"{self.docker_cmd} container start {container_id}")
+            local.shell(f"{self.docker_cmd} container start {quoted_container_id}")
             return container_id, False
         return container_id, True
 
@@ -123,13 +125,13 @@ class DockerConnector(BaseConnector):
         ]
 
         if self.data.get("docker_platform"):
-            docker_cmd_parts.extend(["--platform", self.data["docker_platform"]])
+            docker_cmd_parts.extend(["--platform", shlex.quote(self.data["docker_platform"])])
         if self.data.get("docker_architecture"):
-            docker_cmd_parts.extend(["--arch", self.data["docker_architecture"]])
+            docker_cmd_parts.extend(["--arch", shlex.quote(self.data["docker_architecture"])])
 
         docker_cmd_parts.extend(
             [
-                image_name,
+                shlex.quote(image_name),
                 "tail",
                 "-f",
                 "/dev/null",
@@ -173,14 +175,16 @@ class DockerConnector(BaseConnector):
             )
             return
 
+        quoted_container_id = shlex.quote(container_id)
+
         with progress_spinner({f"{self.docker_cmd} commit"}):
-            image_id = local.shell(f"{self.docker_cmd} commit {container_id}", splitlines=True)[-1][
-                7:19
-            ]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
+            image_id = local.shell(
+                f"{self.docker_cmd} commit {quoted_container_id}", splitlines=True
+            )[-1][7:19]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
 
         with progress_spinner({f"{self.docker_cmd} rm"}):
             local.shell(
-                f"{self.docker_cmd} rm -f {container_id}",
+                f"{self.docker_cmd} rm -f {quoted_container_id}",
             )
 
         logger.info(
@@ -255,8 +259,8 @@ class DockerConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                temp_filename,
-                f"{self.container_id}:{remote_filename}",
+                QuoteString(temp_filename),
+                QuoteString(f"{self.container_id}:{remote_filename}"),
             )
 
             status, output = self.local.run_shell_command(
@@ -303,8 +307,8 @@ class DockerConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                f"{self.container_id}:{remote_filename}",
-                temp_filename,
+                QuoteString(f"{self.container_id}:{remote_filename}"),
+                QuoteString(temp_filename),
             )
 
             status, output = self.local.run_shell_command(
