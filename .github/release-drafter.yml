@@ -1,0 +1,44 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: 'Core'
+    labels:
+      - 'api'
+      - 'core'
+  - title: 'Operations/Facts'
+    labels:
+      - 'operations'
+      - 'facts'
+  - title: 'Connectors'
+    labels:
+      - 'connectors'
+  - title: 'CLI'
+    labels:
+      - 'cli'
+  - title: 'Docs/Meta'
+    labels:
+      - 'docs'
+      - 'meta'
+      - 'tests'
+  - title: 'Dependencies'
+    labels:
+      - 'dependencies'
+change-template: '- $TITLE (#$NUMBER)'
+change-title-escapes: '\<*_&'
+version-resolver:
+  major:
+    labels:
+      - 'breaking'
+  minor:
+    labels:
+      - 'enhancement'
+      - 'feature'
+  patch:
+    labels:
+      - 'bugfix'
+      - 'fix'
+  default: patch
+template: |
+  ## Changes
+
+  $CHANGES

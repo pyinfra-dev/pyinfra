@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps:"
+    groups:
+      dev-dependencies:
+        patterns:
+          - "ruff"
+          - "mypy"
+          - "pytest*"
+          - "coverage"
+          - "types-*"
+          - "typos"
+          - "freezegun"
+          - "ipython"
+          - "ipdb"
+          - "pyinfra-testgen"
+      docs-dependencies:
+        patterns:
+          - "sphinx"
+          - "myst-parser"
+          - "pyinfra-guzzle_sphinx_theme"
+          - "jinja2"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci:"

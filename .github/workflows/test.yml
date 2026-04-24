@@ -7,7 +7,13 @@ on:
       - 2.x
       - 1.x
       - 0.x
+    tags:
+      - "v*"
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # Linting
@@ -55,6 +61,7 @@ jobs:
       - type-check
       - spell-check
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-26, macos-15, macos-14, windows-2025, windows-2022, ubuntu-24.04, ubuntu-22.04]
         # Test every OS vs. Python 3.14, and only one for 3.1[012]
@@ -91,6 +98,7 @@ jobs:
       - type-check
       - spell-check
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         test-name: [local, ssh, docker, podman]
