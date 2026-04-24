@@ -162,9 +162,7 @@ def repo(
     else:
         is_tag = False
         current_branch = host.get_fact(GitBranch, repo=dest)
-        branch_switching = False
         if branch is not None and current_branch != branch:
-            branch_switching = True
             git_commands.append("fetch")  # fetch to ensure we have the branch locally
             git_commands.append(StringCommand("checkout", QuoteString(branch)))
         if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
@@ -172,20 +170,21 @@ def repo(
             is_tag = True
         if pull and not is_tag:
             skip_pull = False
-            # If the branch hasn't changed and the local HEAD already matches the
-            # remote tip, a `git pull` would be a no-op. Skip it so pyinfra reports
-            # the operation unchanged rather than always "Success".
-            if not branch_switching:
-                effective_branch = branch or current_branch
-                if effective_branch:
-                    local_commit = host.get_fact(GitLocalCommit, repo=dest)
-                    remote_commit = host.get_fact(
-                        GitRemoteBranchCommit,
-                        repo=dest,
-                        branch=effective_branch,
-                    )
-                    if local_commit and remote_commit and local_commit == remote_commit:
-                        skip_pull = True
+            # Skip `git pull` when the local branch tip already matches the
+            # remote tip, so pyinfra reports the operation unchanged rather
+            # than always "Success". This still applies when we switch branch:
+            # if the target branch already exists locally at the remote tip,
+            # the fetch+checkout leaves nothing for pull to do.
+            effective_branch = branch or current_branch
+            if effective_branch:
+                local_commit = host.get_fact(GitLocalCommit, repo=dest, ref=effective_branch)
+                remote_commit = host.get_fact(
+                    GitRemoteBranchCommit,
+                    repo=dest,
+                    branch=effective_branch,
+                )
+                if local_commit and remote_commit and local_commit == remote_commit:
+                    skip_pull = True
             if skip_pull:
                 host.noop(
                     "git repository {0} is already up to date".format(dest),

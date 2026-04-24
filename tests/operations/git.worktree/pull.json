@@ -10,7 +10,7 @@
             "repo=/home/myworktree": "origin/master"
         },
         "git.GitLocalCommit": {
-            "repo=/home/myworktree": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "ref=HEAD, repo=/home/myworktree": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         "git.GitRemoteBranchCommit": {
             "branch=master, remote=origin, repo=/home/myworktree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"

@@ -15,7 +15,7 @@
             "repo=/home/myrepo": "master"
         },
         "git.GitLocalCommit": {
-            "repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "ref=master, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         "git.GitRemoteBranchCommit": {
             "branch=master, remote=origin, repo=/home/myrepo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
