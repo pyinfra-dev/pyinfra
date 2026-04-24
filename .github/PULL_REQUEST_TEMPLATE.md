@@ -1,15 +1,37 @@
 <!--
     🎉 Thank you for taking the time to contribute to pyinfra! 🎉
 
-    Please provide a short description of the proposed change and here's a handy checklist of things
-    to make PRs quicker to review and merge.
+    See the contributing guide: https://docs.pyinfra.com/en/latest/contributing.html
 
-    Note that we will not merge new connectors, but instead welcome PRs that link to thid party
-    connector packages.
+    New connectors are shipped as separate packages, not merged here —
+    docs PRs linking to them are very welcome.
 -->
 
-- [ ] Pull request is based on the default branch (`3.x` at this time)
-- [ ] Pull request includes tests for any new/updated operations/facts
-- [ ] Pull request includes documentation for any new/updated operations/facts
-- [ ] Tests pass (see `scripts/dev-test.sh`)
-- [ ] Type checking & code style passes (see `scripts/dev-lint.sh`)
+## Summary
+
+<!-- What changed and why. A sentence or two. -->
+
+## Related issues
+
+<!-- "Closes #1234" / "Refs #5678" -->
+
+## Test plan
+
+<!-- How did you verify this? Commands run, scenarios exercised. -->
+
+## Labels
+
+<!--
+  Pick one area label: api · core · operations · facts · connectors · cli · docs · meta · tests · dependencies
+  Pick one version-bump label: breaking · enhancement · feature · bugfix · fix
+  (See .github/release-drafter.yml — labels drive the changelog bucket.)
+-->
+
+## Checklist
+
+- [ ] Based on `3.x`
+- [ ] Focused on a single change (no unrelated refactors / churn)
+- [ ] Tests added or updated for new/changed operations, facts, connectors
+- [ ] Docs added or updated for user-facing changes
+- [ ] `scripts/dev-test.sh` passes
+- [ ] `scripts/dev-lint.sh` passes

@@ -50,6 +50,15 @@ scripts/dev-format.sh
 
 Please try to use consistent commit messages, look at the [recent history](https://github.com/pyinfra-dev/pyinfra/commits/) for examples. PRs that follow this will be rebased, PRs that do not will be squashed.
 
+### Pull Request Labels
+
+PRs feed into an auto-generated changelog via [Release Drafter](https://github.com/pyinfra-dev/pyinfra/blob/3.x/.github/release-drafter.yml). Please apply:
+
++ one area label: `api`, `core`, `operations`, `facts`, `connectors`, `cli`, `docs`, `meta`, `tests`, or `dependencies`
++ one version-bump label: `breaking` (major), `enhancement` or `feature` (minor), `bugfix` or `fix` (patch)
+
+Maintainers will adjust labels on merge if needed.
+
 ### Tests
 
 GitHub will run all the test suites as part of any pull requests. There's a handy script that runs the unit tests:
