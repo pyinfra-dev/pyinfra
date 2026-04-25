@@ -36,7 +36,7 @@ def container(
     restart_policy: str | None = None,
     auto_remove: bool = False,
     dns: list[str] | None = None,
-    command: str = "",
+    command: str | None = None,
 ):
     """
     Manage Docker containers

@@ -169,7 +169,7 @@ class ContainerSpec:
     restart_policy: str | None = None
     auto_remove: bool = False
     dns: list[str] = field(default_factory=list)
-    command: str = ""
+    command: str | None = None
 
     def container_create_args(self):
         args = []
