@@ -97,7 +97,7 @@ def container(
         docker.container(
             name="Run a custom command",
             container="alpine",
-            command="sh -c 'echo Whatever you want",
+            command="sh -c 'echo Whatever you want'",
         )
     """
 
