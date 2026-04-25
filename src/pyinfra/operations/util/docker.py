@@ -204,7 +204,8 @@ class ContainerSpec:
             args.append("--dns {0}".format(dns))
 
         args.append(self.image)
-        args.append(self.command)
+        if self.command:
+            args.append(self.command)
 
         return args
 
