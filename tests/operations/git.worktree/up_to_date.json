@@ -1,0 +1,21 @@
+{
+    "args": ["/home/myworktree"],
+    "facts": {
+        "files.Directory": {
+            "path=/home/myworktree": {
+                "mode": 0
+            }
+        },
+        "git.GitTrackingBranch" : {
+            "repo=/home/myworktree": "origin/master"
+        },
+        "git.GitLocalCommit": {
+            "ref=HEAD, repo=/home/myworktree": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
+        },
+        "git.GitRemoteBranchCommit": {
+            "branch=master, remote=origin, repo=/home/myworktree": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
+        }
+    },
+    "commands": [],
+    "noop_description": "git worktree /home/myworktree is already up to date"
+}

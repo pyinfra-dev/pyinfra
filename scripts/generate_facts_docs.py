@@ -104,6 +104,13 @@ def build_facts_docs():
                     )
 
             lines.append(".. _facts:{0}.{1}:".format(module_name, name))
+            # Modules that re-export classes under an alias (e.g. facts/zfs.py
+            # exposes both ZfsDatasets and Datasets pointing at the same class)
+            # end up keyed by whichever name getmembers sees first. Emit the
+            # canonical class name as an extra label so cross-refs from the
+            # operations docs resolve regardless of import style.
+            if cls.__name__ != name:
+                lines.append(".. _facts:{0}.{1}:".format(module_name, cls.__name__))
             lines.append("")
 
             title = ":code:`{0}.{1}`".format(module_name, name)

@@ -1,0 +1,6 @@
+{
+    "args": ["/srv/app"],
+    "commands": [
+        "docker compose --project-directory /srv/app up -d --remove-orphans"
+    ]
+}

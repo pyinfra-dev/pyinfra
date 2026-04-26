@@ -6,15 +6,20 @@ as inventory directly.
 
 from __future__ import annotations
 
+from shlex import quote as shlex_quote
+
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
+    DockerAuths,
     DockerContainer,
     DockerImage,
     DockerNetwork,
     DockerPlugin,
     DockerVolume,
 )
+
+DOCKER_HUB_SERVER = "https://index.docker.io/v1/"
 
 from .util.docker import ContainerSpec, handle_docker, parse_image_reference
 
@@ -44,6 +49,7 @@ def container(
     memory: str | None = None,
     extra_args: list[str] | None = None,
     dns: list[str] | None = None,
+    command: str | None = None,
 ):
     """
     Manage Docker containers
@@ -71,6 +77,7 @@ def container(
     + memory: memory limit (e.g. ``512m``, ``1g``)
     + extra_args: list of additional raw arguments passed to ``docker container create``
     + dns: list of dns servers to be used by the container
+    + command: custom command to run on container start
 
     **Examples:**
 
@@ -120,6 +127,14 @@ def container(
             container="nginx",
             start=True,
         )
+
+        # Run a custom command on container start
+        # Note: you can omit the shell (sh -c) to use the default shell of the container
+        docker.container(
+            name="Run a custom command",
+            container="alpine",
+            command="sh -c 'echo Whatever you want'",
+        )
     """
 
     want_spec = ContainerSpec(
@@ -142,6 +157,7 @@ def container(
         memory,
         extra_args or list(),
         dns or list(),
+        command,
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 
@@ -543,3 +559,229 @@ def plugin(
             command="remove",
             plugin=plugin_name,
         )
+
+
+@operation()
+def login(
+    username: str,
+    password: str,
+    server: str | None = None,
+    force: bool = False,
+):
+    """
+    Log in to a Docker registry.
+
+    + username: username to authenticate with
+    + password: password to authenticate with
+    + server: registry server to log in to (defaults to Docker Hub)
+    + force: log in even if ``~/.docker/config.json`` already has an entry for the server
+
+    Idempotency is checked against the ``auths`` section of
+    ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``: if the server is already
+    present, the operation is a no-op. Use ``force=True`` to re-run ``docker
+    login`` (e.g. after rotating credentials).
+
+    The password is piped to ``docker login --password-stdin`` so it is not
+    exposed on the command line, and is masked in pyinfra's command log.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Log in to a private registry
+        docker.login(
+            name="Log in to private registry",
+            server="myregistry.io:5000",
+            username="ci",
+            password="s3cret",
+        )
+
+        # Log in to Docker Hub
+        docker.login(
+            name="Log in to Docker Hub",
+            username="ci",
+            password="s3cret",
+        )
+    """
+    if not username:
+        raise OperationError("docker.login requires a username")
+    if not password:
+        raise OperationError("docker.login requires a password")
+
+    target_server = server or DOCKER_HUB_SERVER
+
+    if not force:
+        existing_auths = host.get_fact(DockerAuths)
+        if target_server in existing_auths:
+            host.noop(f"Already logged in to Docker registry {target_server}")
+            return
+
+    command_bits: list = [
+        "printf '%s'",
+        MaskString(shlex_quote(password)),
+        "| docker login --username",
+        QuoteString(username),
+        "--password-stdin",
+    ]
+    if server:
+        command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)
+
+
+@operation()
+def logout(server: str | None = None):
+    """
+    Log out of a Docker registry.
+
+    + server: registry server to log out of (defaults to Docker Hub)
+
+    No-ops when the server is not present in
+    ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Log out of a private registry
+        docker.logout(
+            name="Log out of private registry",
+            server="myregistry.io:5000",
+        )
+
+        # Log out of Docker Hub
+        docker.logout(name="Log out of Docker Hub")
+    """
+    target_server = server or DOCKER_HUB_SERVER
+
+    existing_auths = host.get_fact(DockerAuths)
+    if target_server not in existing_auths:
+        host.noop(f"Not logged in to Docker registry {target_server}")
+        return
+
+    command_bits: list = ["docker logout"]
+    if server:
+        command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)
+
+
+@operation(is_idempotent=False)
+def compose(
+    project_directory: str,
+    files: str | list[str] | None = None,
+    project_name: str | None = None,
+    present: bool = True,
+    pull: str | None = None,
+    build: bool = False,
+    force_recreate: bool = False,
+    remove_orphans: bool = True,
+    remove_volumes: bool = False,
+    compose_command: str = "docker compose",
+):
+    """
+    Deploy a Docker Compose stack on the target.
+
+    + project_directory: project directory on the target (maps to
+      ``--project-directory``). Compose discovers ``compose.yaml`` /
+      ``compose.yml`` / ``docker-compose.yaml`` / ``docker-compose.yml`` inside
+      this directory by default.
+    + files: optional path or list of paths to specific compose file(s) on the
+      target (maps to ``-f``); use this to override the default discovery or to
+      layer overrides.
+    + project_name: compose project name (maps to ``--project-name``; defaults
+      to compose's own default — typically the basename of ``project_directory``)
+    + present: ``True`` runs ``up -d``, ``False`` runs ``down``
+    + pull: policy for ``up -d --pull`` (``None``, ``"always"``, ``"missing"``, ``"never"``)
+    + build: pass ``--build`` on ``up``
+    + force_recreate: pass ``--force-recreate`` on ``up``
+    + remove_orphans: pass ``--remove-orphans`` on ``up`` / ``down``
+    + remove_volumes: pass ``-v`` on ``down`` (only honored when ``present=False``)
+    + compose_command: compose binary to invoke; use ``"docker-compose"`` for v1
+
+    This operation is not idempotent from pyinfra's perspective: it always shells out
+    to compose. Docker itself skips services whose definition has not changed, so
+    re-runs are safe and cheap.
+
+    ``_env`` and ``_chdir`` are the standard pyinfra global operation kwargs and
+    work here without any special handling, which is useful for compose variable
+    interpolation.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker, files
+
+        # Upload the compose file then bring the stack up using compose's
+        # default discovery (looks for compose.yaml / docker-compose.yml in
+        # the project directory)
+        files.put(
+            name="Upload compose file",
+            src="files/docker-compose.yml",
+            dest="/srv/app/docker-compose.yml",
+        )
+        docker.compose(
+            name="Deploy app stack",
+            project_directory="/srv/app",
+            project_name="app",
+            _env={"DIR_STORAGE": "/srv/app/data"},
+        )
+
+        # Layer a base compose file with an override
+        docker.compose(
+            name="Deploy app stack with override",
+            project_directory="/srv/app",
+            files=["docker-compose.yml", "docker-compose.prod.yml"],
+        )
+
+        # Tear the stack down, including named volumes
+        docker.compose(
+            name="Remove app stack",
+            project_directory="/srv/app",
+            project_name="app",
+            present=False,
+            remove_volumes=True,
+        )
+    """
+    if not project_directory:
+        raise OperationError("docker.compose requires a project_directory")
+
+    if pull is not None and pull not in ("always", "missing", "never"):
+        raise OperationError(
+            'docker.compose pull must be one of None, "always", "missing", "never"',
+        )
+
+    file_list: list[str] = (
+        [files] if isinstance(files, str) else list(files) if files is not None else []
+    )
+
+    command_bits: list[str | QuoteString] = [compose_command]
+    command_bits.extend(["--project-directory", QuoteString(project_directory)])
+    if project_name:
+        command_bits.extend(["--project-name", QuoteString(project_name)])
+    for compose_file in file_list:
+        command_bits.extend(["-f", QuoteString(compose_file)])
+
+    if present:
+        command_bits.append("up -d")
+        if pull:
+            command_bits.extend(["--pull", pull])
+        if build:
+            command_bits.append("--build")
+        if force_recreate:
+            command_bits.append("--force-recreate")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
+    else:
+        command_bits.append("down")
+        if remove_volumes:
+            command_bits.append("-v")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
+
+    yield StringCommand(*command_bits)
