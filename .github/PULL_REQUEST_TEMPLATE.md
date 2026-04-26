@@ -30,7 +30,7 @@
 ## Checklist
 
 - [ ] Based on `3.x`
-- [ ] Focused on a single change (no unrelated refactors / churn)
+- [ ] Focused on a single change (no unrelated refactors / churn / multiple features in 1 PR)
 - [ ] Tests added or updated for new/changed operations, facts, connectors
 - [ ] Docs added or updated for user-facing changes
 - [ ] `scripts/dev-test.sh` passes
