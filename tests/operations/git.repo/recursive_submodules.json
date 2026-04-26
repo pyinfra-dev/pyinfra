@@ -13,6 +13,12 @@
         },
         "git.GitBranch": {
             "repo=/home/myrepo": "master"
+        },
+        "git.GitLocalCommit": {
+            "ref=master, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "git.GitRemoteBranchCommit": {
+            "branch=master, remote=origin, repo=/home/myrepo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         }
     },
     "commands": [

@@ -10,15 +10,12 @@
             "repo=/home/myworktree": "origin/master"
         },
         "git.GitLocalCommit": {
-            "ref=HEAD, repo=/home/myworktree": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "ref=HEAD, repo=/home/myworktree": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
         },
         "git.GitRemoteBranchCommit": {
-            "branch=master, remote=origin, repo=/home/myworktree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            "branch=master, remote=origin, repo=/home/myworktree": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
         }
     },
-    "commands": [
-        "cd /home/myworktree && git pull"
-    ],
-    "idempotent": false,
-    "disable_idempotent_warning_reason": "git pull is always executed"
+    "commands": [],
+    "noop_description": "git worktree /home/myworktree is already up to date"
 }
