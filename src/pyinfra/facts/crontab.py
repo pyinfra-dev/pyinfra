@@ -102,7 +102,21 @@ class CrontabFile:
         return self.commands
 
 
-_crontab_env_re = re.compile(r"^\s*([A-Z_]+)=(.*)$")
+# crontab(5) env line: ``name = value`` with optional spaces around ``=``. The
+# name may be a bare identifier or placed in matching single/double quotes; the
+# value runs to end-of-line (the caller handles any quoting in the value).
+_crontab_env_re = re.compile(
+    r"""
+    ^\s*
+    (?:
+        "[^"]*"                         # "quoted name"
+      | '[^']*'                         # 'quoted name'
+      | [A-Za-z_][A-Za-z0-9_]*          # bare identifier
+    )
+    \s*=
+    """,
+    re.VERBOSE,
+)
 
 
 class Crontab(FactBase[CrontabFile]):

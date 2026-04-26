@@ -1,0 +1,13 @@
+{
+    "command": "ids=$(docker ps -qa) && [ -n \"$ids\" ] && docker container inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"abc123\", \"Config\": {\"Env\": [\"PATH=/usr/bin\", \"DEBUG=true\", \"EMPTY=\"]}}, {\"Id\": \"def456\", \"Config\": {\"Env\": null}}]"],
+    "fact": {
+        "abc123": {
+            "PATH": "/usr/bin",
+            "DEBUG": "true",
+            "EMPTY": ""
+        },
+        "def456": {}
+    }
+}

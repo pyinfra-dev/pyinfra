@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from random import uniform
 from shutil import which
 from socket import error as socket_error, gaierror
@@ -308,10 +309,23 @@ class SSHConnector(BaseConnector):
         if not kwargs.get("allow_agent"):
             return False
 
+        # Honor IdentityAgent from SSH config
+        identity_agent = getattr(self.client, "identity_agent", None)
+        old_auth_sock = os.environ.get("SSH_AUTH_SOCK")
+        if isinstance(identity_agent, str):
+            os.environ["SSH_AUTH_SOCK"] = identity_agent
+        else:
+            identity_agent = None
         try:
             agent_keys = list(Agent().get_keys())
         except Exception:
             return False
+        finally:
+            if identity_agent:
+                if old_auth_sock is not None:
+                    os.environ["SSH_AUTH_SOCK"] = old_auth_sock
+                else:
+                    os.environ.pop("SSH_AUTH_SOCK", None)
 
         if not agent_keys:
             return False

@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "path": "/srv/app",
+        "tags": "registry.io/app:arm64",
+        "platform": "linux/arm64",
+        "build_cmd": "docker buildx build",
+        "builder": "multiarch"
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=registry.io/app:arm64": []
+        }
+    },
+    "commands": [
+        "docker buildx build --builder multiarch -t registry.io/app:arm64 --platform linux/arm64 /srv/app"
+    ]
+}

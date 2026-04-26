@@ -1,0 +1,9 @@
+{
+    "args": ["/srv/app"],
+    "kwargs": {
+        "compose_command": "docker-compose"
+    },
+    "commands": [
+        "docker-compose --project-directory /srv/app up -d --remove-orphans"
+    ]
+}

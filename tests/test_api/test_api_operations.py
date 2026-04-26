@@ -2,6 +2,7 @@ from collections import defaultdict
 from os import path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
+import time
 
 import pyinfra
 from pyinfra.api import (
@@ -257,6 +258,23 @@ class TestOperationsApi(PatchSSHTestCase):
         run_ops(state)
 
         assert is_called
+
+    def test_function_call_op_timeout(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        timeout = 1
+
+        def mocked_function(*args, **kwargs):
+            time.sleep(timeout + 1)
+
+        add_op(state, python.call, mocked_function, _timeout=timeout)
+
+        # Timeout should cause the operation to fail and hosts to be removed
+        with self.assertRaises(PyinfraError) as context:
+            run_ops(state)
 
     def test_run_once_serial_op(self):
         inventory = make_inventory()

@@ -1,0 +1,19 @@
+{
+    "kwargs": {
+        "src": "/tmp/app.tar.gz",
+        "dest": "/opt/app",
+        "remote_src": true,
+        "extra_opts": ["--strip-components=1"]
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/opt/app": true
+        },
+        "files.File": {
+            "path=/tmp/app.tar.gz": true
+        }
+    },
+    "commands": [
+        "tar -xz --strip-components=1 -f /tmp/app.tar.gz -C /opt/app"
+    ]
+}

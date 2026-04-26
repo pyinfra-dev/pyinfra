@@ -1,0 +1,6 @@
+{
+    "command": "docker --version",
+    "requires_command": "docker",
+    "output": ["Docker version 29.3.1, build c2be9ccfc3\n"],
+    "fact": "Docker version 29.3.1, build c2be9ccfc3"
+}
