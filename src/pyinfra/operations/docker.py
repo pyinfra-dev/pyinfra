@@ -668,3 +668,120 @@ def logout(server: str | None = None):
         command_bits.append(QuoteString(server))
 
     yield StringCommand(*command_bits)
+
+
+@operation(is_idempotent=False)
+def compose(
+    project_directory: str,
+    files: str | list[str] | None = None,
+    project_name: str | None = None,
+    present: bool = True,
+    pull: str | None = None,
+    build: bool = False,
+    force_recreate: bool = False,
+    remove_orphans: bool = True,
+    remove_volumes: bool = False,
+    compose_command: str = "docker compose",
+):
+    """
+    Deploy a Docker Compose stack on the target.
+
+    + project_directory: project directory on the target (maps to
+      ``--project-directory``). Compose discovers ``compose.yaml`` /
+      ``compose.yml`` / ``docker-compose.yaml`` / ``docker-compose.yml`` inside
+      this directory by default.
+    + files: optional path or list of paths to specific compose file(s) on the
+      target (maps to ``-f``); use this to override the default discovery or to
+      layer overrides.
+    + project_name: compose project name (maps to ``--project-name``; defaults
+      to compose's own default — typically the basename of ``project_directory``)
+    + present: ``True`` runs ``up -d``, ``False`` runs ``down``
+    + pull: policy for ``up -d --pull`` (``None``, ``"always"``, ``"missing"``, ``"never"``)
+    + build: pass ``--build`` on ``up``
+    + force_recreate: pass ``--force-recreate`` on ``up``
+    + remove_orphans: pass ``--remove-orphans`` on ``up`` / ``down``
+    + remove_volumes: pass ``-v`` on ``down`` (only honored when ``present=False``)
+    + compose_command: compose binary to invoke; use ``"docker-compose"`` for v1
+
+    This operation is not idempotent from pyinfra's perspective: it always shells out
+    to compose. Docker itself skips services whose definition has not changed, so
+    re-runs are safe and cheap.
+
+    ``_env`` and ``_chdir`` are the standard pyinfra global operation kwargs and
+    work here without any special handling, which is useful for compose variable
+    interpolation.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker, files
+
+        # Upload the compose file then bring the stack up using compose's
+        # default discovery (looks for compose.yaml / docker-compose.yml in
+        # the project directory)
+        files.put(
+            name="Upload compose file",
+            src="files/docker-compose.yml",
+            dest="/srv/app/docker-compose.yml",
+        )
+        docker.compose(
+            name="Deploy app stack",
+            project_directory="/srv/app",
+            project_name="app",
+            _env={"DIR_STORAGE": "/srv/app/data"},
+        )
+
+        # Layer a base compose file with an override
+        docker.compose(
+            name="Deploy app stack with override",
+            project_directory="/srv/app",
+            files=["docker-compose.yml", "docker-compose.prod.yml"],
+        )
+
+        # Tear the stack down, including named volumes
+        docker.compose(
+            name="Remove app stack",
+            project_directory="/srv/app",
+            project_name="app",
+            present=False,
+            remove_volumes=True,
+        )
+    """
+    if not project_directory:
+        raise OperationError("docker.compose requires a project_directory")
+
+    if pull is not None and pull not in ("always", "missing", "never"):
+        raise OperationError(
+            'docker.compose pull must be one of None, "always", "missing", "never"',
+        )
+
+    file_list: list[str] = (
+        [files] if isinstance(files, str) else list(files) if files is not None else []
+    )
+
+    command_bits: list[str | QuoteString] = [compose_command]
+    command_bits.extend(["--project-directory", QuoteString(project_directory)])
+    if project_name:
+        command_bits.extend(["--project-name", QuoteString(project_name)])
+    for compose_file in file_list:
+        command_bits.extend(["-f", QuoteString(compose_file)])
+
+    if present:
+        command_bits.append("up -d")
+        if pull:
+            command_bits.extend(["--pull", pull])
+        if build:
+            command_bits.append("--build")
+        if force_recreate:
+            command_bits.append("--force-recreate")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
+    else:
+        command_bits.append("down")
+        if remove_volumes:
+            command_bits.append("-v")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
+
+    yield StringCommand(*command_bits)
