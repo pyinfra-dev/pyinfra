@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "username": "ci",
+        "password": "newpw",
+        "server": "myregistry.io:5000",
+        "force": true
+    },
+    "commands": [
+        {
+            "raw": "printf '%s' newpw | docker login --username ci --password-stdin myregistry.io:5000",
+            "masked": "printf '%s' *** | docker login --username ci --password-stdin myregistry.io:5000"
+        }
+    ]
+}
