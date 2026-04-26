@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "path": "/srv/app",
+        "tags": "app:prod",
+        "dockerfile": "docker/Dockerfile.prod"
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=app:prod": []
+        }
+    },
+    "commands": [
+        "docker build -t app:prod -f docker/Dockerfile.prod /srv/app"
+    ]
+}

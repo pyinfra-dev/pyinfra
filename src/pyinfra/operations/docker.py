@@ -285,6 +285,138 @@ def image(image: str, present: bool = True, force: bool = False):
 
 
 @operation()
+def build(
+    path: str,
+    tags: str | list[str] | None = None,
+    dockerfile: str | None = None,
+    build_args: dict[str, str] | None = None,
+    labels: dict[str, str] | None = None,
+    target: str | None = None,
+    platform: str | None = None,
+    network: str | None = None,
+    cache_from: str | list[str] | None = None,
+    cache_to: str | list[str] | None = None,
+    secrets: list[str] | None = None,
+    pull: bool = False,
+    no_cache: bool = False,
+    force: bool = False,
+    builder: str | None = None,
+    build_cmd: str = "docker build",
+):
+    """
+    Build a Docker image from a context directory or URL.
+
+    + path: build context (local directory or git/http URL)
+    + tags: tag or list of tags to apply to the built image (maps to ``-t``)
+    + dockerfile: path to the Dockerfile (maps to ``-f``; relative to the context)
+    + build_args: ``--build-arg`` values as a mapping
+    + labels: ``--label`` values as a mapping
+    + target: ``--target`` stage for multi-stage Dockerfiles
+    + platform: ``--platform`` (e.g. ``linux/amd64``)
+    + network: ``--network`` (e.g. ``host``)
+    + cache_from: ``--cache-from`` value or list of values; accepts image
+      references and full backend specs (e.g. ``type=registry,ref=...``,
+      ``type=gha``, ``type=local,src=/tmp/.buildx-cache``)
+    + cache_to: ``--cache-to`` value or list of values; same backend syntax as
+      ``cache_from`` (BuildKit / ``docker buildx build`` only)
+    + secrets: list of raw ``--secret`` specs (e.g. ``id=mysecret,src=/run/secret``)
+    + pull: pass ``--pull`` to always fetch newer base images
+    + no_cache: pass ``--no-cache``
+    + force: rebuild even if all provided tags already exist locally
+    + builder: optional name passed via ``--builder`` to select a buildx
+      builder instance (BuildKit only)
+    + build_cmd: command used to invoke the build, defaults to ``docker build``;
+      set to ``"docker buildx build"`` to force BuildKit
+
+    Idempotency is tag-based: when ``tags`` is provided and ``force`` is false, the
+    operation no-ops if every tag already exists on the target. Without ``tags``
+    the build always runs (Docker's own layer cache still applies).
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Build and tag a local context
+        docker.build(
+            name="Build app image",
+            path="/srv/app",
+            tags=["app:1.0", "app:latest"],
+            build_args={"VERSION": "1.0"},
+            pull=True,
+        )
+
+        # BuildKit cross-platform build from a custom Dockerfile,
+        # using a named buildx builder and a registry cache backend
+        docker.build(
+            name="Build multi-arch app",
+            path="/srv/app",
+            tags="registry.io/app:arm64",
+            dockerfile="docker/Dockerfile.prod",
+            platform="linux/arm64",
+            build_cmd="docker buildx build",
+            builder="multiarch",
+            cache_from="type=registry,ref=registry.io/app:cache",
+            cache_to="type=registry,ref=registry.io/app:cache,mode=max",
+        )
+    """
+    if not path:
+        raise OperationError("docker.build requires a context path")
+
+    tag_list: list[str] = (
+        [tags] if isinstance(tags, str) else list(tags) if tags is not None else []
+    )
+    cache_from_list: list[str] = (
+        [cache_from]
+        if isinstance(cache_from, str)
+        else list(cache_from)
+        if cache_from is not None
+        else []
+    )
+    cache_to_list: list[str] = (
+        [cache_to] if isinstance(cache_to, str) else list(cache_to) if cache_to is not None else []
+    )
+
+    if tag_list and not force:
+        missing = [tag for tag in tag_list if not host.get_fact(DockerImage, object_id=tag)]
+        if not missing:
+            host.noop("Image(s) {0} already exist!".format(", ".join(tag_list)))
+            return
+
+    command_bits: list[str | QuoteString] = [build_cmd]
+    if builder:
+        command_bits.extend(["--builder", QuoteString(builder)])
+    for tag in tag_list:
+        command_bits.extend(["-t", QuoteString(tag)])
+    if dockerfile:
+        command_bits.extend(["-f", QuoteString(dockerfile)])
+    for key, value in (build_args or {}).items():
+        command_bits.extend(["--build-arg", QuoteString("{0}={1}".format(key, value))])
+    for key, value in (labels or {}).items():
+        command_bits.extend(["--label", QuoteString("{0}={1}".format(key, value))])
+    if target:
+        command_bits.extend(["--target", QuoteString(target)])
+    if platform:
+        command_bits.extend(["--platform", QuoteString(platform)])
+    if network:
+        command_bits.extend(["--network", QuoteString(network)])
+    for cache in cache_from_list:
+        command_bits.extend(["--cache-from", QuoteString(cache)])
+    for cache in cache_to_list:
+        command_bits.extend(["--cache-to", QuoteString(cache)])
+    for secret in secrets or []:
+        command_bits.extend(["--secret", QuoteString(secret)])
+    if pull:
+        command_bits.append("--pull")
+    if no_cache:
+        command_bits.append("--no-cache")
+    command_bits.append(QuoteString(path))
+
+    yield StringCommand(*command_bits)
+
+
+@operation()
 def volume(volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True):
     """
     Manage Docker volumes
