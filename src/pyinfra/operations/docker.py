@@ -285,6 +285,138 @@ def image(image: str, present: bool = True, force: bool = False):
 
 
 @operation()
+def build(
+    path: str,
+    tags: str | list[str] | None = None,
+    dockerfile: str | None = None,
+    build_args: dict[str, str] | None = None,
+    labels: dict[str, str] | None = None,
+    target: str | None = None,
+    platform: str | None = None,
+    network: str | None = None,
+    cache_from: str | list[str] | None = None,
+    cache_to: str | list[str] | None = None,
+    secrets: list[str] | None = None,
+    pull: bool = False,
+    no_cache: bool = False,
+    force: bool = False,
+    builder: str | None = None,
+    build_cmd: str = "docker build",
+):
+    """
+    Build a Docker image from a context directory or URL.
+
+    + path: build context (local directory or git/http URL)
+    + tags: tag or list of tags to apply to the built image (maps to ``-t``)
+    + dockerfile: path to the Dockerfile (maps to ``-f``; relative to the context)
+    + build_args: ``--build-arg`` values as a mapping
+    + labels: ``--label`` values as a mapping
+    + target: ``--target`` stage for multi-stage Dockerfiles
+    + platform: ``--platform`` (e.g. ``linux/amd64``)
+    + network: ``--network`` (e.g. ``host``)
+    + cache_from: ``--cache-from`` value or list of values; accepts image
+      references and full backend specs (e.g. ``type=registry,ref=...``,
+      ``type=gha``, ``type=local,src=/tmp/.buildx-cache``)
+    + cache_to: ``--cache-to`` value or list of values; same backend syntax as
+      ``cache_from`` (BuildKit / ``docker buildx build`` only)
+    + secrets: list of raw ``--secret`` specs (e.g. ``id=mysecret,src=/run/secret``)
+    + pull: pass ``--pull`` to always fetch newer base images
+    + no_cache: pass ``--no-cache``
+    + force: rebuild even if all provided tags already exist locally
+    + builder: optional name passed via ``--builder`` to select a buildx
+      builder instance (BuildKit only)
+    + build_cmd: command used to invoke the build, defaults to ``docker build``;
+      set to ``"docker buildx build"`` to force BuildKit
+
+    Idempotency is tag-based: when ``tags`` is provided and ``force`` is false, the
+    operation no-ops if every tag already exists on the target. Without ``tags``
+    the build always runs (Docker's own layer cache still applies).
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Build and tag a local context
+        docker.build(
+            name="Build app image",
+            path="/srv/app",
+            tags=["app:1.0", "app:latest"],
+            build_args={"VERSION": "1.0"},
+            pull=True,
+        )
+
+        # BuildKit cross-platform build from a custom Dockerfile,
+        # using a named buildx builder and a registry cache backend
+        docker.build(
+            name="Build multi-arch app",
+            path="/srv/app",
+            tags="registry.io/app:arm64",
+            dockerfile="docker/Dockerfile.prod",
+            platform="linux/arm64",
+            build_cmd="docker buildx build",
+            builder="multiarch",
+            cache_from="type=registry,ref=registry.io/app:cache",
+            cache_to="type=registry,ref=registry.io/app:cache,mode=max",
+        )
+    """
+    if not path:
+        raise OperationError("docker.build requires a context path")
+
+    tag_list: list[str] = (
+        [tags] if isinstance(tags, str) else list(tags) if tags is not None else []
+    )
+    cache_from_list: list[str] = (
+        [cache_from]
+        if isinstance(cache_from, str)
+        else list(cache_from)
+        if cache_from is not None
+        else []
+    )
+    cache_to_list: list[str] = (
+        [cache_to] if isinstance(cache_to, str) else list(cache_to) if cache_to is not None else []
+    )
+
+    if tag_list and not force:
+        missing = [tag for tag in tag_list if not host.get_fact(DockerImage, object_id=tag)]
+        if not missing:
+            host.noop("Image(s) {0} already exist!".format(", ".join(tag_list)))
+            return
+
+    command_bits: list[str | QuoteString] = [build_cmd]
+    if builder:
+        command_bits.extend(["--builder", QuoteString(builder)])
+    for tag in tag_list:
+        command_bits.extend(["-t", QuoteString(tag)])
+    if dockerfile:
+        command_bits.extend(["-f", QuoteString(dockerfile)])
+    for key, value in (build_args or {}).items():
+        command_bits.extend(["--build-arg", QuoteString("{0}={1}".format(key, value))])
+    for key, value in (labels or {}).items():
+        command_bits.extend(["--label", QuoteString("{0}={1}".format(key, value))])
+    if target:
+        command_bits.extend(["--target", QuoteString(target)])
+    if platform:
+        command_bits.extend(["--platform", QuoteString(platform)])
+    if network:
+        command_bits.extend(["--network", QuoteString(network)])
+    for cache in cache_from_list:
+        command_bits.extend(["--cache-from", QuoteString(cache)])
+    for cache in cache_to_list:
+        command_bits.extend(["--cache-to", QuoteString(cache)])
+    for secret in secrets or []:
+        command_bits.extend(["--secret", QuoteString(secret)])
+    if pull:
+        command_bits.append("--pull")
+    if no_cache:
+        command_bits.append("--no-cache")
+    command_bits.append(QuoteString(path))
+
+    yield StringCommand(*command_bits)
+
+
+@operation()
 def volume(volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True):
     """
     Manage Docker volumes
@@ -666,5 +798,122 @@ def logout(server: str | None = None):
     command_bits: list = ["docker logout"]
     if server:
         command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)
+
+
+@operation(is_idempotent=False)
+def compose(
+    project_directory: str,
+    files: str | list[str] | None = None,
+    project_name: str | None = None,
+    present: bool = True,
+    pull: str | None = None,
+    build: bool = False,
+    force_recreate: bool = False,
+    remove_orphans: bool = True,
+    remove_volumes: bool = False,
+    compose_command: str = "docker compose",
+):
+    """
+    Deploy a Docker Compose stack on the target.
+
+    + project_directory: project directory on the target (maps to
+      ``--project-directory``). Compose discovers ``compose.yaml`` /
+      ``compose.yml`` / ``docker-compose.yaml`` / ``docker-compose.yml`` inside
+      this directory by default.
+    + files: optional path or list of paths to specific compose file(s) on the
+      target (maps to ``-f``); use this to override the default discovery or to
+      layer overrides.
+    + project_name: compose project name (maps to ``--project-name``; defaults
+      to compose's own default — typically the basename of ``project_directory``)
+    + present: ``True`` runs ``up -d``, ``False`` runs ``down``
+    + pull: policy for ``up -d --pull`` (``None``, ``"always"``, ``"missing"``, ``"never"``)
+    + build: pass ``--build`` on ``up``
+    + force_recreate: pass ``--force-recreate`` on ``up``
+    + remove_orphans: pass ``--remove-orphans`` on ``up`` / ``down``
+    + remove_volumes: pass ``-v`` on ``down`` (only honored when ``present=False``)
+    + compose_command: compose binary to invoke; use ``"docker-compose"`` for v1
+
+    This operation is not idempotent from pyinfra's perspective: it always shells out
+    to compose. Docker itself skips services whose definition has not changed, so
+    re-runs are safe and cheap.
+
+    ``_env`` and ``_chdir`` are the standard pyinfra global operation kwargs and
+    work here without any special handling, which is useful for compose variable
+    interpolation.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker, files
+
+        # Upload the compose file then bring the stack up using compose's
+        # default discovery (looks for compose.yaml / docker-compose.yml in
+        # the project directory)
+        files.put(
+            name="Upload compose file",
+            src="files/docker-compose.yml",
+            dest="/srv/app/docker-compose.yml",
+        )
+        docker.compose(
+            name="Deploy app stack",
+            project_directory="/srv/app",
+            project_name="app",
+            _env={"DIR_STORAGE": "/srv/app/data"},
+        )
+
+        # Layer a base compose file with an override
+        docker.compose(
+            name="Deploy app stack with override",
+            project_directory="/srv/app",
+            files=["docker-compose.yml", "docker-compose.prod.yml"],
+        )
+
+        # Tear the stack down, including named volumes
+        docker.compose(
+            name="Remove app stack",
+            project_directory="/srv/app",
+            project_name="app",
+            present=False,
+            remove_volumes=True,
+        )
+    """
+    if not project_directory:
+        raise OperationError("docker.compose requires a project_directory")
+
+    if pull is not None and pull not in ("always", "missing", "never"):
+        raise OperationError(
+            'docker.compose pull must be one of None, "always", "missing", "never"',
+        )
+
+    file_list: list[str] = (
+        [files] if isinstance(files, str) else list(files) if files is not None else []
+    )
+
+    command_bits: list[str | QuoteString] = [compose_command]
+    command_bits.extend(["--project-directory", QuoteString(project_directory)])
+    if project_name:
+        command_bits.extend(["--project-name", QuoteString(project_name)])
+    for compose_file in file_list:
+        command_bits.extend(["-f", QuoteString(compose_file)])
+
+    if present:
+        command_bits.append("up -d")
+        if pull:
+            command_bits.extend(["--pull", pull])
+        if build:
+            command_bits.append("--build")
+        if force_recreate:
+            command_bits.append("--force-recreate")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
+    else:
+        command_bits.append("down")
+        if remove_volumes:
+            command_bits.append("-v")
+        if remove_orphans:
+            command_bits.append("--remove-orphans")
 
     yield StringCommand(*command_bits)

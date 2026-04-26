@@ -1,0 +1,9 @@
+{
+    "kwargs": {
+        "path": ""
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "docker.build requires a context path"
+    }
+}
