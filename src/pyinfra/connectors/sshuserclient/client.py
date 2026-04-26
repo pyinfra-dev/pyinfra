@@ -3,6 +3,7 @@ This file as originally part of the "sshuserclient" pypi package. The GitHub
 source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
+import os
 from os import path
 
 from gevent.lock import BoundedSemaphore
@@ -166,6 +167,7 @@ class SSHClient(ParamikoClient):
             missing_host_key_policy,
             host_keys_files,
             keep_alive,
+            identity_agent,
         ) = self.parse_config(
             hostname,
             kwargs,
@@ -188,7 +190,21 @@ class SSHClient(ParamikoClient):
             config.update(_pyinfra_ssh_paramiko_connect_kwargs)
 
         self._ssh_config = config
-        super().connect(hostname, **config)
+        self.identity_agent = identity_agent
+
+        # Honor IdentityAgent from SSH config by temporarily setting SSH_AUTH_SOCK
+        # so Paramiko's Agent class connects to the correct socket.
+        old_auth_sock = os.environ.get("SSH_AUTH_SOCK")
+        if identity_agent:
+            os.environ["SSH_AUTH_SOCK"] = identity_agent
+        try:
+            super().connect(hostname, **config)
+        finally:
+            if identity_agent:
+                if old_auth_sock is not None:
+                    os.environ["SSH_AUTH_SOCK"] = old_auth_sock
+                else:
+                    os.environ.pop("SSH_AUTH_SOCK", None)
 
         if _pyinfra_ssh_forward_agent is not None:
             forward_agent = _pyinfra_ssh_forward_agent
@@ -204,13 +220,14 @@ class SSHClient(ParamikoClient):
             session = transport.open_session()
             AgentRequestHandler(session)
 
-    def gateway(self, hostname, host_port, target, target_port):
+    def gateway(self, hostname, host_port, target, target_port, timeout=None):
         transport = self.get_transport()
         assert transport is not None, "No transport"
         return transport.open_channel(
             "direct-tcpip",
             (target, target_port),
             (hostname, host_port),
+            timeout=timeout,
         )
 
     def parse_config(
@@ -225,6 +242,7 @@ class SSHClient(ParamikoClient):
 
         keep_alive = 0
         forward_agent = False
+        identity_agent = None
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
         host_keys_files = (path.expanduser("~/.ssh/known_hosts"),)
 
@@ -237,6 +255,7 @@ class SSHClient(ParamikoClient):
                 missing_host_key_policy,
                 host_keys_files,
                 keep_alive,
+                identity_agent,
             )
 
         host_config = ssh_config.lookup(hostname)
@@ -266,8 +285,19 @@ class SSHClient(ParamikoClient):
         if "port" in host_config:
             cfg["port"] = int(host_config["port"])
 
+        # Respect ``ConnectTimeout`` from ssh_config (issue #971): without this,
+        # paramiko waits on its own default and a ProxyJump hop can hang for
+        # minutes before failing.
+        if "connecttimeout" in host_config and "timeout" not in cfg:
+            cfg["timeout"] = int(host_config["connecttimeout"])
+
         if "serveraliveinterval" in host_config:
             keep_alive = int(host_config["serveraliveinterval"])
+
+        if "identityagent" in host_config:
+            agent_path = host_config["identityagent"]
+            if agent_path.lower() != "none":
+                identity_agent = path.expanduser(agent_path)
 
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
@@ -275,14 +305,26 @@ class SSHClient(ParamikoClient):
         elif "proxyjump" in host_config:
             hops = host_config["proxyjump"].split(",")
             sock = None
+            # Propagate the target's timeout down so hop connections and the
+            # direct-tcpip channel don't hang forever when the network misbehaves
+            # (issue #971). Individual hops can still override via their own
+            # ``ConnectTimeout`` in ssh_config.
+            target_timeout = cfg.get("timeout")
 
             for i, hop in enumerate(hops):
                 hop_hostname, hop_config = self.derive_shorthand(ssh_config, hop)
                 logger.debug("SSH ProxyJump through %s:%s", hop_hostname, hop_config["port"])
 
+                hop_connect_kwargs = dict(hop_config)
+                if "timeout" not in hop_connect_kwargs and target_timeout is not None:
+                    hop_connect_kwargs["timeout"] = target_timeout
+
                 c = SSHClient()
                 c.connect(
-                    hop_hostname, _pyinfra_ssh_config_file=ssh_config_file, sock=sock, **hop_config
+                    hop_hostname,
+                    _pyinfra_ssh_config_file=ssh_config_file,
+                    sock=sock,
+                    **hop_connect_kwargs,
                 )
 
                 if i == len(hops) - 1:
@@ -291,10 +333,24 @@ class SSHClient(ParamikoClient):
                 else:
                     target, target_config = self.derive_shorthand(ssh_config, hops[i + 1])
 
-                sock = c.gateway(hostname, cfg["port"], target, target_config["port"])
+                sock = c.gateway(
+                    hostname,
+                    cfg["port"],
+                    target,
+                    target_config["port"],
+                    timeout=target_timeout,
+                )
             cfg["sock"] = sock
 
-        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_files, keep_alive
+        return (
+            hostname,
+            cfg,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_files,
+            keep_alive,
+            identity_agent,
+        )
 
     @staticmethod
     def derive_shorthand(ssh_config, host_string):
@@ -323,6 +379,8 @@ class SSHClient(ParamikoClient):
             "port": base_config.get("port", 22),
             "username": base_config.get("user"),
         }
+        if "connecttimeout" in base_config:
+            config["timeout"] = int(base_config["connecttimeout"])
         config.update(shorthand_config)
 
         return hostname, config

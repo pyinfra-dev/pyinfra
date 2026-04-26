@@ -103,7 +103,12 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
 
             if isinstance(command, FunctionCommand):
                 try:
-                    status = command.execute(state, host, connector_arguments)
+                    with gevent.Timeout(timeout, exception=TimeoutError):
+                        status = command.execute(state, host, connector_arguments)
+
+                except TimeoutError as e:
+                    log_host_command_error(host, e, timeout=timeout)
+
                 except NestedOperationError:
                     host.log_styled("Error in nested operation", fg="red", log_func=logger.error)
                 except Exception as e:

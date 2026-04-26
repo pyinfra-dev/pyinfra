@@ -1,0 +1,30 @@
+{
+    "command": "docker stats --no-stream --format '{{json .}}'",
+    "requires_command": "docker",
+    "output": [
+        "{\"ID\": \"abc123\", \"Name\": \"web\", \"CPUPerc\": \"0.01%\", \"MemUsage\": \"4MiB / 1GiB\", \"MemPerc\": \"0.4%\", \"NetIO\": \"0B / 0B\", \"BlockIO\": \"0B / 0B\", \"PIDs\": \"2\"}",
+        "{\"ID\": \"def456\", \"Name\": \"db\", \"CPUPerc\": \"0.10%\", \"MemUsage\": \"50MiB / 1GiB\", \"MemPerc\": \"5.0%\", \"NetIO\": \"1kB / 0B\", \"BlockIO\": \"0B / 0B\", \"PIDs\": \"10\"}"
+    ],
+    "fact": [
+        {
+            "ID": "abc123",
+            "Name": "web",
+            "CPUPerc": "0.01%",
+            "MemUsage": "4MiB / 1GiB",
+            "MemPerc": "0.4%",
+            "NetIO": "0B / 0B",
+            "BlockIO": "0B / 0B",
+            "PIDs": "2"
+        },
+        {
+            "ID": "def456",
+            "Name": "db",
+            "CPUPerc": "0.10%",
+            "MemUsage": "50MiB / 1GiB",
+            "MemPerc": "5.0%",
+            "NetIO": "1kB / 0B",
+            "BlockIO": "0B / 0B",
+            "PIDs": "10"
+        }
+    ]
+}

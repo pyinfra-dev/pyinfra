@@ -6,15 +6,20 @@ as inventory directly.
 
 from __future__ import annotations
 
+from shlex import quote as shlex_quote
+
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
+    DockerAuths,
     DockerContainer,
     DockerImage,
     DockerNetwork,
     DockerPlugin,
     DockerVolume,
 )
+
+DOCKER_HUB_SERVER = "https://index.docker.io/v1/"
 
 from .util.docker import ContainerSpec, handle_docker, parse_image_reference
 
@@ -35,7 +40,16 @@ def container(
     start: bool = True,
     restart_policy: str | None = None,
     auto_remove: bool = False,
+    mounts: list[str] | None = None,
+    privileged: bool = False,
+    hostname: str | None = None,
+    entrypoint: str | None = None,
+    user: str | None = None,
+    cpus: float | None = None,
+    memory: str | None = None,
+    extra_args: list[str] | None = None,
     dns: list[str] | None = None,
+    command: str | None = None,
 ):
     """
     Manage Docker containers
@@ -54,7 +68,16 @@ def container(
     + start: start or stop the container
     + restart_policy: restart policy to apply when a container exits
     + auto_remove: automatically remove the container and its associated anonymous volumes when it exits
+    + mounts: list of ``--mount`` specifications (e.g. ``type=bind,source=/src,target=/app``)
+    + privileged: give extended privileges to the container
+    + hostname: container hostname
+    + entrypoint: override the default entrypoint
+    + user: username or UID to run as
+    + cpus: number of CPUs (e.g. ``1.5``)
+    + memory: memory limit (e.g. ``512m``, ``1g``)
+    + extra_args: list of additional raw arguments passed to ``docker container create``
     + dns: list of dns servers to be used by the container
+    + command: custom command to run on container start
 
     **Examples:**
 
@@ -76,6 +99,21 @@ def container(
             auto_remove=True,
         )
 
+        # Run a container with mounts and resource limits
+        docker.container(
+            name="Deploy app container",
+            container="myapp",
+            image="myapp:latest",
+            mounts=["type=bind,source=/host/data,target=/app/data"],
+            privileged=True,
+            hostname="myapp-host",
+            entrypoint="/bin/sh",
+            user="1000:1000",
+            cpus=2.0,
+            memory="512m",
+            extra_args=["--cap-add", "NET_ADMIN"],
+        )
+
         # Stop a container
         docker.container(
             name="Stop Nginx container",
@@ -88,6 +126,14 @@ def container(
             name="Start Nginx container",
             container="nginx",
             start=True,
+        )
+
+        # Run a custom command on container start
+        # Note: you can omit the shell (sh -c) to use the default shell of the container
+        docker.container(
+            name="Run a custom command",
+            container="alpine",
+            command="sh -c 'echo Whatever you want'",
         )
     """
 
@@ -102,7 +148,16 @@ def container(
         pull_always,
         restart_policy,
         auto_remove,
+        mounts or list(),
+        privileged,
+        hostname,
+        entrypoint,
+        user,
+        cpus,
+        memory,
+        extra_args or list(),
         dns or list(),
+        command,
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 
@@ -504,3 +559,112 @@ def plugin(
             command="remove",
             plugin=plugin_name,
         )
+
+
+@operation()
+def login(
+    username: str,
+    password: str,
+    server: str | None = None,
+    force: bool = False,
+):
+    """
+    Log in to a Docker registry.
+
+    + username: username to authenticate with
+    + password: password to authenticate with
+    + server: registry server to log in to (defaults to Docker Hub)
+    + force: log in even if ``~/.docker/config.json`` already has an entry for the server
+
+    Idempotency is checked against the ``auths`` section of
+    ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``: if the server is already
+    present, the operation is a no-op. Use ``force=True`` to re-run ``docker
+    login`` (e.g. after rotating credentials).
+
+    The password is piped to ``docker login --password-stdin`` so it is not
+    exposed on the command line, and is masked in pyinfra's command log.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Log in to a private registry
+        docker.login(
+            name="Log in to private registry",
+            server="myregistry.io:5000",
+            username="ci",
+            password="s3cret",
+        )
+
+        # Log in to Docker Hub
+        docker.login(
+            name="Log in to Docker Hub",
+            username="ci",
+            password="s3cret",
+        )
+    """
+    if not username:
+        raise OperationError("docker.login requires a username")
+    if not password:
+        raise OperationError("docker.login requires a password")
+
+    target_server = server or DOCKER_HUB_SERVER
+
+    if not force:
+        existing_auths = host.get_fact(DockerAuths)
+        if target_server in existing_auths:
+            host.noop(f"Already logged in to Docker registry {target_server}")
+            return
+
+    command_bits: list = [
+        "printf '%s'",
+        MaskString(shlex_quote(password)),
+        "| docker login --username",
+        QuoteString(username),
+        "--password-stdin",
+    ]
+    if server:
+        command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)
+
+
+@operation()
+def logout(server: str | None = None):
+    """
+    Log out of a Docker registry.
+
+    + server: registry server to log out of (defaults to Docker Hub)
+
+    No-ops when the server is not present in
+    ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Log out of a private registry
+        docker.logout(
+            name="Log out of private registry",
+            server="myregistry.io:5000",
+        )
+
+        # Log out of Docker Hub
+        docker.logout(name="Log out of Docker Hub")
+    """
+    target_server = server or DOCKER_HUB_SERVER
+
+    existing_auths = host.get_fact(DockerAuths)
+    if target_server not in existing_auths:
+        host.noop(f"Not logged in to Docker registry {target_server}")
+        return
+
+    command_bits: list = ["docker logout"]
+    if server:
+        command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)

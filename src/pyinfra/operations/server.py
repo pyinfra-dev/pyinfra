@@ -17,6 +17,7 @@ from pyinfra.api.util import try_int
 from pyinfra.connectors.util import remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory, FileContents, FindInFile, Link
 from pyinfra.facts.server import (
+    AuthorizedKeys,
     EtcHosts,
     Groups,
     Home,
@@ -91,6 +92,13 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
         max_retries = round(reboot_timeout / interval)
+
+        # The remote askpass files (if any) live on a host that has just
+        # rebooted — the SSH session is dead and there is nothing to clean up.
+        # Clear the stored paths before disconnecting so the disconnect path
+        # does not attempt an ``rm -f`` over the broken connection.
+        host.connector_data["sudo_askpass_path"] = None
+        host.connector_data["su_askpass_path"] = None
 
         host.disconnect()  # make sure we are properly disconnected
         retries = 0
@@ -921,25 +929,36 @@ def user_authorized_keys(
 
     authorized_key_file = f"{authorized_key_directory}/{authorized_key_filename}"
 
-    if delete_keys:
-        # Create a whole new authorized_keys file
-        keys_file = StringIO(
-            "{0}\n".format(
-                "\n".join(public_keys),
-            ),
-        )
+    # Pull the currently installed keys once; individual files.line calls otherwise
+    # issue one FindInFile fact per key, which dominates the cost for users with many
+    # keys.
+    current_keys = host.get_fact(AuthorizedKeys, user=user, path=authorized_key_file)
 
-        # And ensure it exists
-        yield from files.put._inner(
-            src=keys_file,
-            dest=authorized_key_file,
-            user=user,
-            group=group or user,
-            mode=600,
-        )
+    if delete_keys:
+        if current_keys == public_keys:
+            # Still ensure the file and its ownership/mode stay correct.
+            yield from files.file._inner(
+                path=authorized_key_file,
+                user=user,
+                group=group or user,
+                mode=600,
+            )
+        else:
+            keys_file = StringIO(
+                "{0}\n".format(
+                    "\n".join(public_keys),
+                ),
+            )
+            yield from files.put._inner(
+                src=keys_file,
+                dest=authorized_key_file,
+                user=user,
+                group=group or user,
+                mode=600,
+            )
 
     else:
-        # Ensure authorized_keys exists
+        # Ensure authorized_keys exists with the right ownership and mode.
         yield from files.file._inner(
             path=authorized_key_file,
             user=user,
@@ -947,8 +966,12 @@ def user_authorized_keys(
             mode=600,
         )
 
-        # And every public key is present
+        # Only append the keys that the fact says are missing; an empty fact result
+        # also covers the "file does not exist yet" case.
+        current_key_set = set(current_keys)
         for key in public_keys:
+            if key in current_key_set:
+                continue
             yield from files.line._inner(path=authorized_key_file, line=key, ensure_newline=True)
 
 
