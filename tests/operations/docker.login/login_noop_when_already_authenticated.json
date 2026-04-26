@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "username": "ci",
+        "password": "s3cret",
+        "server": "myregistry.io:5000"
+    },
+    "facts": {
+        "docker.DockerAuths": ["myregistry.io:5000"]
+    },
+    "commands": [],
+    "noop_description": "Already logged in to Docker registry myregistry.io:5000"
+}

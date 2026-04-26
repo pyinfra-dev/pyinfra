@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "username": "ci",
+        "password": "s3cret"
+    },
+    "facts": {
+        "docker.DockerAuths": []
+    },
+    "commands": [
+        {
+            "raw": "printf '%s' s3cret | docker login --username ci --password-stdin",
+            "masked": "printf '%s' *** | docker login --username ci --password-stdin"
+        }
+    ]
+}

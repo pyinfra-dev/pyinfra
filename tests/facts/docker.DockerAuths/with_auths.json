@@ -1,0 +1,7 @@
+{
+    "command": "config=\"${DOCKER_CONFIG:-$HOME/.docker}/config.json\"; [ -r \"$config\" ] && cat \"$config\" || echo \"{}\"",
+    "output": [
+        "{\"auths\": {\"https://index.docker.io/v1/\": {\"auth\": \"xxx\"}, \"myregistry.io:5000\": {\"auth\": \"yyy\"}}}"
+    ],
+    "fact": ["https://index.docker.io/v1/", "myregistry.io:5000"]
+}
