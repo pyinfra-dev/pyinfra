@@ -1,0 +1,10 @@
+{
+    "kwargs": {
+        "path": "/srv/app",
+        "tags": "app:1.0",
+        "force": true
+    },
+    "commands": [
+        "docker build -t app:1.0 /srv/app"
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "kwargs": {
+        "path": "/srv/app",
+        "tags": "app:1.0",
+        "target": "runtime",
+        "platform": "linux/amd64",
+        "pull": true,
+        "no_cache": true
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=app:1.0": []
+        }
+    },
+    "commands": [
+        "docker build -t app:1.0 --target runtime --platform linux/amd64 --pull --no-cache /srv/app"
+    ]
+}
