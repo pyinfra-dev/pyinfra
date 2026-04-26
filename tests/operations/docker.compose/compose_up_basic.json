@@ -1,6 +1,6 @@
 {
-    "args": ["/srv/app/docker-compose.yml"],
+    "args": ["/srv/app"],
     "commands": [
-        "docker compose -f /srv/app/docker-compose.yml up -d --remove-orphans"
+        "docker compose --project-directory /srv/app up -d --remove-orphans"
     ]
 }

@@ -1,10 +1,10 @@
 {
-    "args": ["/srv/app/docker-compose.yml"],
+    "args": ["/srv/app"],
     "kwargs": {
         "project": "app",
         "pull": "always"
     },
     "commands": [
-        "docker compose --project-name app -f /srv/app/docker-compose.yml up -d --pull always --remove-orphans"
+        "docker compose --project-directory /srv/app --project-name app up -d --pull always --remove-orphans"
     ]
 }

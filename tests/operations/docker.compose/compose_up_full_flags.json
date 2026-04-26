@@ -1,11 +1,11 @@
 {
-    "args": ["/srv/app/docker-compose.yml"],
+    "args": ["/srv/app"],
     "kwargs": {
         "build": true,
         "force_recreate": true,
         "remove_orphans": true
     },
     "commands": [
-        "docker compose -f /srv/app/docker-compose.yml up -d --build --force-recreate --remove-orphans"
+        "docker compose --project-directory /srv/app up -d --build --force-recreate --remove-orphans"
     ]
 }
