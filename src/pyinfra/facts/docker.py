@@ -394,7 +394,7 @@ class DockerImageHistory(_DockerJsonLinesFactBase):
         ).format(image_id)
 
 
-class DockerAuths(FactBase):
+class DockerAuths(FactBase[list[str]]):
     """
     Returns the list of registry servers the current user is authenticated
     against, read from ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.
@@ -410,7 +410,7 @@ class DockerAuths(FactBase):
         )
 
     @override
-    def process(self, output):
+    def process(self, output: list[str]) -> list[str]:
         try:
             data = json.loads("".join(output))
         except json.JSONDecodeError:
