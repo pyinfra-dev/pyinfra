@@ -1,0 +1,9 @@
+{
+    "arg": "myrepo",
+    "command": "! test -d myrepo || (cd myrepo && git rev-parse HEAD 2>/dev/null)",
+    "requires_command": "git",
+    "output": [
+        "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
+    ],
+    "fact": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
+}
