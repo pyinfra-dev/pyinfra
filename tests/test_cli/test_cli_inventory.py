@@ -45,6 +45,31 @@ class TestCliInventory(PatchSSHTestCase):
         assert inventory.group_data["leftover_data"].get("still_parsed") == "never_used"
         assert inventory.group_data["leftover_data"].get("_global_arg") == "gets_parsed"
 
+    def test_imports_do_not_leak_into_group_data(self):
+        """
+        Regression test for #1297: ``from pkg import name`` / ``import pkg`` in
+        a group_data file must not expose ``name`` / ``pkg`` as group data,
+        otherwise ``debug-inventory`` fails trying to JSON-encode a module.
+        """
+        ctx_state.reset()
+        ctx_inventory.reset()
+
+        hosts = ["somehost", "anotherhost", "someotherhost"]
+        result = run_cli(
+            "-y",
+            ",".join(hosts),
+            f"--group-data={path.join('tests', 'test_cli', 'deploy', 'group_data')}",
+            "exec",
+            "uptime",
+        )
+        assert result.exit_code == 0, result.stdout
+
+        leaked = inventory.group_data["imports_leak"]
+        assert "os" not in leaked
+        assert "inventory" not in leaked
+        assert "path_join" not in leaked
+        assert leaked.get("exported_value") == "this_should_be_included"
+
     def test_load_group_data_file(self):
         ctx_state.reset()
         ctx_inventory.reset()

@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "container": "nginx",
+        "image": "nginx:alpine",
+        "present": "true",
+        "start": false,
+        "command": "sh -c 'echo leroy jenkins'"
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=nginx": []
+        }
+    },
+    "commands": [
+        "docker container create --name nginx nginx:alpine sh -c 'echo leroy jenkins'"
+    ]
+}

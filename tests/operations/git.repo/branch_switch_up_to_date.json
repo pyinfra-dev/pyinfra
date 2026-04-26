@@ -1,7 +1,7 @@
 {
     "args": ["myrepo", "/home/myrepo"],
     "kwargs": {
-        "rebase": true
+        "branch": "mybranch"
     },
     "facts": {
         "files.Directory": {
@@ -13,16 +13,19 @@
         "git.GitBranch": {
             "repo=/home/myrepo": "master"
         },
+        "git.GitTag": {
+            "repo=/home/myrepo": [
+            ]
+        },
         "git.GitLocalCommit": {
-            "ref=master, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "ref=mybranch, repo=/home/myrepo": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
         },
         "git.GitRemoteBranchCommit": {
-            "branch=master, remote=origin, repo=/home/myrepo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            "branch=mybranch, remote=origin, repo=/home/myrepo": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
         }
     },
     "commands": [
-        "cd /home/myrepo && git pull --rebase"
-    ],
-    "idempotent": false,
-    "disable_idempotent_warning_reason": "git pull will always be executed"
+        "cd /home/myrepo && git fetch",
+        "cd /home/myrepo && git checkout mybranch"
+    ]
 }
