@@ -1,7 +1,7 @@
 {
     "args": ["/srv/app"],
     "kwargs": {
-        "project": "app",
+        "project_name": "app",
         "pull": "always"
     },
     "commands": [
