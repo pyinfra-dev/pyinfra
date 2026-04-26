@@ -11,11 +11,14 @@ from .config import Config  # noqa: F401 # pragma: no cover
 from .deploy import deploy  # noqa: F401 # pragma: no cover
 from .exceptions import (  # noqa: F401
     DeployError,  # noqa: F401 # pragma: no cover
+    FactPreconditionError,
     FactError,
+    FactNotCollected,
     FactProcessError,
     FactTypeError,
     FactValueError,
     InventoryError,
+    MissingCommandError,
     OperationError,
     OperationTypeError,
     OperationValueError,

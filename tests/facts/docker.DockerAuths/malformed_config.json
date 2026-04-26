@@ -1,0 +1,5 @@
+{
+    "command": "config=\"${DOCKER_CONFIG:-$HOME/.docker}/config.json\"; [ -r \"$config\" ] && cat \"$config\" || echo \"{}\"",
+    "output": ["not json at all"],
+    "fact": []
+}

@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "username": "ci",
+        "password": "s3cret",
+        "server": "myregistry.io:5000"
+    },
+    "facts": {
+        "docker.DockerAuths": []
+    },
+    "commands": [
+        {
+            "raw": "printf '%s' s3cret | docker login --username ci --password-stdin myregistry.io:5000",
+            "masked": "printf '%s' *** | docker login --username ci --password-stdin myregistry.io:5000"
+        }
+    ]
+}
