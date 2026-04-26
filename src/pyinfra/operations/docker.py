@@ -672,7 +672,7 @@ def logout(server: str | None = None):
 
 @operation(is_idempotent=False)
 def compose(
-    src: str,
+    project_directory: str,
     files: str | list[str] | None = None,
     project_name: str | None = None,
     present: bool = True,
@@ -686,15 +686,15 @@ def compose(
     """
     Deploy a Docker Compose stack on the target.
 
-    + src: project directory on the target (maps to ``--project-directory``).
-      Compose discovers ``compose.yaml`` / ``compose.yml`` /
-      ``docker-compose.yaml`` / ``docker-compose.yml`` inside this directory by
-      default.
+    + project_directory: project directory on the target (maps to
+      ``--project-directory``). Compose discovers ``compose.yaml`` /
+      ``compose.yml`` / ``docker-compose.yaml`` / ``docker-compose.yml`` inside
+      this directory by default.
     + files: optional path or list of paths to specific compose file(s) on the
       target (maps to ``-f``); use this to override the default discovery or to
       layer overrides.
     + project_name: compose project name (maps to ``--project-name``; defaults
-      to compose's own default — typically the basename of ``src``)
+      to compose's own default — typically the basename of ``project_directory``)
     + present: ``True`` runs ``up -d``, ``False`` runs ``down``
     + pull: policy for ``up -d --pull`` (``None``, ``"always"``, ``"missing"``, ``"never"``)
     + build: pass ``--build`` on ``up``
@@ -718,7 +718,8 @@ def compose(
         from pyinfra.operations import docker, files
 
         # Upload the compose file then bring the stack up using compose's
-        # default discovery (looks for compose.yaml/docker-compose.yml in src)
+        # default discovery (looks for compose.yaml / docker-compose.yml in
+        # the project directory)
         files.put(
             name="Upload compose file",
             src="files/docker-compose.yml",
@@ -726,7 +727,7 @@ def compose(
         )
         docker.compose(
             name="Deploy app stack",
-            src="/srv/app",
+            project_directory="/srv/app",
             project_name="app",
             _env={"DIR_STORAGE": "/srv/app/data"},
         )
@@ -734,21 +735,21 @@ def compose(
         # Layer a base compose file with an override
         docker.compose(
             name="Deploy app stack with override",
-            src="/srv/app",
+            project_directory="/srv/app",
             files=["docker-compose.yml", "docker-compose.prod.yml"],
         )
 
         # Tear the stack down, including named volumes
         docker.compose(
             name="Remove app stack",
-            src="/srv/app",
+            project_directory="/srv/app",
             project_name="app",
             present=False,
             remove_volumes=True,
         )
     """
-    if not src:
-        raise OperationError("docker.compose requires a project directory via src")
+    if not project_directory:
+        raise OperationError("docker.compose requires a project_directory")
 
     if pull is not None and pull not in ("always", "missing", "never"):
         raise OperationError(
@@ -760,7 +761,7 @@ def compose(
     )
 
     command_bits: list[str | QuoteString] = [compose_command]
-    command_bits.extend(["--project-directory", QuoteString(src)])
+    command_bits.extend(["--project-directory", QuoteString(project_directory)])
     if project_name:
         command_bits.extend(["--project-name", QuoteString(project_name)])
     for compose_file in file_list:
