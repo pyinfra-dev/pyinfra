@@ -1,7 +1,8 @@
+import ast
 import socket
 from collections import defaultdict
 from os import listdir, path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TypeVar, Union
 
 from pyinfra import logger
 from pyinfra.api.inventory import Inventory
@@ -55,6 +56,31 @@ def _is_inventory_group(key: str, value: Any):
     return True
 
 
+def _get_imported_names(filename: str) -> Set[str]:
+    """
+    Return the set of names bound by ``import`` / ``from ... import`` statements
+    in ``filename``. Used to keep those names out of the resulting group data dict
+    (issue #1297) so that e.g. ``from pyinfra import inventory`` in a group data
+    file does not end up as a piece of group data and break ``debug-inventory``.
+    """
+    with open(filename, "r", encoding="utf-8") as f:
+        tree = ast.parse(f.read(), filename=filename)
+
+    names: Set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                names.add(alias.asname or alias.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name == "*":
+                    # Wildcard imports can't be resolved statically; users who
+                    # hit this case can alias names with leading underscores.
+                    continue
+                names.add(alias.asname or alias.name)
+    return names
+
+
 def _get_group_data(dirname_or_filename: str):
     group_data = {}
 
@@ -76,7 +102,14 @@ def _get_group_data(dirname_or_filename: str):
 
             # Read the files locals into a dict
             attrs = exec_file(file, return_locals=True)
-            keys = attrs.get("__all__", attrs.keys())
+            # If __all__ is explicitly set the user controls exports directly;
+            # otherwise drop names introduced by import statements so modules,
+            # classes, and other unserializable objects don't leak into the
+            # group data (issue #1297).
+            if "__all__" in attrs:
+                keys = attrs["__all__"]
+            else:
+                keys = [key for key in attrs.keys() if key not in _get_imported_names(file)]
 
             group_data[group_name] = {
                 key: value

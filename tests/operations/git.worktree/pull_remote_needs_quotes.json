@@ -11,6 +11,12 @@
         },
         "git.GitTrackingBranch": {
             "repo=/home/my worktree; whoami": null
+        },
+        "git.GitLocalCommit": {
+            "ref=HEAD, repo=/home/my worktree; whoami": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "git.GitRemoteBranchCommit": {
+            "branch=master; rm -rf /, remote=origin; evil, repo=/home/my worktree; whoami": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         }
     },
     "commands": [

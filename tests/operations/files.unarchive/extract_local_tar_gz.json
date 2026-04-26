@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "src": "releases/app.tar.gz",
+        "dest": "/opt/app"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/opt/app": true
+        }
+    },
+    "commands": [
+        ["upload", "releases/app.tar.gz", "_tempfile_"],
+        "tar -xz -f _tempfile_ -C /opt/app",
+        "rm -f _tempfile_"
+    ]
+}
