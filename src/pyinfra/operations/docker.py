@@ -6,15 +6,20 @@ as inventory directly.
 
 from __future__ import annotations
 
+from shlex import quote as shlex_quote
+
 from pyinfra import host
-from pyinfra.api import OperationError, QuoteString, StringCommand, operation
+from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
+    DockerAuths,
     DockerContainer,
     DockerImage,
     DockerNetwork,
     DockerPlugin,
     DockerVolume,
 )
+
+DOCKER_HUB_SERVER = "https://index.docker.io/v1/"
 
 from .util.docker import ContainerSpec, handle_docker, parse_image_reference
 
@@ -686,3 +691,112 @@ def plugin(
             command="remove",
             plugin=plugin_name,
         )
+
+
+@operation()
+def login(
+    username: str,
+    password: str,
+    server: str | None = None,
+    force: bool = False,
+):
+    """
+    Log in to a Docker registry.
+
+    + username: username to authenticate with
+    + password: password to authenticate with
+    + server: registry server to log in to (defaults to Docker Hub)
+    + force: log in even if ``~/.docker/config.json`` already has an entry for the server
+
+    Idempotency is checked against the ``auths`` section of
+    ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``: if the server is already
+    present, the operation is a no-op. Use ``force=True`` to re-run ``docker
+    login`` (e.g. after rotating credentials).
+
+    The password is piped to ``docker login --password-stdin`` so it is not
+    exposed on the command line, and is masked in pyinfra's command log.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Log in to a private registry
+        docker.login(
+            name="Log in to private registry",
+            server="myregistry.io:5000",
+            username="ci",
+            password="s3cret",
+        )
+
+        # Log in to Docker Hub
+        docker.login(
+            name="Log in to Docker Hub",
+            username="ci",
+            password="s3cret",
+        )
+    """
+    if not username:
+        raise OperationError("docker.login requires a username")
+    if not password:
+        raise OperationError("docker.login requires a password")
+
+    target_server = server or DOCKER_HUB_SERVER
+
+    if not force:
+        existing_auths = host.get_fact(DockerAuths)
+        if target_server in existing_auths:
+            host.noop(f"Already logged in to Docker registry {target_server}")
+            return
+
+    command_bits: list = [
+        "printf '%s'",
+        MaskString(shlex_quote(password)),
+        "| docker login --username",
+        QuoteString(username),
+        "--password-stdin",
+    ]
+    if server:
+        command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)
+
+
+@operation()
+def logout(server: str | None = None):
+    """
+    Log out of a Docker registry.
+
+    + server: registry server to log out of (defaults to Docker Hub)
+
+    No-ops when the server is not present in
+    ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Log out of a private registry
+        docker.logout(
+            name="Log out of private registry",
+            server="myregistry.io:5000",
+        )
+
+        # Log out of Docker Hub
+        docker.logout(name="Log out of Docker Hub")
+    """
+    target_server = server or DOCKER_HUB_SERVER
+
+    existing_auths = host.get_fact(DockerAuths)
+    if target_server not in existing_auths:
+        host.noop(f"Not logged in to Docker registry {target_server}")
+        return
+
+    command_bits: list = ["docker logout"]
+    if server:
+        command_bits.append(QuoteString(server))
+
+    yield StringCommand(*command_bits)
