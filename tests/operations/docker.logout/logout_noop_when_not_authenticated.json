@@ -1,0 +1,10 @@
+{
+    "kwargs": {
+        "server": "myregistry.io:5000"
+    },
+    "facts": {
+        "docker.DockerAuths": []
+    },
+    "commands": [],
+    "noop_description": "Not logged in to Docker registry myregistry.io:5000"
+}
