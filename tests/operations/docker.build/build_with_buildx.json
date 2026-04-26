@@ -3,7 +3,8 @@
         "path": "/srv/app",
         "tags": "registry.io/app:arm64",
         "platform": "linux/arm64",
-        "builder": "docker buildx build"
+        "build_cmd": "docker buildx build",
+        "builder": "multiarch"
     },
     "facts": {
         "docker.DockerImage": {
@@ -11,6 +12,6 @@
         }
     },
     "commands": [
-        "docker buildx build -t registry.io/app:arm64 --platform linux/arm64 /srv/app"
+        "docker buildx build --builder multiarch -t registry.io/app:arm64 --platform linux/arm64 /srv/app"
     ]
 }
