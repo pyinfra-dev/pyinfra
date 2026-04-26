@@ -44,6 +44,7 @@ def container(
     memory: str | None = None,
     extra_args: list[str] | None = None,
     dns: list[str] | None = None,
+    command: str | None = None,
 ):
     """
     Manage Docker containers
@@ -71,6 +72,7 @@ def container(
     + memory: memory limit (e.g. ``512m``, ``1g``)
     + extra_args: list of additional raw arguments passed to ``docker container create``
     + dns: list of dns servers to be used by the container
+    + command: custom command to run on container start
 
     **Examples:**
 
@@ -120,6 +122,14 @@ def container(
             container="nginx",
             start=True,
         )
+
+        # Run a custom command on container start
+        # Note: you can omit the shell (sh -c) to use the default shell of the container
+        docker.container(
+            name="Run a custom command",
+            container="alpine",
+            command="sh -c 'echo Whatever you want'",
+        )
     """
 
     want_spec = ContainerSpec(
@@ -142,6 +152,7 @@ def container(
         memory,
         extra_args or list(),
         dns or list(),
+        command,
     )
     existent_container = host.get_fact(DockerContainer, object_id=container)
 
