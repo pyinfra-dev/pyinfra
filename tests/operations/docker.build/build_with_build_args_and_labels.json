@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "path": "/srv/app",
+        "tags": "app:1.0",
+        "build_args": {"VERSION": "1.0", "COMMIT": "abc123"},
+        "labels": {"org.opencontainers.image.source": "https://example.com/app"}
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=app:1.0": []
+        }
+    },
+    "commands": [
+        "docker build -t app:1.0 --build-arg VERSION=1.0 --build-arg COMMIT=abc123 --label org.opencontainers.image.source=https://example.com/app /srv/app"
+    ]
+}

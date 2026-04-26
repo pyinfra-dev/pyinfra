@@ -1,0 +1,18 @@
+{
+    "kwargs": {
+        "path": "/srv/app",
+        "tags": "app:1.0"
+    },
+    "facts": {
+        "docker.DockerImage": {
+            "object_id=app:1.0": [
+                {
+                    "Id": "sha256:abcd1234",
+                    "RepoTags": ["app:1.0"]
+                }
+            ]
+        }
+    },
+    "commands": [],
+    "noop_description": "Image(s) app:1.0 already exist!"
+}
