@@ -405,6 +405,7 @@ def packages(
     force=False,
     no_recommends=False,
     allow_downgrades=False,
+    purge=False,
     extra_install_args: str | None = None,
     extra_uninstall_args: str | None = None,
 ):
@@ -420,6 +421,8 @@ def packages(
     + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
     + allow_downgrades: allow downgrading packages with version (--allow-downgrades)
+    + purge: when removing packages (``present=False``) use ``apt purge`` so configuration files
+      are removed alongside the package
     + extra_install_args: additional arguments to the apt install command
     + extra_uninstall_args: additional arguments to the apt uninstall command
 
@@ -476,7 +479,7 @@ def packages(
 
     install_command = " ".join(install_command_args)
 
-    uninstall_command_args = ["remove"]
+    uninstall_command_args = ["purge" if purge else "remove"]
     if extra_uninstall_args:
         uninstall_command_args.append(extra_uninstall_args)
 
