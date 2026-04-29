@@ -46,7 +46,10 @@
         "server.AuthorizedKeys": {
             "path=homedir/.ssh/authorized_keys, user=someuser": ["somekeydata"]
         },
-        "server.Groups": {}
+        "server.Groups": {},
+        "server.Which": {
+            "command=usermod": "/usr/sbin/usermod"
+        }
     },
     "commands": [
         "chmod 600 homedir/.ssh/authorized_keys",
