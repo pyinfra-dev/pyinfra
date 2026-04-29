@@ -941,7 +941,7 @@ def user(
             if os_type == "FreeBSD":
                 yield StringCommand("pw", "userdel", "-n", QuoteString(user))
             else:
-                if not host.get_fact(Which, command="userdel"):
+                if os_type == "Linux" and not host.get_fact(Which, command="userdel"):
                     if host.get_fact(LinuxName) == "Alpine":
                         raise OperationError(
                             "userdel is not installed (install the shadow package)"
@@ -1019,7 +1019,7 @@ def user(
             else:
                 yield StringCommand("pw", "useradd", "-n", QuoteString(user), *args)
         else:
-            if not host.get_fact(Which, command="useradd"):
+            if os_type == "Linux" and not host.get_fact(Which, command="useradd"):
                 if host.get_fact(LinuxName) == "Alpine":
                     raise OperationError("useradd is not installed (install the shadow package)")
                 raise OperationError("useradd is not installed")
@@ -1080,7 +1080,7 @@ def user(
             if os_type == "FreeBSD":
                 yield StringCommand("pw", "usermod", "-n", QuoteString(user), *mod_args)
             else:
-                if not host.get_fact(Which, command="usermod"):
+                if os_type == "Linux" and not host.get_fact(Which, command="usermod"):
                     if host.get_fact(LinuxName) == "Alpine":
                         raise OperationError(
                             "usermod is not installed (install the shadow package)"
