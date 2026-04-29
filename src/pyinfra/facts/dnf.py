@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from typing_extensions import override
 
 from pyinfra.api import FactBase
@@ -70,21 +72,18 @@ class DnfEnabledModules(FactBase):
 
     default = dict
 
+    _ENABLED_FLAG = re.compile(r"\[e\](?!\w)")
+
     @override
     def process(self, output):
         result: dict[str, str] = {}
         for line in output:
-            # Every data row from `--enabled` carries the [e] flag; this is the
-            # cheapest way to skip repo-section headers, the column header, the
-            # Hint legend and any blank lines.
-            if "[e]" not in line:
+            if not self._ENABLED_FLAG.search(line):
                 continue
             tokens = line.split()
             if len(tokens) < 2:
                 continue
             name, stream = tokens[0], tokens[1]
-            if name == "Name":
-                continue
             result[name] = stream
         return result
 
@@ -108,17 +107,16 @@ class DnfDisabledModules(FactBase):
 
     default = list
 
+    _DISABLED_FLAG = re.compile(r"\[x\](?!\w)")
+
     @override
     def process(self, output):
         seen: set[str] = set()
         for line in output:
-            if "[x]" not in line:
+            if not self._DISABLED_FLAG.search(line):
                 continue
             tokens = line.split()
             if not tokens:
                 continue
-            name = tokens[0]
-            if name == "Name":
-                continue
-            seen.add(name)
+            seen.add(tokens[0])
         return sorted(seen)
