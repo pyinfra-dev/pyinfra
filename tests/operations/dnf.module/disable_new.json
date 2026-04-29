@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "module": "ruby",
+        "state": "disabled"
+    },
+    "facts": {
+        "dnf.DnfDisabledModules": []
+    },
+    "commands": [
+        "dnf module disable -y ruby"
+    ]
+}

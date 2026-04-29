@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "module": "postgresql",
+        "stream": "16",
+        "state": "bogus"
+    },
+    "facts": {},
+    "commands": [],
+    "exception": {
+        "name": "OperationValueError",
+        "message": "Invalid state 'bogus', must be 'enabled' or 'disabled'"
+    }
+}
