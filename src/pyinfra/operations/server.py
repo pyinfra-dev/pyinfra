@@ -506,7 +506,14 @@ def sysctl(
 
     string_value = " ".join(["{0}".format(v) for v in value]) if isinstance(value, list) else value
 
-    value = [try_int(v) for v in value] if isinstance(value, list) else try_int(value)
+    if isinstance(value, list):
+        value = [try_int(v) for v in value]
+        if len(value) == 1:
+            value = value[0]
+    elif isinstance(value, str) and len(value.split()) > 1:
+        value = [try_int(v) for v in value.split()]
+    else:
+        value = try_int(value)
 
     existing_sysctls = host.get_fact(Sysctl, keys=[key])
     existing_value = existing_sysctls.get(key)
