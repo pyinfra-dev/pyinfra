@@ -83,8 +83,42 @@ class DnfEnabledModules(FactBase):
             if len(tokens) < 2:
                 continue
             name, stream = tokens[0], tokens[1]
-            # Defensive: ignore the column header if dnf ever decorates it.
-            if name == "Name" or name.startswith("Hint:"):
+            if name == "Name":
                 continue
             result[name] = stream
         return result
+
+
+class DnfDisabledModules(FactBase):
+    """
+    Returns a sorted list of dnf module names that have been explicitly disabled:
+
+    .. code:: python
+
+        ["ruby", "php"]
+    """
+
+    @override
+    def command(self) -> str:
+        return "dnf module list --disabled"
+
+    @override
+    def requires_command(self) -> str:
+        return "dnf"
+
+    default = list
+
+    @override
+    def process(self, output):
+        seen: set[str] = set()
+        for line in output:
+            if "[x]" not in line:
+                continue
+            tokens = line.split()
+            if not tokens:
+                continue
+            name = tokens[0]
+            if name == "Name":
+                continue
+            seen.add(name)
+        return sorted(seen)
