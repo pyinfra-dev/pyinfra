@@ -5,8 +5,8 @@ Manage dnf packages and repositories. Note that dnf package names are case-sensi
 from __future__ import annotations
 
 from pyinfra import host, state
-from pyinfra.api import operation
-from pyinfra.facts.dnf import DnfEnabledModules
+from pyinfra.api import OperationValueError, QuoteString, StringCommand, operation
+from pyinfra.facts.dnf import DnfDisabledModules, DnfEnabledModules
 from pyinfra.facts.rpm import RpmPackageProvides, RpmPackages
 
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
@@ -215,34 +215,65 @@ def packages(
 
 
 @operation()
-def module(module: str, stream: str):
+def module(module: str, stream: str | None = None, state: str = "enabled"):
     """
-    Enable a dnf module stream (application stream).
+    Manage a dnf module (application stream).
 
     + module: name of the dnf module
-    + stream: name of the stream to enable
+    + stream: name of the stream, required when ``state="enabled"``, ignored \
+              when ``state="disabled"``
+    + state: one of ``enabled`` (default) or ``disabled``
 
     Application streams let you install multiple parallel versions of the same
-    component. Only one stream of a module can be enabled at a time; enabling
-    a different stream than the one currently active replaces it.
+    component. Only one stream of a module can be enabled at a time.
 
-    **Example:**
+    Stream switching:
+        ``dnf module enable`` will refuse to switch streams when packages from
+        the currently-active stream are installed. In that case, remove the
+        installed packages (or ``dnf module reset``) before switching.
+
+    **Examples:**
 
     .. code:: python
 
         from pyinfra.operations import dnf
 
+        # Enable a stream
         dnf.module(
             name="Enable PostgreSQL 16 module stream",
             module="postgresql",
             stream="16",
             _sudo=True,
         )
+
+        # Disable a module (all streams become inactive)
+        dnf.module(
+            name="Disable the ruby module",
+            module="ruby",
+            state="disabled",
+            _sudo=True,
+        )
     """
 
-    enabled = host.get_fact(DnfEnabledModules)
-    if enabled.get(module) == stream:
-        host.noop(f"dnf module {module}:{stream} is already enabled")
+    if state not in ("enabled", "disabled"):
+        raise OperationValueError(f"Invalid state {state!r}, must be 'enabled' or 'disabled'")
+
+    if state == "enabled":
+        if stream is None:
+            raise OperationValueError("stream is required when state='enabled'")
+        enabled = host.get_fact(DnfEnabledModules)
+        if enabled.get(module) == stream:
+            host.noop(f"dnf module {module}:{stream} is already enabled")
+            return
+        yield StringCommand(
+            "dnf module enable -y",
+            QuoteString(f"{module}:{stream}"),
+        )
         return
 
-    yield f"dnf module enable -y {module}:{stream}"
+    # state == "disabled"
+    disabled = host.get_fact(DnfDisabledModules)
+    if module in disabled:
+        host.noop(f"dnf module {module} is already disabled")
+        return
+    yield StringCommand("dnf module disable -y", QuoteString(module))
