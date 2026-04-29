@@ -392,3 +392,27 @@ class DockerImageHistory(_DockerJsonLinesFactBase):
         return (
             "docker image history --no-trunc --format '{{{{json .}}}}' {0} 2>&- || true"
         ).format(image_id)
+
+
+class DockerAuths(FactBase[list[str]]):
+    """
+    Returns the list of registry servers the current user is authenticated
+    against, read from ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.
+
+    Returns an empty list if no config file exists or no auths are stored.
+    """
+
+    @override
+    def command(self) -> str:
+        return (
+            'config="${DOCKER_CONFIG:-$HOME/.docker}/config.json"; '
+            '[ -r "$config" ] && cat "$config" || echo "{}"'
+        )
+
+    @override
+    def process(self, output: list[str]) -> list[str]:
+        try:
+            data = json.loads("".join(output))
+        except json.JSONDecodeError:
+            return []
+        return list(data.get("auths", {}).keys())
