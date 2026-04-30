@@ -93,6 +93,7 @@ def rule(
     # Extras and extra shortcuts
     destination_port: int | None = None,
     source_port: int | None = None,
+    comment: str | None = None,
     extras: str = "",
 ):
     """
@@ -121,6 +122,7 @@ def rule(
     + extras: a place to define iptables extension arguments (eg --limit, --physdev)
     + destination_port: destination port (requires protocol)
     + source_port: source port (requires protocol)
+    + comment: rule comment
 
     **Examples:**
 
@@ -154,6 +156,9 @@ def rule(
 
     if source_port:
         extras = f"{extras} --sport {source_port}"
+
+    if comment:
+        extras = "{0} -m comment --comment '{1}'".format(extras, comment)
 
     # Parse the extras string into a sorted list of [flag, value] pairs for comparison with the fact
     extras_list = parse_extras(shlex.split(extras))

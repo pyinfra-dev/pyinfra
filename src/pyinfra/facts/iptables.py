@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import shlex
+
 from typing_extensions import override
 
 from pyinfra.api import FactBase
@@ -54,7 +56,7 @@ def parse_iptables_rule(line):
     is mapped to a name using IPTABLES_ARGS.
     """
 
-    bits = line.split()
+    bits = shlex.split(line)
 
     definition: dict = {}
     extra_tokens: list[str] = []

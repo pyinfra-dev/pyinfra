@@ -2,15 +2,18 @@
     "args": ["INPUT"],
     "kwargs": {
         "jump": "ACCEPT",
-        "extras": "--another 'argument with spaces'"
+        "comment": "This rule is amazing!"
     },
     "facts": {
         "iptables.IptablesRules": {
             "table=filter": [
                 {
                     "chain": "INPUT",
-                    "extras": [["--another", "argument with spaces"]],
-                    "jump": "ACCEPT"
+                    "jump": "ACCEPT",
+                    "extras": [
+                        ["--comment", "This rule is amazing!"],
+                        ["-m", "comment"]
+                    ]
                 }
             ]
         }

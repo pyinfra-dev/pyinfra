@@ -27,7 +27,7 @@
             "out_interface": "eth1",
             "not_source": "2101::2/32",
             "jump": "DROP",
-            "extras": [["--another", "'argument with spaces'"]]
+            "extras": [["--another", "argument with spaces"]]
         }
     ]
 }
