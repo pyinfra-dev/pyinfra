@@ -7,6 +7,34 @@ passed (as a ``list`` of lines) to the ``process`` handler to generate fact data
 Fact classes may provide a ``default`` function that takes no arguments (except ``self``). The return value of this function is used if an error
 occurs during fact collection.
 
+## `FactBase` vs `ShortFactBase`
+
+There are two base classes for facts and they solve different problems:
+
+- **`FactBase`** — defines a *new* fact that runs a shell command on the host and parses the output. Use this whenever you need information that isn't already available from an existing fact.
+- **`ShortFactBase`** — defines a *derived* view over an existing fact. It does not run any command on the host; instead it points at another fact via a `fact` class attribute and post-processes that fact's result. Use this when you want a simpler or different shape of an existing fact (e.g. just one field from a dict). Both facts share the same cached command result, so adding a `ShortFactBase` costs nothing at runtime.
+
+For example, `LinuxName` is a `ShortFactBase` that extracts the `name` field from the larger `LinuxDistribution` fact:
+
+```py
+from typing_extensions import override
+from pyinfra.api import ShortFactBase
+
+class LinuxName(ShortFactBase[str]):
+    """
+    Returns the name of the Linux distribution. Shortcut for
+    ``host.get_fact(LinuxDistribution)['name']``.
+    """
+
+    fact = LinuxDistribution
+
+    @override
+    def process_data(self, data) -> str:
+        return data["name"]
+```
+
+The rest of this page covers `FactBase`.
+
 ## Guarding against missing binaries: `requires_command`
 
 Override `requires_command` to declare a binary that must be present on the remote host before
@@ -165,3 +193,6 @@ This fact could then be used like so:
 ```py
 command_output = host.get_fact(RawCommandOutput, command='execute this command')
 ```
+
+!!! note "Contributing a fact to pyinfra itself?"
+    Facts shipped in the pyinfra repo must also be registered in `pyinfra-metadata.toml` at the repo root (with a `type = "fact"` entry and one or more tags). Omitting it won't break the fact at runtime, but the docs site won't pick it up. This only applies to in-tree contributions; external pyinfra packages don't need this file.

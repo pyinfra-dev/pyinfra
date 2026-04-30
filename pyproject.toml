@@ -65,9 +65,8 @@ test = [
 ]
 
 docs = [
-    "pyinfra-guzzle_sphinx_theme>=0.19; python_version >= '3.13'",
-    "myst-parser>=4.0.1,<5; python_version >= '3.13'",
-    "sphinx==8.2.3; python_version >= '3.13'",
+    "zensical>=0.0.34",
+    "mkdocstrings[python]>=0.26.1",
 ]
 
 # dev includes test + docs + extra dev-only tools

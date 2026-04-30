@@ -1,0 +1,574 @@
+/* --- Palette tokens --------------------------------------------- */
+
+[data-md-color-scheme="default"][data-md-color-primary="pyinfra"],
+[data-md-color-scheme="default"] {
+    /* Mirrors pyinfra.com light palette */
+    --pyi-bg:         #eef0ed;
+    --pyi-bg2:        #e3ecde;
+    --pyi-ink:        #0c1f12;
+    --pyi-ink2:       #36563f;
+    --pyi-muted:      #6f8a74;
+    --pyi-rule:       #c4d6c1;
+    --pyi-brand:      #009030;
+    --pyi-brand-dim:  #00a040;
+    --pyi-brand-soft: #b0e0c0;
+    --pyi-yellow:     #876213;
+    --pyi-blue:       #1f5a4a;
+    --pyi-red:        #a8392b;
+    --pyi-on-brand:   #fbfdf8;
+}
+
+[data-md-color-scheme="slate"][data-md-color-primary="pyinfra"],
+[data-md-color-scheme="slate"] {
+    /* Mirrors pyinfra.com dark palette */
+    --pyi-bg:         #000a0b;
+    --pyi-bg2:        #0d1a10;
+    --pyi-ink:        #dfeee4;
+    --pyi-ink2:       #9ec5ad;
+    --pyi-muted:      #5d7e69;
+    --pyi-rule:       #1c3225;
+    --pyi-brand:      #00d060;
+    --pyi-brand-dim:  #00a040;
+    --pyi-brand-soft: #b0e0c0;
+    --pyi-yellow:     #e8c878;
+    --pyi-blue:       #88c4b0;
+    --pyi-red:        #e57373;
+    --pyi-on-brand:   #08110a;
+}
+
+/* Apply tokens to Material's --md-* surface vars */
+[data-md-color-scheme="default"],
+[data-md-color-scheme="slate"] {
+    --md-default-bg-color:              var(--pyi-bg);
+    --md-default-bg-color--light:       var(--pyi-bg2);
+    --md-default-bg-color--lighter:     var(--pyi-bg2);
+    --md-default-bg-color--lightest:    var(--pyi-bg);
+
+    --md-default-fg-color:              var(--pyi-ink);
+    --md-default-fg-color--light:       var(--pyi-ink2);
+    --md-default-fg-color--lighter:     var(--pyi-muted);
+    --md-default-fg-color--lightest:    var(--pyi-rule);
+
+    /* Body copy sits one notch dimmer than headings (which use --pyi-ink) */
+    --md-typeset-color:                 var(--pyi-ink2);
+    --md-typeset-a-color:               var(--pyi-brand);
+    --md-typeset-mark-color:            color-mix(in srgb, var(--pyi-yellow) 35%, transparent);
+    --md-typeset-del-color:             color-mix(in srgb, var(--pyi-red) 25%, transparent);
+    --md-typeset-ins-color:             color-mix(in srgb, var(--pyi-brand) 25%, transparent);
+
+    --md-code-bg-color:                 var(--pyi-bg2);
+    --md-code-fg-color:                 var(--pyi-ink);
+    --md-code-hl-color:                 color-mix(in srgb, var(--pyi-brand) 20%, transparent);
+    --md-code-hl-number-color:          var(--pyi-yellow);
+    --md-code-hl-special-color:         var(--pyi-red);
+    --md-code-hl-function-color:        var(--pyi-blue);
+    --md-code-hl-constant-color:        var(--pyi-blue);
+    --md-code-hl-keyword-color:         var(--pyi-brand);
+    --md-code-hl-string-color:          var(--pyi-yellow);
+    --md-code-hl-name-color:            var(--pyi-ink);
+    --md-code-hl-operator-color:        var(--pyi-muted);
+    --md-code-hl-punctuation-color:     var(--pyi-muted);
+    --md-code-hl-comment-color:         var(--pyi-muted);
+    --md-code-hl-generic-color:         var(--pyi-ink2);
+    --md-code-hl-variable-color:        var(--pyi-ink);
+
+    --md-footer-bg-color:               var(--pyi-bg2);
+    --md-footer-bg-color--dark:         var(--pyi-bg);
+    --md-footer-fg-color:               var(--pyi-ink);
+    --md-footer-fg-color--light:        var(--pyi-ink2);
+    --md-footer-fg-color--lighter:      var(--pyi-muted);
+}
+
+/* Brand colors — used by header, links, accents */
+[data-md-color-primary="pyinfra"] {
+    --md-primary-fg-color:              var(--pyi-brand);
+    --md-primary-fg-color--light:       var(--pyi-brand-dim);
+    --md-primary-fg-color--dark:        var(--pyi-brand-dim);
+    --md-primary-bg-color:              var(--pyi-on-brand);
+    --md-primary-bg-color--light:       color-mix(in srgb, var(--pyi-on-brand) 70%, transparent);
+}
+[data-md-color-accent="pyinfra"] {
+    --md-accent-fg-color:               var(--pyi-brand);
+    --md-accent-fg-color--transparent:  color-mix(in srgb, var(--pyi-brand) 12%, transparent);
+    --md-accent-bg-color:               var(--pyi-on-brand);
+    --md-accent-bg-color--light:        color-mix(in srgb, var(--pyi-on-brand) 70%, transparent);
+}
+
+/* --- Fonts ----------------------------------------------------- */
+
+:root {
+    --md-code-font: "JetBrains Mono", "IBM Plex Mono", ui-monospace,
+                    SFMono-Regular, Menlo, Consolas, monospace;
+    --md-code-font-family: var(--md-code-font);
+}
+
+/* --- Square corners -------------------------------------------- */
+
+.md-typeset code,
+.md-typeset pre,
+.md-typeset pre > code,
+.md-typeset .highlight,
+.md-typeset .highlight pre,
+.md-typeset .highlighttable,
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .tabbed-set > input + label,
+.md-typeset .tabbed-content,
+.md-button,
+.md-search__form,
+.md-search__output,
+.md-search-result__item,
+.md-tag,
+.md-clipboard {
+    border-radius: 0 !important;
+}
+
+/* --- Headings -------------------------------------------------- */
+/* Mono headings — matches the terminal vibe of pyinfra.com, where
+   every heading is set in JetBrains Mono. No `//` prefix on body
+   headings (that's reserved for sidebar eyebrows). */
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+    font-family: var(--md-code-font);
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--pyi-ink);
+}
+
+/* --- Rule borders --------------------------------------------- */
+
+.md-typeset hr,
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+    border-color: var(--pyi-rule);
+}
+
+/* --- Operation/fact cards grid (landing pages) ----------------- */
+
+.pyinfra-cards-filter {
+    margin: 1.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.pyinfra-cards-filter label {
+    font-weight: 600;
+}
+
+.pyinfra-cards-filter select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--pyi-rule);
+    background: var(--pyi-bg2);
+    color: var(--pyi-ink);
+    font: inherit;
+}
+
+.pyinfra-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 0 0 2rem;
+}
+
+.pyinfra-card {
+    padding: 1rem;
+    border: 1px solid var(--pyi-rule);
+    background: var(--pyi-bg2);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: border-color 150ms ease;
+}
+
+.pyinfra-card:hover {
+    border-color: var(--pyi-brand);
+}
+
+.pyinfra-card h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.pyinfra-card h3 a {
+    text-decoration: none;
+}
+
+.pyinfra-card .pyinfra-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: auto;
+}
+
+.pyinfra-card .pyinfra-tag {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.75rem;
+    font-family: var(--md-code-font);
+    background: var(--pyi-bg);
+    border: 1px solid var(--pyi-rule);
+    color: var(--pyi-ink2);
+}
+
+/* Announcement banner spacing */
+.md-banner a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+/* --- Top header / nav bar -------------------------------------- */
+/* Match pyinfra.com nav: transparent background, single rule line,
+   no drop shadow. */
+
+.md-header,
+.md-header[data-md-state="shadow"],
+.md-header--shadow {
+    background-color: transparent;
+    color: var(--pyi-ink);
+    box-shadow: none;
+    border-bottom: 1px solid var(--pyi-rule);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.md-header__title,
+.md-header__topic,
+.md-header__button,
+.md-header__option,
+.md-header__source {
+    color: var(--pyi-ink);
+}
+
+.md-header .md-search__input {
+    background: var(--pyi-bg2);
+    color: var(--pyi-ink);
+}
+
+.md-header .md-search__input::placeholder {
+    color: var(--pyi-muted);
+}
+
+/* Tabs row under the header (when navigation.tabs is enabled) */
+.md-tabs {
+    background-color: transparent;
+    color: var(--pyi-ink);
+    border-bottom: 1px solid var(--pyi-rule);
+}
+
+.md-tabs__link {
+    color: var(--pyi-ink2);
+    opacity: 1;
+}
+
+.md-tabs__link--active,
+.md-tabs__link:hover {
+    color: var(--pyi-brand);
+}
+
+/* --- Sidebar layout -------------------------------------------- */
+/* Slightly slimmer left nav, wider content grid. Stock zensical
+   defaults are 12.1rem sidebars inside a 61rem grid. */
+/*
+.md-sidebar--primary {
+    width: 10rem;
+    margin-right: 1rem;
+}
+
+@media screen and (min-width: 76.25em) {
+    .md-grid {
+        max-width: 70rem;
+    }
+}*/
+
+/* --- Sidebar nav links ----------------------------------------- */
+/* Flat list: section headers act as `// eyebrows` above their links,
+   with both header and links sharing the same left edge so they read
+   as one continuous column. */
+
+.md-nav__title {
+    color: var(--pyi-muted);
+    font-family: var(--md-code-font);
+    font-size: 0.62rem;
+    text-transform: lowercase;
+    letter-spacing: 0;
+    font-weight: 700;
+    padding: 0 0 0.3rem;
+}
+
+/* Strip the stock sticky-header chrome from the TOC title so it
+   sits flush with the link list below. */
+.md-sidebar--secondary .md-nav__title {
+    background: transparent;
+    box-shadow: none;
+    height: auto;
+    line-height: 1.5;
+    padding: 5px;
+}
+
+.md-nav__list .md-nav__item {
+    padding: 0;
+    margin: 0;
+}
+
+.md-nav__list .md-nav__link {
+    display: inline-block;
+    padding: 0.15rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--pyi-ink2);
+    font-family: var(--md-code-font);
+    transition: color 120ms ease;
+}
+
+.md-nav__list label.md-nav__link {
+    padding-left: 5px;
+}
+
+.md-nav__list .md-nav__link[href]:hover,
+.md-nav__list .md-nav__link[href]:focus,
+.md-nav__list .md-nav__link--active {
+    /* Scoped to real links ([href]) so the section-header toggle labels
+       (which use for=, not href) keep their grey treatment on hover.
+       !important beats the stock modern theme, whose hover/active rules
+       carry higher specificity and would otherwise paint a background box
+       and recolor the text. We want bare green text, no surface. */
+    color: var(--pyi-brand) !important;
+    background: transparent !important;
+    text-decoration: none;
+}
+
+/* Section headers inside the sidebar (zensical "navigation.sections")
+   styled as grey eyebrows matching pyinfra.com section-eyebrow. */
+.md-nav__item--section > .md-nav__link,
+.md-nav__item--nested > .md-nav__link {
+    border: 0;
+    padding: 0.9rem 0 0.3rem;
+    color: var(--pyi-muted);
+    font-weight: 700;
+    font-size: 0.62rem;
+    text-transform: lowercase;
+    background: transparent;
+}
+
+.md-nav__item--section:first-child > .md-nav__link,
+.md-nav__item--nested:first-child > .md-nav__link {
+    padding-top: 0;
+}
+
+.md-nav__item--section > .md-nav__link:hover,
+.md-nav__item--nested > .md-nav__link:hover {
+    background: transparent;
+    color: var(--pyi-muted);
+}
+
+/* Drop the stock left-padding indent on nested lists — we want links
+   flush with their section header. */
+@media screen and (min-width: 76.25em) {
+    .md-nav--primary .md-nav__list,
+    .md-nav--primary .md-nav .md-nav__list {
+        padding-left: 0;
+    }
+}
+
+/* --- Body link styling ----------------------------------------- */
+/* No underline by default; hover shows a faint underline. */
+
+.md-typeset a {
+    text-decoration: none;
+    transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+
+.md-typeset a:hover,
+.md-typeset a:focus {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--pyi-brand) 50%, transparent);
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+}
+
+/* --- Admonitions ----------------------------------------------- */
+/* Match body copy size — stock Material shrinks them to ~0.64rem. */
+
+.md-typeset .admonition,
+.md-typeset details {
+    /*font-size: 0.8rem;*/
+    border-color: var(--pyi-rule);
+    background: var(--pyi-bg2);
+    box-shadow: none;
+}
+
+.md-typeset .admonition > *,
+.md-typeset details > * {
+    font-size: inherit;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+    font-family: var(--md-code-font);
+    /*font-size: 0.78rem;*/
+    font-weight: 700;
+    background: transparent;
+    color: var(--pyi-ink);
+}
+
+/* --- Header brand mark ----------------------------------------- */
+/* Replace stock site-name text with the marketing-site brand mark:
+   ~/pyinfra · main ●  — keeps the logo image intact. */
+
+.md-header__title .md-header__topic > .md-ellipsis,
+.md-header__title > .md-header__topic > span,
+.md-header__title .md-header__topic:first-child .md-ellipsis {
+    font-size: 0;
+    line-height: 1;
+}
+
+.md-header__title .md-header__topic:first-child::after {
+    content: "~/pyinfra";
+    font-family: var(--md-code-font);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--pyi-brand);
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+}
+
+/* The `~/pyinfra` brand mark links home (see overrides/partials/header.html) */
+.md-header__topic--home {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.md-header__topic--home:hover::after {
+    color: var(--pyi-brand-dim);
+}
+
+.md-header__title .md-header__topic + .md-header__topic::after {
+    content: none;
+}
+
+.md-header__button.md-logo {
+    padding: 0 10px 0 0;
+    margin: 0;
+}
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--pyi-brand) 25%, transparent));
+}
+
+/* --- Header search box ----------------------------------------- */
+/* The modern zensical variant renders search as a single
+   `.md-search__button` (magnify icon ::before, ⌘K hint ::after). Mirror
+   pyinfra.com .install-box: square, rule border, bg2 surface, mono,
+   green prompt. */
+
+.md-search__button {
+    border-radius: 0;
+    border: 1px solid var(--pyi-rule);
+    background: var(--pyi-bg2);
+    color: var(--pyi-ink2);
+    font-family: var(--md-code-font);
+    transition: border-color 120ms ease, color 120ms ease;
+}
+
+.md-search__button:hover,
+.md-search__button:focus {
+    background: var(--pyi-bg2);
+    border-color: var(--pyi-brand);
+    color: var(--pyi-ink);
+}
+
+/* Tint the built-in magnify icon green to read as a terminal prompt */
+.md-search__button::before {
+    background-color: var(--pyi-brand);
+}
+
+/* Square + theme the ⌘K keyboard hint badge */
+.md-search__button::after {
+    background: var(--pyi-bg);
+    border: 1px solid var(--pyi-rule);
+    border-radius: 0;
+    color: var(--pyi-muted);
+    font-family: var(--md-code-font);
+    top: 0.2rem;
+    right: 0.2rem;
+}
+
+/* The separate header magnify label icon — match brand */
+.md-search__icon[for="__search"] {
+    color: var(--pyi-brand);
+}
+
+/* DocSearch (Algolia) container — match same surface */
+#docsearch .DocSearch-Button {
+    background: var(--pyi-bg2);
+    border: 1px solid var(--pyi-rule);
+    border-radius: 0;
+    color: var(--pyi-ink2);
+    font-family: var(--md-code-font);
+    box-shadow: none;
+}
+
+#docsearch .DocSearch-Button:hover {
+    border-color: var(--pyi-brand);
+    box-shadow: none;
+}
+
+#docsearch .DocSearch-Search-Icon {
+    color: var(--pyi-brand);
+}
+
+/* --- Footer meta line ------------------------------------------ */
+/* Copy the bottom strip of pyinfra.com: `© ... · open source community`
+   on the left, `● all systems operational` on the right, single rule. */
+
+.md-footer-meta {
+    background: var(--pyi-bg2);
+    border-top: 1px solid var(--pyi-rule);
+    color: var(--pyi-ink2);
+    font-family: var(--md-code-font);
+    font-size: 0.7rem;
+}
+
+.md-footer-meta__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+}
+
+.md-footer-meta .md-copyright,
+.md-footer-meta .md-copyright__highlight {
+    color: var(--pyi-ink2);
+    font-size: inherit;
+}
+
+.md-footer-meta .md-copyright a {
+    color: var(--pyi-brand);
+    text-decoration: none;
+}
+
+.md-footer-meta__inner::after {
+    content: "● all systems operational";
+    color: var(--pyi-brand);
+    font-family: var(--md-code-font);
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+/* Social/extra icons get pushed if present — keep them centered */
+.md-footer-meta .md-social {
+    margin-left: auto;
+    margin-right: 1rem;
+}
+
+.md-content {
+    padding-bottom: 40px;
+}

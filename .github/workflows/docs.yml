@@ -34,9 +34,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Install
-        run: |
-          uv sync --group docs --no-default-groups
-          uv pip install 'jinja2<3.1'
+        run: uv sync --group docs --no-default-groups
 
       - name: Generate documentation
         run: scripts/build-public-docs.sh
