@@ -391,6 +391,33 @@ def worktree(
         # Apply any user or group
         if user or group:
             yield chown(worktree, user, group, recursive=True)
+            # `git worktree add` writes per-worktree metadata under the source
+            # repo's `.git/worktrees/<name>/`, plus refs/logs for any new
+            # branch it creates. When the command runs as root (e.g. via
+            # `_sudo`), those files end up root-owned and break later git
+            # commands run as the worktree owner.
+            worktree_name = worktree.rstrip("/").rsplit("/", 1)[-1]
+            yield chown(
+                unix_path_join(repo, ".git", "worktrees", worktree_name),
+                user,
+                group,
+                recursive=True,
+            )
+            branch_for_chown = new_branch
+            if not branch_for_chown and not detached and not commitish:
+                branch_for_chown = worktree_name
+            if branch_for_chown:
+                yield chown(
+                    unix_path_join(repo, ".git", "refs", "heads", branch_for_chown),
+                    user,
+                    group,
+                )
+                yield chown(
+                    unix_path_join(repo, ".git", "logs", "refs", "heads", branch_for_chown),
+                    user,
+                    group,
+                    recursive=True,
+                )
 
     # It exists and we don't want it
     elif host.get_fact(Directory, path=worktree) and not present:
