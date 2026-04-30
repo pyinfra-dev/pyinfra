@@ -71,7 +71,7 @@ def parse_iptables_rule(line):
         if key and key in IPTABLES_ARGS:
             definition_key = f"not_{IPTABLES_ARGS[key]}" if not_arg else IPTABLES_ARGS[key]
             definition[definition_key] = arg_string
-        else:
+        elif key:
             extra_tokens.append(key)
             extra_tokens.extend(args)
 
