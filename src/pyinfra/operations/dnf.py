@@ -215,14 +215,14 @@ def packages(
 
 
 @operation()
-def module(module: str, stream: str | None = None, state: str = "enabled"):
+def module(module: str, stream: str | None = None, enabled: bool = True):
     """
     Manage a dnf module (application stream).
 
     + module: name of the dnf module
-    + stream: name of the stream, required when ``state="enabled"``, ignored \
-              when ``state="disabled"``
-    + state: one of ``enabled`` (default) or ``disabled``
+    + stream: name of the stream, required when ``enabled=True``, ignored \
+              when ``enabled=False``
+    + enabled: ``True`` (default) to enable the stream, ``False`` to disable the module
 
     Application streams let you install multiple parallel versions of the same
     component. Only one stream of a module can be enabled at a time.
@@ -250,19 +250,16 @@ def module(module: str, stream: str | None = None, state: str = "enabled"):
         dnf.module(
             name="Disable the ruby module",
             module="ruby",
-            state="disabled",
+            enabled=False,
             _sudo=True,
         )
     """
 
-    if state not in ("enabled", "disabled"):
-        raise OperationValueError(f"Invalid state {state!r}, must be 'enabled' or 'disabled'")
-
-    if state == "enabled":
+    if enabled:
         if stream is None:
-            raise OperationValueError("stream is required when state='enabled'")
-        enabled = host.get_fact(DnfEnabledModules)
-        if enabled.get(module) == stream:
+            raise OperationValueError("stream is required when enabled=True")
+        enabled_modules = host.get_fact(DnfEnabledModules)
+        if enabled_modules.get(module) == stream:
             host.noop(f"dnf module {module}:{stream} is already enabled")
             return
         yield StringCommand(
@@ -271,7 +268,6 @@ def module(module: str, stream: str | None = None, state: str = "enabled"):
         )
         return
 
-    # state == "disabled"
     disabled = host.get_fact(DnfDisabledModules)
     if module in disabled:
         host.noop(f"dnf module {module} is already disabled")

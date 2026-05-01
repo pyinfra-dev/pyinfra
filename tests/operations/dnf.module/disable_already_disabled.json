@@ -1,7 +1,7 @@
 {
     "kwargs": {
         "module": "ruby",
-        "state": "disabled"
+        "enabled": false
     },
     "facts": {
         "dnf.DnfDisabledModules": ["ruby"]

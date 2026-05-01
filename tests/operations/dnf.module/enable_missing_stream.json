@@ -6,6 +6,6 @@
     "commands": [],
     "exception": {
         "name": "OperationValueError",
-        "message": "stream is required when state='enabled'"
+        "message": "stream is required when enabled=True"
     }
 }
