@@ -11,6 +11,11 @@ Core:
 - facts.zfs: fix `ZfsDatasets.requires_command` returning `"zpool"` instead of `"zfs"`; add
   `ZfsPools` fact; add `ZfsDatasets.check_preconditions()` checking kernel module via `server.KernelModules`
 
+Operations/facts:
+
+- operations.files.line, operations.files.replace: add `extended_regex` parameter (default `False`) to opt in to extended regular expressions (`grep -E` / `sed -E`) so quantifiers like `+` and `?` and groups like `(a|b)` work without backslash escaping (#1019, #1400).
+- facts.files.FindInFile: add `extended_regex` parameter (default `False`) to use `grep -E`.
+
 # v3.7
 
 Thank you to all contributors - particular shout out to @wowi42 for an incredible run of PRs!

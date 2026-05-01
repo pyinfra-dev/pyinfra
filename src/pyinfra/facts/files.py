@@ -426,7 +426,7 @@ class FindInFile(FactBase):
     """
 
     @override
-    def command(self, path, pattern, interpolate_variables=False):
+    def command(self, path, pattern, interpolate_variables=False, extended_regex=False):
         self.exists_flag = "__pyinfra_exists_{0}".format(path)
 
         if interpolate_variables:
@@ -435,13 +435,11 @@ class FindInFile(FactBase):
             pattern = QuoteString(pattern)
 
         return make_formatted_string_command(
-            (
-                "grep -e {0} {1} 2> /dev/null || "
-                "( find {1} -type f > /dev/null && echo {2} || true )"
-            ),
+            ("{3} -e {0} {1} 2> /dev/null || ( find {1} -type f > /dev/null && echo {2} || true )"),
             pattern,
             QuoteString(path),
             QuoteString(self.exists_flag),
+            "grep -E" if extended_regex else "grep",
         )
 
     @override

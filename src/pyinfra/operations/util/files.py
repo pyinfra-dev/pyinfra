@@ -60,6 +60,7 @@ def sed_delete(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
 ) -> StringCommand:
     return _sed_command(**locals(), sed_script_builder=_sed_delete_builder)
 
@@ -80,6 +81,7 @@ def sed_replace(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
 ) -> StringCommand:
     return _sed_command(**locals(), sed_script_builder=_sed_replace_builder)
 
@@ -91,6 +93,7 @@ def _sed_command(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
     # Python requires a default value here, so use _sed_replace_builder for
     # backwards compatibility.
     sed_script_builder: Callable[[str, str, str, bool], str] = _sed_replace_builder,
@@ -114,9 +117,13 @@ def _sed_command(
 
     sed_script = sed_script_builder(line, replace, flags_str, interpolate_variables)
 
+    sed_args: list[str] = ["sed"]
+    if extended_regex:
+        sed_args.append("-E")
+    sed_args.append("-i.{0}".format(backup_extension))
+
     sed_command = StringCommand(
-        "sed",
-        "-i.{0}".format(backup_extension),
+        *sed_args,
         sed_script,
         QuoteString(filename),
     )

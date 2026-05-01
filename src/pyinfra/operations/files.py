@@ -293,6 +293,7 @@ def line(
     interpolate_variables=False,
     escape_regex_characters=False,
     ensure_newline=False,
+    extended_regex=False,
 ):
     """
     Ensure lines in files using grep to locate and sed to replace.
@@ -306,6 +307,9 @@ def line(
     + interpolate_variables: whether to interpolate variables in ``replace``
     + escape_regex_characters: whether to escape regex characters from the matching line
     + ensure_newline: ensures that the appended line is on a new line
+    + extended_regex: pass ``-E`` to ``grep`` and ``sed`` so quantifiers like ``+`` and
+      ``?`` and groups like ``(a|b)`` work without backslash escaping. Defaults to ``False``
+      (basic regular expressions) for backward compatibility.
 
     Regex line matching:
         Unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
@@ -395,6 +399,7 @@ def line(
         path=path,
         pattern=match_line,
         interpolate_variables=interpolate_variables,
+        extended_regex=extended_regex,
     )
 
     # If replace present, use that over the matching line
@@ -436,6 +441,7 @@ def line(
         flags=flags,
         backup=backup,
         interpolate_variables=interpolate_variables,
+        extended_regex=extended_regex,
     )
 
     # No line and we want it, append it
@@ -455,6 +461,7 @@ def line(
                 path=path,
                 pattern=replace_line,
                 interpolate_variables=interpolate_variables,
+                extended_regex=extended_regex,
             )
 
         if not present_lines:
@@ -476,6 +483,7 @@ def line(
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
+            extended_regex=extended_regex,
         )
 
     # Line(s) exists and we have want to ensure they're correct
@@ -500,6 +508,7 @@ def replace(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
     match=None,  # deprecated
 ):
     """
@@ -511,6 +520,9 @@ def replace(
     + flags: list of flags to pass to sed
     + backup: whether to backup the file (see below)
     + interpolate_variables: whether to interpolate variables in ``replace``
+    + extended_regex: pass ``-E`` to ``grep`` and ``sed`` so quantifiers like ``+`` and
+      ``?`` and groups like ``(a|b)`` work without backslash escaping. Defaults to ``False``
+      (basic regular expressions) for backward compatibility.
 
     Backup:
         If set to ``True``, any editing of the file will place an old copy with the ISO
@@ -549,6 +561,7 @@ def replace(
         path=path,
         pattern=text,
         interpolate_variables=interpolate_variables,
+        extended_regex=extended_regex,
     )
 
     # Only do the replacement if the file does not exist (it may be created earlier)
@@ -561,6 +574,7 @@ def replace(
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
+            extended_regex=extended_regex,
         )
     else:
         host.noop('string "{0}" does not exist in {1}'.format(text, path))
