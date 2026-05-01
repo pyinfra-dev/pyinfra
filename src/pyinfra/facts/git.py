@@ -69,3 +69,49 @@ class GitTrackingBranch(GitFactBase):
         if m:
             return m.group(1)
         return None
+
+
+_SHA_RE = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
+
+
+class GitLocalCommit(GitFactBase):
+    """
+    Returns the SHA of ``ref`` (defaults to ``HEAD``) in a local git repository,
+    or ``None`` when the repository does not exist, the ref is unknown, or the
+    command fails.
+    """
+
+    @override
+    def command(self, repo: str, ref: str = "HEAD") -> str:
+        return "! test -d {0} || (cd {0} && git rev-parse {1} 2>/dev/null)".format(repo, ref)
+
+    @override
+    def process(self, output: list[str]):
+        if not output:
+            return None
+        line = output[0].strip()
+        return line if _SHA_RE.fullmatch(line) else None
+
+
+class GitRemoteBranchCommit(GitFactBase):
+    """
+    Returns the SHA of the tip of ``branch`` on ``remote`` as reported by
+    ``git ls-remote``. Returns ``None`` when the remote is unreachable, the
+    branch does not exist on the remote, or the repository is missing.
+    """
+
+    @override
+    def command(self, repo: str, remote: str = "origin", branch: str | None = None) -> str:
+        ref = branch if branch else "HEAD"
+        return ("! test -d {0} || (cd {0} && git ls-remote {1} {2} 2>/dev/null | head -n1)").format(
+            repo, remote, ref
+        )
+
+    @override
+    def process(self, output: list[str]):
+        if not output:
+            return None
+        parts = output[0].strip().split("\t", 1)
+        if parts and _SHA_RE.fullmatch(parts[0]):
+            return parts[0]
+        return None

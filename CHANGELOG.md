@@ -1,3 +1,16 @@
+# Unreleased
+
+Core:
+
+- api.facts: `requires_command` now uses an if/then/else shell guard with a sentinel marker
+  (`##PYINFRA_NOCMD##`) so that "binary absent" can be distinguished from "binary returned no data"
+- api.facts: add `check_preconditions(state, host)` hook on `FactBase` for runtime prerequisite checks
+  (e.g. kernel module loaded, service running) — return a reason string or `None`
+- api.exceptions: add `FactNotCollected`, `MissingCommandError`, `FactPreconditionError` exception
+  hierarchy; both exceptions are phase-aware (silent during prepare, raised during execute)
+- facts.zfs: fix `ZfsDatasets.requires_command` returning `"zpool"` instead of `"zfs"`; add
+  `ZfsPools` fact; add `ZfsDatasets.check_preconditions()` checking kernel module via `server.KernelModules`
+
 # v3.7
 
 Thank you to all contributors - particular shout out to @wowi42 for an incredible run of PRs!

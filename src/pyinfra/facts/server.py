@@ -65,13 +65,13 @@ class TmpDir(FactBase):
     def command(self):
         return """
 if [ -n "$TMPDIR" ] && [ -d "$TMPDIR" ] && [ -w "$TMPDIR" ]; then
-    echo "$TMPDIR"
+    echo "$TMPDIR";
 elif [ -n "$TMP" ] && [ -d "$TMP" ] && [ -w "$TMP" ]; then
-    echo "$TMP"
+    echo "$TMP";
 elif [ -n "$TEMP" ] && [ -d "$TEMP" ] && [ -w "$TEMP" ]; then
-    echo "$TEMP"
+    echo "$TEMP";
 else
-    echo ""
+    echo "";
 fi
         """.strip()
 
@@ -808,6 +808,39 @@ class Users(FactBase):
                 }
 
         return users
+
+
+class AuthorizedKeys(FactBase[List[str]]):
+    """
+    Returns the SSH public keys listed in a user's ``~/.ssh/authorized_keys`` file as a
+    list of full key strings. Empty lines and lines starting with ``#`` are skipped; the
+    file's order is preserved.
+
+    .. code:: python
+
+        [
+            "ssh-ed25519 AAAAC3Nz... user@host",
+            "ssh-rsa AAAAB3Nz... other@host",
+        ]
+    """
+
+    default = list
+
+    @override
+    def command(self, user: str, path: Optional[str] = None) -> str:
+        # Tilde expansion resolves the user's home without another fact round-trip.
+        target = path if path is not None else "~{0}/.ssh/authorized_keys".format(user)
+        return "cat {0} 2>/dev/null || true".format(target)
+
+    @override
+    def process(self, output: Iterable[str]) -> List[str]:
+        keys: List[str] = []
+        for raw in output:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            keys.append(line)
+        return keys
 
 
 class LinuxDistributionDict(TypedDict):

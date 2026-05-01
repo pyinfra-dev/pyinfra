@@ -1,0 +1,17 @@
+{
+    "command": "ids=$(docker ps -qa) && [ -n \"$ids\" ] && docker container inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"abc123\", \"NetworkSettings\": {\"Ports\": {\"80/tcp\": [{\"HostIp\": \"0.0.0.0\", \"HostPort\": \"8080\"}], \"443/tcp\": null}}}, {\"Id\": \"def456\", \"NetworkSettings\": {\"Ports\": null}}]"],
+    "fact": {
+        "abc123": {
+            "80/tcp": [
+                {
+                    "HostIp": "0.0.0.0",
+                    "HostPort": "8080"
+                }
+            ],
+            "443/tcp": null
+        },
+        "def456": {}
+    }
+}

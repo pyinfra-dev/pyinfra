@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -85,7 +86,8 @@ class ConnectorArguments(TypedDict, total=False):
 
 
 def generate_env(config: "Config", value: dict) -> dict:
-    env = config.ENV.copy()
+    env = {key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ}
+    env.update(config.ENV)
     env.update(value)
     return env
 

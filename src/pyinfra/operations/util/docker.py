@@ -168,7 +168,16 @@ class ContainerSpec:
     pull_always: bool = False
     restart_policy: str | None = None
     auto_remove: bool = False
+    mounts: list[str] = field(default_factory=list)
+    privileged: bool = False
+    hostname: str | None = None
+    entrypoint: str | None = None
+    user: str | None = None
+    cpus: float | None = None
+    memory: str | None = None
+    extra_args: list[str] = field(default_factory=list)
     dns: list[str] = field(default_factory=list)
+    command: str | None = None
 
     def container_create_args(self):
         args = []
@@ -180,6 +189,9 @@ class ContainerSpec:
 
         for volume in self.volumes:
             args.append("-v {0}".format(volume))
+
+        for mount in self.mounts:
+            args.append("--mount {0}".format(mount))
 
         for env_var in self.env_vars:
             args.append("-e {0}".format(env_var))
@@ -199,10 +211,33 @@ class ContainerSpec:
         if self.auto_remove:
             args.append("--rm")
 
+        if self.privileged:
+            args.append("--privileged")
+
+        if self.hostname is not None:
+            args.append("--hostname {0}".format(self.hostname))
+
+        if self.entrypoint is not None:
+            args.append("--entrypoint {0}".format(self.entrypoint))
+
+        if self.user is not None:
+            args.append("--user {0}".format(self.user))
+
+        if self.cpus is not None:
+            args.append("--cpus {0}".format(self.cpus))
+
+        if self.memory is not None:
+            args.append("--memory {0}".format(self.memory))
+
+        for extra_arg in self.extra_args:
+            args.append(extra_arg)
+
         for dns in self.dns:
             args.append("--dns {0}".format(dns))
 
         args.append(self.image)
+        if self.command:
+            args.append(self.command)
 
         return args
 

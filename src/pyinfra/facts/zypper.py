@@ -4,8 +4,8 @@ from typing_extensions import override
 
 from pyinfra.api import FactBase
 
-from .util import make_cat_files_command
-from .util.packaging import parse_zypper_repositories
+from .util import make_cat_files_command_with_markers
+from .util.packaging import REPO_FILENAME_MARKER, parse_zypper_repositories
 
 
 class ZypperRepositories(FactBase):
@@ -20,14 +20,16 @@ class ZypperRepositories(FactBase):
                 "name": "Main Repository",
                 "enabled": "1",
                 "autorefresh": "1",
-                "baseurl": "http://download.opensuse.org/distribution/leap/$releasever/repo/oss/"
+                "baseurl": "http://download.opensuse.org/distribution/leap/$releasever/repo/oss/",
+                "filename": "/etc/zypp/repos.d/oss.repo"
             },
         ]
     """
 
     @override
     def command(self) -> str:
-        return make_cat_files_command(
+        return make_cat_files_command_with_markers(
+            REPO_FILENAME_MARKER,
             "/etc/zypp/repos.d/*.repo",
         )
 

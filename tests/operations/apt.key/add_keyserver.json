@@ -4,9 +4,23 @@
         "keyid": "abc"
     },
     "facts": {
-        "apt.AptKeys": {}
+        "files.Directory": {
+            "path=/etc/apt/keyrings": null,
+            "path=_tempfile_": null
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/keyserver-abc.gpg": null
+        }
     },
     "commands": [
-        "apt-key adv --keyserver key-server.net --recv-keys abc"
+        "mkdir -p /etc/apt/keyrings",
+        "chmod 755 /etc/apt/keyrings",
+        "mkdir -p _tempfile_",
+        "chmod 700 _tempfile_",
+        "export GNUPGHOME=\"_tempfile_\" && gpg --batch --keyserver \"key-server.net\" --recv-keys abc",
+        "export GNUPGHOME=\"_tempfile_\" && gpg --batch --export abc > \"/etc/apt/keyrings/keyserver-abc.gpg\"",
+        "mkdir -p /etc/apt/keyrings",
+        "touch /etc/apt/keyrings/keyserver-abc.gpg",
+        "chmod 644 /etc/apt/keyrings/keyserver-abc.gpg"
     ]
 }

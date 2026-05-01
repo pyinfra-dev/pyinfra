@@ -80,7 +80,7 @@ def download(
     dest: str,
     user: str | None = None,
     group: str | None = None,
-    mode: str | None = None,
+    mode: int | str | None = None,
     cache_time: int | None = None,
     force=False,
     sha384sum: str | None = None,
@@ -90,6 +90,7 @@ def download(
     headers: dict[str, str] | None = None,
     insecure=False,
     proxy: str | None = None,
+    limit_rate: str | None = None,
     temp_dir: str | Path | None = None,
     extra_curl_args: dict[str, str] | None = None,
     extra_wget_args: dict[str, str] | None = None,
@@ -111,6 +112,7 @@ def download(
     + headers: optional dictionary of headers to set for the HTTP request
     + insecure: disable SSL verification for the HTTP request
     + proxy: simple HTTP proxy through which we can download files, form `http://<yourproxy>:<port>`
+    + limit_rate: cap the download bandwidth, accepts the curl/wget format (e.g. ``1M``, ``500k``)
     + temp_dir: use this custom temporary directory during the download
     + extra_curl_args: optional dictionary with custom arguments for curl
     + extra_wget_args: optional dictionary with custom arguments for wget
@@ -127,6 +129,7 @@ def download(
         )
     """
 
+    mode = ensure_mode_int(mode)
     info = host.get_fact(File, path=dest)
 
     # Destination is a directory?
@@ -197,6 +200,10 @@ def download(
         if insecure:
             curl_args.append("--insecure")
             wget_args.append("--no-check-certificate")
+
+        if limit_rate:
+            curl_args.append(StringCommand("--limit-rate", QuoteString(limit_rate)))
+            wget_args.append(StringCommand("--limit-rate", QuoteString(limit_rate)))
 
         if headers:
             for key, value in headers.items():
@@ -273,7 +280,22 @@ def download(
                 QuoteString("MD5 did not match!"),
             )
     else:
-        host.noop("file {0} has already been downloaded".format(dest))
+        # No re-download needed, but still reconcile ownership + mode against the
+        # existing file so a changed mode/user/group argument takes effect
+        # without forcing a re-download. See issue #1200.
+        assert info is not None  # narrowed: download=True covers info is None
+        changed = False
+
+        if (user and info["user"] != user) or (group and info["group"] != group):
+            yield file_utils.chown(dest, user, group)
+            changed = True
+
+        if mode and info["mode"] != mode:
+            yield file_utils.chmod(dest, mode)
+            changed = True
+
+        if not changed:
+            host.noop("file {0} has already been downloaded".format(dest))
 
 
 @operation()
@@ -2114,3 +2136,140 @@ def block(
         else:
             cmd = StringCommand(f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'")
             yield StringCommand(out_prep, cmd, q_path, "> $OUT", real_out)
+
+
+_TAR_FORMATS = {
+    ".tar": ["-x"],
+    ".tar.gz": ["-xz"],
+    ".tgz": ["-xz"],
+    ".tar.bz2": ["-xj"],
+    ".tbz2": ["-xj"],
+    ".tar.xz": ["-xJ"],
+    ".txz": ["-xJ"],
+    ".tar.zst": ["-x", "--zstd"],
+}
+_ZIP_FORMATS = (".zip",)
+_ARCHIVE_EXTENSIONS = tuple(_TAR_FORMATS.keys()) + _ZIP_FORMATS
+
+
+def _get_archive_format(src: str) -> tuple[str, list[str]] | None:
+    lower = src.lower()
+    for ext, flags in _TAR_FORMATS.items():
+        if lower.endswith(ext):
+            return "tar", flags
+    for ext in _ZIP_FORMATS:
+        if lower.endswith(ext):
+            return "unzip", ["-o"]
+    return None
+
+
+@operation()
+def unarchive(
+    src: str,
+    dest: str,
+    remote_src: bool = False,
+    creates: str | None = None,
+    extra_opts: list[str] | None = None,
+    user: str | None = None,
+    group: str | None = None,
+):
+    """
+    Extract archive files on the remote system.
+
+    + src: path to the archive file (local or remote depending on ``remote_src``)
+    + dest: remote directory to extract into (must exist)
+    + remote_src: set to ``True`` if the archive is already on the remote system
+    + creates: if this path already exists, the operation is skipped (idempotency)
+    + extra_opts: list of additional arguments to pass to the extract command
+    + user: user to own the extracted files
+    + group: group to own the extracted files
+
+    Supported formats:
+        ``.tar``, ``.tar.gz``/``.tgz``, ``.tar.bz2``/``.tbz2``,
+        ``.tar.xz``/``.txz``, ``.tar.zst``, ``.zip``
+
+    **Examples:**
+
+    .. code:: python
+
+        # Extract a remote archive
+        files.unarchive(
+            name="Extract app tarball",
+            src="/tmp/app.tar.gz",
+            dest="/opt/app",
+            remote_src=True,
+        )
+
+        # Upload and extract a local archive
+        files.unarchive(
+            name="Deploy release",
+            src="releases/app-v1.0.tar.gz",
+            dest="/opt/app",
+            creates="/opt/app/bin/start",
+        )
+    """
+
+    # Idempotency: skip if creates path already exists
+    if creates:
+        if host.get_fact(File, path=creates) is not None:
+            host.noop("archive already extracted ({0} exists)".format(creates))
+            return
+
+    # Validate destination exists and is a directory
+    dest_info = host.get_fact(Directory, path=dest)
+    if not dest_info:
+        raise OperationError("Destination {0} is not an existing directory".format(dest))
+
+    archive_format = _get_archive_format(src)
+    if archive_format is None:
+        raise OperationValueError(
+            "Unsupported archive format for {0}. Supported: {1}".format(
+                src, ", ".join(_ARCHIVE_EXTENSIONS)
+            )
+        )
+
+    tool, flags = archive_format
+
+    if not remote_src:
+        # Upload the local archive to a temp location on the remote
+        temp_archive = host.get_temp_filename(src)
+        yield FileUploadCommand(src, temp_archive)
+        archive_path = temp_archive
+    else:
+        # Validate the remote archive exists
+        if host.get_fact(File, path=src) is None:
+            raise OperationError("Remote archive {0} does not exist".format(src))
+        archive_path = src
+
+    extras = list(extra_opts) if extra_opts else []
+
+    if tool == "tar":
+        # tar <flags> <extras> -f <archive> -C <dest>
+        # Keep -f adjacent to the archive path so extras never get mistaken for it.
+        yield StringCommand(
+            tool,
+            *flags,
+            *extras,
+            "-f",
+            QuoteString(archive_path),
+            "-C",
+            QuoteString(dest),
+        )
+    else:
+        # unzip <flags> <extras> <archive> -d <dest>
+        yield StringCommand(
+            tool,
+            *flags,
+            *extras,
+            QuoteString(archive_path),
+            "-d",
+            QuoteString(dest),
+        )
+
+    # Clean up uploaded temp file
+    if not remote_src:
+        yield StringCommand("rm", "-f", QuoteString(temp_archive))
+
+    # Set ownership if requested
+    if user or group:
+        yield file_utils.chown(dest, user, group, recursive=True)

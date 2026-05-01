@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Callable, Generator
 
-from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api import OperationError, QuoteString, StringCommand
 from pyinfra.api.output import format_text
 
 
@@ -146,7 +146,7 @@ def chown(
     dereference=True,
 ) -> StringCommand:
     command = "chown"
-    user_group = None
+    user_group: str | None = None
 
     if user and group:
         user_group = "{0}:{1}".format(user, group)
@@ -158,6 +158,9 @@ def chown(
         command = "chgrp"
         user_group = group
 
+    if user_group is None:
+        raise OperationError("chown() requires at least one of user or group")
+
     args = [command]
     if recursive:
         args.append("-R")
@@ -165,7 +168,7 @@ def chown(
     if not dereference:
         args.append("-h")
 
-    return StringCommand(" ".join(args), user_group, QuoteString(target))
+    return StringCommand(" ".join(args), QuoteString(user_group), QuoteString(target))
 
 
 # like the touch command, but only supports setting one field at a time, and expects any

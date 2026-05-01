@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "container": "myapp",
+        "image": "myapp:latest",
+        "hostname": "myapp-host",
+        "present": "true",
+        "start": false
+    },
+    "facts": {
+        "docker.DockerContainer": {
+            "object_id=myapp": []
+        }
+    },
+    "commands": [
+        "docker container create --name myapp --hostname myapp-host myapp:latest"
+    ]
+}
