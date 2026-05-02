@@ -132,6 +132,8 @@ fact:
     key: value                         # expected return value of process()
 ```
 
+## Coding Conventions
+
 **Docstring format** — pyinfra uses `+ param: description` bullets (parsed by
 `scripts/generate_operations_docs.py`). Do not use Google/NumPy/Sphinx style — it will silently
 break docs generation.
@@ -142,6 +144,11 @@ break docs generation.
 
 **Optional parameter defaults** — optional parameters must default to `None`, not `""`. Older
 operations in the codebase use `""` defaults; do not replicate this pattern.
+
+**Type hints** — all new (non-test) code must be fully type hinted. Use modern Python 3.10+
+conventions: built-in generics (`list`, `set`, `dict`, `tuple`) instead of `typing` equivalents
+(`List`, `Set`, etc.), and avoid quoting class names unless a forward reference is strictly
+required.
 
 ## Branch Strategy
 

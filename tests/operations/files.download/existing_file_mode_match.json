@@ -1,0 +1,19 @@
+{
+    "args": ["http://myfile"],
+    "kwargs": {
+        "dest": "/home/myfile",
+        "mode": "777"
+    },
+    "facts": {
+        "server.Date": "datetime:2015-01-01T00:00:00",
+        "files.File": {
+            "path=/home/myfile": {
+                "mode": 777,
+                "user": "root",
+                "group": "root"
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "file /home/myfile has already been downloaded"
+}
