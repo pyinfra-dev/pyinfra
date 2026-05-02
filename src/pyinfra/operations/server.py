@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, QuoteString, StringCommand, operation
 from pyinfra.api.util import try_int
-from pyinfra.connectors.util import remove_any_sudo_askpass_file
+from pyinfra.connectors.util import clear_askpass_cache, remove_any_sudo_askpass_file
 from pyinfra.facts.files import Directory, FindInFile, Link
 from pyinfra.facts.server import (
     AuthorizedKeys,
@@ -94,11 +94,10 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         max_retries = round(reboot_timeout / interval)
 
         # The remote askpass files (if any) live on a host that has just
-        # rebooted — the SSH session is dead and there is nothing to clean up.
+        # rebooted, the SSH session is dead and there is nothing to clean up.
         # Clear the stored paths before disconnecting so the disconnect path
         # does not attempt an ``rm -f`` over the broken connection.
-        host.connector_data["sudo_askpass_path"] = None
-        host.connector_data["su_askpass_path"] = None
+        clear_askpass_cache(host)
 
         host.disconnect()  # make sure we are properly disconnected
         retries = 0
@@ -120,7 +119,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     # On certain systems sudo files are lost on reboot
     def clean_sudo_info(state, host):
-        host.connector_data["sudo_askpass_path"] = None
+        clear_askpass_cache(host)
 
     yield FunctionCommand(clean_sudo_info, (), {})
 

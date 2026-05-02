@@ -620,7 +620,7 @@ class TestSSHConnector(TestCase):
         state = State(inventory, Config())
         host = inventory.get_host("somehost")
         host.connect(state)
-        host.connector_data["sudo_askpass_path"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
 
         command = "echo hi"
         return_values = [1, 0]  # return 0 on the second call
