@@ -65,13 +65,13 @@ class TmpDir(FactBase):
     def command(self):
         return """
 if [ -n "$TMPDIR" ] && [ -d "$TMPDIR" ] && [ -w "$TMPDIR" ]; then
-    echo "$TMPDIR"
+    echo "$TMPDIR";
 elif [ -n "$TMP" ] && [ -d "$TMP" ] && [ -w "$TMP" ]; then
-    echo "$TMP"
+    echo "$TMP";
 elif [ -n "$TEMP" ] && [ -d "$TEMP" ] && [ -w "$TEMP" ]; then
-    echo "$TEMP"
+    echo "$TEMP";
 else
-    echo ""
+    echo "";
 fi
         """.strip()
 
