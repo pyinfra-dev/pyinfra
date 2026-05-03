@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from typing_extensions import override
 
@@ -37,14 +36,14 @@ class InitdStatus(FactBase):
     default = dict
 
     @override
-    def process(self, output) -> dict[str, Optional[bool]]:
-        services: dict[str, Optional[bool]] = {}
+    def process(self, output) -> dict[str, bool | None]:
+        services: dict[str, bool | None] = {}
 
         for line in output:
             matches = re.match(self.regex, line)
             if matches:
                 intstatus = int(matches.group(2))
-                status: Optional[bool] = None
+                status: bool | None = None
 
                 # Exit code 0 = OK/running
                 if intstatus == 0:

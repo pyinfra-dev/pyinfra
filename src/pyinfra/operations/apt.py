@@ -206,7 +206,7 @@ def repo(src: str, present=True, filename: str | None = None):
 
     # Get the target .list file to manage
     if filename:
-        filename = "/etc/apt/sources.list.d/{0}.list".format(filename)
+        filename = f"/etc/apt/sources.list.d/{filename}.list"
     else:
         filename = "/etc/apt/sources.list"
 
@@ -236,10 +236,7 @@ def repo(src: str, present=True, filename: str | None = None):
         )
     else:
         host.noop(
-            'apt repo "{0}" {1}'.format(
-                src,
-                "exists" if present else "does not exist",
-            ),
+            f'apt repo "{src}" {"exists" if present else "does not exist"}',
         )
 
 
@@ -267,10 +264,10 @@ def ppa(src: str, present=True):
     """
 
     if present:
-        yield 'apt-add-repository -y "{0}"'.format(src)
+        yield f'apt-add-repository -y "{src}"'
 
     if not present:
-        yield 'apt-add-repository -y --remove "{0}"'.format(src)
+        yield f'apt-add-repository -y --remove "{src}"'
 
 
 @operation()
@@ -328,24 +325,21 @@ def deb(src: str, present=True, force=False):
     if present:
         if not exists:
             # Install .deb file - ignoring failure (on unmet dependencies)
-            yield "dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true".format(src)
+            yield f"dpkg --force-confdef --force-confold -i {src} 2> /dev/null || true"
             # Attempt to install any missing dependencies
-            yield "{0} -f".format(noninteractive_apt("install", force=force))
+            yield f"{noninteractive_apt('install', force=force)} -f"
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
-            yield "dpkg --force-confdef --force-confold -i {0}".format(src)
+            yield f"dpkg --force-confdef --force-confold -i {src}"
         else:
-            host.noop("deb {0} is installed".format(original_src))
+            host.noop(f"deb {original_src} is installed")
 
     # Package exists but we don't want?
     if not present:
         if exists:
-            yield "{0} {1}".format(
-                noninteractive_apt("remove", force=force),
-                info["name"],
-            )
+            yield f"{noninteractive_apt('remove', force=force)} {info['name']}"
         else:
-            host.noop("deb {0} is not installed".format(original_src))
+            host.noop(f"deb {original_src} is not installed")
 
 
 @operation(
@@ -396,7 +390,7 @@ def update(cache_time: int | None = None):
     # don't bother touching anything in there - so pyinfra does it, enabling
     # cache_time to work.
     if cache_time:
-        yield "touch {0}".format(APT_UPDATE_FILENAME)
+        yield f"touch {APT_UPDATE_FILENAME}"
 
 
 _update = update  # noqa: E305

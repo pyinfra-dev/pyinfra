@@ -4,18 +4,12 @@ import os
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Generic,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Type,
     TypeVar,
-    Union,
     cast,
     get_type_hints,
 )
+from collections.abc import Callable, Iterable, Mapping
 
 from typing_extensions import TypedDict
 
@@ -32,8 +26,8 @@ default_sentinel = object()
 
 class ArgumentMeta(Generic[T]):
     description: str
-    default: Callable[["Config"], T]
-    handler: Optional[Callable[["Config", T], T]]
+    default: Callable[[Config], T]
+    handler: Callable[[Config, T], T] | None
 
     def __init__(self, description, default, handler=None) -> None:
         self.description = description
@@ -74,18 +68,18 @@ class ConnectorArguments(TypedDict, total=False):
     _success_exit_codes: Iterable[int]
     _timeout: int
     _get_pty: bool
-    _stdin: Union[str, list[str], Iterable[str]]
+    _stdin: str | list[str] | Iterable[str]
 
     # Retry arguments
     _retries: int
-    _retry_delay: Union[int, float]
+    _retry_delay: int | float
     _retry_until: Callable[[dict], bool]
 
     # Temp directory argument
     _temp_dir: str
 
 
-def generate_env(config: "Config", value: dict) -> dict:
+def generate_env(config: Config, value: dict) -> dict:
     env = {key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ}
     env.update(config.ENV)
     env.update(value)
@@ -198,7 +192,7 @@ class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
-    _if: Union[List[Callable[[], bool]], Callable[[], bool], None]
+    _if: list[Callable[[], bool]] | Callable[[], bool] | None
 
 
 meta_argument_meta: dict[str, ArgumentMeta] = {
@@ -256,7 +250,7 @@ class AllArguments(ConnectorArguments, MetaArguments, ExecutionArguments):
     pass
 
 
-def all_global_arguments() -> List[tuple[str, Type]]:
+def all_global_arguments() -> list[tuple[str, type]]:
     """Return all global arguments and their types."""
     return list(get_type_hints(AllArguments).items())
 
@@ -375,8 +369,8 @@ __argument_docs__ = {
 
 
 def pop_global_arguments(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     kwargs: dict[str, Any],
 ) -> tuple[AllArguments, list[str]]:
     """

@@ -38,24 +38,24 @@ def chain(
     )
 
     command = "iptables" if version == 4 else "ip6tables"
-    command = "{0} -t {1}".format(command, table)
+    command = f"{command} -t {table}"
 
     if not present:
         if chain in chains:
-            yield "{0} -X {1}".format(command, chain)
+            yield f"{command} -X {chain}"
         else:
-            host.noop("iptables chain {0} does not exist".format(chain))
+            host.noop(f"iptables chain {chain} does not exist")
         return
 
     if present:
         if chain not in chains:
-            yield "{0} -N {1}".format(command, chain)
+            yield f"{command} -N {chain}"
         else:
-            host.noop("iptables chain {0} exists".format(chain))
+            host.noop(f"iptables chain {chain} exists")
 
         if policy:
             if chain not in chains or chains[chain] != policy:
-                yield "{0} -P {1} {2}".format(command, chain, policy)
+                yield f"{command} -P {chain} {policy}"
 
 
 @operation()
@@ -138,14 +138,14 @@ def rule(
     """
 
     if isinstance(to_ports, int):
-        to_ports = "{0}".format(to_ports)
+        to_ports = f"{to_ports}"
 
     # These are only shortcuts for extras
     if destination_port:
-        extras = "{0} --dport {1}".format(extras, destination_port)
+        extras = f"{extras} --dport {destination_port}"
 
     if source_port:
-        extras = "{0} --sport {1}".format(extras, source_port)
+        extras = f"{extras} --sport {source_port}"
 
     # Convert the extras string into a set to enable comparison with the fact
     extras_set = set(extras.split())
@@ -167,27 +167,27 @@ def rule(
     if to_destination and (table != "nat" or jump != "DNAT"):
         raise OperationError(
             "iptables only supports to_destination on the nat table and the DNAT jump "
-            "(table={0}, jump={1})".format(table, jump),
+            f"(table={table}, jump={jump})",
         )
 
     # As above, --to-source only w/table=nat, jump=SNAT
     if to_source and (table != "nat" or jump != "SNAT"):
         raise OperationError(
             "iptables only supports to_source on the nat table and the SNAT jump "
-            "(table={0}, jump={1})".format(table, jump),
+            f"(table={table}, jump={jump})",
         )
 
     # As above, --to-ports only w/table=nat, jump=REDIRECT
     if to_ports and (table != "nat" or jump != "REDIRECT"):
         raise OperationError(
             "iptables only supports to_ports on the nat table and the REDIRECT jump "
-            "(table={0}, jump={1})".format(table, jump),
+            f"(table={table}, jump={jump})",
         )
 
     # --log-prefix is only supported with jump=LOG
     if log_prefix and jump != "LOG":
         raise OperationError(
-            "iptables only supports log_prefix with the LOG jump (jump={0})".format(jump),
+            f"iptables only supports log_prefix with the LOG jump (jump={jump})",
         )
 
     definition = {
@@ -213,7 +213,7 @@ def rule(
 
     definition = {
         key: (
-            "{0}/32".format(value)
+            f"{value}/32"
             if (
                 key in ("source", "not_source", "destination", "not_destination")
                 and "/" not in value
@@ -237,7 +237,7 @@ def rule(
         if definition not in rules:
             action = "-A" if append else "-I"
         else:
-            host.noop("iptables {0} rule exists".format(chain))
+            host.noop(f"iptables {chain} rule exists")
             return
 
     # Definition exists and we don't want it
@@ -245,7 +245,7 @@ def rule(
         if definition in rules:
             action = "-D"
         else:
-            host.noop("iptables {0} rule does not exists".format(chain))
+            host.noop(f"iptables {chain} rule does not exists")
             return
 
     # Are we adding/removing a rule? Lets build it

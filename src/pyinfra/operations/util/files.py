@@ -4,7 +4,7 @@ import difflib
 import re
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Callable, Generator
+from collections.abc import Callable, Generator
 
 from pyinfra.api import OperationError, QuoteString, StringCommand
 from pyinfra.api.output import format_text
@@ -116,13 +116,13 @@ def _sed_command(
 
     sed_command = StringCommand(
         "sed",
-        "-i.{0}".format(backup_extension),
+        f"-i.{backup_extension}",
         sed_script,
         QuoteString(filename),
     )
 
     if not backup:  # if we're not backing up, remove the file *if* sed succeeds
-        backup_filename = "{0}.{1}".format(filename, backup_extension)
+        backup_filename = f"{filename}.{backup_extension}"
         sed_command = StringCommand(sed_command, "&&", "rm", "-f", QuoteString(backup_filename))
 
     return sed_command
@@ -133,7 +133,7 @@ def chmod(target: str, mode: str | int, recursive=False) -> StringCommand:
     if recursive:
         args.append("-R")
 
-    args.append("{0}".format(mode))
+    args.append(f"{mode}")
 
     return StringCommand(" ".join(args), QuoteString(target))
 
@@ -149,7 +149,7 @@ def chown(
     user_group: str | None = None
 
     if user and group:
-        user_group = "{0}:{1}".format(user, group)
+        user_group = f"{user}:{group}"
 
     elif user:
         user_group = user
@@ -211,9 +211,9 @@ def adjust_regex(line: str, escape_regex_characters: bool) -> str:
     # Ensure we're matching a whole line, note: match may be a partial line so we
     # put any matches on either side.
     if not match_line.startswith("^"):
-        match_line = "^.*{0}".format(match_line)
+        match_line = f"^.*{match_line}"
     if not match_line.endswith("$"):
-        match_line = "{0}.*$".format(match_line)
+        match_line = f"{match_line}.*$"
 
     return match_line
 
@@ -225,16 +225,16 @@ def generate_color_diff(
         beginning = start + 1  # lines start numbering with one
         length = stop - start
         if length == 1:
-            return "{}".format(beginning)
+            return f"{beginning}"
         if not length:
             beginning -= 1  # empty ranges begin at line just before the range
-        return "{},{}".format(beginning, length)
+        return f"{beginning},{length}"
 
     for group in difflib.SequenceMatcher(None, current_lines, desired_lines).get_grouped_opcodes(2):
         first, last = group[0], group[-1]
         file1_range = _format_range_unified(first[1], last[2])
         file2_range = _format_range_unified(first[3], last[4])
-        yield "@@ -{} +{} @@".format(file1_range, file2_range)
+        yield f"@@ -{file1_range} +{file2_range} @@"
 
         for tag, i1, i2, j1, j2 in group:
             if tag == "equal":
