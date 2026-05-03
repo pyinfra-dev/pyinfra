@@ -51,7 +51,13 @@ Review all open PRs on pyinfra-dev/pyinfra and maintain review files in `.prs/`:
 
 ## Parallelism
 
-- Process multiple PRs in parallel using Agent tool where possible (batch into groups of 3-5).
+Use **rolling concurrency**, not fixed batches. The goal is to keep ~5 PR reviews in flight at all times so a slow review never blocks a fast one.
+
+- Spawn each PR-review agent with `run_in_background: true` so completions arrive as individual notifications instead of blocking on a whole batch.
+- **Initial fill**: in a single message, launch up to 5 background agents (one per PR) to saturate the in-flight pool.
+- **On each completion notification**: if any PRs remain in the queue, immediately launch one new background agent to replace the finished one — keep the in-flight count at 5 until the queue is empty.
+- Track three sets in your head (or via TaskCreate if it helps): `queued` (not yet started), `in_flight` (background agents running), `done` (review file written). Move PRs between sets as agents complete.
+- Do not wait for the full pool to drain before launching replacements — the whole point is to avoid that.
 - Each agent should be given the full context: repo name, PR number, review format, and instruction to deeply inspect code.
 
 ## Final Summary
