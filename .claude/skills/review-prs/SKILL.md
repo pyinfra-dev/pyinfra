@@ -9,7 +9,7 @@ Review all open PRs on pyinfra-dev/pyinfra and maintain review files in `.prs/`:
 
 1. **Run sync script**: Execute `bash .claude/skills/review-prs/sync.sh` to clean up stale reviews and get the list of PRs to update/create.
 
-2. **For each PR** in the sync output (Update + New only, NOT Unchanged), launch agents in parallel (batches of 3-5) to review:
+2. **For each PR** in the sync output (Update + New only, NOT Unchanged), launch agents using rolling concurrency (see Parallelism below) to review:
    - Each agent gets: repo name, PR number, whether it's an update or new review.
    - Agent fetches the PR diff via `gh pr diff --repo pyinfra-dev/pyinfra {number}`.
    - Agent also fetches `updatedAt` via `gh pr view --repo pyinfra-dev/pyinfra {number} --json updatedAt --jq .updatedAt` and includes it in the review header as `**PR Updated:** {timestamp}`.
