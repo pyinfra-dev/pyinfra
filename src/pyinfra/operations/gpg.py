@@ -341,11 +341,9 @@ def key(
                 # Check if all requested keys already exist
                 all_keys_exist = True
                 for kid in keyids_to_check:
-                    # Remove 0x prefix if present for comparison
                     clean_keyid = kid.replace("0x", "").replace("0X", "").upper()
                     key_exists = any(
-                        clean_keyid in existing_key_id.upper()
-                        or existing_key_id.upper().endswith(clean_keyid)
+                        _matches_keyid(existing_key_id, clean_keyid)
                         for existing_key_id in existing_keys.keys()
                     )
                     if not key_exists:
