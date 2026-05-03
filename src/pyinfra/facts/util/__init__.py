@@ -15,3 +15,17 @@ def make_cat_files_command(*filenames: Iterable[str]) -> str:
         commands = ["({0})".format(command) for command in commands]
 
     return " && ".join(commands)
+
+
+def make_cat_files_command_with_markers(marker: str, *filenames: str) -> str:
+    """
+    Build a shell command that cats each file prefixed by a marker line naming the file.
+    Globs are expanded by the shell; missing files (including unexpanded globs) are skipped.
+    """
+
+    args = " ".join(filenames)
+    return (
+        "for f in {args}; do "
+        '[ -f "$f" ] && {{ printf "{marker} %s\\n" "$f"; cat "$f"; }}; '
+        "done || true"
+    ).format(args=args, marker=marker)

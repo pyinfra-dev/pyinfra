@@ -4,8 +4,8 @@ from typing_extensions import override
 
 from pyinfra.api import FactBase
 
-from .util import make_cat_files_command
-from .util.packaging import parse_yum_repositories
+from .util import make_cat_files_command_with_markers
+from .util.packaging import REPO_FILENAME_MARKER, parse_yum_repositories
 
 
 class YumRepositories(FactBase):
@@ -24,14 +24,16 @@ class YumRepositories(FactBase):
                 "countme": "1",
                 "gpgkey": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9",
                 "metadata_expire": "86400",
-                "enabled_metadata": "1"
+                "enabled_metadata": "1",
+                "filename": "/etc/yum.repos.d/almalinux.repo"
             },
         ]
     """
 
     @override
     def command(self) -> str:
-        return make_cat_files_command(
+        return make_cat_files_command_with_markers(
+            REPO_FILENAME_MARKER,
             "/etc/yum.conf",
             "/etc/yum.repos.d/*.repo",
         )

@@ -132,6 +132,8 @@ fact:
     key: value                         # expected return value of process()
 ```
 
+## Coding Conventions
+
 **Docstring format** — pyinfra uses `+ param: description` bullets (parsed by
 `scripts/generate_operations_docs.py`). Do not use Google/NumPy/Sphinx style — it will silently
 break docs generation.
@@ -166,6 +168,11 @@ ask for duplicated logic to be replaced with the existing helper.
 **No `assert` in `src/`** — `python -O` strips assertions, silently dropping the check. Raise an
 explicit exception instead: `OperationError` for operation argument issues, `ValueError` /
 `TypeError` for library code. `assert` is fine in tests.
+
+**Type hints** — all new (non-test) code must be fully type hinted. Use modern Python 3.10+
+conventions: built-in generics (`list`, `set`, `dict`, `tuple`) instead of `typing` equivalents
+(`List`, `Set`, etc.), and avoid quoting class names unless a forward reference is strictly
+required.
 
 ## Branch Strategy
 

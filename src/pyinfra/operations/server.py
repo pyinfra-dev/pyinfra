@@ -506,7 +506,14 @@ def sysctl(
 
     string_value = " ".join(["{0}".format(v) for v in value]) if isinstance(value, list) else value
 
-    value = [try_int(v) for v in value] if isinstance(value, list) else try_int(value)
+    if isinstance(value, list):
+        value = [try_int(v) for v in value]
+        if len(value) == 1:
+            value = value[0]
+    elif isinstance(value, str) and len(value.split()) > 1:
+        value = [try_int(v) for v in value.split()]
+    else:
+        value = try_int(value)
 
     existing_sysctls = host.get_fact(Sysctl, keys=[key])
     existing_value = existing_sysctls.get(key)
@@ -572,17 +579,23 @@ def service(
     elif host.get_fact(Which, command="sv"):
         service_operation = runit.service
 
+    # NOTE: must run before the sysvinit check: BSDs ship `service` in base (distinct from the
+    # Linux sysvinit wrapper), so matching on Which command="service" first would misroute BSD
+    # hosts to sysvinit. See https://github.com/pyinfra-dev/pyinfra/issues/1496.
+    # The OS list is explicit (rather than "not Linux") so other /etc/rc.d-having systems are not
+    # accidentally routed through bsdinit; see https://github.com/Fizzadar/pyinfra/issues/819 for
+    # the original motivation to exclude Linux here.
+    elif host.get_fact(Os) in ("FreeBSD", "OpenBSD", "NetBSD", "DragonFly") and bool(
+        host.get_fact(Directory, path="/etc/rc.d")
+    ):
+        service_operation = bsdinit.service
+
     elif (
         host.get_fact(Which, command="service")
         or host.get_fact(Link, path="/etc/init.d")
         or host.get_fact(Directory, path="/etc/init.d")
     ):
         service_operation = sysvinit.service
-
-    # NOTE: important that we are not Linux here because /etc/rc.d will exist but checking it's
-    # contents may trigger things (like a reboot: https://github.com/Fizzadar/pyinfra/issues/819)
-    elif host.get_fact(Os) != "Linux" and bool(host.get_fact(Directory, path="/etc/rc.d")):
-        service_operation = bsdinit.service
 
     else:
         raise OperationError(
