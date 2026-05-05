@@ -1,9 +1,12 @@
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 import pytest
 
+from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
 from pyinfra.operations.util.files import unix_path_join
+from pyinfra.operations.util.packaging import ensure_packages
 
 
 class TestUnixPathJoin(TestCase):
@@ -295,3 +298,76 @@ class TestParseImageReference(TestCase):
         assert ref.tag == "v1.2.3"
         assert ref.registry_port is None
         assert ref.digest is None
+
+
+class TestEnsurePackagesDualFormat(TestCase):
+    """ensure_packages must accept both dict[str, set[str]] and dict[str, PackageInfo]."""
+
+    def _run(self, current_packages, packages=("vim",), latest=False, present=True):
+        host = MagicMock()
+        return list(
+            ensure_packages(
+                host,
+                list(packages),
+                current_packages,
+                present=present,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=latest,
+                upgrade_command="upgrade",
+            )
+        ), host
+
+    def test_old_format_installed_no_latest(self):
+        commands, host = self._run({"vim": {"9.0"}}, latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0)")
+
+    def test_old_format_latest_blindly_upgrades(self):
+        commands, _ = self._run({"vim": {"9.0"}}, latest=True)
+        assert commands == ["upgrade vim"]
+
+    def test_old_format_missing_installs(self):
+        commands, _ = self._run({}, latest=False)
+        assert commands == ["install vim"]
+
+    def test_new_format_installed_uses_status(self):
+        current = {
+            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+        }
+        commands, host = self._run(current, latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0)")
+
+    def test_new_format_latest_only_upgrades_upgradeable(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim",
+                installed_version="9.0",
+                available_version="9.1",
+                status=PackageStatus.UPGRADEABLE,
+            ),
+            "git": PackageInfo(
+                name="git", installed_version="2.40", status=PackageStatus.INSTALLED
+            ),
+        }
+        commands, host = self._run(current, packages=("vim", "git"), latest=True)
+        assert commands == ["upgrade vim"]
+        host.noop.assert_any_call("package git is up to date (2.40)")
+
+    def test_new_format_held_is_noop_even_when_latest(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim",
+                installed_version="9.0",
+                available_version="9.1",
+                status=PackageStatus.HELD,
+            )
+        }
+        commands, host = self._run(current, latest=True)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is held")
+
+    def test_new_format_missing_installs(self):
+        commands, _ = self._run({}, latest=False)
+        assert commands == ["install vim"]
