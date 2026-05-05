@@ -323,6 +323,12 @@ class TestEnsurePackagesDualFormat(TestCase):
         assert commands == []
         host.noop.assert_called_once_with("package vim is installed (9.0)")
 
+    def test_old_format_multiple_versions_noop_is_sorted(self):
+        # Sets are hash-randomized; the noop string must be deterministic.
+        commands, host = self._run({"vim": {"9.0-1", "9.0"}}, latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0,9.0-1)")
+
     def test_old_format_latest_blindly_upgrades(self):
         commands, _ = self._run({"vim": {"9.0"}}, latest=True)
         assert commands == ["upgrade vim"]

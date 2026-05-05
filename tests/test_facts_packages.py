@@ -55,3 +55,9 @@ class TestBuildPackageMap(TestCase):
     def test_handles_empty_versions(self):
         result = build_package_map({"foo": set()})
         assert result["foo"].installed_version == ""
+
+    def test_multiple_versions_picks_lexicographic_min(self):
+        # Sets have hash-randomized iteration order; build_package_map sorts
+        # so the chosen installed_version is deterministic across runs.
+        result = build_package_map({"linux-image": {"6.1.0-13", "6.1.0-12", "5.10.0-26"}})
+        assert result["linux-image"].installed_version == "5.10.0-26"

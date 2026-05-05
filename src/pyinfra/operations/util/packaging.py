@@ -158,13 +158,17 @@ def _format_version(
     current_packages: dict[str, set[str]] | dict[str, PackageInfo],
     pkg_name: str,
 ) -> str:
-    """Return a human-readable version string for noop messages."""
+    """Return a human-readable version string for noop messages.
+
+    For the legacy ``set[str]`` shape, multiple versions are sorted so the
+    noop output is deterministic across runs.
+    """
     if pkg_name not in current_packages:
         return ""
     value = current_packages[pkg_name]
     if isinstance(value, PackageInfo):
         return value.installed_version
-    return ",".join(value)
+    return ",".join(sorted(value))
 
 
 def ensure_packages(

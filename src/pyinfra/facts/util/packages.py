@@ -45,7 +45,9 @@ def build_package_map(
     _held = held or set()
 
     for name, versions in installed.items():
-        version = next(iter(versions), "")
+        # Sort so a multi-version set produces the same PackageInfo.installed_version
+        # across runs (sets have hash-randomized iteration order for strings).
+        version = next(iter(sorted(versions)), "")
 
         if name in _held:
             status = PackageStatus.HELD
