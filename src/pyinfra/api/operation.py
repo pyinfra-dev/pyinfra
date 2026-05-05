@@ -7,6 +7,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 
 from __future__ import annotations
 
+import time
 from functools import wraps
 from inspect import signature
 from io import StringIO
@@ -350,9 +351,13 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         op_is_change = None
         if state.should_check_for_changes():
             op_is_change = False
-            for _ in command_generator():
-                op_is_change = True
-                break
+            prepare_start = time.monotonic()
+            try:
+                for _ in command_generator():
+                    op_is_change = True
+                    break
+            finally:
+                state.timings.record_op_prepare(op_hash, host, time.monotonic() - prepare_start)
         else:
             # If not calling the op function to check for change we still want to ensure the args
             # are valid, so use Signature.bind to trigger any TypeError.

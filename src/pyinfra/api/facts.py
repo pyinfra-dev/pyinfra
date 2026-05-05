@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import inspect
 import re
+import time
 from inspect import getcallargs
 from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Type, TypeVar, cast
@@ -262,12 +263,14 @@ def _get_fact(
     ensure_hosts: Optional[Any] = None,
     apply_failed_hosts: bool = True,
 ) -> Any:
+    fact_start = time.monotonic()
     fact = cls()
     name = fact.name
 
     fact_kwargs, global_kwargs = _handle_fact_kwargs(state, host, cls, args, kwargs)
 
     kwargs_str = get_kwargs_str(fact_kwargs)
+    fact_key = f"{name} ({kwargs_str})" if kwargs_str else name
     logger.debug(
         "Getting fact: %s (%s) (ensure_hosts: %r)",
         name,
@@ -401,5 +404,7 @@ def _get_fact(
     # Check we've not failed
     if apply_failed_hosts and not status and not global_kwargs["_ignore_errors"]:
         state.fail_hosts({host})
+
+    state.timings.record_fact(host, fact_key, time.monotonic() - fact_start)
 
     return data

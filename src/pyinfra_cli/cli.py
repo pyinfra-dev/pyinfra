@@ -1,5 +1,6 @@
 import logging
 import sys
+import time
 import warnings
 from fnmatch import fnmatch
 from getpass import getpass
@@ -28,8 +29,11 @@ from .prints import (
     print_inventory,
     print_meta,
     print_results,
+    print_run_elapsed,
     print_state_operations,
     print_support_info,
+    print_timings,
+    print_timings_json,
 )
 from .util import exec_file, load_deploy_file, load_func, parse_cli_arg
 from .virtualenv import init_virtualenv
@@ -215,6 +219,26 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     default=False,
     help="Print operations after generating and exit.",
 )
+@click.option(
+    "--timings",
+    is_flag=True,
+    default=False,
+    help="Print a summary of the slowest operations and facts at the end of the run.",
+)
+@click.option(
+    "--timings-json",
+    is_flag=True,
+    default=False,
+    help="Print structured timing data as JSON to stdout at the end of the run.",
+)
+@click.option(
+    "--log-timestamps",
+    is_flag=True,
+    default=False,
+    help="Prefix every log line with a wall-clock timestamp.",
+    envvar="PYINFRA_LOG_TIMESTAMPS",
+    show_envvar=True,
+)
 @click.version_option(
     version=__version__,
     prog_name="pyinfra",
@@ -320,6 +344,9 @@ def _main(
     debug_all: bool,
     debug_facts: bool,
     debug_operations: bool,
+    timings: bool = False,
+    timings_json: bool = False,
+    log_timestamps: bool = False,
     support: bool = False,
 ):
     # Setup working directory
@@ -329,7 +356,7 @@ def _main(
 
     # Setup logging & Bootstrap/Venv
     #
-    _setup_log_level(debug, debug_all)
+    _setup_log_level(debug, debug_all, log_timestamps=log_timestamps)
     init_virtualenv()
 
     # Check operations are valid and setup commands
@@ -445,11 +472,24 @@ def _main(
 
     logger.info("--> Beginning operation run...")
     state.set_stage(StateStage.Execute)
-    run_ops(state, serial=serial, no_wait=no_wait)
+    state.timings.run_start = time.monotonic()
+    state.timings.wall_start = time.time()
+    try:
+        run_ops(state, serial=serial, no_wait=no_wait)
+    finally:
+        state.timings.run_end = time.monotonic()
+        state.timings.wall_end = time.time()
 
     logger.info("--> Results:")
     state.set_stage(StateStage.Disconnect)
     print_results(state)
+
+    print_run_elapsed(state)
+    if timings:
+        print_timings(state)
+    if timings_json:
+        print_timings_json(state)
+
     _exit()
 
 
@@ -481,7 +521,7 @@ def _do_confirm(msg: str) -> bool:
 
 # Setup
 #
-def _setup_log_level(debug, debug_all):
+def _setup_log_level(debug, debug_all, log_timestamps: bool = False):
     if not debug and not sys.warnoptions:
         warnings.simplefilter("ignore")
 
@@ -493,7 +533,7 @@ def _setup_log_level(debug, debug_all):
     if debug_all:
         other_log_level = logging.DEBUG
 
-    setup_logging(log_level, other_log_level)
+    setup_logging(log_level, other_log_level, log_timestamps=log_timestamps)
 
 
 def _validate_operations(operations, chdir):

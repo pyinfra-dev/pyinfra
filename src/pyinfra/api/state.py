@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Callable, Iterator, Optional
+from typing import TYPE_CHECKING, Callable, Iterator, Optional, cast
 
 from gevent.pool import Pool
 from paramiko import PKey
@@ -142,6 +142,66 @@ class StateHostResults:
     partial_ops = 0
 
 
+def _resolve_host(host: "Host") -> "Host":
+    """
+    Normalise a (possibly gevent-context-proxy) host to its underlying concrete
+    Host. Storing the proxy as a dict key works for the duration of the greenlet
+    but breaks downstream consumers (eg JSON output) that read after the
+    greenlet's local has been cleared.
+    """
+
+    get_module = getattr(host, "_get_module", None)
+    if callable(get_module):
+        resolved = get_module()
+        if resolved is not None:
+            return cast("Host", resolved)
+    return host
+
+
+@dataclass
+class StateTimings:
+    """
+    Per-run timing data, populated as the deploy progresses. All durations are in
+    seconds (``time.monotonic`` deltas). ``wall_start``/``wall_end`` use
+    ``time.time`` for a human-readable run duration.
+    """
+
+    # Wall clock timestamps for the overall run
+    wall_start: Optional[float] = None
+    wall_end: Optional[float] = None
+    # Monotonic timestamps, used for the elapsed delta
+    run_start: Optional[float] = None
+    run_end: Optional[float] = None
+
+    # op_hash -> {host: seconds spent generating commands during change detection}
+    op_prepare: dict[str, dict["Host", float]] = field(
+        default_factory=lambda: defaultdict(dict),
+    )
+    # op_hash -> {host: seconds spent executing commands on the remote host}
+    op_execute: dict[str, dict["Host", float]] = field(
+        default_factory=lambda: defaultdict(dict),
+    )
+    # host -> {fact_key: [seconds, ...]}; a list because some facts may be re-fetched
+    facts: dict["Host", dict[str, list[float]]] = field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(list)),
+    )
+
+    def record_op_prepare(self, op_hash: str, host: "Host", seconds: float) -> None:
+        self.op_prepare[op_hash][_resolve_host(host)] = seconds
+
+    def record_op_execute(self, op_hash: str, host: "Host", seconds: float) -> None:
+        self.op_execute[op_hash][_resolve_host(host)] = seconds
+
+    def record_fact(self, host: "Host", fact_key: str, seconds: float) -> None:
+        self.facts[_resolve_host(host)][fact_key].append(seconds)
+
+    @property
+    def elapsed(self) -> Optional[float]:
+        if self.run_start is None or self.run_end is None:
+            return None
+        return self.run_end - self.run_start
+
+
 class State:
     """
     Manages state for a pyinfra deploy.
@@ -157,6 +217,9 @@ class State:
 
     # Main gevent pool
     pool: "Pool"
+
+    # Per-run timing data
+    timings: "StateTimings"
 
     # Current stage this state is in
     current_stage: StateStage = StateStage.Setup
@@ -238,6 +301,9 @@ class State:
         #
 
         self.callback_handlers: list[BaseStateCallback] = []
+
+        # Per-run timing data (populated by operations.py / facts.py / cli.py)
+        self.timings = StateTimings()
 
         # Setup greenlet pools
         self.pool = Pool(config.PARALLEL)

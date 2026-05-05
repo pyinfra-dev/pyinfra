@@ -4,7 +4,7 @@ import json
 import platform
 import re
 import sys
-from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Tuple, Union, cast
 
 import click
 
@@ -341,3 +341,162 @@ def print_results(state: "State"):
     rows.append((logger.info, totals_row))
 
     print_rows(rows)
+
+
+def _format_seconds(seconds: float) -> str:
+    if seconds >= 60:
+        minutes, secs = divmod(seconds, 60)
+        return "{0:d}m {1:.2f}s".format(int(minutes), secs)
+    if seconds >= 1:
+        return "{0:.2f}s".format(seconds)
+    return "{0:.0f}ms".format(seconds * 1000)
+
+
+def print_run_elapsed(state: "State"):
+    elapsed = state.timings.elapsed
+    if elapsed is None:
+        return
+    click.echo(err=True)
+    click.echo("--> Finished, took {0}".format(_format_seconds(elapsed)), err=True)
+
+
+def _collect_op_timings(state: "State", top_n: int = 10) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for op_hash in state.get_op_order():
+        prepare = state.timings.op_prepare.get(op_hash, {})
+        execute = state.timings.op_execute.get(op_hash, {})
+        if not prepare and not execute:
+            continue
+        total_prepare = sum(prepare.values())
+        total_execute = sum(execute.values())
+        max_execute = max(execute.values()) if execute else 0.0
+        rows.append(
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(state.op_meta[op_hash]),
+                "total_prepare_seconds": total_prepare,
+                "total_execute_seconds": total_execute,
+                "max_host_execute_seconds": max_execute,
+                "hosts_executed": len(execute),
+            }
+        )
+    rows.sort(key=lambda r: cast(float, r["total_execute_seconds"]), reverse=True)
+    return rows[:top_n]
+
+
+def _collect_fact_timings(state: "State", top_n: int = 10) -> List[Dict[str, Any]]:
+    aggregated: Dict[str, Dict[str, float]] = {}
+    for host_facts in state.timings.facts.values():
+        for fact_key, samples in host_facts.items():
+            entry = aggregated.setdefault(
+                fact_key,
+                {"total": 0.0, "max": 0.0, "samples": 0, "hosts": 0},
+            )
+            entry["total"] += sum(samples)
+            entry["max"] = max(entry["max"], max(samples))
+            entry["samples"] += len(samples)
+            entry["hosts"] += 1
+
+    rows: List[Dict[str, Any]] = [
+        {
+            "fact": fact_key,
+            "total_seconds": data["total"],
+            "max_host_seconds": data["max"],
+            "samples": int(data["samples"]),
+            "hosts": int(data["hosts"]),
+        }
+        for fact_key, data in aggregated.items()
+    ]
+    rows.sort(key=lambda r: cast(float, r["total_seconds"]), reverse=True)
+    return rows[:top_n]
+
+
+def print_timings(state: "State", top_n: int = 10):
+    """
+    Print a human-readable summary of the slowest operations and facts.
+    """
+    op_rows = _collect_op_timings(state, top_n=top_n)
+    fact_rows = _collect_fact_timings(state, top_n=top_n)
+
+    click.echo(err=True)
+    click.echo("--> Timings:", err=True)
+
+    if op_rows:
+        rows: List[Tuple[Callable, Union[List[str], str]]] = [
+            (
+                logger.info,
+                ["Operation", "Hosts", "Prepare (sum)", "Execute (sum)", "Slowest host"],
+            ),
+        ]
+        for r in op_rows:
+            rows.append(
+                (
+                    logger.info,
+                    [
+                        truncate(r["name"], 60),
+                        str(r["hosts_executed"]),
+                        _format_seconds(r["total_prepare_seconds"]),
+                        _format_seconds(r["total_execute_seconds"]),
+                        _format_seconds(r["max_host_execute_seconds"]),
+                    ],
+                )
+            )
+        print_rows(rows)
+    else:
+        click.echo("    No operation timings recorded.", err=True)
+
+    click.echo(err=True)
+
+    if fact_rows:
+        rows = [
+            (logger.info, ["Fact", "Hosts", "Calls", "Total", "Slowest"]),
+        ]
+        for r in fact_rows:
+            rows.append(
+                (
+                    logger.info,
+                    [
+                        truncate(r["fact"], 60),
+                        str(r["hosts"]),
+                        str(r["samples"]),
+                        _format_seconds(r["total_seconds"]),
+                        _format_seconds(r["max_host_seconds"]),
+                    ],
+                )
+            )
+        print_rows(rows)
+    else:
+        click.echo("    No fact timings recorded.", err=True)
+
+
+def print_timings_json(state: "State"):
+    """
+    Print a JSON document with structured timing data to stdout. Designed for
+    consumption by external tooling.
+    """
+    payload = {
+        "wall_start": state.timings.wall_start,
+        "wall_end": state.timings.wall_end,
+        "elapsed_seconds": state.timings.elapsed,
+        "operations": [
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(state.op_meta[op_hash]),
+                "prepare": {
+                    host.name: seconds
+                    for host, seconds in state.timings.op_prepare.get(op_hash, {}).items()
+                },
+                "execute": {
+                    host.name: seconds
+                    for host, seconds in state.timings.op_execute.get(op_hash, {}).items()
+                },
+            }
+            for op_hash in state.get_op_order()
+            if op_hash in state.timings.op_prepare or op_hash in state.timings.op_execute
+        ],
+        "facts": {
+            host.name: {fact_key: list(samples) for fact_key, samples in host_facts.items()}
+            for host, host_facts in state.timings.facts.items()
+        },
+    }
+    click.echo(json.dumps(payload, indent=2, default=json_encode))

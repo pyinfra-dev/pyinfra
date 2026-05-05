@@ -85,6 +85,8 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
     commands: list[PyinfraCommand] = []
     all_output_lines: list[OutputLine] = []
 
+    execute_start = time.monotonic()
+
     # Retry loop
     while retry_attempt <= retries:
         did_error = False
@@ -192,6 +194,8 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
             continue
 
         break
+
+    state.timings.record_op_execute(op_hash, host, time.monotonic() - execute_start)
 
     # Handle results
     op_success = return_status = not did_error

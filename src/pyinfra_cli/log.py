@@ -1,4 +1,6 @@
 import logging
+import os
+import time
 
 import click
 from typing_extensions import override
@@ -26,6 +28,10 @@ class LogFormatter(logging.Formatter):
         logging.ERROR: lambda s: click.style(s, "red"),
         logging.CRITICAL: lambda s: click.style(s, "red", bold=True),
     }
+
+    def __init__(self, log_timestamps: bool = False) -> None:
+        super().__init__()
+        self.log_timestamps = log_timestamps
 
     @override
     def format(self, record):
@@ -57,6 +63,10 @@ class LogFormatter(logging.Formatter):
             if record.levelno in self.level_to_format:
                 message = self.level_to_format[record.levelno](message)
 
+            if self.log_timestamps:
+                ts = time.strftime("%H:%M:%S", time.localtime())
+                message = "[{0}] {1}".format(ts, message)
+
             self.previous_was_header = "-->" in message
             return message
 
@@ -64,13 +74,16 @@ class LogFormatter(logging.Formatter):
         return super().format(record)
 
 
-def setup_logging(log_level, other_log_level=None):
+def setup_logging(log_level, other_log_level=None, log_timestamps: bool = False):
     if other_log_level:
         logging.basicConfig(level=other_log_level)
 
+    if not log_timestamps and os.environ.get("PYINFRA_LOG_TIMESTAMPS"):
+        log_timestamps = True
+
     logger.setLevel(log_level)
     handler = LogHandler()
-    formatter = LogFormatter()
+    formatter = LogFormatter(log_timestamps=log_timestamps)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.propagate = False
