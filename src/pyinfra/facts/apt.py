@@ -8,7 +8,7 @@ from typing_extensions import TypedDict, override
 
 from pyinfra.api import FactBase
 
-from .gpg import GpgFactBase
+from .gpg import GpgKeyrings
 
 
 @dataclass(frozen=True)
@@ -370,28 +370,48 @@ class AptSources(FactBase):
         return repos
 
 
-class AptKeys(GpgFactBase):
+class AptKeys(GpgKeyrings):
     """
-    Returns information on GPG keys apt has in its keychain:
+    Returns information on GPG keys available to APT.
+
+    This fact reuses the GpgKeyrings infrastructure to search APT's modern keyring
+    directories instead of using the deprecated apt-key command. It provides
+    compatibility with the old AptKeys interface while leveraging the modern
+    GPG infrastructure.
 
     .. code:: python
 
         {
-            "KEY-ID": {
+            "3B4FE6ACC0B21F32": {
+                "validity": "-",
                 "length": 4096,
-                "uid": "Oxygem <hello@oxygem.com>"
+                "subkeys": {},
+                "fingerprint": "790BC7277767219C42C86F933B4FE6ACC0B21F32",
+                "uid_hash": "B7A02867A0C1D32B594B36C00E20C8C57E397748",
+                "uid": "Ubuntu Archive Automatic Signing Key (2012) <ftpmaster@ubuntu.com>"
             },
         }
     """
 
-    # This requires both apt-key *and* apt-key itself requires gpg
     @override
-    def command(self) -> str:
-        return "! command -v gpg || apt-key list --with-colons"
+    def command(self, directories: list[str] | None = None) -> str:
+        return super().command(
+            directories or ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
+        )
 
     @override
-    def requires_command(self) -> str:
-        return "apt-key"
+    def process(self, output):
+        # Get the full keyring structure from parent
+        keyrings_data = super().process(output)
+
+        # Flatten to match the traditional AptKeys format: {key_id: key_details}
+        # Note: if the same key ID appears in multiple keyring files, the last one wins.
+        flattened_keys: dict = {}
+        for keyring_path, keyring_info in keyrings_data.items():
+            if "keys" in keyring_info:
+                flattened_keys.update(keyring_info["keys"])
+
+        return flattened_keys
 
 
 class AptSimulationDict(TypedDict):
