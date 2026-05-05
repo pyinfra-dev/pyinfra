@@ -371,3 +371,90 @@ class TestEnsurePackagesDualFormat(TestCase):
     def test_new_format_missing_installs(self):
         commands, _ = self._run({}, latest=False)
         assert commands == ["install vim"]
+
+    def test_new_format_versioned_match_is_noop(self):
+        current = {
+            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["vim=9.0"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=False,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0)")
+
+    def test_new_format_versioned_mismatch_installs_pinned(self):
+        current = {
+            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["vim=9.1"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=False,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        assert commands == ["install vim=9.1"]
+
+    def test_new_format_upgradeable_with_pinned_version_installs_not_upgrades(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim",
+                installed_version="9.0",
+                available_version="9.1",
+                status=PackageStatus.UPGRADEABLE,
+            )
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["vim=9.1"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=True,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        # Pinned-version request: install path, never upgrade path.
+        assert commands == ["install vim=9.1"]
+
+    def test_new_format_uninstall_removes_installed_package(self):
+        current = {
+            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+        }
+        commands, _ = self._run(current, present=False)
+        assert commands == ["uninstall vim"]
+
+    def test_new_format_uninstall_held_package_proceeds(self):
+        # HELD blocks auto-upgrade, not explicit removal: uninstall must still proceed.
+        current = {
+            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.HELD)
+        }
+        commands, _ = self._run(current, present=False)
+        assert commands == ["uninstall vim"]
+
+    def test_new_format_uninstall_missing_package_is_noop(self):
+        commands, host = self._run({}, present=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is not installed")
