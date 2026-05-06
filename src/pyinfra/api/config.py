@@ -63,6 +63,8 @@ class ConfigDefaults:
     RETRY: int = 0
     # Delay in seconds between retry attempts
     RETRY_DELAY: int = 5
+    # Skip idempotency checks for all operations
+    EXECUTION_ONLY: bool = False
     # List of environment variable names to inherit from the local process environment.
     # These are passed to every shell command, with lower priority than config.ENV.
     INHERIT_ENV: Sequence[str] = ()
