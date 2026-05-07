@@ -1,17 +1,18 @@
 {
-    "command": "(! test -f /etc/yum.conf || cat /etc/yum.conf) && (cat /etc/yum.repos.d/*.repo || true)",
+    "command": "for f in /etc/yum.conf /etc/yum.repos.d/*.repo; do [ -f \"$f\" ] && { printf \"#pyinfra-filename: %s\\n\" \"$f\"; cat \"$f\"; }; done || true",
     "requires_command": "yum",
     "output": [
+        "#pyinfra-filename: /etc/yum.repos.d/somerepo.repo",
         "# comment line",
         " # comment line with whitespaces",
         "[somerepo]",
         "baseurl=abc"
-
     ],
     "fact": [
         {
             "repoid": "somerepo",
             "name": "somerepo",
+            "filename": "/etc/yum.repos.d/somerepo.repo",
             "baseurl": "abc"
         }
     ]

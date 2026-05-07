@@ -4,11 +4,35 @@
         "keyid": ["abc", "def"]
     },
     "facts": {
-        "apt.AptKeys": {
-            "abc": {},
-            "def": {}
+        "gpg.GpgKeyrings": {
+            "directories=['/etc/apt/keyrings']": {
+                "/etc/apt/keyrings/keyserver-abc-def.gpg": {
+                    "format": "gpg",
+                    "keys": {
+                        "ABC": {
+                            "validity": "-",
+                            "length": 4096,
+                            "subkeys": {},
+                            "fingerprint": "ABCABC1234567890ABCABC1234567890ABCABC12",
+                            "uid_hash": "AAABBBCCC",
+                            "uid": "Test Vendor A <a@vendor.com>"
+                        },
+                        "DEF": {
+                            "validity": "-",
+                            "length": 4096,
+                            "subkeys": {},
+                            "fingerprint": "DEFDEF1234567890DEFDEF1234567890DEFDEF12",
+                            "uid_hash": "DDDEEEFFF",
+                            "uid": "Test Vendor B <b@vendor.com>"
+                        }
+                    }
+                }
+            }
+        },
+        "files.File": {
+            "path=/etc/apt/keyrings/keyserver-abc-def.gpg": {"mode": 644, "user": "root", "group": "root"}
         }
     },
     "commands": [],
-    "noop_description": "Keys abc, def are already available in the apt keychain"
+    "noop_description": "GPG keys ['abc', 'def'] already exist in /etc/apt/keyrings/keyserver-abc-def.gpg"
 }

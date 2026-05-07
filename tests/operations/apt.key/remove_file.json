@@ -1,0 +1,14 @@
+{
+    "kwargs": {
+        "dest": "old-vendor.gpg",
+        "present": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/etc/apt/keyrings/old-vendor.gpg": {"mode": "644"}
+        }
+    },
+    "commands": [
+        "rm -f /etc/apt/keyrings/old-vendor.gpg"
+    ]
+}
