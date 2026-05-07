@@ -1,13 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
-from socket import timeout as timeout_error
-from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
-from gevent.subprocess import PIPE, Popen
 from typing import TYPE_CHECKING
-from collections.abc import Callable, Iterable
 
 import gevent
 from gevent.subprocess import PIPE, Popen
@@ -228,7 +225,7 @@ def execute_command_with_sudo_retry(
         if requires_password:
             # If we need a password, ask the user for it and attach to the host
             # internal connector data for use when executing future commands.
-            sudo_password = getpass("{0}sudo password: ".format(host.print_prefix))
+            sudo_password = getpass(f"{host.print_prefix}sudo password: ")
             host.connector_data["prompted_sudo_password"] = sudo_password
             return_code, output = execute_command()
             attempts += 1
