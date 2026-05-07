@@ -636,6 +636,45 @@ class TestSSHConnector(TestCase):
             get_pty=False,
         )
 
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    @mock.patch("pyinfra.connectors.util.getpass")
+    def test_run_shell_command_retry_for_sudo_rs_password(
+        self,
+        fake_getpass,
+        fake_ssh_client,
+    ):
+        # sudo-rs (the Rust replacement, default in Ubuntu 25.10+) prints a different message
+        # when it cannot prompt non-interactively; the retry path should recognize it too.
+        fake_getpass.return_value = "PASSWORD"
+
+        fake_ssh = mock.MagicMock()
+        fake_stdin = mock.MagicMock()
+        fake_stdout = mock.MagicMock()
+        fake_stderr = ["sudo-rs: interactive authentication is required"]
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, fake_stderr
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect(state)
+        host.connector_data["sudo_askpass_path"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
+
+        command = "echo hi"
+        return_values = [1, 0]  # return 0 on the second call
+        fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
+
+        out = host.run_shell_command(command, _sudo=True)
+        assert len(out) == 2
+        assert out[0] is True
+        assert fake_getpass.called
+        fake_ssh.exec_command.assert_called_with(
+            "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
+            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
+            get_pty=False,
+        )
+
     # SSH file put/get tests
     #
 
