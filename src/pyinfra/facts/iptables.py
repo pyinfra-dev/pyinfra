@@ -92,7 +92,7 @@ class IptablesRules(FactBase):
     default = list
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "iptables-save"
 
     @override
