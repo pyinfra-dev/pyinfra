@@ -120,7 +120,7 @@ def _sed_command(
     sed_args: list[str] = ["sed"]
     if extended_regex:
         sed_args.append("-E")
-    sed_args.append(f"-i.{backup_extension}"))
+    sed_args.append(f"-i.{backup_extension}")
 
     sed_command = StringCommand(
         *sed_args,
