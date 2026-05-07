@@ -1,17 +1,18 @@
 {
-    "command": "cat /etc/zypp/repos.d/*.repo || true",
+    "command": "for f in /etc/zypp/repos.d/*.repo; do [ -f \"$f\" ] && { printf \"#pyinfra-filename: %s\\n\" \"$f\"; cat \"$f\"; }; done || true",
     "requires_command": "zypper",
     "output": [
+        "#pyinfra-filename: /etc/zypp/repos.d/somerepo.repo",
         "# comment line",
         " # comment line with whitespaces",
         "[somerepo]",
         "baseurl=abc"
-
     ],
     "fact": [
         {
             "repoid": "somerepo",
             "name": "somerepo",
+            "filename": "/etc/zypp/repos.d/somerepo.repo",
             "baseurl": "abc"
         }
     ]

@@ -4,13 +4,13 @@ Manage apt packages and repositories.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from pyinfra import host
-from pyinfra.api import OperationError, operation
+from pyinfra.api import operation
 from pyinfra.facts.apt import (
-    AptKeys,
     AptSources,
     SimulateOperationWillChange,
     noninteractive_apt,
@@ -18,13 +18,13 @@ from pyinfra.facts.apt import (
 )
 from pyinfra.facts.deb import DebPackage, DebPackages
 from pyinfra.facts.files import File
-from pyinfra.facts.gpg import GpgKey
 from pyinfra.facts.server import Date
+from pyinfra.operations import files, gpg
 
-from . import files
 from .util.packaging import ensure_packages
 
 APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
+APT_KEYRING_DIRS = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
 
 
 def _simulate_then_perform(command: str):
@@ -45,22 +45,77 @@ def _simulate_then_perform(command: str):
         yield noninteractive_apt(command)
 
 
-@operation()
-def key(src: str | None = None, keyserver: str | None = None, keyid: str | list[str] | None = None):
+def _sanitize_keyring_part(name: str) -> str:
     """
-    Add apt gpg keys with ``apt-key``.
+    Produce a filesystem-friendly segment from a URL host, basename, or key ID.
+    """
+    name = name.strip().lower()
+    name = re.sub(r"[^\w.-]+", "_", name)
+    name = re.sub(r"_+", "_", name).strip("_.")
+    return name or "apt-keyring"
 
-    + src: filename or URL
-    + keyserver: URL of keyserver to fetch key from
-    + keyid: key ID or list of key IDs when using keyserver
 
-    keyserver/id:
-        These must be provided together.
+def _derive_dest_from_src_and_keyids(src: str | None, keyids: list[str] | None) -> str:
+    """
+    Compute a stable destination path in /etc/apt/keyrings/ from a source or key IDs.
+
+    Priority:
+      1) from src (URL domain + basename, or local basename)
+      2) from keyids (joined)
+      3) fallback "apt-keyring.gpg"
+    """
+    base = None
+    if src:
+        parsed = urlparse(src)
+        if parsed.scheme and parsed.netloc:
+            domain_part = _sanitize_keyring_part(parsed.netloc.replace(":", "_"))
+            bn = _sanitize_keyring_part(
+                (parsed.path.rsplit("/", 1)[-1] or "key").replace(".asc", "").replace(".gpg", "")
+            )
+            base = f"{domain_part}-{bn}"
+        else:
+            bn = _sanitize_keyring_part(
+                src.rsplit("/", 1)[-1].replace(".asc", "").replace(".gpg", "")
+            )
+            base = bn or "key"
+    elif keyids:
+        base = "keyserver-" + _sanitize_keyring_part("-".join(keyids))
+    else:
+        base = "apt-keyring"
+
+    return f"/etc/apt/keyrings/{base}.gpg"
+
+
+@operation()
+def key(
+    src: str | None = None,
+    keyserver: str | None = None,
+    keyid: str | list[str] | None = None,
+    dest: str | None = None,
+    present: bool = True,
+):
+    """
+    Add or remove APT GPG keys using modern keyring management (no ``apt-key``).
+
+    Keys are written to ``/etc/apt/keyrings/`` and can be referenced in source entries
+    via ``signed-by=``. The destination filename is derived automatically from the source
+    URL or key IDs when not specified explicitly.
+
+    + src: filename or URL to a key (``.asc`` ASCII-armored or binary ``.gpg``)
+    + keyserver: keyserver URL for fetching keys by ID
+    + keyid: key ID or list of key IDs (required with ``keyserver``, optional for removal)
+    + dest: destination filename or absolute path — ``.gpg`` extension is enforced;
+      relative names are resolved under ``/etc/apt/keyrings/``
+    + present: whether the key should be present (default: ``True``) or removed
+
+    .. note::
+        ASCII-armored keys (``.asc``) are automatically dearmored on installation.
+        Keyserver fetches use a temporary ``GNUPGHOME`` and export binary keyrings.
+        Removal without ``keyid`` deletes the whole keyring file; with ``keyid`` it
+        removes individual keys and prunes empty files.
 
     .. warning::
-        ``apt-key`` is deprecated in Debian, it is recommended NOT to use this
-        operation and instead follow the instructions here:
-
+        ``apt-key`` is deprecated in Debian. This operation follows the modern approach:
         https://wiki.debian.org/DebianRepository/UseThirdParty
 
     **Examples:**
@@ -69,53 +124,64 @@ def key(src: str | None = None, keyserver: str | None = None, keyid: str | list[
 
         from pyinfra.operations import apt
         # Note: If using URL, wget is assumed to be installed.
+
         apt.key(
-            name="Add the Docker apt gpg key",
-            src="https://download.docker.com/linux/ubuntu/gpg",
+            name="Add Docker apt GPG key",
+            src="https://download.docker.com/linux/debian/gpg",
+            dest="docker.gpg",
         )
 
         apt.key(
-            name="Install VirtualBox key",
-            src="https://www.virtualbox.org/download/oracle_vbox_2016.asc",
+            name="Remove specific keyring file",
+            dest="old-vendor.gpg",
+            present=False,
+        )
+
+        apt.key(
+            name="Remove key by ID from all APT keyrings",
+            keyid="0xCOMPROMISED123",
+            present=False,
+        )
+
+        apt.key(
+            name="Fetch keys from keyserver",
+            keyserver="hkps://keyserver.ubuntu.com",
+            keyid=["0xD88E42B4", "0x7EA0A9C3"],
+            dest="vendor-archive.gpg",
         )
     """
 
-    existing_keys = host.get_fact(AptKeys)
+    # Special case: remove by key ID without explicit destination → search all APT keyring dirs
+    if not present and keyid and not dest and not src and not keyserver:
+        yield from gpg.key._inner(
+            keyid=keyid,
+            present=False,
+            working_dirs=APT_KEYRING_DIRS,
+        )
+        return
 
-    if src:
-        key_data = host.get_fact(GpgKey, src=src)
-        if key_data:
-            keyid = list(key_data.keys())
-
-        if not keyid or not all(kid in existing_keys for kid in keyid):
-            # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
-            # apt-key passes to gpg which doesn't always support https!
-            if urlparse(src).scheme:
-                yield "(wget -O - {0} || curl -sSLf {0}) | apt-key add -".format(src)
-            else:
-                yield "apt-key add {0}".format(src)
+    # Resolve destination path under /etc/apt/keyrings/
+    if dest and not dest.startswith("/"):
+        dest = f"/etc/apt/keyrings/{dest}"
+    elif not dest:
+        if src:
+            dest = _derive_dest_from_src_and_keyids(src, None)
+        elif keyserver and keyid:
+            keyid_list = [keyid] if isinstance(keyid, str) else keyid
+            dest = _derive_dest_from_src_and_keyids(None, keyid_list)
         else:
-            host.noop("All keys from {0} are already available in the apt keychain".format(src))
+            dest = "/etc/apt/keyrings/apt-key.gpg"
 
-    if keyserver:
-        if not keyid:
-            raise OperationError("`keyid` must be provided with `keyserver`")
-
-        if isinstance(keyid, str):
-            keyid = [keyid]
-
-        needed_keys = sorted(set(keyid) - set(existing_keys.keys()))
-        if needed_keys:
-            yield "apt-key adv --keyserver {0} --recv-keys {1}".format(
-                keyserver,
-                " ".join(needed_keys),
-            )
-        else:
-            host.noop(
-                "Keys {0} are already available in the apt keychain".format(
-                    ", ".join(keyid),
-                ),
-            )
+    # Delegate everything to gpg.key with APT-specific defaults
+    yield from gpg.key._inner(
+        src=src,
+        dest=dest,
+        keyserver=keyserver,
+        keyid=keyid,
+        present=present,
+        dearmor=True,
+        mode="0644",
+    )
 
 
 @operation()
@@ -405,6 +471,7 @@ def packages(
     force=False,
     no_recommends=False,
     allow_downgrades=False,
+    purge=False,
     extra_install_args: str | None = None,
     extra_uninstall_args: str | None = None,
 ):
@@ -420,6 +487,8 @@ def packages(
     + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
     + allow_downgrades: allow downgrading packages with version (--allow-downgrades)
+    + purge: when removing packages (``present=False``) use ``apt purge`` so configuration files
+      are removed alongside the package
     + extra_install_args: additional arguments to the apt install command
     + extra_uninstall_args: additional arguments to the apt uninstall command
 
@@ -476,7 +545,7 @@ def packages(
 
     install_command = " ".join(install_command_args)
 
-    uninstall_command_args = ["remove"]
+    uninstall_command_args = ["purge" if purge else "remove"]
     if extra_uninstall_args:
         uninstall_command_args.append(extra_uninstall_args)
 
