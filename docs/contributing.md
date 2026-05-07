@@ -48,7 +48,7 @@ scripts/dev-format.sh
 
 ### Commit Messages
 
-Coommit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 standard. PRs that follow this will be rebased, PRs that do not will be squashed.
 
 The following scopes are allowed: `api`, `cli`, `operations`, `facts`, `connectors`. With the last 
