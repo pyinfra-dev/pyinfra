@@ -1,15 +1,86 @@
-# Unreleased
+# v3.8.0
+
+Big release with a lot of fixes and improvements across the board! We're also switching to full semver (so .0 on the 3.8.0) for this release and others going forward. Thank you to all contributors!
 
 Core:
 
-- api.facts: `requires_command` now uses an if/then/else shell guard with a sentinel marker
-  (`##PYINFRA_NOCMD##`) so that "binary absent" can be distinguished from "binary returned no data"
-- api.facts: add `check_preconditions(state, host)` hook on `FactBase` for runtime prerequisite checks
-  (e.g. kernel module loaded, service running) — return a reason string or `None`
-- api.exceptions: add `FactNotCollected`, `MissingCommandError`, `FactPreconditionError` exception
-  hierarchy; both exceptions are phase-aware (silent during prepare, raised during execute)
-- facts.zfs: fix `ZfsDatasets.requires_command` returning `"zpool"` instead of `"zfs"`; add
-  `ZfsPools` fact; add `ZfsDatasets.check_preconditions()` checking kernel module via `server.KernelModules`
+- api.command: fix `make_formatted_string_command` adding unwanted spaces between format args (#1610) (@wowi42)
+- api: decouple core API from click by introducing pluggable output functions (#1616) (@wowi42)
+
+Operations/facts:
+
+- operations: expand quoting of user inputs to prevent command injection (#1576) (@wowi42)
+- facts.selinux.FileContext: handle missing SELinux context (#1581) (@wowi42)
+- facts.systemd: ensure that user-mode systemd facts do not fail if user manager is not available (#1604) (@martenlienen)
+- facts.apt.AptSources: add deb822 format support (#1465) (@maisim)
+- operations.files: expand diff output (#1552) (@gwelch-contegix)
+- facts.server: add Ports fact returning all listening ports (#1637) (@wowi42)
+- facts.choco: remove invalid shell_executable on ChocoPackages (#1598) (@wowi42)
+- operations.git.repo: add depth support (#1656) (@bsaussay)
+- operations.docker: add extra parameters (#1593) (@wowi42)
+- operations.selinux.port: fix a bug where the op would not find existing labels if `sepolicy` command was missing from the host (#1654) (@yacoob)
+- operations.server.reboot: survive dead SSH session during askpass cleanup (#1665) (@wowi42)
+- facts.docker: add version, container, image, network detail facts (#1668) (@wowi42)
+- facts.server: add AuthorizedKeys, make user_authorized_keys idempotent (#1670) (@wowi42)
+- facts.crontab: match full crontab(5) env var syntax (#1678) (@wowi42)
+- operations.files: add limit_rate to cap download bandwidth (#1681) (@wowi42)
+- operations.files: add files.unarchive (#1631) (@wowi42)
+- operations.docker: add support for custom command (#1625) (@EricDriussi)
+- facts.{yum,dnf,zypper}: add filename field to each repository entry (#1684) (@wowi42)
+- operations.server: dispatch BSD rc.d before sysvinit in server.service (#1685) (@wowi42)
+- operations.files.download: reconcile mode/user/group on existing files (#1687) (@wowi42)
+
+Connectors:
+
+- connectors.ssh: fix parsing of SSH config file comments (#1574) (@wowi42)
+- connectors: use gevent.subprocess in util for macOS + Python 3.13 compatibility (#1653) (@Yaminyam)
+- connectors: show askpass generation errors (#1628) (@matthijskooijman)
+- connectors.ssh: honor ConnectTimeout through ProxyJump (#1679) (@wowi42)
+
+Docs/meta:
+
+- docs: facts.opkg, operations.opkg - add note about Openwrt switch to apk (#1595) (@morrison12)
+- docs: fix extra trailing comma in operation argument lists (#1596) (@morrison12)
+- docs: fix missing keyword-only args in operations documentation (#1600) (@morrison12)
+- docs: fix `generate_operations_docs.py` and add docs build to CI (#1614) (@wowi42)
+- docs: operations.files - clarify template vars use (#1615) (@EricDriussi)
+- docs: update Python version requirements (#1627) (@pascal-cm)
+- docs: generate fact/operation docs for modules (vs files) (#1606) (@morrison12)
+- docs: clarify group_data/ is file-inventory only (#1696) (@wowi42)
+
+Other:
+
+- facts+operations: add `GpgKeyrings` fact and `gpg.*` operations (#1460) (@maisim)
+- dependencies/paramiko: support paramiko v4, remove DSS key support (#1525) (@5long)
+- operations.server.mount fix not detecting already-mounted devices (#1611) (@wowi42)
+- facts+operations: add uv support (#1500) (@morrison12)
+- meta,api: lazy load fact and operation modules (#1609) (@Dexmachi)
+- facts,operations: migrate `shlex.quote` to `StringCommand` + `QuoteString` everywhere (#1617) (@wowi42)
+- operations+facts: `server.Processes` fact and `server.kill` operation (#1583) (@wowi42)
+- arguments: add `dzdo` support for privilege escalation, including CLI options and configuration. (#1633) (@guinuxbr)
+- zfs: return an empty dict if zfs/zpool commands are not available (#1650) (@yacoob)
+- meta,ci: make ruff checks in ci+dev-lint.sh consistent
+- progress: finish spinner as soon as possible (#1657) (@matthijskooijman)
+- feat: support SSH IdentityAgent config directive (#1630) (@wowi42)
+- security: quote untrusted values in command construction across connectors, operations, and util (#1664) (@wowi42)
+- ci: upgrade default Python to 3.14 (#1667) (@wowi42)
+- fix: Add timeout support in FunctionCommand (#1663) (@Tbruno25)
+- feat: add config.INHERIT_ENV to pass local process env vars to all op… (#1677) (@maisim)
+- Add support for using AI coding agents (#1672) (@DonDebonair)
+- fix(cli): exclude imports from group data (#1676) (@wowi42)
+- fix: scripts/generate_facts_docs: add canonical-name label for re-exported facts (#1686) (@wowi42)
+- fix(operations.git): don't pull when already up to date (#1690) (@wowi42)
+- feat(facts): add requires_command guard sentinel and check_preconditions() hook (@maisim)
+- feat(facts.zfs): add check_preconditions for ZfsDatasets and update command method (@maisim)
+- feat(operations.docker): add login/logout operations (#1694) (@wowi42)
+- feat(operations.docker): add compose operation (#1693) (@wowi42)
+- feat(operations.docker): add build operation (#1695) (@wowi42)
+- operations/facts: modernize apt.key to replace deprecated apt-key command (@maisim)
+- chore: make Claude use modern type hints (#1692) (@DonDebonair)
+- feat(apt): add purge option to apt.packages (closes #1698) (#1702) (@mvanhorn)
+- fix(facts): add semicolons to TmpDir shell script for sh -c compatibility (#1703) (@wucm667)
+- fix(operations.server): normalize sysctl value for comparison (#1706) (@wowi42)
+- feat: add PR review skill (#1683)
 
 # v3.7
 
