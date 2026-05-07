@@ -67,6 +67,21 @@ CHAR_TO_PERMISSION = (
 )
 
 
+def _unquote_stat_name(name: str) -> str:
+    """
+    Strip the quoting `stat %N` (or `ls -ld`) wraps a path in:
+    'name' (GNU coreutils), `name' (older GNU/RHEL 6), or "name" (uutils-coreutils).
+    """
+    for opener, closer in (("'", "'"), ("`", "'"), ('"', '"')):
+        if (
+            len(name) >= len(opener) + len(closer)
+            and name.startswith(opener)
+            and name.endswith(closer)
+        ):
+            return name[len(opener) : -len(closer)]
+    return name
+
+
 def _parse_mode(mode: str) -> int:
     """
     Converts ls mode output (rwxrwxrwx) -> octal permission integer (755).
@@ -187,7 +202,7 @@ def _parse_ls_output(output: str) -> tuple[FileDict, str] | None:
     # Handle symbolic links
     if path_type == "link" and " -> " in path:
         filename, target = path.split(" -> ", 1)
-        data["link_target"] = target.strip("'").lstrip("`")
+        data["link_target"] = _unquote_stat_name(target)
 
     return data, path_type
 
@@ -270,7 +285,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
             if path_type == "link":
                 filename = match.group(8)
                 filename, target = filename.split(" -> ")
-                data["link_target"] = target.strip("'").lstrip("`")
+                data["link_target"] = _unquote_stat_name(target)
 
             return data
 
