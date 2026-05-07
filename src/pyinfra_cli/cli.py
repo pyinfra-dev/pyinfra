@@ -129,6 +129,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     default=False,
     help="Whether to use a password with sudo.",
 )
+@click.option(
+    "--use-sudo-login",
+    is_flag=True,
+    default=False,
+    help="Use a login shell when sudo-ing.",
+)
 @click.option("--su-user", help="Which user to su to.")
 @click.option(
     "--dzdo",
@@ -300,6 +306,7 @@ def _main(
     sudo: bool,
     sudo_user: str,
     use_sudo_password: bool,
+    use_sudo_login: bool,
     su_user: str,
     dzdo: bool,
     dzdo_user: str,
@@ -350,6 +357,7 @@ def _main(
         sudo,
         sudo_user,
         use_sudo_password,
+        use_sudo_login,
         same_sudo_password,
         su_user,
         dzdo,
@@ -594,6 +602,7 @@ def _set_config(
     sudo,
     sudo_user,
     use_sudo_password,
+    use_sudo_login,
     same_sudo_password,
     su_user,
     dzdo,
@@ -622,6 +631,9 @@ def _set_config(
 
     if use_sudo_password:
         config.USE_SUDO_PASSWORD = use_sudo_password
+
+    if use_sudo_login:
+        config.USE_SUDO_LOGIN = True
 
     if same_sudo_password:
         config.SUDO_PASSWORD = getpass("sudo password: ")

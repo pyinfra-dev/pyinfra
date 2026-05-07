@@ -280,20 +280,22 @@ class Host:
             data,
         )
 
-        yield
+        try:
+            yield
+        finally:
+            # Restore the previous values even if the deploy body raised, so a
+            # caught exception does not leak the deploy name into later ops.
+            self.in_deploy = old_in_deploy
+            self.current_deploy_name = old_deploy_name
+            self.current_deploy_kwargs = old_deploy_kwargs
+            self.current_deploy_data = old_deploy_data
 
-        # Restore the previous values
-        self.in_deploy = old_in_deploy
-        self.current_deploy_name = old_deploy_name
-        self.current_deploy_kwargs = old_deploy_kwargs
-        self.current_deploy_data = old_deploy_data
-
-        logger.debug(
-            "Reset deploy to %s (args=%r, data=%r)",
-            old_deploy_name,
-            old_deploy_kwargs,
-            old_deploy_data,
-        )
+            logger.debug(
+                "Reset deploy to %s (args=%r, data=%r)",
+                old_deploy_name,
+                old_deploy_kwargs,
+                old_deploy_data,
+            )
 
     @memoize
     def _get_temp_directory(self):
