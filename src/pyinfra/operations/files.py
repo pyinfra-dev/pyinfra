@@ -80,7 +80,7 @@ def download(
     dest: str,
     user: str | None = None,
     group: str | None = None,
-    mode: str | None = None,
+    mode: int | str | None = None,
     cache_time: int | None = None,
     force=False,
     sha384sum: str | None = None,
@@ -129,6 +129,7 @@ def download(
         )
     """
 
+    mode = ensure_mode_int(mode)
     info = host.get_fact(File, path=dest)
 
     # Destination is a directory?
@@ -279,7 +280,22 @@ def download(
                 QuoteString("MD5 did not match!"),
             )
     else:
-        host.noop("file {0} has already been downloaded".format(dest))
+        # No re-download needed, but still reconcile ownership + mode against the
+        # existing file so a changed mode/user/group argument takes effect
+        # without forcing a re-download. See issue #1200.
+        assert info is not None  # narrowed: download=True covers info is None
+        changed = False
+
+        if (user and info["user"] != user) or (group and info["group"] != group):
+            yield file_utils.chown(dest, user, group)
+            changed = True
+
+        if mode and info["mode"] != mode:
+            yield file_utils.chmod(dest, mode)
+            changed = True
+
+        if not changed:
+            host.noop("file {0} has already been downloaded".format(dest))
 
 
 @operation()

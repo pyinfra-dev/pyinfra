@@ -1,15 +1,10 @@
 {
     "args": ["mykey"],
     "facts": {
-        "apt.AptKeys": {
-            "abc": {}
-        },
-        "gpg.GpgKey": {
-            "src=mykey": {
-                "abc": {}
-            }
+        "files.File": {
+            "path=/etc/apt/keyrings/mykey.gpg": {"mode": 644, "user": "root", "group": "root"}
         }
     },
     "commands": [],
-    "noop_description": "All keys from mykey are already available in the apt keychain"
+    "noop_description": "GPG keyring /etc/apt/keyrings/mykey.gpg already exists"
 }
