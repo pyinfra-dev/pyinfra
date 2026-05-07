@@ -66,7 +66,7 @@ def crontab(
 
     def comma_sep(value):
         if isinstance(value, (list, tuple)):
-            return ",".join("{0}".format(v) for v in value)
+            return ",".join(f"{v}" for v in value)
         return value
 
     minute = comma_sep(minute)
@@ -81,7 +81,7 @@ def crontab(
         ctb = CrontabFile(ctb0)
     else:
         ctb = ctb0
-    name_comment = "# pyinfra-name={0}".format(cron_name)
+    name_comment = f"# pyinfra-name={cron_name}"
 
     existing_crontab = ctb.get_command(
         command=command if cron_name is None else None, name=cron_name
@@ -98,18 +98,11 @@ def crontab(
     temp_filename = host.get_temp_filename()
 
     if special_time:
-        new_crontab_line = "{0} {1}".format(special_time, command)
+        new_crontab_line = f"{special_time} {command}"
     else:
-        new_crontab_line = "{minute} {hour} {day_of_month} {month} {day_of_week} {command}".format(
-            minute=minute,
-            hour=hour,
-            day_of_month=day_of_month,
-            month=month,
-            day_of_week=day_of_week,
-            command=command,
-        )
+        new_crontab_line = f"{minute} {hour} {day_of_month} {month} {day_of_week} {command}"
 
-    existing_crontab_match = ".*{0}.*".format(existing_crontab_match)
+    existing_crontab_match = f".*{existing_crontab_match}.*"
 
     # Don't want the cron and it does exist? Remove the line
     if not present and exists:
@@ -126,7 +119,7 @@ def crontab(
     elif present and not exists:
         logger.debug(f"present: {present}, exists: {exists}")
         if ctb:  # append a blank line if cron entries already exist
-            edit_commands.append("echo '' >> {0}".format(temp_filename))
+            edit_commands.append(f"echo '' >> {temp_filename}")
         if cron_name:
             edit_commands.append(
                 StringCommand("echo", QuoteString(name_comment), ">>", temp_filename),
@@ -165,22 +158,18 @@ def crontab(
     if edit_commands:
         crontab_args = []
         if user:
-            crontab_args.append("-u {0}".format(user))
+            crontab_args.append(f"-u {user}")
 
         # List the crontab into a temporary file if it exists
         if ctb:
-            yield "crontab -l {0} > {1}".format(" ".join(crontab_args), temp_filename)
+            yield f"crontab -l {' '.join(crontab_args)} > {temp_filename}"
 
         # Now yield any edits
-        for edit_command in edit_commands:
-            yield edit_command
+        yield from edit_commands
 
         # Finally, use the tempfile to write a new crontab
-        yield "crontab {0} {1}".format(" ".join(crontab_args), temp_filename)
+        yield f"crontab {' '.join(crontab_args)} {temp_filename}"
     else:
         host.noop(
-            "crontab {0} {1}".format(
-                command,
-                "exists" if present else "does not exist",
-            ),
+            f"crontab {command} {'exists' if present else 'does not exist'}",
         )

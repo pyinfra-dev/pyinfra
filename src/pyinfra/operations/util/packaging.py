@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from io import StringIO
-from typing import Callable, NamedTuple, cast
+from typing import NamedTuple, cast
+from collections.abc import Callable
 from urllib.parse import urlparse
 
 from packaging.requirements import InvalidRequirement, Requirement
@@ -16,7 +17,7 @@ from pyinfra.operations import files
 
 
 def default_inst_vers_format_fn(name: str, operator: str, version: str):
-    return "{name}{operator}{version}".format(name=name, operator=operator, version=version)
+    return f"{name}{operator}{version}"
 
 
 class PkgInfo(NamedTuple):
@@ -238,7 +239,7 @@ def ensure_rpm(state: State, host: Host, source: str, present: bool, package_man
     # If source is a url
     if urlparse(source).scheme:
         # Generate a temp filename (with .rpm extension to please yum)
-        temp_filename = "{0}.rpm".format(host.get_temp_filename(source))
+        temp_filename = f"{host.get_temp_filename(source)}.rpm"
 
         # Ensure it's downloaded
         yield from files.download._inner(src=source, dest=temp_filename)
@@ -260,22 +261,19 @@ def ensure_rpm(state: State, host: Host, source: str, present: bool, package_man
     if present and not exists:
         # If we had info, always install
         if info:
-            yield "rpm -i {0}".format(source)
+            yield f"rpm -i {source}"
         # This happens if we download the package mid-deploy, so we have no info
         # but also don't know if it's installed. So check at runtime, otherwise
         # the install will fail.
         else:
-            yield "rpm -q `rpm -qp {0}` 2> /dev/null || rpm -i {0}".format(source)
+            yield f"rpm -q `rpm -qp {source}` 2> /dev/null || rpm -i {source}"
 
     # Package exists but we don't want?
     elif exists and not present:
-        yield "{0} remove -y {1}".format(package_manager_command, info["name"])
+        yield f"{package_manager_command} remove -y {info['name']}"
     else:
         host.noop(
-            "rpm {0} is {1}".format(
-                original_source,
-                "installed" if present else "not installed",
-            ),
+            f"rpm {original_source} is {'installed' if present else 'not installed'}",
         )
 
 
@@ -299,7 +297,7 @@ def ensure_yum_repo(
         if name_or_url.endswith(".repo"):
             name_or_url = name_or_url[:-5]
 
-    filename = "{0}{1}.repo".format(repo_directory, name_or_url)
+    filename = f"{repo_directory}{name_or_url}.repo"
 
     # If we don't want the repo, just remove any existing file
     if not present:
@@ -319,18 +317,18 @@ def ensure_yum_repo(
 
     # Build the repo file from string
     repo_lines = [
-        "[{0}]".format(name_or_url),
-        "name={0}".format(description),
-        "baseurl={0}".format(baseurl),
-        "enabled={0}".format(1 if enabled else 0),
-        "gpgcheck={0}".format(1 if gpgcheck else 0),
+        f"[{name_or_url}]",
+        f"name={description}",
+        f"baseurl={baseurl}",
+        f"enabled={1 if enabled else 0}",
+        f"gpgcheck={1 if gpgcheck else 0}",
     ]
 
     if type_:
-        repo_lines.append("type={0}".format(type_))
+        repo_lines.append(f"type={type_}")
 
     if gpgkey:
-        repo_lines.append("gpgkey={0}".format(gpgkey))
+        repo_lines.append(f"gpgkey={gpgkey}")
 
     repo_lines.append("")
     repo = "\n".join(repo_lines)

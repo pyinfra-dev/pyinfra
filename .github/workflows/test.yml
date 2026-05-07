@@ -24,7 +24,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
       - uses: astral-sh/ruff-action@v3
         with:
-          args: "check --diff"
+          args: "check --diff --unsafe-fixes"
       - uses: astral-sh/ruff-action@v3
         with:
           args: "format --diff"

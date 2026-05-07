@@ -37,7 +37,7 @@ def build_arguments_doc():
         # Add a cross-reference label for each section
         slug = group_name.lower().replace(" & ", "-").replace(" ", "-")
         lines.append("")
-        lines.append(".. _arguments-{0}:".format(slug))
+        lines.append(f".. _arguments-{slug}:")
         lines.append("")
         lines.append(group_name)
         lines.append(title_line("~", group_name))
@@ -84,7 +84,7 @@ def build_arguments_doc():
             lines.append(cleandoc(arguments_example_doc))
 
     module_filename = path.join(docs_dir, "_deploy_globals.rst")
-    print("--> Writing {0}".format(module_filename))
+    print(f"--> Writing {module_filename}")
 
     out = "\n".join(lines)
 

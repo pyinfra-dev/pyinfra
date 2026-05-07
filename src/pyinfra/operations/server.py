@@ -109,7 +109,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
             if retries > max_retries:
                 raise Exception(
-                    ("Server did not reboot in time (reboot_timeout={0}s)").format(reboot_timeout),
+                    (f"Server did not reboot in time (reboot_timeout={reboot_timeout}s)"),
                 )
 
             sleep(interval)
@@ -142,14 +142,12 @@ def wait(port: int):
         )
     """
 
-    yield r"""
-        while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
-            echo "waiting for port {0}..."
+    yield rf"""
+        while ! (netstat -an | grep LISTEN | grep -e "\.{port}" -e ":{port}"); do
+            echo "waiting for port {port}..."
             sleep 1
         done
-    """.format(
-        port,
-    )
+    """
 
 
 @operation(is_idempotent=False)
@@ -175,8 +173,7 @@ def shell(commands: str | list[str]):
     if isinstance(commands, str):
         commands = [commands]
 
-    for command in commands:
-        yield command
+    yield from commands
 
 
 @operation(is_idempotent=False)
@@ -235,7 +232,7 @@ def script_template(src: str, args=(), **data):
         )
     """
 
-    temp_file = host.get_temp_filename("{0}{1}".format(src, data))
+    temp_file = host.get_temp_filename(f"{src}{data}")
     yield from files.template._inner(src, temp_file, **data)
 
     yield chmod(temp_file, "+x")
@@ -284,12 +281,7 @@ def modprobe(module: str, present=True, force=False):
 
     else:
         host.noop(
-            "{0} {1} {2} {3}".format(
-                "modules" if len(list_value) > 1 else "module",
-                "/".join(list_value),
-                "are" if len(list_value) > 1 else "is",
-                "loaded" if present else "not loaded",
-            ),
+            f"{'modules' if len(list_value) > 1 else 'module'} {'/'.join(list_value)} {'are' if len(list_value) > 1 else 'is'} {'loaded' if present else 'not loaded'}",
         )
 
 
@@ -380,10 +372,7 @@ def mount(
 
     else:
         host.noop(
-            "filesystem {0} is {1}".format(
-                path,
-                "mounted" if mounted else "not mounted",
-            ),
+            f"filesystem {path} is {'mounted' if mounted else 'not mounted'}",
         )
 
 
@@ -438,7 +427,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
 
     if hostname_file:
         # Create a whole new hostname file
-        file = StringIO("{0}\n".format(hostname))
+        file = StringIO(f"{hostname}\n")
 
         # And ensure it exists
         yield from files.put._inner(src=file, dest=hostname_file)
@@ -471,10 +460,10 @@ def timezone(timezone: str):
         return
 
     if host.get_fact(Which, command="timedatectl"):
-        yield "timedatectl set-timezone {0}".format(timezone)
+        yield f"timedatectl set-timezone {timezone}"
     else:
-        yield "ln -sf /usr/share/zoneinfo/{0} /etc/localtime".format(timezone)
-        yield "echo {0} > /etc/timezone".format(timezone)
+        yield f"ln -sf /usr/share/zoneinfo/{timezone} /etc/localtime"
+        yield f"echo {timezone} > /etc/timezone"
 
 
 @operation()
@@ -504,9 +493,16 @@ def sysctl(
         )
     """
 
-    string_value = " ".join(["{0}".format(v) for v in value]) if isinstance(value, list) else value
+    string_value = " ".join([f"{v}" for v in value]) if isinstance(value, list) else value
 
-    value = [try_int(v) for v in value] if isinstance(value, list) else try_int(value)
+    if isinstance(value, list):
+        value = [try_int(v) for v in value]
+        if len(value) == 1:
+            value = value[0]
+    elif isinstance(value, str) and len(value.split()) > 1:
+        value = [try_int(v) for v in value.split()]
+    else:
+        value = try_int(value)
 
     existing_sysctls = host.get_fact(Sysctl, keys=[key])
     existing_value = existing_sysctls.get(key)
@@ -517,13 +513,13 @@ def sysctl(
             StringCommand(QuoteString(key), "=", QuoteString(str(string_value)), _separator=""),
         )
     else:
-        host.noop("sysctl {0} is set to {1}".format(key, string_value))
+        host.noop(f"sysctl {key} is set to {string_value}")
 
     if persist:
         yield from files.line._inner(
             path=persist_file,
-            line="{0}[[:space:]]*=[[:space:]]*{1}".format(key, string_value),
-            replace="{0} = {1}".format(key, string_value),
+            line=f"{key}[[:space:]]*=[[:space:]]*{string_value}",
+            replace=f"{key} = {string_value}",
         )
 
 
@@ -558,7 +554,7 @@ def service(
         )
     """
 
-    service_operation: "PyinfraOperation"
+    service_operation: PyinfraOperation
 
     if host.get_fact(Which, command="systemctl"):
         service_operation = systemd.service
@@ -572,17 +568,23 @@ def service(
     elif host.get_fact(Which, command="sv"):
         service_operation = runit.service
 
+    # NOTE: must run before the sysvinit check: BSDs ship `service` in base (distinct from the
+    # Linux sysvinit wrapper), so matching on Which command="service" first would misroute BSD
+    # hosts to sysvinit. See https://github.com/pyinfra-dev/pyinfra/issues/1496.
+    # The OS list is explicit (rather than "not Linux") so other /etc/rc.d-having systems are not
+    # accidentally routed through bsdinit; see https://github.com/Fizzadar/pyinfra/issues/819 for
+    # the original motivation to exclude Linux here.
+    elif host.get_fact(Os) in ("FreeBSD", "OpenBSD", "NetBSD", "DragonFly") and bool(
+        host.get_fact(Directory, path="/etc/rc.d")
+    ):
+        service_operation = bsdinit.service
+
     elif (
         host.get_fact(Which, command="service")
         or host.get_fact(Link, path="/etc/init.d")
         or host.get_fact(Directory, path="/etc/init.d")
     ):
         service_operation = sysvinit.service
-
-    # NOTE: important that we are not Linux here because /etc/rc.d will exist but checking it's
-    # contents may trigger things (like a reboot: https://github.com/Fizzadar/pyinfra/issues/819)
-    elif host.get_fact(Os) != "Linux" and bool(host.get_fact(Directory, path="/etc/rc.d")):
-        service_operation = bsdinit.service
 
     else:
         raise OperationError(
@@ -621,7 +623,7 @@ def packages(
         )
     """
 
-    package_operation: "PyinfraOperation"
+    package_operation: PyinfraOperation
 
     # TODO: improve this - use LinuxDistribution fact + mapping with fallback below?
     # Here to be preferred on openSUSE which also provides aptitude
@@ -783,7 +785,7 @@ def user_authorized_keys(
             try_path = path.join(state.cwd, key)
 
         if path.exists(try_path):
-            with open(try_path, "r") as f:
+            with open(try_path) as f:
                 return [key.strip() for key in f.readlines()]
 
         return [key.strip()]
@@ -818,7 +820,7 @@ def user_authorized_keys(
             )
         else:
             keys_file = StringIO(
-                "{0}\n".format(
+                "{}\n".format(
                     "\n".join(public_keys),
                 ),
             )
@@ -930,7 +932,7 @@ def user(
         groups = []
 
     if home is None:
-        home = "/home/{0}".format(user)
+        home = f"/home/{user}"
         if existing_user:
             home = existing_user.get("home", home)
 
@@ -1088,7 +1090,7 @@ def user(
             public_keys=public_keys,
             group=group,
             delete_keys=delete_keys,
-            authorized_key_directory="{0}/.ssh".format(home),
+            authorized_key_directory=f"{home}/.ssh",
             authorized_key_filename=None,
         )
 
@@ -1123,7 +1125,7 @@ def locale(
 
     locales = host.get_fact(Locales)
 
-    logger.debug("Enabled locales: {0}".format(locales))
+    logger.debug(f"Enabled locales: {locales}")
 
     locales_definitions_file = "/etc/locale.gen"
 
@@ -1182,7 +1184,7 @@ def kill(pid: int, signal: str = "TERM"):
         )
     """
 
-    yield "kill -{0} {1}".format(signal, pid)
+    yield f"kill -{signal} {pid}"
 
 
 @operation()

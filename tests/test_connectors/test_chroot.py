@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import shlex
 from subprocess import PIPE
 from unittest import TestCase
@@ -17,7 +15,7 @@ def fake_chroot_shell(command, splitlines=None):
     if command == "chroot /not-a-chroot ls":
         return True
 
-    raise PyinfraError("Invalid command: {0}".format(command))
+    raise PyinfraError(f"Invalid command: {command}")
 
 
 @patch("pyinfra.connectors.chroot.local.shell", fake_chroot_shell)
@@ -72,7 +70,7 @@ class TestChrootConnector(TestCase):
 
         command = make_unix_command(command).get_raw_value()
         command = shlex.quote(command)
-        docker_command = "chroot /not-a-chroot sh -c {0}".format(command)
+        docker_command = f"chroot /not-a-chroot sh -c {command}"
         shell_command = make_unix_command(docker_command).get_raw_value()
 
         self.fake_popen_mock.assert_called_with(

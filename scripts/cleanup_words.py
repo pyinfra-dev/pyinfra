@@ -4,7 +4,7 @@ from os import path
 
 
 def cleanup_words():
-    with open(path.join("tests", "words.txt"), "r", encoding="utf-8") as f:
+    with open(path.join("tests", "words.txt"), encoding="utf-8") as f:
         data = f.read()
 
     lines = data.splitlines()

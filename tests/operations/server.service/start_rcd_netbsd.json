@@ -1,0 +1,26 @@
+{
+    "args": ["nginx"],
+    "facts": {
+        "server.Os": "NetBSD",
+        "bsdinit.RcdStatus": {
+            "nginx": false
+        },
+        "server.Which": {
+            "command=systemctl": false,
+            "command=initctl": false,
+            "command=rc-service": false,
+            "command=sv": false,
+            "command=service": "/usr/sbin/service"
+        },
+        "files.Directory": {
+            "path=/etc/init.d": false,
+            "path=/etc/rc.d": true
+        },
+        "files.Link": {
+            "path=/etc/init.d": false
+        }
+    },
+    "commands": [
+        "test -e /etc/rc.d/nginx && /etc/rc.d/nginx start || /usr/local/etc/rc.d/nginx start"
+    ]
+}

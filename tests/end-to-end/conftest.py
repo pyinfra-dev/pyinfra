@@ -1,6 +1,6 @@
 import re
 import subprocess
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 import testinfra.host
@@ -36,9 +36,7 @@ class Helpers:
         _, stderr = Helpers.run(command, **kwargs)
 
         for line in expected_lines:
-            assert re.search(line, stderr, re.MULTILINE), 'Line "{0}" not found in output!'.format(
-                line,
-            )
+            assert re.search(line, stderr, re.MULTILINE), f'Line "{line}" not found in output!'
 
     @staticmethod
     def run_container_test_host(

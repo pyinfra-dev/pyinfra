@@ -30,11 +30,11 @@ class RunitStatus(FactBase):
     def command(self, service=None, svdir="/var/service") -> str:
         if service is None:
             return (
-                'export SVDIR="{0}" && '
-                'cd "$SVDIR" && find * -maxdepth 0 -exec sv status {{}} + 2>/dev/null'
-            ).format(svdir)
+                f'export SVDIR="{svdir}" && '
+                'cd "$SVDIR" && find * -maxdepth 0 -exec sv status {} + 2>/dev/null'
+            )
         else:
-            return 'SVDIR="{0}" sv status "{1}"'.format(svdir, service)
+            return f'SVDIR="{svdir}" sv status "{service}"'
 
     @override
     def process(self, output):
@@ -69,11 +69,11 @@ class RunitManaged(FactBase):
     def command(self, service=None, svdir="/var/service"):
         if service is None:
             return (
-                '[ -d "{0}" ] && cd "{0}" '
+                f'[ -d "{svdir}" ] && cd "{svdir}" '
                 '&& find -mindepth 1 -maxdepth 1 -type l -printf "%f\\n" || true'
-            ).format(svdir)
+            )
         else:
-            return 'cd "{0}" && test -h "{1}" && echo "{1}" || true'.format(svdir, service)
+            return f'cd "{svdir}" && test -h "{service}" && echo "{service}" || true'
 
     @override
     def process(self, output):

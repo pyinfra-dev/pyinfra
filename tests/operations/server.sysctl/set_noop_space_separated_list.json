@@ -1,0 +1,12 @@
+{
+    "args": ["net.ipv4.ip_local_port_range", [1024, 65535]],
+    "facts": {
+        "server.Sysctl": {
+            "keys=['net.ipv4.ip_local_port_range']": {
+                "net.ipv4.ip_local_port_range": [1024, 65535]
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "sysctl net.ipv4.ip_local_port_range is set to 1024 65535"
+}

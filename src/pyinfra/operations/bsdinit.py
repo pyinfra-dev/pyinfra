@@ -53,7 +53,7 @@ def service(
     if isinstance(enabled, bool):
         yield from files.line._inner(
             path="/etc/rc.conf.local",
-            line="^{0}_enable=".format(service),
-            replace='{0}_enable="YES"'.format(service),
+            line=f"^{service}_enable=",
+            replace=f'{service}_enable="YES"',
             present=enabled,
         )

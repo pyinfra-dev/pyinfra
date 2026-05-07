@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
-from socket import timeout as timeout_error
 from gevent.subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
+from typing import TYPE_CHECKING
+from collections.abc import Callable, Iterable
 
 import gevent
 
@@ -39,10 +39,10 @@ echo "$temp"
 def run_local_process(
     command: str,
     stdin=None,
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
     print_output: bool = False,
     print_prefix: str = "",
-) -> tuple[int, "CommandOutput"]:
+) -> tuple[int, CommandOutput]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
     assert process.stdout is not None
@@ -147,7 +147,7 @@ def read_buffer(
 def read_output_buffers(
     stdout_buffer: Iterable,
     stderr_buffer: Iterable,
-    timeout: Optional[int],
+    timeout: int | None,
     print_output: bool,
     print_prefix: str,
 ) -> CommandOutput:
@@ -162,7 +162,7 @@ def read_output_buffers(
         stdout_buffer,
         output_queue,
         print_output=print_output,
-        print_func=lambda line: "{0}{1}".format(print_prefix, line),
+        print_func=lambda line: f"{print_prefix}{line}",
     )
     stderr_reader = gevent.spawn(
         read_buffer,
@@ -170,10 +170,7 @@ def read_output_buffers(
         stderr_buffer,
         output_queue,
         print_output=print_output,
-        print_func=lambda line: "{0}{1}".format(
-            print_prefix,
-            format_text(line, "red"),
-        ),
+        print_func=lambda line: f"{print_prefix}{format_text(line, 'red')}",
     )
 
     # Wait on output, with our timeout (or None)
@@ -186,7 +183,7 @@ def read_output_buffers(
         stdout_reader.kill()
         stderr_reader.kill()
 
-        raise timeout_error()
+        raise TimeoutError()
 
     return CommandOutput(list(output_queue.queue))
 
@@ -196,8 +193,8 @@ def read_output_buffers(
 
 
 def execute_command_with_sudo_retry(
-    host: "Host",
-    command_arguments: "ConnectorArguments",
+    host: Host,
+    command_arguments: ConnectorArguments,
     execute_command: Callable[..., tuple[int, CommandOutput]],
 ) -> tuple[int, CommandOutput]:
     return_code, output = execute_command()
@@ -210,7 +207,7 @@ def execute_command_with_sudo_retry(
             if line.line.strip() == "sudo: a password is required":
                 # If we need a password, ask the user for it and attach to the host
                 # internal connector data for use when executing future commands.
-                sudo_password = getpass("{0}sudo password: ".format(host.print_prefix))
+                sudo_password = getpass(f"{host.print_prefix}sudo password: ")
                 host.connector_data["prompted_sudo_password"] = sudo_password
                 return_code, output = execute_command()
                 break
@@ -226,7 +223,7 @@ def write_stdin(stdin, buffer):
 
     for line in stdin:
         if not line.endswith("\n"):
-            line = "{0}\n".format(line)
+            line = f"{line}\n"
         line = line.encode()
         buffer.write(line)
     buffer.close()
@@ -265,8 +262,8 @@ def _show_use_su_login_warning() -> None:
     )
 
 
-def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArguments":
-    control_arguments: "ConnectorArguments" = {}
+def extract_control_arguments(arguments: ConnectorArguments) -> ConnectorArguments:
+    control_arguments: ConnectorArguments = {}
 
     if "_success_exit_codes" in arguments:
         control_arguments["_success_exit_codes"] = arguments.pop("_success_exit_codes")
@@ -280,35 +277,33 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
     return control_arguments
 
 
-def _ensure_sudo_askpass_set_for_host(host: "Host"):
+def _ensure_sudo_askpass_set_for_host(host: Host):
     return _ensure_askpass_set_for_host(host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR)
 
 
-def _ensure_su_askpass_set_for_host(host: "Host"):
+def _ensure_su_askpass_set_for_host(host: Host):
     return _ensure_askpass_set_for_host(host, "su_askpass_path", SU_ASKPASS_ENV_VAR)
 
 
-def _ensure_askpass_set_for_host(host: "Host", key: str, env_var: str):
+def _ensure_askpass_set_for_host(host: Host, key: str, env_var: str):
     if host.connector_data.get(key):
         return
     ok, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
 
     if not ok:
-        raise PyinfraError("Failed to create sudo_askpass command: {0}".format(output.output))
+        raise PyinfraError(f"Failed to create sudo_askpass command: {output.output}")
 
     if not output.stdout_lines:
         raise PyinfraError(
-            "Failed to create sudo_askpass command: no output produced by command: {0}".format(
-                output.output,
-            )
+            f"Failed to create sudo_askpass command: no output produced by command: {output.output}"
         )
 
     host.connector_data[key] = output.stdout_lines[0]
 
 
 def make_unix_command_for_host(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     command: StringCommand,
     **command_arguments,
 ) -> StringCommand:
@@ -377,12 +372,12 @@ def make_unix_command(
         _shell_executable = "sh"
 
     if _env:
-        env_bits: list[Union[str, StringCommand, QuoteString]] = ["export"]
+        env_bits: list[str | StringCommand | QuoteString] = ["export"]
         for key, value in _env.items():
             # Quote the whole `key=value` pair so arbitrary values cannot break
             # out into additional shell tokens. Invalid identifiers in `key` will
             # fail safely when the shell rejects the resulting `export` statement.
-            env_bits.append(QuoteString("{0}={1}".format(key, value)))
+            env_bits.append(QuoteString(f"{key}={value}"))
         env_bits.append("&&")
         env_bits.append(command)
         command = StringCommand(*env_bits)
@@ -390,7 +385,7 @@ def make_unix_command(
     if _chdir:
         command = StringCommand("cd", QuoteString(_chdir), "&&", command)
 
-    command_bits: list[Union[str, StringCommand, QuoteString]] = []
+    command_bits: list[str | StringCommand | QuoteString] = []
 
     if _doas:
         command_bits.extend(["doas", "-n"])
@@ -410,10 +405,7 @@ def make_unix_command(
                 "env",
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
                 MaskString(
-                    "{0}={1}".format(
-                        SUDO_ASKPASS_ENV_VAR,
-                        StringCommand(QuoteString(_sudo_password)).get_raw_value(),
-                    )
+                    f"{SUDO_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_sudo_password)).get_raw_value()}"
                 ),
             ],
         )
@@ -441,10 +433,7 @@ def make_unix_command(
                 [
                     "env",
                     MaskString(
-                        "{0}={1}".format(
-                            SU_ASKPASS_ENV_VAR,
-                            StringCommand(QuoteString(_su_password)).get_raw_value(),
-                        )
+                        f"{SU_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_su_password)).get_raw_value()}"
                     ),
                     QuoteString(_su_askpass_path),
                     "|",

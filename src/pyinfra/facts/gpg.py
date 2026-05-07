@@ -95,9 +95,9 @@ class GpgKey(GpgFactBase):
     @override
     def command(self, src):
         if urlparse(src).scheme:
-            return ("(wget -O - {0} || curl -sSLf {0}) | gpg --with-colons").format(src)
+            return f"(wget -O - {src} || curl -sSLf {src}) | gpg --with-colons"
 
-        return "gpg --with-colons {0}".format(src)
+        return f"gpg --with-colons {src}"
 
 
 class GpgKeys(GpgFactBase):
@@ -119,7 +119,7 @@ class GpgKeys(GpgFactBase):
         if not keyring:
             return "gpg --list-keys --with-colons"
 
-        return ("gpg --list-keys --with-colons --keyring {0} --no-default-keyring").format(keyring)
+        return f"gpg --list-keys --with-colons --keyring {keyring} --no-default-keyring"
 
 
 class GpgSecretKeys(GpgFactBase):
@@ -145,9 +145,7 @@ class GpgSecretKeys(GpgFactBase):
         if not keyring:
             return "gpg --list-secret-keys --with-colons"
 
-        return ("gpg --list-secret-keys --with-colons --keyring {0} --no-default-keyring").format(
-            keyring,
-        )
+        return f"gpg --list-secret-keys --with-colons --keyring {keyring} --no-default-keyring"
 
 
 class GpgKeyrings(GpgFactBase):

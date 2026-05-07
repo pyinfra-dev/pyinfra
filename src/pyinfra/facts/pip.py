@@ -30,7 +30,7 @@ class PipPackages(FactBase):
     @override
     def command(self, pip=None):
         pip = pip or self.pip_command
-        return "{0} freeze --all".format(pip)
+        return f"{pip} freeze --all"
 
     @override
     def process(self, output):
