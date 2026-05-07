@@ -53,17 +53,17 @@ def container(
     if not present:
         if container:
             if container["status"] == "Running":
-                yield "lxc stop {0}".format(id)
+                yield f"lxc stop {id}"
 
             # Command to remove the container:
-            yield "lxc delete {0}".format(id)
+            yield f"lxc delete {id}"
         else:
-            host.noop("container {0} does not exist".format(id))
+            host.noop(f"container {id} does not exist")
 
     # Container doesn't exist and we want it
     if present:
         if not container:
             # Command to create the container:
-            yield "lxc launch {image} {id} < /dev/null".format(id=id, image=image)
+            yield f"lxc launch {image} {id} < /dev/null"
         else:
-            host.noop("container {0} exists".format(id))
+            host.noop(f"container {id} exists")

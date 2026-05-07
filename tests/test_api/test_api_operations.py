@@ -273,7 +273,7 @@ class TestOperationsApi(PatchSSHTestCase):
         add_op(state, python.call, mocked_function, _timeout=timeout)
 
         # Timeout should cause the operation to fail and hosts to be removed
-        with self.assertRaises(PyinfraError) as context:
+        with self.assertRaises(PyinfraError):
             run_ops(state)
 
     def test_run_once_serial_op(self):

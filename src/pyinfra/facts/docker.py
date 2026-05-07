@@ -135,10 +135,7 @@ class DockerPlugins(DockerFactBase):
 class DockerSingleMixin(DockerFactBase):
     @override
     def command(self, object_id):
-        return "docker {0} inspect {1} 2>&- || true".format(
-            self.docker_type,
-            object_id,
-        )
+        return f"docker {self.docker_type} inspect {object_id} 2>&- || true"
 
 
 class DockerContainer(DockerSingleMixin):
@@ -332,7 +329,7 @@ class DockerContainerFsChanges(DockerFactBase):
 
     @override
     def command(self, container_id) -> str:
-        return "docker container diff {0} 2>&- || true".format(container_id)
+        return f"docker container diff {container_id} 2>&- || true"
 
     @override
     def process(self, output):
@@ -354,7 +351,7 @@ class DockerContainerProcesses(DockerFactBase):
 
     @override
     def command(self, container_id) -> str:
-        return "docker container top {0} 2>&- || true".format(container_id)
+        return f"docker container top {container_id} 2>&- || true"
 
     @override
     def process(self, output):
@@ -389,6 +386,28 @@ class DockerImageHistory(_DockerJsonLinesFactBase):
 
     @override
     def command(self, image_id) -> str:
+        return f"docker image history --no-trunc --format '{{{{json .}}}}' {image_id} 2>&- || true"
+
+
+class DockerAuths(FactBase[list[str]]):
+    """
+    Returns the list of registry servers the current user is authenticated
+    against, read from ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.
+
+    Returns an empty list if no config file exists or no auths are stored.
+    """
+
+    @override
+    def command(self) -> str:
         return (
-            "docker image history --no-trunc --format '{{{{json .}}}}' {0} 2>&- || true"
-        ).format(image_id)
+            'config="${DOCKER_CONFIG:-$HOME/.docker}/config.json"; '
+            '[ -r "$config" ] && cat "$config" || echo "{}"'
+        )
+
+    @override
+    def process(self, output: list[str]) -> list[str]:
+        try:
+            data = json.loads("".join(output))
+        except json.JSONDecodeError:
+            return []
+        return list(data.get("auths", {}).keys())

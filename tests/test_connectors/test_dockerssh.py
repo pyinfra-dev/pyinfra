@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import shlex
 from unittest import TestCase
 from unittest.mock import MagicMock, mock_open, patch
@@ -42,7 +40,7 @@ def fake_ssh_docker_shell(
             fake_ssh_docker_shell.ran_custom_command = True
             return (status, output)
 
-    raise PyinfraError("Invalid Command: {0}".format(command))
+    raise PyinfraError(f"Invalid Command: {command}")
 
 
 def fake_ssh_podman_shell(
@@ -75,20 +73,20 @@ def fake_ssh_podman_shell(
             fake_ssh_podman_shell.ran_custom_command = True
             return (status, output)
 
-    raise PyinfraError("Invalid Command: {0}".format(command))
+    raise PyinfraError(f"Invalid Command: {command}")
 
 
 def get_docker_command(command):
     shell_command = make_unix_command(command).get_raw_value()
     shell_command = shlex.quote(shell_command)
-    docker_command = "docker exec -it containerid sh -c {0}".format(shell_command)
+    docker_command = f"docker exec -it containerid sh -c {shell_command}"
     return docker_command
 
 
 def get_podman_command(command):
     shell_command = make_unix_command(command).get_raw_value()
     shell_command = shlex.quote(shell_command)
-    podman_command = "podman exec -it containerid sh -c {0}".format(shell_command)
+    podman_command = f"podman exec -it containerid sh -c {shell_command}"
     return podman_command
 
 

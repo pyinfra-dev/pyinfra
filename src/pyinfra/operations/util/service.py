@@ -22,14 +22,14 @@ def handle_service_control(
         if is_running:
             yield make_formatted_string_command(formatter, QuoteString(name), "stop")
         else:
-            host.noop("service {0} is stopped".format(name))
+            host.noop(f"service {name} is stopped")
 
     # Need running but down
     if running is True:
         if not is_running:
             yield make_formatted_string_command(formatter, QuoteString(name), "start")
         else:
-            host.noop("service {0} is running".format(name))
+            host.noop(f"service {name} is running")
 
     # Only restart if the service is already running
     if restarted and is_running:

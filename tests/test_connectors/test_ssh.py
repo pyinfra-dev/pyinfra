@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 from socket import error as socket_error, gaierror
 from unittest import TestCase, mock
 
@@ -420,7 +418,7 @@ class TestSSHConnector(TestCase):
         )
 
         fake_echo.assert_called_with(
-            "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
+            f"{host.print_prefix}>>> sh -c 'echo ***'",
             err=True,
         )
 

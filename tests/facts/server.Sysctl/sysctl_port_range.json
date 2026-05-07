@@ -1,0 +1,13 @@
+{
+    "command": "sysctl -a 2>/dev/null || true",
+    "output": [
+        "net.ipv4.ip_local_port_range = 1024	65535",
+        "net.ipv4.ip_local_reserved_ports = ",
+        "kern.hostname: example"
+    ],
+    "fact": {
+        "net.ipv4.ip_local_port_range": [1024, 65535],
+        "net.ipv4.ip_local_reserved_ports": "",
+        "kern.hostname": "example"
+    }
+}

@@ -19,7 +19,10 @@
                 "password": ""
             }
         },
-        "server.Groups": {}
+        "server.Groups": {},
+        "server.Which": {
+            "command=usermod": "/usr/sbin/usermod"
+        }
     },
     "commands": [
         "usermod -d '/home/evil $(id)' -s '/bin/bash; rm -rf /' -g 'mygroup; inject' -c 'Full Name; rm -rf /' 'some user; whoami'"

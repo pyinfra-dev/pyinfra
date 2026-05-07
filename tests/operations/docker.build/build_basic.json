@@ -1,0 +1,8 @@
+{
+    "kwargs": {
+        "path": "/srv/app"
+    },
+    "commands": [
+        "docker build /srv/app"
+    ]
+}

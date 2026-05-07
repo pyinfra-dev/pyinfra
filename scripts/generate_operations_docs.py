@@ -31,10 +31,10 @@ def build_operations_docs():
     for module_name in get_module_names(pyinfra_dir / "operations"):
         lines = []
 
-        print("--> Doing module: {0}".format(module_name))
-        module = import_module("pyinfra.operations.{0}".format(module_name))
+        print(f"--> Doing module: {module_name}")
+        module = import_module(f"pyinfra.operations.{module_name}")
 
-        full_title = "{0} Operations".format(module_name.title())
+        full_title = f"{module_name.title()} Operations"
         lines.append(full_title)
         lines.append(title_line("-", full_title))
         lines.append("")
@@ -57,7 +57,7 @@ def build_operations_docs():
                 fact_module = value.__module__.replace("pyinfra.facts.", "")
                 items.append(f":ref:`facts:{fact_module}.{key}`")
 
-            lines.append("Facts used in these operations: {0}.".format(", ".join(items)))
+            lines.append("Facts used in these operations: {}.".format(", ".join(items)))
             lines.append("")
 
         all_operation_functions = [
@@ -81,10 +81,10 @@ def build_operations_docs():
                 func = decorated_func
                 decorated_func = getattr(func, "_inner", None)
 
-            lines.append(".. _operations:{0}.{1}:".format(module_name, name))
+            lines.append(f".. _operations:{module_name}.{name}:")
             lines.append("")
 
-            title_name = ":code:`{0}.{1}`".format(module_name, name)
+            title_name = f":code:`{module_name}.{name}`"
             lines.append(title_name)
 
             # Underline name with -'s for title
@@ -96,14 +96,12 @@ def build_operations_docs():
                     or "This operation will always execute commands and is not idempotent."
                 )
                 lines.append(
-                    """
+                    f"""
 .. admonition:: Stateless operation
     :class: important
 
-    {0}
-""".format(
-                        text,
-                    ),
+    {text}
+""",
                 )
 
             doc = func.__doc__
@@ -152,7 +150,7 @@ def build_operations_docs():
             if doc:
                 lines.append("")
                 lines.append(
-                    "{0}".format(
+                    "{}".format(
                         "\n".join([format_doc_line(line) for line in doc.split("\n")]),
                     ).strip(),
                 )
@@ -165,8 +163,8 @@ def build_operations_docs():
             lines.append("")
 
         # Write out the file
-        module_filename = path.join(docs_dir, "operations", "{0}.rst".format(module_name))
-        print("--> Writing {0}".format(module_filename))
+        module_filename = path.join(docs_dir, "operations", f"{module_name}.rst")
+        print(f"--> Writing {module_filename}")
 
         with open(module_filename, "w", encoding="utf-8") as outfile:
             outfile.write("\n".join(lines))

@@ -12,8 +12,6 @@ OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgra
 .. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
 """
 
-from typing import List, Union
-
 from pyinfra import host
 from pyinfra.api import StringCommand, operation
 from pyinfra.facts.opkg import OpkgPackages
@@ -36,7 +34,7 @@ _update = update
 
 @operation()
 def packages(
-    packages: Union[str, List[str]] = "",
+    packages: str | list[str] = "",
     present: bool = True,
     latest: bool = False,
     update: bool = True,

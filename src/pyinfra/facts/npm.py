@@ -1,4 +1,3 @@
-# encoding: utf8
 from __future__ import annotations
 
 from typing_extensions import override
@@ -30,7 +29,7 @@ class NpmPackages(FactBase):
     @override
     def command(self, directory=None):
         if directory:
-            return ("! test -d {0} || (cd {0} && npm list -g --depth=0)").format(directory)
+            return f"! test -d {directory} || (cd {directory} && npm list -g --depth=0)"
         return "npm list -g --depth=0"
 
     @override

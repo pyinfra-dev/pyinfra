@@ -1,0 +1,10 @@
+{
+    "arg": {
+        "repo": "myrepo",
+        "branch": "main"
+    },
+    "command": "! test -d myrepo || (cd myrepo && git ls-remote origin main 2>/dev/null | head -n1)",
+    "requires_command": "git",
+    "output": [],
+    "fact": null
+}

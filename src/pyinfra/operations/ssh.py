@@ -36,13 +36,13 @@ def keyscan(hostname: str, force=False, port=22):
     homedir = host.get_fact(Home)
 
     yield from files.directory._inner(
-        "{0}/.ssh".format(homedir),
+        f"{homedir}/.ssh",
         mode=700,
     )
 
     hostname_present = host.get_fact(
         FindInFile,
-        path="{0}/.ssh/known_hosts".format(homedir),
+        path=f"{homedir}/.ssh/known_hosts",
         pattern=hostname,
     )
 
@@ -61,7 +61,7 @@ def keyscan(hostname: str, force=False, port=22):
         yield keyscan_command
 
     else:
-        host.noop("host key for {0} already exists".format(hostname))
+        host.noop(f"host key for {hostname} already exists")
 
 
 @operation(is_idempotent=False)
@@ -185,14 +185,12 @@ def download(
     # Local file exists but isn't a file?
     if local_file_info is False:
         raise OperationError(
-            "Local destination {0} already exists and is not a file".format(
-                local_filename,
-            ),
+            f"Local destination {local_filename} already exists and is not a file",
         )
 
     # If the local file exists and we're not forcing a re-download, no-op
     if local_file_info and not force:
-        host.noop("file {0} is already downloaded".format(filename))
+        host.noop(f"file {filename} is already downloaded")
         return
 
     # Figure out where we're connecting (host or user@host)

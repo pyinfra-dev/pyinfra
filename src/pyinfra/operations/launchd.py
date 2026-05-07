@@ -41,5 +41,5 @@ def service(
 
     # No restart command, so just stop/start
     if restarted and was_running:
-        yield "launchctl stop {0}".format(service)
-        yield "launchctl start {0}".format(service)
+        yield f"launchctl stop {service}"
+        yield f"launchctl start {service}"

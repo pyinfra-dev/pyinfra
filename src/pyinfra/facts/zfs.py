@@ -35,14 +35,22 @@ class ZfsPools(FactBase):
 
 class ZfsDatasets(FactBase):
     @override
-    def command(self) -> str:
-        return "zfs get -H all"
-
-    @override
     def requires_command(self) -> str:
         return "zfs"
 
     default = dict
+
+    @override
+    def check_preconditions(self, state, host):
+        from pyinfra.facts.server import KernelModules
+
+        modules = host.get_fact(KernelModules) or {}
+        if "zfs" not in modules:
+            return "kernel module 'zfs' is not loaded"
+
+    @override
+    def command(self) -> str:
+        return "zfs get -H all"
 
     @override
     def process(self, output):

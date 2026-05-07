@@ -1,7 +1,9 @@
+import ast
 import socket
 from collections import defaultdict
 from os import listdir, path
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, TypeVar, Union
+from collections.abc import Callable
 
 from pyinfra import logger
 from pyinfra.api.inventory import Inventory
@@ -11,7 +13,7 @@ from pyinfra.context import ctx_inventory
 from .exceptions import CliError
 from .util import exec_file, try_import_module_attribute
 
-HostType = Union[str, Tuple[str, Dict]]
+HostType = Union[str, tuple[str, dict]]
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = (str, tuple)
@@ -55,6 +57,31 @@ def _is_inventory_group(key: str, value: Any):
     return True
 
 
+def _get_imported_names(filename: str) -> set[str]:
+    """
+    Return the set of names bound by ``import`` / ``from ... import`` statements
+    in ``filename``. Used to keep those names out of the resulting group data dict
+    (issue #1297) so that e.g. ``from pyinfra import inventory`` in a group data
+    file does not end up as a piece of group data and break ``debug-inventory``.
+    """
+    with open(filename, encoding="utf-8") as f:
+        tree = ast.parse(f.read(), filename=filename)
+
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                names.add(alias.asname or alias.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name == "*":
+                    # Wildcard imports can't be resolved statically; users who
+                    # hit this case can alias names with leading underscores.
+                    continue
+                names.add(alias.asname or alias.name)
+    return names
+
+
 def _get_group_data(dirname_or_filename: str):
     group_data = {}
 
@@ -76,7 +103,14 @@ def _get_group_data(dirname_or_filename: str):
 
             # Read the files locals into a dict
             attrs = exec_file(file, return_locals=True)
-            keys = attrs.get("__all__", attrs.keys())
+            # If __all__ is explicitly set the user controls exports directly;
+            # otherwise drop names introduced by import statements so modules,
+            # classes, and other unserializable objects don't leak into the
+            # group data (issue #1297).
+            if "__all__" in attrs:
+                keys = attrs["__all__"]
+            else:
+                keys = [key for key in attrs.keys() if key not in _get_imported_names(file)]
 
             group_data[group_name] = {
                 key: value
@@ -96,7 +130,7 @@ def _get_groups_from_filename(inventory_filename: str):
 T = TypeVar("T")
 
 
-def _get_any_tuple_first(item: Union[T, Tuple[T, Any]]) -> T:
+def _get_any_tuple_first(item: T | tuple[T, Any]) -> T:
     return item[0] if isinstance(item, tuple) else item
 
 
@@ -118,7 +152,7 @@ def _resolves_to_host(maybe_host: str) -> bool:
             return False
 
 
-def _get_ssh_alias(maybe_host: str) -> Optional[str]:
+def _get_ssh_alias(maybe_host: str) -> str | None:
     logger.debug('Checking if "%s" is an SSH alias', maybe_host)
 
     # Note this does not cover the case where `host.data.ssh_config_file` is used
@@ -140,7 +174,7 @@ def _get_ssh_alias(maybe_host: str) -> Optional[str]:
 def make_inventory(
     inventory: str,
     override_data=None,
-    cwd: Optional[str] = None,
+    cwd: str | None = None,
     group_data_directories=None,
 ):
     # (Un)fortunately the CLI is pretty flexible for inventory inputs; we support inventory files, a
@@ -185,8 +219,8 @@ def make_inventory(
 
 
 def make_inventory_from_func(
-    inventory_func: Callable[[], Dict[str, List[HostType]]],
-    override_data: Optional[Dict[Any, Any]] = None,
+    inventory_func: Callable[[], dict[str, list[HostType]]],
+    override_data: dict[Any, Any] | None = None,
 ):
     logger.warning("Loading inventory via import function is in alpha!")
 
@@ -200,10 +234,10 @@ def make_inventory_from_func(
 
     # TODO: this shouldn't be required to make an inventory, groups should suffice
     combined_host_list = set()
-    groups_with_data: Dict[str, Tuple[List[HostType], Dict]] = {}
+    groups_with_data: dict[str, tuple[list[HostType], dict]] = {}
 
     for key, hosts in groups.items():
-        data: Dict = {}
+        data: dict = {}
 
         if isinstance(hosts, tuple):
             hosts, data = hosts
@@ -239,8 +273,8 @@ def make_inventory_from_func(
 
 
 def make_inventory_from_iterable(
-    hosts: List[HostType],
-    override_data: Optional[Dict[Any, Any]] = None,
+    hosts: list[HostType],
+    override_data: dict[Any, Any] | None = None,
 ):
     """
     Builds a ``pyinfra.api.Inventory`` from an iterable of hosts loaded from a module attribute.
@@ -263,7 +297,7 @@ def make_inventory_from_iterable(
 def make_inventory_from_files(
     inventory_filename: str,
     override_data=None,
-    cwd: Optional[str] = None,
+    cwd: str | None = None,
     group_data_directories=None,
 ):
     """
@@ -274,7 +308,7 @@ def make_inventory_from_files(
     file_groupname = None
 
     # TODO: this type is complex & convoluted, fix this
-    groups: Dict[str, Union[List[str], Tuple[List[str], Dict[str, Any]]]]
+    groups: dict[str, list[str] | tuple[list[str], dict[str, Any]]]
 
     # If we're not a valid file we assume a list of comma separated hostnames
     if not path.exists(inventory_filename):
@@ -287,7 +321,7 @@ def make_inventory_from_files(
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
         file_groupname = path.basename(inventory_filename).rsplit(".", 1)[0]
 
-    all_data: Dict[str, Any] = {}
+    all_data: dict[str, Any] = {}
 
     if "all" in groups:
         all_hosts = groups.pop("all")
@@ -338,7 +372,7 @@ def make_inventory_from_files(
     if group_data_directories:
         possible_group_data_folders.extend(group_data_directories)
 
-    group_data: Dict[str, Dict[str, Any]] = defaultdict(dict)
+    group_data: dict[str, dict[str, Any]] = defaultdict(dict)
 
     with ctx_inventory.use(fake_inventory):
         for folder in possible_group_data_folders:
