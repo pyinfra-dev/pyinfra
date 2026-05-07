@@ -74,6 +74,41 @@ The name of the host can be accessed via the ``pyinfra.host.name`` attribute:
 
     print(host.name)  # prints "app-1.net" for example
 
+Function-based Inventories (alpha)
+----------------------------------
+
+In addition to inventory files, pyinfra can load an inventory from a Python function or module-level iterable passed on the command line as ``module.path.attribute`` (or ``module.path:attribute``):
+
+.. code:: shell
+
+    # Call a function that returns a dict of groups
+    pyinfra myproject.inventory.make_prod OPERATIONS...
+
+    # Or point at a module-level list/tuple of hosts
+    pyinfra myproject.inventory:HOSTS OPERATIONS...
+
+The function must return a ``dict`` of group name to either a list of hosts or a ``(hosts, data)`` tuple:
+
+.. code:: python
+
+    # myproject/inventory.py
+
+    def make_prod():
+        return {
+            "app_servers": (
+                ["app-1.net", "app-2.net"],
+                {"app_user": "myuser", "app_dir": "/opt/pyinfra"},
+            ),
+            "db_servers": ["db-1.net", "db-2.net"],
+        }
+
+.. admonition:: group_data/ is not loaded for function-based inventories
+    :class: note
+
+    The ``group_data/`` directory convention described below is tied to the location of an inventory **file**. It is not loaded when the inventory comes from a function or module attribute — there is no on-disk inventory to anchor the lookup against.
+
+    Provide per-group data via the ``(hosts, data)`` tuple in the function's return value, or compose the data inside the function itself (e.g. by reading files, calling APIs, or importing Python modules). The ``function-based inventory`` loader is also still in alpha and will log a warning at startup.
+
 Groups
 ------
 
@@ -110,6 +145,9 @@ These variables can then be used in operations:
 
 .. Note::
     The ``group_data`` directory is relative to the current working directory. This can be changed at runtime via the ``--chdir`` flag.
+
+.. Note::
+    ``group_data/`` is only loaded for file-based inventories. When the inventory is provided as a Python function or module attribute (see `Function-based Inventories (alpha)`_), supply group data via the ``(hosts, data)`` tuple in the function's return value instead.
 
 Data Hierarchy
 --------------

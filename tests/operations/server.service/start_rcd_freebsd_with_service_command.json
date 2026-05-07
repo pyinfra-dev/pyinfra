@@ -1,8 +1,8 @@
 {
     "args": ["nginx"],
     "facts": {
-        "server.Os": "Linux",
-        "sysvinit.InitdStatus": {
+        "server.Os": "FreeBSD",
+        "bsdinit.RcdStatus": {
             "nginx": false
         },
         "server.Which": {
@@ -10,17 +10,17 @@
             "command=initctl": false,
             "command=rc-service": false,
             "command=sv": false,
-            "command=service": false
+            "command=service": "/usr/sbin/service"
         },
         "files.Directory": {
-            "path=/etc/init.d": true,
-            "path=/etc/rc.d": false
+            "path=/etc/init.d": false,
+            "path=/etc/rc.d": true
         },
         "files.Link": {
-            "path=/etc/init.d": true
+            "path=/etc/init.d": false
         }
     },
     "commands": [
-        "/etc/init.d/nginx start"
+        "test -e /etc/rc.d/nginx && /etc/rc.d/nginx start || /usr/local/etc/rc.d/nginx start"
     ]
 }
