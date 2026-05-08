@@ -16,10 +16,16 @@ def make_psql_command(
     port: str | int | None = None,
     executable="psql",
 ) -> StringCommand:
-    target_bits: list[str] = []
+    target_bits: list[str | StringCommand] = []
 
     if password:
-        target_bits.append(MaskString(f'PGPASSWORD="{password}"'))
+        target_bits.append(
+            StringCommand(
+                "PGPASSWORD",
+                QuoteString(MaskString(password)),
+                _separator="=",
+            )
+        )
 
     target_bits.append(executable)
 

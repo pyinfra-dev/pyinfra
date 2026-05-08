@@ -30,7 +30,7 @@ def make_mysql_command(
 
     if password:
         # Quote the password as it may contain special characters
-        target_bits.append(MaskString(f'-p"{password}"'))
+        target_bits.append(StringCommand("-p", QuoteString(MaskString(password)), _separator=""))
 
     if host:
         target_bits.append(f"-h{host}")

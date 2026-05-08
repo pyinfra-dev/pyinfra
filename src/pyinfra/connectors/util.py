@@ -446,8 +446,10 @@ def make_unix_command(
             [
                 "env",
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
-                MaskString(
-                    f"{SUDO_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_sudo_password)).get_raw_value()}"
+                StringCommand(
+                    SUDO_ASKPASS_ENV_VAR,
+                    StringCommand(QuoteString(MaskString(_sudo_password))).get_raw_value(),
+                    _separator="=",
                 ),
             ],
         )
@@ -474,8 +476,10 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
-                    MaskString(
-                        f"{SU_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_su_password)).get_raw_value()}"
+                    StringCommand(
+                        SU_ASKPASS_ENV_VAR,
+                        StringCommand(QuoteString(MaskString(_su_password))).get_raw_value(),
+                        _separator="=",
                     ),
                     QuoteString(_su_askpass_path),
                     "|",

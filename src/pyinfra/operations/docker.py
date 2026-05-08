@@ -6,8 +6,6 @@ as inventory directly.
 
 from __future__ import annotations
 
-from shlex import quote as shlex_quote
-
 from pyinfra import host
 from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
@@ -752,7 +750,7 @@ def login(
 
     command_bits: list = [
         "printf '%s'",
-        MaskString(shlex_quote(password)),
+        QuoteString(MaskString(password)),
         "| docker login --username",
         QuoteString(username),
         "--password-stdin",
