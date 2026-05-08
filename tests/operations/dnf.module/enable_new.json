@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "module": "postgresql",
+        "stream": "16"
+    },
+    "facts": {
+        "dnf.DnfEnabledModules": {}
+    },
+    "commands": [
+        "dnf module enable -y postgresql:16"
+    ]
+}

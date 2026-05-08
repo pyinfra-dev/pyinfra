@@ -106,7 +106,7 @@ def cask_upgrade():
     Upgrades all brew casks.
     """
 
-    yield "brew %supgrade%s" % cask_args()
+    yield "brew {}upgrade{}".format(*cask_args())
 
 
 @operation()
@@ -150,9 +150,9 @@ def casks(
         casks,
         host.get_fact(BrewCasks),
         present,
-        install_command="brew %sinstall%s" % args,
-        uninstall_command="brew %suninstall%s" % args,
-        upgrade_command="brew %supgrade%s" % args,
+        install_command="brew {}install{}".format(*args),
+        uninstall_command="brew {}uninstall{}".format(*args),
+        upgrade_command="brew {}upgrade{}".format(*args),
         version_join="@",
         latest=latest,
     )
@@ -205,25 +205,25 @@ def tap(src: str | None = None, present=True, url: str | None = None):
     src = src or str(urllib.parse.urlparse(url).path).strip("/")
 
     if len(src.split("/")) != 2:
-        host.noop("src '{0}' doesn't have two components.".format(src))
+        host.noop(f"src '{src}' doesn't have two components.")
         return
 
     taps = host.get_fact(BrewTaps)
     already_tapped = src in taps
 
     if present and already_tapped:
-        host.noop("tap {0} already exists".format(src))
+        host.noop(f"tap {src} already exists")
         return
 
     if already_tapped:
-        yield "brew untap {0}".format(src)
+        yield f"brew untap {src}"
         return
 
     if not present:
-        host.noop("tap {0} does not exist".format(src))
+        host.noop(f"tap {src} does not exist")
         return
 
-    cmd = "brew tap {0}".format(src)
+    cmd = f"brew tap {src}"
 
     if url is not None:
         cmd = " ".join([cmd, url])

@@ -35,10 +35,7 @@ class FakeInvoke:
             result.ok = code == 0
         except Exception as e:
             logger.warning(
-                ("pyinfra encountered an error loading SSH config match exec {0}: {1}").format(
-                    cmd,
-                    e,
-                ),
+                (f"pyinfra encountered an error loading SSH config match exec {cmd}: {e}"),
             )
 
         return result
@@ -99,7 +96,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
             if path.isfile(filename):
                 if filename in parsed_files:
                     raise Exception(
-                        "Include loop detected in ssh config file: %s" % filename,
+                        f"Include loop detected in ssh config file: {filename}",
                     )
                 with open(filename, encoding="utf-8") as fd:
                     parsed_files.append(filename)

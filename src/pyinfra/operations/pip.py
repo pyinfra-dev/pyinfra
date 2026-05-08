@@ -45,13 +45,13 @@ def virtualenv(
 
     # Check for *contents* of a virtualenv, ie don't accept an empty directory
     # as a valid virtualenv but ensure the activate script exists.
-    activate_script_path = "{0}/bin/activate".format(path)
+    activate_script_path = f"{path}/bin/activate"
 
     if present is False:
         if host.get_fact(File, path=activate_script_path):
             yield from files.directory._inner(path, present=False)
         else:
-            host.noop("virtualenv {0} does not exist".format(path))
+            host.noop(f"virtualenv {path} does not exist")
 
     if present:
         if not host.get_fact(File, path=activate_script_path):
@@ -76,7 +76,7 @@ def virtualenv(
 
             yield StringCommand(*command)
         else:
-            host.noop("virtualenv {0} exists".format(path))
+            host.noop(f"virtualenv {path} exists")
 
 
 _virtualenv = virtualenv._inner  # noqa
@@ -175,7 +175,7 @@ def packages(
         install_command_args.append(extra_install_args)
     install_command = " ".join(install_command_args)
 
-    upgrade_command = "{0} --upgrade".format(install_command)
+    upgrade_command = f"{install_command} --upgrade"
     uninstall_command = " ".join([pip, "uninstall", "--yes"])
 
     # (un)Install requirements

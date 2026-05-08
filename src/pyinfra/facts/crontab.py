@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Optional, TypedDict, Union
+from typing import TypedDict
 
 from typing_extensions import NotRequired, override
 
@@ -11,20 +11,20 @@ class CrontabDict(TypedDict):
     command: NotRequired[str]
     # handles cases like CRON_TZ=UTC
     env: NotRequired[str]
-    minute: NotRequired[Union[int, str]]
-    hour: NotRequired[Union[int, str]]
-    month: NotRequired[Union[int, str]]
-    day_of_month: NotRequired[Union[int, str]]
-    day_of_week: NotRequired[Union[int, str]]
-    comments: NotRequired[List[str]]
+    minute: NotRequired[int | str]
+    hour: NotRequired[int | str]
+    month: NotRequired[int | str]
+    day_of_month: NotRequired[int | str]
+    day_of_week: NotRequired[int | str]
+    comments: NotRequired[list[str]]
     special_time: NotRequired[str]
 
 
 # for compatibility, also keeps a dict of command -> crontab dict
 class CrontabFile:
-    commands: List[CrontabDict]
+    commands: list[CrontabDict]
 
-    def __init__(self, input_dict: Optional[Dict[str, CrontabDict]] = None):
+    def __init__(self, input_dict: dict[str, CrontabDict] | None = None):
         super().__init__()
         self.commands = []
         if input_dict:
@@ -46,11 +46,11 @@ class CrontabFile:
         return {item.get("command") or item.get("env"): item for item in self.commands}
 
     def get_command(
-        self, command: Optional[str] = None, name: Optional[str] = None
-    ) -> Optional[CrontabDict]:
+        self, command: str | None = None, name: str | None = None
+    ) -> CrontabDict | None:
         assert command or name, "Either command or name must be provided"
 
-        name_comment = "# pyinfra-name={0}".format(name)
+        name_comment = f"# pyinfra-name={name}"
         for cmd in self.commands:
             if "command" not in cmd:
                 continue
@@ -60,16 +60,16 @@ class CrontabFile:
                 return cmd
         return None
 
-    def get_env(self, env: str) -> Optional[CrontabDict]:
+    def get_env(self, env: str) -> CrontabDict | None:
         for cmd in self.commands:
             if cmd.get("env") == env:
                 return cmd
         return None
 
-    def get(self, item: str) -> Optional[CrontabDict]:
+    def get(self, item: str) -> CrontabDict | None:
         return self.get_command(command=item, name=item) or self.get_env(item)
 
-    def __getitem__(self, item) -> Optional[CrontabDict]:
+    def __getitem__(self, item) -> CrontabDict | None:
         return self.get(item)
 
     @override
@@ -164,7 +164,7 @@ class Crontab(FactBase[CrontabFile]):
     @override
     def command(self, user=None):
         if user:
-            return "crontab -l -u {0} || true".format(user)
+            return f"crontab -l -u {user} || true"
         return "crontab -l || true"
 
     @override

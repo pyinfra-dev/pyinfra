@@ -48,7 +48,12 @@ scripts/dev-format.sh
 
 ### Commit Messages
 
-Please try to use consistent commit messages, look at the [recent history](https://github.com/pyinfra-dev/pyinfra/commits/) for examples. PRs that follow this will be rebased, PRs that do not will be squashed.
+Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+standard. PRs that follow this will be rebased, PRs that do not will be squashed.
+
+The following scopes are allowed: `api`, `cli`, `operations`, `facts`, `connectors`. With the last 
+three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
+
 
 ### Tests
 
