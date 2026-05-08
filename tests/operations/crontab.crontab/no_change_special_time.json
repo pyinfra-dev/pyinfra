@@ -1,0 +1,18 @@
+{
+    "args": ["this_is_a_command"],
+    "kwargs": {
+        "special_time": "@reboot"
+    },
+    "facts": {
+        "crontab.Crontab": {
+            "user=None": {
+                "this_is_a_command": {
+                    "special_time": "@reboot",
+                    "comments": []
+                }
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "crontab this_is_a_command exists"
+}
