@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
 
 import pyinfra
-from pyinfra.api import Config, Host, MaskString, State, StringCommand
+from pyinfra.api import Config, Host, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.context import ctx_state
@@ -403,7 +403,7 @@ class TestSSHConnector(TestCase):
         host = inventory.get_host("somehost")
         host.connect()
 
-        command = StringCommand("echo", MaskString("top-secret-stuff"))
+        command = StringCommand("echo", HiddenValue("top-secret-stuff"))
         fake_stdout.channel.recv_exit_status.return_value = 0
 
         out = host.run_shell_command(command, print_output=True, print_input=True)

@@ -11,7 +11,7 @@ import gevent
 
 from pyinfra import logger
 from pyinfra.api.output import echo, format_text
-from pyinfra.api import MaskString, QuoteString, StringCommand
+from pyinfra.api import HiddenValue, QuoteString, StringCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
@@ -448,7 +448,7 @@ def make_unix_command(
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
                 StringCommand(
                     SUDO_ASKPASS_ENV_VAR,
-                    StringCommand(QuoteString(MaskString(_sudo_password))).get_raw_value(),
+                    StringCommand(QuoteString(HiddenValue(_sudo_password))).get_raw_value(),
                     _separator="=",
                 ),
             ],
@@ -478,7 +478,7 @@ def make_unix_command(
                     "env",
                     StringCommand(
                         SU_ASKPASS_ENV_VAR,
-                        StringCommand(QuoteString(MaskString(_su_password))).get_raw_value(),
+                        StringCommand(QuoteString(HiddenValue(_su_password))).get_raw_value(),
                         _separator="=",
                     ),
                     QuoteString(_su_askpass_path),

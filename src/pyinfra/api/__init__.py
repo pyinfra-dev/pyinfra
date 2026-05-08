@@ -5,8 +5,9 @@ from .command import (  # noqa: F401
     QuoteString,
     RsyncCommand,
     StringCommand,
+    MaskString,
 )
-from .maskstring import MaskString
+from .hiddenvalue import HiddenValue
 from .config import Config  # noqa: F401 # pragma: no cover
 from .deploy import deploy  # noqa: F401 # pragma: no cover
 from .exceptions import (  # noqa: F401

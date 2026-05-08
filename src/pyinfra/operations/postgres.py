@@ -17,7 +17,7 @@ See example/postgresql.py for detailed example
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import MaskString, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, QuoteString, StringCommand, operation
 from pyinfra.facts.postgres import (
     PostgresDatabases,
     PostgresRoles,
@@ -160,7 +160,7 @@ def role(
         if password:
             sql_bits.append(
                 StringCommand(
-                    "PASSWORD", StringCommand("'", MaskString(password), "'", _separator="")
+                    "PASSWORD", StringCommand("'", HiddenValue(password), "'", _separator="")
                 )
             )
 
@@ -202,7 +202,7 @@ def role(
         if password:
             sql_bits.append(
                 StringCommand(
-                    "PASSWORD", StringCommand("'", MaskString(password), "'", _separator="")
+                    "PASSWORD", StringCommand("'", HiddenValue(password), "'", _separator="")
                 )
             )
             should_execute = True

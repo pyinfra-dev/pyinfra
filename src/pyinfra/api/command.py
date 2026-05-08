@@ -9,9 +9,10 @@ import gevent
 from typing_extensions import Unpack, override
 
 from pyinfra.context import LocalContextObject, ctx_config, ctx_host
-from .maskstring import MaskString
+from .hiddenvalue import HiddenValue
 
 from .arguments import ConnectorArguments
+import warnings
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -54,10 +55,16 @@ def make_formatted_string_command(string: str, *args, **kwargs) -> StringCommand
     return StringCommand(*string_bits)
 
 
-class QuoteString:
-    obj: str | StringCommand
+class MaskString(str):
+    def __new__(cls, s):
+        warnings.warn("MaskString is deprecated please switch to HiddenValue")
+        return super().__new__(s)
 
-    def __init__(self, obj: str | StringCommand):
+
+class QuoteString:
+    obj: str | StringCommand | HiddenValue
+
+    def __init__(self, obj: str | StringCommand | HiddenValue):
         self.obj = obj
 
     @override
@@ -112,8 +119,12 @@ class StringCommand(PyinfraCommand):
             if isinstance(bit, StringCommand):
                 bit = bit_accessor(bit)
 
-            if unmask and isinstance(bit, MaskString):
-                bit = bit.unmask()
+            if unmask:
+                if isinstance(bit, HiddenValue):
+                    bit = bit.unmask()
+            else:
+                if isinstance(bit, MaskString):
+                    bit = "*MASKED*"
 
             if not isinstance(bit, str):
                 bit = f"{bit}"

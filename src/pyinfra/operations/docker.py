@@ -7,7 +7,7 @@ as inventory directly.
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
     DockerAuths,
     DockerContainer,
@@ -750,7 +750,7 @@ def login(
 
     command_bits: list = [
         "printf '%s'",
-        QuoteString(MaskString(password)),
+        QuoteString(HiddenValue(password)),
         "| docker login --username",
         QuoteString(username),
         "--password-stdin",
