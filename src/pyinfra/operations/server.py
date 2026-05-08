@@ -29,6 +29,7 @@ from pyinfra.facts.server import (
     Os,
     Sysctl,
     Timezone,
+    Uptime,
     Users,
     Which,
 )
@@ -78,6 +79,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
             reboot_timeout=600,
         )
     """
+    pre_reboot_uptime: list[int] = []
 
     # Remove this now, before we reboot the server - if the reboot fails (expected or
     # not) we'll error if we don't clean this up now. Will simply be re-uploaded if
@@ -86,6 +88,11 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         remove_any_sudo_askpass_file(host)
 
     yield FunctionCommand(remove_any_askpass_file, (), {})
+
+    def capture_uptime(state, host):
+        pre_reboot_uptime.append(host.get_fact(Uptime))
+
+    yield FunctionCommand(capture_uptime, (), {})
 
     yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
 
@@ -102,10 +109,25 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         host.disconnect()  # make sure we are properly disconnected
         retries = 0
 
+        pre_uptime = pre_reboot_uptime[0]
+
         while True:
             host.connect(show_errors=False)
-            if host.connected:
+
+            if not host.connected:
+                logger.debug("Waiting for host to become reachable...")
+                continue
+
+            post_uptime = host.get_fact(Uptime)
+            logger.debug(
+                f"Connected (current_uptime={post_uptime}s, pre_reboot_uptime={pre_uptime}s)"
+            )
+
+            if post_uptime < pre_uptime + delay:
+                logger.debug("Reboot confirmed.")
                 break
+
+            logger.debug("Host reachable but uptime unchanged; reboot still in progress")
 
             if retries > max_retries:
                 raise Exception(
