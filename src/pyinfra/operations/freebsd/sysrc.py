@@ -4,7 +4,6 @@ Manipulate system rc files.
 
 from __future__ import annotations
 
-from typing_extensions import List, Optional, Union
 
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
@@ -21,7 +20,7 @@ SYSRC_DEL: str = "del"
 def sysrc(
     parameter: str,
     value: str,
-    jail: Optional[str] = None,
+    jail: str | None = None,
     command: str = SYSRC_SET,
     overwrite: bool = False,
 ):
@@ -55,7 +54,7 @@ def sysrc(
         )
     """
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.extend(["sysrc", "-i"])
 

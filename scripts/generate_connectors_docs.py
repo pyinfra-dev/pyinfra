@@ -20,7 +20,7 @@ def build_connectors_docs():
     for connector_name, connector in get_all_connectors().items():
         lines = []
 
-        full_title = "``@{0}`` Connector".format(connector_name)
+        full_title = f"``@{connector_name}`` Connector"
         lines.append(full_title)
         lines.append(title_line("-", full_title))
         lines.append("")
@@ -99,7 +99,7 @@ def build_connectors_docs():
             lines.append("")
 
         module_filename = path.join(docs_dir, "connectors", f"{connector_name}.rst")
-        print("--> Writing {0}".format(module_filename))
+        print(f"--> Writing {module_filename}")
 
         with open(module_filename, "w", encoding="utf-8") as outfile:
             outfile.write("\n".join(lines))

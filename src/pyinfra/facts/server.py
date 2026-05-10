@@ -6,7 +6,8 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Optional, Union
+from collections.abc import Iterable
 
 from dateutil.parser import parse as parse_date
 from distro import distro
@@ -177,7 +178,7 @@ class Which(FactBase[Optional[str]]):
 
     @override
     def command(self, command):
-        return "command -v {0} || true".format(command)
+        return f"command -v {command} || true"
 
 
 class Date(FactBase[datetime]):
@@ -225,7 +226,7 @@ class MountsDict(TypedDict):
     options: list[str]
 
 
-class Mounts(FactBase[Dict[str, MountsDict]]):
+class Mounts(FactBase[dict[str, MountsDict]]):
     """
     Returns a dictionary of mounted filesystems and information.
 
@@ -319,7 +320,7 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
+class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
     """
     Returns the process occupying a port and its PID.
 
@@ -354,7 +355,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             return f"netstat -{proto_flag}lnp 2>/dev/null | awk '$4 ~ /:{port}$/'"
 
     @override
-    def process(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def process(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         if self._tool == "ss":
             return self._process_ss(output)
         elif self._tool == "netstat":
@@ -363,7 +364,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             return self._process_sockstat(output)
         return None, None
 
-    def _process_ss(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_ss(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         for line in output:
             if '"' not in line or "pid=" not in line:
                 continue
@@ -372,7 +373,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             return (proc, pid)
         return None, None
 
-    def _process_netstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_netstat(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         for line in output:
             line = line.strip()
             if not line:
@@ -386,7 +387,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
                     break
         return None, None
 
-    def _process_sockstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_sockstat(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         for line in output:
             line = line.strip()
             if not line or line.startswith("USER"):
@@ -397,7 +398,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
         return None, None
 
 
-class Ports(FactBase[List[dict[str, Union[int, str]]]]):
+class Ports(FactBase[list[dict[str, int | str]]]):
     """
     Returns a list of all listening ports with their processes and PIDs.
 
@@ -426,7 +427,7 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
             return "netstat -tunp 2>/dev/null || true"
 
     @override
-    def process(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+    def process(self, output: Iterable[str]) -> list[dict[str, int | str]]:
         if self._tool == "ss":
             return self._process_ss(output)
         elif self._tool == "netstat":
@@ -435,8 +436,8 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
             return self._process_sockstat(output)
         return []
 
-    def _process_ss(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
-        results: List[dict[str, Union[int, str]]] = []
+    def _process_ss(self, output: Iterable[str]) -> list[dict[str, int | str]]:
+        results: list[dict[str, int | str]] = []
 
         for line in output:
             if '"' not in line or "pid=" not in line:
@@ -471,8 +472,8 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
                     results.append({"port": port, "ip": ip, "protocol": protocol, "process": proc})
         return results
 
-    def _process_netstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
-        results: List[dict[str, Union[int, str]]] = []
+    def _process_netstat(self, output: Iterable[str]) -> list[dict[str, int | str]]:
+        results: list[dict[str, int | str]] = []
         for line in output:
             line = line.strip()
             if not line:
@@ -498,8 +499,8 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
                         break
         return results
 
-    def _process_sockstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
-        results: List[dict[str, Union[int, str]]] = []
+    def _process_sockstat(self, output: Iterable[str]) -> list[dict[str, int | str]]:
+        results: list[dict[str, int | str]] = []
         for line in output:
             line = line.strip()
             if not line or line.startswith("USER"):
@@ -700,7 +701,7 @@ class Sysctl(FactBase):
         return sysctls
 
 
-class Groups(FactBase[List[str]]):
+class Groups(FactBase[list[str]]):
     """
     Returns a list of groups on the system.
     """
@@ -810,7 +811,7 @@ class Users(FactBase):
         return users
 
 
-class AuthorizedKeys(FactBase[List[str]]):
+class AuthorizedKeys(FactBase[list[str]]):
     """
     Returns the SSH public keys listed in a user's ``~/.ssh/authorized_keys`` file as a
     list of full key strings. Empty lines and lines starting with ``#`` are skipped; the
@@ -827,14 +828,14 @@ class AuthorizedKeys(FactBase[List[str]]):
     default = list
 
     @override
-    def command(self, user: str, path: Optional[str] = None) -> str:
+    def command(self, user: str, path: str | None = None) -> str:
         # Tilde expansion resolves the user's home without another fact round-trip.
-        target = path if path is not None else "~{0}/.ssh/authorized_keys".format(user)
-        return "cat {0} 2>/dev/null || true".format(target)
+        target = path if path is not None else f"~{user}/.ssh/authorized_keys"
+        return f"cat {target} 2>/dev/null || true"
 
     @override
-    def process(self, output: Iterable[str]) -> List[str]:
-        keys: List[str] = []
+    def process(self, output: Iterable[str]) -> list[str]:
+        keys: list[str] = []
         for raw in output:
             line = raw.strip()
             if not line or line.startswith("#"):
@@ -844,10 +845,10 @@ class AuthorizedKeys(FactBase[List[str]]):
 
 
 class LinuxDistributionDict(TypedDict):
-    name: Optional[str]
-    major: Optional[int]
-    minor: Optional[int]
-    release_meta: Dict
+    name: str | None
+    major: int | None
+    minor: int | None
+    release_meta: dict
 
 
 class LinuxDistribution(FactBase[LinuxDistributionDict]):
@@ -970,7 +971,7 @@ class LinuxName(ShortFactBase[str]):
 
 
 class SelinuxDict(TypedDict):
-    mode: Optional[str]
+    mode: str | None
 
 
 class Selinux(FactBase[SelinuxDict]):
@@ -1013,7 +1014,7 @@ class Selinux(FactBase[SelinuxDict]):
         return selinux_info
 
 
-class LinuxGui(FactBase[List[str]]):
+class LinuxGui(FactBase[list[str]]):
     """
     Returns a list of available Linux GUIs.
     """
@@ -1056,7 +1057,7 @@ class HasGui(ShortFactBase[bool]):
         return len(data) > 0
 
 
-class Locales(FactBase[List[str]]):
+class Locales(FactBase[list[str]]):
     """
     Returns installed locales on the target host.
 
@@ -1219,7 +1220,7 @@ echo "no_reboot_required"
         return list(output)[0].strip() == "reboot_required"
 
 
-class Processes(FactBase["Dict[int, ProcessDict]"]):
+class Processes(FactBase[dict[int, ProcessDict]]):
     """
     Returns a dictionary of running processes keyed by PID.
 

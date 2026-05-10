@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Optional, Tuple, TypedDict
+from typing import Any, Optional, TypedDict
+from collections.abc import Iterable
 
 from typing_extensions import override
 
 from pyinfra.api import FactBase
 
-BootEntry = Tuple[bool, str]
-EFIBootMgrInfoDict = TypedDict(
-    "EFIBootMgrInfoDict",
-    {
-        "BootNext": Optional[int],
-        "BootCurrent": Optional[int],
-        "Timeout": Optional[int],
-        "BootOrder": Optional[List[int]],
-        "Entries": Dict[int, BootEntry],
-    },
-)
+BootEntry = tuple[bool, str]
+
+
+class EFIBootMgrInfoDict(TypedDict):
+    BootNext: int | None
+    BootCurrent: int | None
+    Timeout: int | None
+    BootOrder: list[int] | None
+    Entries: dict[int, BootEntry]
 
 
 class EFIBootMgr(FactBase[Optional[EFIBootMgrInfoDict]]):
@@ -50,7 +49,7 @@ class EFIBootMgr(FactBase[Optional[EFIBootMgrInfoDict]]):
         return "efibootmgr || true"
 
     @override
-    def process(self, output: Iterable[str]) -> Optional[EFIBootMgrInfoDict]:
+    def process(self, output: Iterable[str]) -> EFIBootMgrInfoDict | None:
         # This parsing code closely follows the printing code of efibootmgr
         # at <https://github.com/rhboot/efibootmgr/blob/main/src/efibootmgr.c#L2020-L2048>
 
@@ -64,7 +63,7 @@ class EFIBootMgr(FactBase[Optional[EFIBootMgrInfoDict]]):
 
         output = iter(output)
 
-        line: Optional[str] = next(output, None)
+        line: str | None = next(output, None)
 
         if line is None:
             # efibootmgr run on a non-UEFI system, likely printed

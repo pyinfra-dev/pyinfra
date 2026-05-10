@@ -12,6 +12,9 @@
         },
         "files.Link": {
             "path=homedir": false
+        },
+        "server.Which": {
+            "command=useradd": "/usr/sbin/useradd"
         }
     },
     "exception": {

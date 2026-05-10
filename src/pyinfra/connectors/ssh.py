@@ -3,9 +3,10 @@ from __future__ import annotations
 import os
 from random import uniform
 from shutil import which
-from socket import error as socket_error, gaierror
+from socket import gaierror
 from time import sleep
-from typing import IO, TYPE_CHECKING, Any, Iterable, Optional, Protocol, Tuple
+from typing import IO, TYPE_CHECKING, Any, Protocol
+from collections.abc import Iterable
 
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
 from paramiko.agent import Agent
@@ -163,12 +164,12 @@ class SSHConnector(BaseConnector):
     data_meta = connector_data_meta
     data: ConnectorData
 
-    client: Optional[SSHClient] = None
+    client: SSHClient | None = None
 
     @override
     @staticmethod
     def make_names_data(name):
-        yield "@ssh/{0}".format(name), {"ssh_hostname": name}, []
+        yield f"@ssh/{name}", {"ssh_hostname": name}, []
 
     def make_paramiko_kwargs(self) -> dict[str, Any]:
         kwargs = {
@@ -221,7 +222,7 @@ class SSHConnector(BaseConnector):
             while True:
                 try:
                     return self._connect()
-                except (SSHException, gaierror, socket_error, EOFError):
+                except (OSError, SSHException, gaierror, EOFError):
                     if retries == 0:
                         raise
                     retries -= 1
@@ -232,7 +233,7 @@ class SSHConnector(BaseConnector):
             raise_connect_error(self.host, "SSH error", e)
         except gaierror as e:
             raise_connect_error(self.host, "Could not resolve hostname", e)
-        except socket_error as e:
+        except OSError as e:
             raise_connect_error(self.host, "Could not connect", e)
         except EOFError as e:
             raise_connect_error(self.host, "EOF error", e)
@@ -262,11 +263,9 @@ class SSHConnector(BaseConnector):
                 if key == "pkey" and value:
                     auth_kwargs["key"] = self.data["ssh_key"]
 
-            auth_args = ", ".join(
-                "{0}={1}".format(key, value) for key, value in auth_kwargs.items()
-            )
+            auth_args = ", ".join(f"{key}={value}" for key, value in auth_kwargs.items())
 
-            raise_connect_error(self.host, "Authentication error ({0})".format(auth_args), e)
+            raise_connect_error(self.host, f"Authentication error ({auth_args})", e)
 
         except BadHostKeyException as e:
             remove_entry = e.hostname
@@ -364,8 +363,8 @@ class SSHConnector(BaseConnector):
         command: StringCommand,
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
-    ) -> Tuple[bool, CommandOutput]:
+        **arguments: Unpack[ConnectorArguments],
+    ) -> tuple[bool, CommandOutput]:
         """
         Execute a command on the specified host.
 
@@ -389,7 +388,7 @@ class SSHConnector(BaseConnector):
         _stdin = arguments.pop("_stdin", None)
         _success_exit_codes = arguments.pop("_success_exit_codes", None)
 
-        def execute_command() -> Tuple[int, CommandOutput]:
+        def execute_command() -> tuple[int, CommandOutput]:
             unix_command = make_unix_command_for_host(self.state, self.host, command, **arguments)
             actual_command = unix_command.get_raw_value()
 
@@ -401,7 +400,7 @@ class SSHConnector(BaseConnector):
             )
 
             if print_input:
-                echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
+                echo(f"{self.host.print_prefix}>>> {unix_command}", err=True)
 
             # Run it! Get stdout, stderr & the underlying channel
             assert self.client is not None
@@ -456,16 +455,14 @@ class SSHConnector(BaseConnector):
                 return SCPClient(transport)
             else:
                 raise ConnectError(
-                    "Unsupported file transfer protocol: {0}".format(
-                        self.data["ssh_file_transfer_protocol"],
-                    ),
+                    f"Unsupported file transfer protocol: {self.data['ssh_file_transfer_protocol']}",
                 )
         except SSHException as e:
             raise ConnectError(
                 (
                     "Unable to establish SFTP connection. Check that the SFTP subsystem "
-                    "for the SSH service at {0} is enabled."
-                ).format(self.host),
+                    f"for the SSH service at {self.host} is enabled."
+                ),
             ) from e
 
     def _get_file(self, remote_filename: str, filename_or_io: str | IO):
@@ -481,7 +478,7 @@ class SSHConnector(BaseConnector):
         remote_temp_filename=None,
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ) -> bool:
         """
         Download a file from the remote host using SFTP. Supports download files
@@ -509,7 +506,7 @@ class SSHConnector(BaseConnector):
             )
 
             if copy_status is False:
-                logger.error("File download copy temp error: {0}".format(output.stderr))
+                logger.error(f"File download copy temp error: {output.stderr}")
                 return False
 
             try:
@@ -526,7 +523,7 @@ class SSHConnector(BaseConnector):
                 )
 
             if remove_status is False:
-                logger.error("File download remove temp error: {0}".format(output.stderr))
+                logger.error(f"File download remove temp error: {output.stderr}")
                 return False
 
         else:
@@ -534,7 +531,7 @@ class SSHConnector(BaseConnector):
 
         if print_output:
             echo(
-                "{0}file downloaded: {1}".format(self.host.print_prefix, remote_filename),
+                f"{self.host.print_prefix}file downloaded: {remote_filename}",
                 err=True,
             )
 
@@ -568,7 +565,7 @@ class SSHConnector(BaseConnector):
         remote_temp_filename=None,
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ) -> bool:
         """
         Upload file-ios to the specified host using SFTP. Supports uploading files
@@ -607,7 +604,7 @@ class SSHConnector(BaseConnector):
                 )
 
                 if status is False:
-                    logger.error("Error on handover to sudo/su user: {0}".format(output.stderr))
+                    logger.error(f"Error on handover to sudo/su user: {output.stderr}")
                     return False
 
             # Execute run_shell_command w/sudo, etc
@@ -621,7 +618,7 @@ class SSHConnector(BaseConnector):
             )
 
             if status is False:
-                logger.error("File upload error: {0}".format(output.stderr))
+                logger.error(f"File upload error: {output.stderr}")
                 return False
 
             # Delete the temporary file now that we've successfully copied it
@@ -633,7 +630,7 @@ class SSHConnector(BaseConnector):
             )
 
             if status is False:
-                logger.error("Unable to remove temporary file: {0}".format(output.stderr))
+                logger.error(f"Unable to remove temporary file: {output.stderr}")
                 return False
 
         # No sudo and no su_user, so just upload it!
@@ -642,7 +639,7 @@ class SSHConnector(BaseConnector):
 
         if print_output:
             echo(
-                "{0}file uploaded: {1}".format(self.host.print_prefix, remote_filename),
+                f"{self.host.print_prefix}file uploaded: {remote_filename}",
                 err=True,
             )
 
@@ -669,7 +666,7 @@ class SSHConnector(BaseConnector):
         flags: Iterable[str],
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ):
         _sudo = arguments.pop("_sudo", False)
         _sudo_user = arguments.pop("_sudo_user", False)
@@ -677,7 +674,7 @@ class SSHConnector(BaseConnector):
         hostname = self.data["ssh_hostname"] or self.host.name
         user = self.data["ssh_user"]
         if user:
-            user = "{0}@".format(user)
+            user = f"{user}@"
 
         ssh_flags = []
         # To avoid asking for interactive input, specify BatchMode=yes
@@ -711,17 +708,17 @@ class SSHConnector(BaseConnector):
 
         port = self.data["ssh_port"]
         if port:
-            ssh_flags.append("-p {0}".format(port))
+            ssh_flags.append(f"-p {port}")
 
         ssh_key = self.data["ssh_key"]
         if ssh_key:
-            ssh_flags.append("-i {0}".format(ssh_key))
+            ssh_flags.append(f"-i {ssh_key}")
 
         remote_rsync_command = "rsync"
         if _sudo:
             remote_rsync_command = "sudo rsync"
             if _sudo_user:
-                remote_rsync_command = "sudo -u {0} rsync".format(_sudo_user)
+                remote_rsync_command = f"sudo -u {_sudo_user} rsync"
 
         rsync_command = (
             "rsync {rsync_flags} "
@@ -739,7 +736,7 @@ class SSHConnector(BaseConnector):
         )
 
         if print_input:
-            echo("{0}>>> {1}".format(self.host.print_prefix, rsync_command), err=True)
+            echo(f"{self.host.print_prefix}>>> {rsync_command}", err=True)
 
         return_code, output = run_local_process(
             rsync_command,
@@ -749,6 +746,6 @@ class SSHConnector(BaseConnector):
 
         status = return_code == 0
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         return True

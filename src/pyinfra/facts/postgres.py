@@ -19,21 +19,21 @@ def make_psql_command(
     target_bits: list[str] = []
 
     if password:
-        target_bits.append(MaskString('PGPASSWORD="{0}"'.format(password)))
+        target_bits.append(MaskString(f'PGPASSWORD="{password}"'))
 
     target_bits.append(executable)
 
     if database:
-        target_bits.append("-d {0}".format(database))
+        target_bits.append(f"-d {database}")
 
     if user:
-        target_bits.append("-U {0}".format(user))
+        target_bits.append(f"-U {user}")
 
     if host:
-        target_bits.append("-h {0}".format(host))
+        target_bits.append(f"-h {host}")
 
     if port:
-        target_bits.append("-p {0}".format(port))
+        target_bits.append(f"-p {port}")
 
     return StringCommand(*target_bits)
 

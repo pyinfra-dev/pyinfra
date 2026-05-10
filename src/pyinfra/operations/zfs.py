@@ -45,7 +45,7 @@ def dataset(
 
     """
 
-    noop_msg = "{0} is already {1}".format(dataset_name, "present" if present else "absent")
+    noop_msg = f"{dataset_name} is already {'present' if present else 'absent'}"
 
     properties.update(extra_props)
 
@@ -54,32 +54,31 @@ def dataset(
     existing_dataset = datasets.get(dataset_name)
 
     if present and not existing_dataset:
-        args = ["-o {0}={1}".format(prop, value) for prop, value in properties.items()]
+        args = [f"-o {prop}={value}" for prop, value in properties.items()]
         if recursive:
             args.append("-p")
         if sparse:
             args.append("-s")
         if volume_size:
-            args.append("-V {0}".format(volume_size))
+            args.append(f"-V {volume_size}")
 
         args.sort()  # dicts are unordered, so make sure the test results are deterministic
 
-        yield "zfs create {0} {1}".format(" ".join(args), dataset_name)
+        yield f"zfs create {' '.join(args)} {dataset_name}"
 
     elif present and existing_dataset:
         prop_args = [
-            "{0}={1}".format(prop, value)
-            for prop, value in properties.items() - existing_dataset.items()
+            f"{prop}={value}" for prop, value in properties.items() - existing_dataset.items()
         ]
         prop_args.sort()
         if prop_args:
-            yield "zfs set {0} {1}".format(" ".join(prop_args), dataset_name)
+            yield f"zfs set {' '.join(prop_args)} {dataset_name}"
         else:
             host.noop(noop_msg)
 
     elif existing_dataset and not present:
         recursive_arg = "-r" if recursive else ""
-        yield "zfs destroy {0} {1}".format(recursive_arg, dataset_name)
+        yield f"zfs destroy {recursive_arg} {dataset_name}"
 
     else:
         host.noop(noop_msg)
@@ -110,10 +109,10 @@ def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extr
         yield from dataset._inner(snapshot_name, present=present, properties=properties)
 
     else:
-        args = ["-o {0}={1}".format(prop, value) for prop, value in properties.items()]
+        args = [f"-o {prop}={value}" for prop, value in properties.items()]
         if recursive:
             args.append("-r")
-        yield "zfs snap {0} {1}".format(" ".join(args), snapshot_name)
+        yield f"zfs snap {' '.join(args)} {snapshot_name}"
 
 
 @operation()

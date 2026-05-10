@@ -10,12 +10,7 @@ def generate_api_docs():
     docs_dir = path.abspath(path.join(this_dir, "..", "docs"))
     pyinfra_dir = path.abspath(path.join(this_dir, "..", "src", "pyinfra"))
 
-    api_doc_command = (
-        "uv run sphinx-apidoc -e -M -f -o {0}/apidoc/ {1} {1}/facts {1}/operations {1}/connectors"
-    ).format(
-        docs_dir,
-        pyinfra_dir,
-    )
+    api_doc_command = f"uv run sphinx-apidoc -e -M -f -o {docs_dir}/apidoc/ {pyinfra_dir} {pyinfra_dir}/facts {pyinfra_dir}/operations {pyinfra_dir}/connectors"
 
     local.shell(
         (api_doc_command,),
@@ -23,7 +18,7 @@ def generate_api_docs():
     )
 
     for filename in ("modules.rst", "pyinfra.rst", "pyinfra.api.rst"):
-        remove("{0}/apidoc/{1}".format(docs_dir, filename))
+        remove(f"{docs_dir}/apidoc/{filename}")
 
 
 if __name__ == "__main__":
