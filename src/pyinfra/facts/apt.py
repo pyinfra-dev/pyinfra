@@ -9,6 +9,10 @@ from typing_extensions import TypedDict, override
 from pyinfra.api import FactBase
 
 from .gpg import GpgFactBase
+from .util.packaging import parse_packages
+
+APT_PACKAGE_NAME_REGEX = r"[a-zA-Z0-9\+\-\.]+(?::[a-zA-Z0-9]+)?"
+APT_PACKAGE_VERSION_REGEX = r"[a-zA-Z0-9:~\.\-\+]+"
 
 
 @dataclass(frozen=True)
@@ -368,6 +372,50 @@ class AptSources(FactBase):
 
         flush()  # flush the final buffer
         return repos
+
+
+class AptPackages(FactBase):
+    """
+    Returns a dict of installed apt packages, keyed by name with a list of
+    versions as the value:
+
+    .. code:: python
+
+        {
+            "package_name": ["version"],
+        }
+
+    The list-of-versions shape mirrors :class:`pyinfra.facts.deb.DebPackages`
+    so callers can swap between the two without reshaping their code. The
+    main reason to reach for ``AptPackages`` is to surface packages whose
+    presence is more reliably visible from ``apt`` than from ``dpkg`` (for
+    example, packages with an architecture suffix like ``foo:i386``).
+    """
+
+    @override
+    def command(self) -> str:
+        # ``apt list --installed`` writes a "Listing..." progress notice on
+        # stderr in modern apt. Suppress it so the parser only sees the
+        # actual package lines on stdout.
+        return "apt list --installed 2>/dev/null"
+
+    @override
+    def requires_command(self) -> str:
+        return "apt"
+
+    default = dict
+
+    # Lines look like: ``name/source-info,now version arch [installed,flags]``
+    # The leading anchor and ``[installed`` tail filter out the optional
+    # "Listing..." header and any other noise.
+    regex = r"^({0})/\S+\s+({1})\s+\S+\s+\[installed".format(
+        APT_PACKAGE_NAME_REGEX,
+        APT_PACKAGE_VERSION_REGEX,
+    )
+
+    @override
+    def process(self, output):
+        return parse_packages(self.regex, output)
 
 
 class AptKeys(GpgFactBase):
