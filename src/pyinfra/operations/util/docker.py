@@ -319,7 +319,7 @@ def _create_volume(**kwargs):
 
 
 def _remove_volume(**kwargs):
-    return f"docker image rm {kwargs['volume']}"
+    return f"docker volume rm {kwargs['volume']}"
 
 
 def _create_network(**kwargs):
