@@ -113,7 +113,7 @@ def _has_package(
         if isinstance(value, PackageInfo):
             if not pkg_versions:
                 return True
-            return any(version == value.installed_version for version in pkg_versions)
+            return any(version in value.installed_versions for version in pkg_versions)
         if not pkg_versions:
             return True
         return any(version in value for version in pkg_versions)
@@ -162,13 +162,14 @@ def _format_version(
     """Return a human-readable version string for noop messages.
 
     For the legacy ``set[str]`` shape, multiple versions are sorted so the
-    noop output is deterministic across runs.
+    noop output is deterministic across runs. For :class:`PackageInfo`,
+    ``installed_versions`` is already sorted by ``build_package_map``.
     """
     if pkg_name not in current_packages:
         return ""
     value = current_packages[pkg_name]
     if isinstance(value, PackageInfo):
-        return value.installed_version
+        return ",".join(value.installed_versions)
     return ",".join(sorted(value))
 
 

@@ -339,7 +339,9 @@ class TestEnsurePackagesDualFormat(TestCase):
 
     def test_new_format_installed_uses_status(self):
         current = {
-            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
         }
         commands, host = self._run(current, latest=False)
         assert commands == []
@@ -349,12 +351,12 @@ class TestEnsurePackagesDualFormat(TestCase):
         current = {
             "vim": PackageInfo(
                 name="vim",
-                installed_version="9.0",
+                installed_versions=("9.0",),
                 available_version="9.1",
                 status=PackageStatus.UPGRADEABLE,
             ),
             "git": PackageInfo(
-                name="git", installed_version="2.40", status=PackageStatus.INSTALLED
+                name="git", installed_versions=("2.40",), status=PackageStatus.INSTALLED
             ),
         }
         commands, host = self._run(current, packages=("vim", "git"), latest=True)
@@ -365,7 +367,7 @@ class TestEnsurePackagesDualFormat(TestCase):
         current = {
             "vim": PackageInfo(
                 name="vim",
-                installed_version="9.0",
+                installed_versions=("9.0",),
                 available_version="9.1",
                 status=PackageStatus.HELD,
             )
@@ -380,7 +382,9 @@ class TestEnsurePackagesDualFormat(TestCase):
 
     def test_new_format_versioned_match_is_noop(self):
         current = {
-            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
         }
         host = MagicMock()
         commands = list(
@@ -401,7 +405,9 @@ class TestEnsurePackagesDualFormat(TestCase):
 
     def test_new_format_versioned_mismatch_installs_pinned(self):
         current = {
-            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
         }
         host = MagicMock()
         commands = list(
@@ -423,7 +429,7 @@ class TestEnsurePackagesDualFormat(TestCase):
         current = {
             "vim": PackageInfo(
                 name="vim",
-                installed_version="9.0",
+                installed_versions=("9.0",),
                 available_version="9.1",
                 status=PackageStatus.UPGRADEABLE,
             )
@@ -447,7 +453,9 @@ class TestEnsurePackagesDualFormat(TestCase):
 
     def test_new_format_uninstall_removes_installed_package(self):
         current = {
-            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.INSTALLED)
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
         }
         commands, _ = self._run(current, present=False)
         assert commands == ["uninstall vim"]
@@ -455,7 +463,7 @@ class TestEnsurePackagesDualFormat(TestCase):
     def test_new_format_uninstall_held_package_proceeds(self):
         # HELD blocks auto-upgrade, not explicit removal: uninstall must still proceed.
         current = {
-            "vim": PackageInfo(name="vim", installed_version="9.0", status=PackageStatus.HELD)
+            "vim": PackageInfo(name="vim", installed_versions=("9.0",), status=PackageStatus.HELD)
         }
         commands, _ = self._run(current, present=False)
         assert commands == ["uninstall vim"]
@@ -464,3 +472,42 @@ class TestEnsurePackagesDualFormat(TestCase):
         commands, host = self._run({}, present=False)
         assert commands == []
         host.noop.assert_called_once_with("package vim is not installed")
+
+    def test_new_format_multi_version_noop_lists_all_versions(self):
+        # rpm-family installonly packages can have multiple installed versions.
+        current = {
+            "kernel": PackageInfo(
+                name="kernel",
+                installed_versions=("5.10.0-26", "6.1.0-13"),
+                status=PackageStatus.INSTALLED,
+            )
+        }
+        commands, host = self._run(current, packages=("kernel",), latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package kernel is installed (5.10.0-26,6.1.0-13)")
+
+    def test_new_format_multi_version_pinned_match_against_any_version(self):
+        # Pinning to a non-highest installed version still counts as installed.
+        current = {
+            "kernel": PackageInfo(
+                name="kernel",
+                installed_versions=("5.10.0-26", "6.1.0-13"),
+                status=PackageStatus.INSTALLED,
+            )
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["kernel=5.10.0-26"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=False,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        assert commands == []
+        host.noop.assert_called_once_with("package kernel is installed (5.10.0-26,6.1.0-13)")
