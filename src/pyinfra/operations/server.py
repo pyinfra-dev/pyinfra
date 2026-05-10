@@ -996,7 +996,7 @@ def user(
 
         if create_home:
             args.append("-m")
-        elif os_type != "FreeBSD":
+        elif os_type not in {"FreeBSD", "OpenBSD"}:
             args.append("-M")
 
         if password and os_type != "FreeBSD":
