@@ -114,20 +114,21 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         while True:
             host.connect(show_errors=False)
 
-            if not host.connected:
+            if host.connected:
+                post_uptime = host.get_fact(Uptime)
+                logger.debug(
+                    "Connected (current_uptime=%ss, pre_reboot_uptime=%ss)",
+                    post_uptime,
+                    pre_uptime,
+                )
+
+                if post_uptime < pre_uptime + delay:
+                    logger.debug("Reboot confirmed.")
+                    break
+
+                logger.debug("Host reachable but uptime unchanged; reboot still in progress")
+            else:
                 logger.debug("Waiting for host to become reachable...")
-                continue
-
-            post_uptime = host.get_fact(Uptime)
-            logger.debug(
-                f"Connected (current_uptime={post_uptime}s, pre_reboot_uptime={pre_uptime}s)"
-            )
-
-            if post_uptime < pre_uptime + delay:
-                logger.debug("Reboot confirmed.")
-                break
-
-            logger.debug("Host reachable but uptime unchanged; reboot still in progress")
 
             if retries > max_retries:
                 raise Exception(
