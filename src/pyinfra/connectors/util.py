@@ -1,18 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
-from gevent.subprocess import PIPE, Popen
 from typing import TYPE_CHECKING
-from collections.abc import Callable, Iterable
 
 import gevent
+from gevent.subprocess import PIPE, Popen
 
 from pyinfra import logger
-from pyinfra.api.output import echo, format_text
 from pyinfra.api import MaskString, QuoteString, StringCommand
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.output import echo, format_text
 from pyinfra.api.util import memoize
 
 if TYPE_CHECKING:
@@ -29,6 +29,11 @@ ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
+if [ -f "$0.${{PPID}}.called" ]; then
+    echo "sudo: 1 incorrect password attempt" >&2
+    exit 1
+fi
+touch "$0.${{PPID}}.called"
 printf '%s\n' "${1}"
 __EOF__
 chmod 755 "$temp"
@@ -199,18 +204,33 @@ def execute_command_with_sudo_retry(
 ) -> tuple[int, CommandOutput]:
     return_code, output = execute_command()
 
+    attempts = 0
     # If we failed look for a sudo password prompt line and re-submit using the sudo password. Look
     # at all lines here in case anything else gets printed, eg in:
     # https://github.com/pyinfra-dev/pyinfra/issues/1292
-    if return_code != 0 and output and output.combined_lines:
+    while return_code != 0 and output and output.combined_lines:
+        requires_password = False
         for line in reversed(output.combined_lines):
-            if line.line.strip() == "sudo: a password is required":
-                # If we need a password, ask the user for it and attach to the host
-                # internal connector data for use when executing future commands.
-                sudo_password = getpass(f"{host.print_prefix}sudo password: ")
-                host.connector_data["prompted_sudo_password"] = sudo_password
-                return_code, output = execute_command()
+            line_stripped = line.line.strip()
+
+            if line_stripped.startswith("sudo:") and "incorrect password attempt" in line_stripped:
                 break
+
+            if line_stripped == "sudo: a password is required":
+                if attempts != 0:
+                    break
+                requires_password = True
+                break
+
+        if requires_password:
+            # If we need a password, ask the user for it and attach to the host
+            # internal connector data for use when executing future commands.
+            sudo_password = getpass(f"{host.print_prefix}sudo password: ")
+            host.connector_data["prompted_sudo_password"] = sudo_password
+            return_code, output = execute_command()
+            attempts += 1
+        else:
+            break
 
     return return_code, output
 
@@ -237,7 +257,12 @@ def remove_any_sudo_askpass_file(host) -> None:
     sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
     if sudo_askpass_path:
         try:
-            host.run_shell_command(StringCommand("rm", "-f", QuoteString(sudo_askpass_path)))
+            wildcard_path = StringCommand(
+                QuoteString(sudo_askpass_path), ".*.called", _separator=""
+            )
+            host.run_shell_command(
+                StringCommand("rm", "-f", QuoteString(sudo_askpass_path), wildcard_path)
+            )
         except Exception as e:
             logger.debug("Could not remove sudo askpass file %s: %s", sudo_askpass_path, e)
         host.connector_data["sudo_askpass_path"] = None
@@ -245,7 +270,10 @@ def remove_any_sudo_askpass_file(host) -> None:
     su_askpass_path = host.connector_data.get("su_askpass_path")
     if su_askpass_path:
         try:
-            host.run_shell_command(StringCommand("rm", "-f", QuoteString(su_askpass_path)))
+            wildcard_path = StringCommand(QuoteString(su_askpass_path), ".*.called", _separator="")
+            host.run_shell_command(
+                StringCommand("rm", "-f", QuoteString(su_askpass_path), wildcard_path)
+            )
         except Exception as e:
             logger.debug("Could not remove su askpass file %s: %s", su_askpass_path, e)
         host.connector_data["su_askpass_path"] = None
@@ -388,7 +416,7 @@ def make_unix_command(
     command_bits: list[str | StringCommand | QuoteString] = []
 
     if _doas:
-        command_bits.extend(["doas", "-n"])
+        command_bits.extend(["env", "LC_ALL=C", "doas", "-n"])
 
         if _doas_user:
             command_bits.extend(["-u", QuoteString(_doas_user)])
@@ -403,12 +431,15 @@ def make_unix_command(
         command_bits.extend(
             [
                 "env",
+                "LC_ALL=C",
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
                 MaskString(
                     f"{SUDO_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_sudo_password)).get_raw_value()}"
                 ),
             ],
         )
+    elif _sudo:
+        command_bits.extend(["env", "LC_ALL=C"])
 
     if _sudo:
         command_bits.extend(["sudo", "-H"])
@@ -432,6 +463,7 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
+                    "LC_ALL=C",
                     MaskString(
                         f"{SU_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_su_password)).get_raw_value()}"
                     ),
@@ -439,6 +471,8 @@ def make_unix_command(
                     "|",
                 ],
             )
+        elif not _sudo and not _doas:
+            command_bits.extend(["env", "LC_ALL=C"])
 
         command_bits.append("su")
 
