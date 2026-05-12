@@ -4,13 +4,13 @@
     ],
     "facts": {
         "files.FindInFile": {
-            "interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*$": [
+            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*$": [
                 "# fr_FR.UTF-8 UTF-8"
             ],
-            "interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*": [
+            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^.*fr_FR.UTF-8[[:space:]]\\+.*": [
                 "# fr_FR.UTF-8 UTF-8"
             ],
-            "interpolate_variables=False, path=/etc/locale.gen, pattern=^# fr_FR.UTF-8 UTF-8$": [
+            "extended_regex=False, interpolate_variables=False, path=/etc/locale.gen, pattern=^# fr_FR.UTF-8 UTF-8$": [
                 "# fr_FR.UTF-8 UTF-8"
             ]
         },

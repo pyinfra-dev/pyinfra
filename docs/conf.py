@@ -7,10 +7,7 @@ import guzzle_sphinx_theme
 from pyinfra import __version__, local
 from pyinfra.api import metadata
 
-copyright = "Nick Barrett {0} — pyinfra v{1}".format(
-    date.today().year,
-    __version__,
-)
+copyright = f"Nick Barrett {date.today().year} — pyinfra v{__version__}"
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -81,7 +78,7 @@ def setup(app):
     metadata_file = path.abspath(path.join(this_dir, "..", "pyinfra-metadata.toml"))
     if not path.exists(metadata_file):
         raise ValueError("No pyinfra-metadata.toml in project root")
-    with open(metadata_file, "r") as file:
+    with open(metadata_file) as file:
         metadata_text = file.read()
     plugins = metadata.parse_plugins(metadata_text)
 
@@ -104,11 +101,11 @@ def setup(app):
 
     local.shell(
         (
-            "python {0}/generate_api_docs.py".format(scripts_dir),
-            "python {0}/generate_arguments_doc.py".format(scripts_dir),
-            "python {0}/generate_connectors_docs.py".format(scripts_dir),
-            "python {0}/generate_facts_docs.py".format(scripts_dir),
-            "python {0}/generate_operations_docs.py".format(scripts_dir),
+            f"python {scripts_dir}/generate_api_docs.py",
+            f"python {scripts_dir}/generate_arguments_doc.py",
+            f"python {scripts_dir}/generate_connectors_docs.py",
+            f"python {scripts_dir}/generate_facts_docs.py",
+            f"python {scripts_dir}/generate_operations_docs.py",
         ),
         print_input=True,
     )

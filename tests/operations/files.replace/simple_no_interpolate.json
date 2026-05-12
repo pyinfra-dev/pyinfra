@@ -6,7 +6,7 @@
     },
     "facts": {
         "files.FindInFile": {
-            "interpolate_variables=False, path=filename, pattern=match": ["matching line"]
+            "extended_regex=False, interpolate_variables=False, path=filename, pattern=match": ["matching line"]
         }
     },
     "commands": [

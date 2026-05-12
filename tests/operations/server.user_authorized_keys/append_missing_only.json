@@ -27,7 +27,7 @@
             ]
         },
         "files.FindInFile": {
-            "interpolate_variables=False, path=/home/someuser/.ssh/authorized_keys, pattern=^.*ssh-rsa AAAAkey2 bob.*$": []
+            "extended_regex=False, interpolate_variables=False, path=/home/someuser/.ssh/authorized_keys, pattern=^.*ssh-rsa AAAAkey2 bob.*$": []
         }
     },
     "commands": [

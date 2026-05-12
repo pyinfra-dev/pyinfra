@@ -36,10 +36,7 @@ class ContextObject:
 
     @override
     def __repr__(self):
-        return "ContextObject({0}):{1}".format(
-            self._base_cls.__name__,
-            repr(self._get_module()),
-        )
+        return f"ContextObject({self._base_cls.__name__}):{repr(self._get_module())}"
 
     @override
     def __str__(self):

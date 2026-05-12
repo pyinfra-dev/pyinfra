@@ -1,7 +1,7 @@
 import os
 from shutil import which
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 from typing_extensions import Unpack, override
 
@@ -53,7 +53,7 @@ class LocalConnector(BaseConnector):
         print_output: bool = False,
         print_input: bool = False,
         **arguments: Unpack["ConnectorArguments"],
-    ) -> Tuple[bool, CommandOutput]:
+    ) -> tuple[bool, CommandOutput]:
         """
         Execute a command on the local machine.
 
@@ -73,14 +73,14 @@ class LocalConnector(BaseConnector):
         _stdin = arguments.pop("_stdin", None)
         _success_exit_codes = arguments.pop("_success_exit_codes", None)
 
-        def execute_command() -> Tuple[int, CommandOutput]:
+        def execute_command() -> tuple[int, CommandOutput]:
             unix_command = make_unix_command_for_host(self.state, self.host, command, **arguments)
             actual_command = unix_command.get_raw_value()
 
             logger.debug("--> Running command on localhost: %s", unix_command)
 
             if print_input:
-                echo("{0}>>> {1}".format(self.host.print_prefix, unix_command), err=True)
+                echo(f"{self.host.print_prefix}>>> {unix_command}", err=True)
 
             return run_local_process(
                 actual_command,
@@ -143,13 +143,13 @@ class LocalConnector(BaseConnector):
             )
 
             if not status:
-                raise IOError(output.stderr)
+                raise OSError(output.stderr)
         finally:
             os.remove(temp_filename)
 
         if print_output:
             echo(
-                "{0}file copied: {1}".format(self.host.print_prefix, remote_filename),
+                f"{self.host.print_prefix}file copied: {remote_filename}",
                 err=True,
             )
 
@@ -185,7 +185,7 @@ class LocalConnector(BaseConnector):
             )
 
             if not status:
-                raise IOError(output.stderr)
+                raise OSError(output.stderr)
 
             # Load our file or IO object and write it to the temporary file
             with open(temp_filename, "rb") as temp_f:
@@ -204,7 +204,7 @@ class LocalConnector(BaseConnector):
 
         if print_output:
             echo(
-                "{0}file copied: {1}".format(self.host.print_prefix, remote_filename),
+                f"{self.host.print_prefix}file copied: {remote_filename}",
                 err=True,
             )
 
@@ -233,6 +233,6 @@ class LocalConnector(BaseConnector):
         )
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         return True

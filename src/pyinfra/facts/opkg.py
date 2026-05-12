@@ -13,7 +13,7 @@ See https://openwrt.org/docs/guide-user/additional-software/opkg
 """
 
 import re
-from typing import Dict, NamedTuple, Union
+from typing import NamedTuple
 
 from typing_extensions import override
 
@@ -31,12 +31,10 @@ class OpkgPkgUpgradeInfo(NamedTuple):
 
 
 class OpkgConfInfo(NamedTuple):
-    paths: Dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
+    paths: dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
     list_dir: str  # where package lists are stored, e.g. /var/opkg-lists
-    options: Dict[
-        str, Union[str, bool]
-    ]  # mapping from option to value, e.g. {'check_signature': True}
-    arch_cfg: Dict[str, int]  # priorities for architectures
+    options: dict[str, str | bool]  # mapping from option to value, e.g. {'check_signature': True}
+    arch_cfg: dict[str, int]  # priorities for architectures
 
 
 class OpkgFeedInfo(NamedTuple):

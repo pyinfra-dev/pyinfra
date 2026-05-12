@@ -36,7 +36,7 @@ def key(src: str):
 
     """
 
-    yield "rpm --import {0}".format(src)
+    yield f"rpm --import {src}"
 
 
 @operation()

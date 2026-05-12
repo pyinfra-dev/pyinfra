@@ -4,7 +4,6 @@ Manage FreeBSD packages.
 
 from __future__ import annotations
 
-from typing_extensions import List, Optional, Union
 
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
@@ -12,7 +11,7 @@ from pyinfra.facts.freebsd import PkgPackage
 
 
 @operation()
-def update(jail: Optional[str] = None, force: bool = False, reponame: Optional[str] = None):
+def update(jail: str | None = None, force: bool = False, reponame: str | None = None):
     """
     Update the local catalogues of the enabled package repositories.
 
@@ -33,7 +32,7 @@ def update(jail: Optional[str] = None, force: bool = False, reponame: Optional[s
         )
     """
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.append("pkg")
 
@@ -52,7 +51,7 @@ def update(jail: Optional[str] = None, force: bool = False, reponame: Optional[s
 
 
 @operation()
-def upgrade(jail: Optional[str] = None, force: bool = False, reponame: Optional[str] = None):
+def upgrade(jail: str | None = None, force: bool = False, reponame: str | None = None):
     """
     Perform upgrades of package software distributions.
 
@@ -73,7 +72,7 @@ def upgrade(jail: Optional[str] = None, force: bool = False, reponame: Optional[
         )
     """
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.append("pkg")
 
@@ -92,7 +91,7 @@ def upgrade(jail: Optional[str] = None, force: bool = False, reponame: Optional[
 
 
 @operation()
-def install(package: str, jail: Optional[str] = None, reponame: Optional[str] = None):
+def install(package: str, jail: str | None = None, reponame: str | None = None):
     """
     Install packages from remote packages repositories or local archives.
 
@@ -111,7 +110,7 @@ def install(package: str, jail: Optional[str] = None, reponame: Optional[str] = 
         host.noop(f"Package '{package}' already installed")
         return
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.append("pkg")
 
@@ -129,7 +128,7 @@ def install(package: str, jail: Optional[str] = None, reponame: Optional[str] = 
 
 
 @operation()
-def remove(package: str, jail: Optional[str] = None):
+def remove(package: str, jail: str | None = None):
     """
     Deletes packages from the database and the system.
 
@@ -147,7 +146,7 @@ def remove(package: str, jail: Optional[str] = None):
         host.noop(f"Package '{package}' cannot be found")
         return
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.append("pkg")
 
@@ -162,7 +161,7 @@ def remove(package: str, jail: Optional[str] = None):
 
 
 @operation()
-def autoremove(jail: Optional[str] = None):
+def autoremove(jail: str | None = None):
     """
     Remove orphan packages.
 
@@ -175,7 +174,7 @@ def autoremove(jail: Optional[str] = None):
         pkg.autoremove()
     """
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.append("pkg")
 
@@ -188,7 +187,7 @@ def autoremove(jail: Optional[str] = None):
 
 
 @operation()
-def clean(all_pkg: bool = False, jail: Optional[str] = None):
+def clean(all_pkg: bool = False, jail: str | None = None):
     """
     Clean the local cache of fetched remote packages.
 
@@ -204,7 +203,7 @@ def clean(all_pkg: bool = False, jail: Optional[str] = None):
         )
     """
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.append("pkg")
 

@@ -9,7 +9,10 @@
     "facts": {
         "server.Os": "Linux",
         "server.Users": {},
-        "server.Groups": {}
+        "server.Groups": {},
+        "server.Which": {
+            "command=useradd": "/usr/sbin/useradd"
+        }
     },
     "commands": [
         "useradd -d '/home/evil $(id)' -s /bin/bash -c 'Full Name; rm -rf /' -M 'some user; whoami'"

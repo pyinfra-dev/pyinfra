@@ -47,9 +47,7 @@ def append_hostkey(client, hostname, key):
         host_key_entry = HostKeyEntry([hostname], key)
         if host_key_entry is None:
             raise SSHException(
-                "Append Hostkey: Failed to parse host {0}, could not append to hostfile".format(
-                    hostname
-                ),
+                f"Append Hostkey: Failed to parse host {hostname}, could not append to hostfile",
             )
         with open(client._host_keys_filename, "a") as host_keys_file:
             hk_entry = host_key_entry.to_line()

@@ -175,6 +175,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 sudo=False,
                 sudo_user=None,
                 use_sudo_password=False,
+                use_sudo_login=False,
                 su_user=None,
                 dzdo=False,
                 dzdo_user=None,
