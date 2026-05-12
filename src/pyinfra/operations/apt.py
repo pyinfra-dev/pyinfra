@@ -4,13 +4,15 @@ Manage apt packages and repositories.
 
 from __future__ import annotations
 
+import io
+import re
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from pyinfra import host
 from pyinfra.api import OperationError, operation
 from pyinfra.facts.apt import (
-    AptKeys,
+    AptSourcesFile,
     AptSources,
     SimulateOperationWillChange,
     noninteractive_apt,
@@ -18,13 +20,13 @@ from pyinfra.facts.apt import (
 )
 from pyinfra.facts.deb import DebPackage, DebPackages
 from pyinfra.facts.files import File
-from pyinfra.facts.gpg import GpgKey
 from pyinfra.facts.server import Date
+from pyinfra.operations import files, gpg
 
-from . import files
 from .util.packaging import ensure_packages
 
 APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
+APT_KEYRING_DIRS = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
 
 
 def _simulate_then_perform(command: str):
@@ -45,22 +47,77 @@ def _simulate_then_perform(command: str):
         yield noninteractive_apt(command)
 
 
-@operation()
-def key(src: str | None = None, keyserver: str | None = None, keyid: str | list[str] | None = None):
+def _sanitize_keyring_part(name: str) -> str:
     """
-    Add apt gpg keys with ``apt-key``.
+    Produce a filesystem-friendly segment from a URL host, basename, or key ID.
+    """
+    name = name.strip().lower()
+    name = re.sub(r"[^\w.-]+", "_", name)
+    name = re.sub(r"_+", "_", name).strip("_.")
+    return name or "apt-keyring"
 
-    + src: filename or URL
-    + keyserver: URL of keyserver to fetch key from
-    + keyid: key ID or list of key IDs when using keyserver
 
-    keyserver/id:
-        These must be provided together.
+def _derive_dest_from_src_and_keyids(src: str | None, keyids: list[str] | None) -> str:
+    """
+    Compute a stable destination path in /etc/apt/keyrings/ from a source or key IDs.
+
+    Priority:
+      1) from src (URL domain + basename, or local basename)
+      2) from keyids (joined)
+      3) fallback "apt-keyring.gpg"
+    """
+    base = None
+    if src:
+        parsed = urlparse(src)
+        if parsed.scheme and parsed.netloc:
+            domain_part = _sanitize_keyring_part(parsed.netloc.replace(":", "_"))
+            bn = _sanitize_keyring_part(
+                (parsed.path.rsplit("/", 1)[-1] or "key").replace(".asc", "").replace(".gpg", "")
+            )
+            base = f"{domain_part}-{bn}"
+        else:
+            bn = _sanitize_keyring_part(
+                src.rsplit("/", 1)[-1].replace(".asc", "").replace(".gpg", "")
+            )
+            base = bn or "key"
+    elif keyids:
+        base = "keyserver-" + _sanitize_keyring_part("-".join(keyids))
+    else:
+        base = "apt-keyring"
+
+    return f"/etc/apt/keyrings/{base}.gpg"
+
+
+@operation()
+def key(
+    src: str | None = None,
+    keyserver: str | None = None,
+    keyid: str | list[str] | None = None,
+    dest: str | None = None,
+    present: bool = True,
+):
+    """
+    Add or remove APT GPG keys using modern keyring management (no ``apt-key``).
+
+    Keys are written to ``/etc/apt/keyrings/`` and can be referenced in source entries
+    via ``signed-by=``. The destination filename is derived automatically from the source
+    URL or key IDs when not specified explicitly.
+
+    + src: filename or URL to a key (``.asc`` ASCII-armored or binary ``.gpg``)
+    + keyserver: keyserver URL for fetching keys by ID
+    + keyid: key ID or list of key IDs (required with ``keyserver``, optional for removal)
+    + dest: destination filename or absolute path — ``.gpg`` extension is enforced;
+      relative names are resolved under ``/etc/apt/keyrings/``
+    + present: whether the key should be present (default: ``True``) or removed
+
+    .. note::
+        ASCII-armored keys (``.asc``) are automatically dearmored on installation.
+        Keyserver fetches use a temporary ``GNUPGHOME`` and export binary keyrings.
+        Removal without ``keyid`` deletes the whole keyring file; with ``keyid`` it
+        removes individual keys and prunes empty files.
 
     .. warning::
-        ``apt-key`` is deprecated in Debian, it is recommended NOT to use this
-        operation and instead follow the instructions here:
-
+        ``apt-key`` is deprecated in Debian. This operation follows the modern approach:
         https://wiki.debian.org/DebianRepository/UseThirdParty
 
     **Examples:**
@@ -69,53 +126,64 @@ def key(src: str | None = None, keyserver: str | None = None, keyid: str | list[
 
         from pyinfra.operations import apt
         # Note: If using URL, wget is assumed to be installed.
+
         apt.key(
-            name="Add the Docker apt gpg key",
-            src="https://download.docker.com/linux/ubuntu/gpg",
+            name="Add Docker apt GPG key",
+            src="https://download.docker.com/linux/debian/gpg",
+            dest="docker.gpg",
         )
 
         apt.key(
-            name="Install VirtualBox key",
-            src="https://www.virtualbox.org/download/oracle_vbox_2016.asc",
+            name="Remove specific keyring file",
+            dest="old-vendor.gpg",
+            present=False,
+        )
+
+        apt.key(
+            name="Remove key by ID from all APT keyrings",
+            keyid="0xCOMPROMISED123",
+            present=False,
+        )
+
+        apt.key(
+            name="Fetch keys from keyserver",
+            keyserver="hkps://keyserver.ubuntu.com",
+            keyid=["0xD88E42B4", "0x7EA0A9C3"],
+            dest="vendor-archive.gpg",
         )
     """
 
-    existing_keys = host.get_fact(AptKeys)
+    # Special case: remove by key ID without explicit destination → search all APT keyring dirs
+    if not present and keyid and not dest and not src and not keyserver:
+        yield from gpg.key._inner(
+            keyid=keyid,
+            present=False,
+            working_dirs=APT_KEYRING_DIRS,
+        )
+        return
 
-    if src:
-        key_data = host.get_fact(GpgKey, src=src)
-        if key_data:
-            keyid = list(key_data.keys())
-
-        if not keyid or not all(kid in existing_keys for kid in keyid):
-            # If URL, wget the key to stdout and pipe into apt-key, because the "adv"
-            # apt-key passes to gpg which doesn't always support https!
-            if urlparse(src).scheme:
-                yield "(wget -O - {0} || curl -sSLf {0}) | apt-key add -".format(src)
-            else:
-                yield "apt-key add {0}".format(src)
+    # Resolve destination path under /etc/apt/keyrings/
+    if dest and not dest.startswith("/"):
+        dest = f"/etc/apt/keyrings/{dest}"
+    elif not dest:
+        if src:
+            dest = _derive_dest_from_src_and_keyids(src, None)
+        elif keyserver and keyid:
+            keyid_list = [keyid] if isinstance(keyid, str) else keyid
+            dest = _derive_dest_from_src_and_keyids(None, keyid_list)
         else:
-            host.noop("All keys from {0} are already available in the apt keychain".format(src))
+            dest = "/etc/apt/keyrings/apt-key.gpg"
 
-    if keyserver:
-        if not keyid:
-            raise OperationError("`keyid` must be provided with `keyserver`")
-
-        if isinstance(keyid, str):
-            keyid = [keyid]
-
-        needed_keys = sorted(set(keyid) - set(existing_keys.keys()))
-        if needed_keys:
-            yield "apt-key adv --keyserver {0} --recv-keys {1}".format(
-                keyserver,
-                " ".join(needed_keys),
-            )
-        else:
-            host.noop(
-                "Keys {0} are already available in the apt keychain".format(
-                    ", ".join(keyid),
-                ),
-            )
+    # Delegate everything to gpg.key with APT-specific defaults
+    yield from gpg.key._inner(
+        src=src,
+        dest=dest,
+        keyserver=keyserver,
+        keyid=keyid,
+        present=present,
+        dearmor=True,
+        mode="0644",
+    )
 
 
 @operation()
@@ -140,7 +208,7 @@ def repo(src: str, present=True, filename: str | None = None):
 
     # Get the target .list file to manage
     if filename:
-        filename = "/etc/apt/sources.list.d/{0}.list".format(filename)
+        filename = f"/etc/apt/sources.list.d/{filename}.list"
     else:
         filename = "/etc/apt/sources.list"
 
@@ -170,11 +238,123 @@ def repo(src: str, present=True, filename: str | None = None):
         )
     else:
         host.noop(
-            'apt repo "{0}" {1}'.format(
-                src,
-                "exists" if present else "does not exist",
-            ),
+            f'apt repo "{src}" {"exists" if present else "does not exist"}',
         )
+
+
+@operation()
+def sources_file(
+    filename: str,
+    types: list[str] | str = "deb",
+    uris: list[str] | str | None = None,
+    suites: list[str] | str | None = None,
+    components: list[str] | str | None = None,
+    architectures: list[str] | str | None = None,
+    signed_by: str | None = None,
+    present: bool = True,
+):
+    """
+    Manage a deb822 ``.sources`` file under ``/etc/apt/sources.list.d/``.
+
+    Creates or removes a modern deb822-format sources file.  Each field that
+    accepts multiple values can be given as a list or a space-separated string.
+
+    + filename: base name for the file (without extension); the ``.sources``
+      extension is added automatically
+    + types: repository type(s) — ``"deb"``, ``"deb-src"``, or both
+    + uris: one or more repository URLs
+    + suites: one or more suite/distribution names (e.g. ``"bookworm"``)
+    + components: one or more components (e.g. ``["main", "contrib"]``)
+    + architectures: restrict to specific architectures (e.g. ``"amd64"``)
+    + signed_by: absolute path to the keyring file used for signature verification
+    + present: whether the sources file should exist
+
+    **Example:**
+
+    .. code:: python
+
+        from pyinfra.operations import apt
+
+        apt.key(
+            name="Add Docker GPG key",
+            src="https://download.docker.com/linux/debian/gpg",
+            dest="docker.gpg",
+        )
+
+        apt.sources_file(
+            name="Add Docker apt repository (deb822)",
+            filename="docker",
+            types=["deb"],
+            uris=["https://download.docker.com/linux/debian"],
+            suites=["bookworm"],
+            components=["stable"],
+            architectures=["amd64"],
+            signed_by="/etc/apt/keyrings/docker.gpg",
+        )
+    """
+    dest = f"/etc/apt/sources.list.d/{filename}.sources"
+
+    # Removal path — just delete the file
+    if not present:
+        info = host.get_fact(File, path=dest)
+        if info:
+            yield from files.file._inner(path=dest, present=False)
+        else:
+            host.noop(f'apt sources file "{dest}" does not exist')
+        return
+
+    # Normalise list arguments
+    def _as_list(val) -> list[str]:
+        if val is None:
+            return []
+        if isinstance(val, str):
+            return val.split()
+        return list(val)
+
+    types_list = _as_list(types) or ["deb"]
+    uris_list = _as_list(uris)
+    suites_list = _as_list(suites)
+    components_list = _as_list(components)
+    architectures_list = _as_list(architectures)
+
+    if not uris_list or not suites_list:
+        raise OperationError("apt.sources_file requires at least one URI and one suite")
+
+    # Build the AptSourcesFile object so we can expand it to AptRepo for idempotency check
+    sources_entry = AptSourcesFile(
+        types=types_list,
+        uris=uris_list,
+        suites=suites_list,
+        components=components_list,
+        architectures=architectures_list or None,
+        signed_by=[signed_by] if signed_by else None,
+    )
+    desired_repos = sources_entry.expand_to_repos()
+
+    # Idempotency: if every expanded repo is already present, do nothing
+    existing_sources = host.get_fact(AptSources)
+    if desired_repos and all(repo in existing_sources for repo in desired_repos):
+        host.noop(f'apt sources file "{dest}" is already configured')
+        return
+
+    # Build deb822 content
+    lines = []
+    lines.append("Types: {}".format(" ".join(types_list)))
+    lines.append("URIs: {}".format(" ".join(uris_list)))
+    lines.append("Suites: {}".format(" ".join(suites_list)))
+    if components_list:
+        lines.append("Components: {}".format(" ".join(components_list)))
+    if architectures_list:
+        lines.append("Architectures: {}".format(" ".join(architectures_list)))
+    if signed_by:
+        lines.append(f"Signed-By: {signed_by}")
+    content = "\n".join(lines) + "\n"
+
+    yield from files.put._inner(
+        src=io.StringIO(content),
+        dest=dest,
+        mode="0644",
+    )
 
 
 @operation(is_idempotent=False)
@@ -201,10 +381,10 @@ def ppa(src: str, present=True):
     """
 
     if present:
-        yield 'apt-add-repository -y "{0}"'.format(src)
+        yield f'apt-add-repository -y "{src}"'
 
     if not present:
-        yield 'apt-add-repository -y --remove "{0}"'.format(src)
+        yield f'apt-add-repository -y --remove "{src}"'
 
 
 @operation()
@@ -262,24 +442,21 @@ def deb(src: str, present=True, force=False):
     if present:
         if not exists:
             # Install .deb file - ignoring failure (on unmet dependencies)
-            yield "dpkg --force-confdef --force-confold -i {0} 2> /dev/null || true".format(src)
+            yield f"dpkg --force-confdef --force-confold -i {src} 2> /dev/null || true"
             # Attempt to install any missing dependencies
-            yield "{0} -f".format(noninteractive_apt("install", force=force))
+            yield f"{noninteractive_apt('install', force=force)} -f"
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
-            yield "dpkg --force-confdef --force-confold -i {0}".format(src)
+            yield f"dpkg --force-confdef --force-confold -i {src}"
         else:
-            host.noop("deb {0} is installed".format(original_src))
+            host.noop(f"deb {original_src} is installed")
 
     # Package exists but we don't want?
     if not present:
         if exists:
-            yield "{0} {1}".format(
-                noninteractive_apt("remove", force=force),
-                info["name"],
-            )
+            yield f"{noninteractive_apt('remove', force=force)} {info['name']}"
         else:
-            host.noop("deb {0} is not installed".format(original_src))
+            host.noop(f"deb {original_src} is not installed")
 
 
 @operation(
@@ -330,7 +507,7 @@ def update(cache_time: int | None = None):
     # don't bother touching anything in there - so pyinfra does it, enabling
     # cache_time to work.
     if cache_time:
-        yield "touch {0}".format(APT_UPDATE_FILENAME)
+        yield f"touch {APT_UPDATE_FILENAME}"
 
 
 _update = update  # noqa: E305
@@ -405,6 +582,7 @@ def packages(
     force=False,
     no_recommends=False,
     allow_downgrades=False,
+    purge=False,
     extra_install_args: str | None = None,
     extra_uninstall_args: str | None = None,
 ):
@@ -420,6 +598,8 @@ def packages(
     + force: whether to force package installs by passing `--force-yes` to apt
     + no_recommends: don't install recommended packages
     + allow_downgrades: allow downgrading packages with version (--allow-downgrades)
+    + purge: when removing packages (``present=False``) use ``apt purge`` so configuration files
+      are removed alongside the package
     + extra_install_args: additional arguments to the apt install command
     + extra_uninstall_args: additional arguments to the apt uninstall command
 
@@ -476,7 +656,7 @@ def packages(
 
     install_command = " ".join(install_command_args)
 
-    uninstall_command_args = ["remove"]
+    uninstall_command_args = ["purge" if purge else "remove"]
     if extra_uninstall_args:
         uninstall_command_args.append(extra_uninstall_args)
 

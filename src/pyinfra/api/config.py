@@ -4,7 +4,7 @@ except ImportError:
     import importlib.metadata as importlib_metadata  # type: ignore[no-redef]
 
 from os import path
-from typing import Iterable, Optional, Sequence, Set
+from collections.abc import Iterable, Sequence
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
@@ -19,40 +19,40 @@ from .exceptions import PyinfraError
 
 class ConfigDefaults:
     # % of hosts which have to fail for all operations to stop
-    FAIL_PERCENT: Optional[int] = None
+    FAIL_PERCENT: int | None = None
     # Seconds to timeout SSH connections
     CONNECT_TIMEOUT: int = 10
     # Temporary directory (on the remote side) to use for caching any files/downloads, the default
     # None value first tries to load the hosts' temporary directory configured via "TMPDIR" env
     # variable, falling back to DEFAULT_TEMP_DIR if not set.
-    TEMP_DIR: Optional[str] = None
+    TEMP_DIR: str | None = None
     DEFAULT_TEMP_DIR: str = "/tmp"
     # Gevent pool size (defaults to #of target hosts)
     PARALLEL: int = 0
     # Specify the required pyinfra version (using PEP 440 setuptools specifier)
-    REQUIRE_PYINFRA_VERSION: Optional[str] = None
+    REQUIRE_PYINFRA_VERSION: str | None = None
     # Specify any required packages (either using PEP 440 or a requirements file)
     # Note: this can also include pyinfra potentially replacing REQUIRE_PYINFRA_VERSION
-    REQUIRE_PACKAGES: Optional[str] = None
+    REQUIRE_PACKAGES: str | None = None
     # All these can be overridden inside individual operation calls:
     # Switch to this user (from ssh_user) using su before executing operations
-    SU_USER: Optional[str] = None
+    SU_USER: str | None = None
     USE_SU_LOGIN: bool = False
     SU_SHELL: bool = False
     PRESERVE_SU_ENV: bool = False
-    SU_PASSWORD: Optional[str] = None
+    SU_PASSWORD: str | None = None
     # Use sudo and optional user
     SUDO: bool = False
-    SUDO_USER: Optional[str] = None
+    SUDO_USER: str | None = None
     PRESERVE_SUDO_ENV: bool = False
     USE_SUDO_LOGIN: bool = False
-    SUDO_PASSWORD: Optional[str] = None
+    SUDO_PASSWORD: str | None = None
     # Use doas and optional user
     DOAS: bool = False
-    DOAS_USER: Optional[str] = None
+    DOAS_USER: str | None = None
     # Use dzdo and optional user
     DZDO: bool = False
-    DZDO_USER: Optional[str] = None
+    DZDO_USER: str | None = None
     # Only show errors but don't count as failure
     IGNORE_ERRORS: bool = False
     # Shell to use to execute commands
@@ -83,7 +83,7 @@ def check_pyinfra_version(version: str):
         )
 
 
-def _check_requirements(requirements: Iterable[str]) -> Set[Requirement]:
+def _check_requirements(requirements: Iterable[str]) -> set[Requirement]:
     """
     Check whether each of the given requirements and all their dependencies are
     installed.
@@ -125,9 +125,9 @@ def _check_requirements(requirements: Iterable[str]) -> Set[Requirement]:
     # hbutils.system.check_reqs() from the hbutils package was also helpful in
     # clarifying what this is supposed to do.
 
-    reqs_to_check: Set[Requirement] = set(Requirement(r) for r in requirements)
-    reqs_satisfied: Set[Requirement] = set()
-    reqs_not_satisfied: Set[Requirement] = set()
+    reqs_to_check: set[Requirement] = set(Requirement(r) for r in requirements)
+    reqs_satisfied: set[Requirement] = set()
+    reqs_not_satisfied: set[Requirement] = set()
 
     while reqs_to_check:
         req = reqs_to_check.pop()
@@ -194,9 +194,7 @@ def check_require_packages(requirements_config):
     requirements_not_met = _check_requirements(requirements)
     if requirements_not_met:
         raise PyinfraError(
-            "Deploy requirements ({0}) not met: missing {1}".format(
-                requirements_config, ", ".join(str(r) for r in requirements_not_met)
-            )
+            f"Deploy requirements ({requirements_config}) not met: missing {', '.join(str(r) for r in requirements_not_met)}"
         )
 
 

@@ -4,7 +4,7 @@ import warnings
 from fnmatch import fnmatch
 from getpass import getpass
 from os import chdir as os_chdir, getcwd, path
-from typing import Iterable, List, Tuple, Union
+from collections.abc import Iterable
 
 import click
 
@@ -128,6 +128,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     is_flag=True,
     default=False,
     help="Whether to use a password with sudo.",
+)
+@click.option(
+    "--use-sudo-login",
+    is_flag=True,
+    default=False,
+    help="Use a login shell when sudo-ing.",
 )
 @click.option("--su-user", help="Which user to su to.")
 @click.option(
@@ -286,7 +292,7 @@ class CliCommands:
 
 def _main(
     inventory,
-    operations: Union[List, Tuple],
+    operations: list | tuple,
     verbosity: int,
     chdir: str,
     ssh_user,
@@ -300,6 +306,7 @@ def _main(
     sudo: bool,
     sudo_user: str,
     use_sudo_password: bool,
+    use_sudo_login: bool,
     su_user: str,
     dzdo: bool,
     dzdo_user: str,
@@ -350,6 +357,7 @@ def _main(
         sudo,
         sudo_user,
         use_sudo_password,
+        use_sudo_login,
         same_sudo_password,
         su_user,
         dzdo,
@@ -471,7 +479,7 @@ def _do_confirm(msg: str) -> bool:
         return False
     # Go up, clear the line, go up again - as if the confirmation statement was never here!
     click.echo(
-        "\033[1A{0}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
+        "\033[1A{}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
         err=True,
         nl=False,
     )
@@ -535,9 +543,7 @@ def _validate_operations(operations, chdir):
                 filenames.append(correct_filename)
                 continue
             raise CliError(
-                "No deploy file: {0}".format(
-                    path.join(chdir, filename) if chdir else filename,
-                ),
+                f"No deploy file: {path.join(chdir, filename) if chdir else filename}",
             )
 
         operations = filenames
@@ -549,15 +555,13 @@ def _validate_operations(operations, chdir):
 
     else:
         raise CliError(
-            """Invalid operations: {0}
+            f"""Invalid operations: {operations}
 
     Operation usage:
     pyinfra INVENTORY deploy_web.py [deploy_db.py]...
     pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
     pyinfra INVENTORY exec -- echo "hello world"
-    pyinfra INVENTORY fact os [users]...""".format(
-                operations,
-            ),
+    pyinfra INVENTORY fact os [users]...""",
         )
 
     return original_operations, operations, command, chdir
@@ -598,6 +602,7 @@ def _set_config(
     sudo,
     sudo_user,
     use_sudo_password,
+    use_sudo_login,
     same_sudo_password,
     su_user,
     dzdo,
@@ -626,6 +631,9 @@ def _set_config(
 
     if use_sudo_password:
         config.USE_SUDO_PASSWORD = use_sudo_password
+
+    if use_sudo_login:
+        config.USE_SUDO_LOGIN = True
 
     if same_sudo_password:
         config.SUDO_PASSWORD = getpass("sudo password: ")
@@ -718,7 +726,7 @@ def _apply_inventory_limit(inventory, limit):
                 limit_hosts = [host for host in inventory if fnmatch(host.name, limiter)]
 
             if not limit_hosts:
-                logger.warning("No host matches found for --limit pattern: {0}".format(limiter))
+                logger.warning(f"No host matches found for --limit pattern: {limiter}")
 
             all_limit_hosts.extend(limit_hosts)
         initial_limit = list(set(all_limit_hosts))
@@ -768,8 +776,8 @@ def _run_fact_operations(state, config, operations):
 
         if args or kwargs:
             _fact_args = args or ""
-            _fact_details = " ({0})".format(get_kwargs_str(kwargs)) if kwargs else ""
-            fact_key = "{0}{1}{2}".format(fact_cls.name, _fact_args, _fact_details)
+            _fact_details = f" ({get_kwargs_str(kwargs)})" if kwargs else ""
+            fact_key = f"{fact_cls.name}{_fact_args}{_fact_details}"
 
         try:
             fact_data[fact_key] = get_facts(
@@ -804,7 +812,7 @@ def _prepare_deploy_operations(state, config, operations):
         config.lock_current_state()
 
         _log_styled_msg = click.style(filename, bold=True)
-        logger.info("Loading: {0}".format(_log_styled_msg))
+        logger.info(f"Loading: {_log_styled_msg}")
 
         state.current_op_file_number = i
         load_deploy_file(state, filename)

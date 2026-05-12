@@ -11,7 +11,10 @@
                 "shell": "/bin/bash"
             }
         },
-        "server.Groups": {}
+        "server.Groups": {},
+        "server.Which": {
+            "command=userdel": "/usr/sbin/userdel"
+        }
     },
     "commands": [
         "userdel someuser"

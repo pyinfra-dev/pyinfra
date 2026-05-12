@@ -1,0 +1,11 @@
+arg:
+  path: /home/pyinfra/mylink
+  pattern: "test.+"
+  extended_regex: true
+command: "grep -E -e test.+ /home/pyinfra/mylink 2> /dev/null || ( find /home/pyinfra/mylink -type f > /dev/null && echo __pyinfra_exists_/home/pyinfra/mylink || true )"
+output:
+  - test some value
+  - another test value
+fact:
+  - test some value
+  - another test value

@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Callable, Iterator, Optional
+from typing import TYPE_CHECKING
+from collections.abc import Callable, Iterator
 
 from gevent.pool import Pool
 from paramiko import PKey
@@ -43,50 +44,48 @@ class BaseStateCallback:
     #
 
     @staticmethod
-    def host_before_connect(state: "State", host: "Host"):
+    def host_before_connect(state: State, host: Host):
         pass
 
     @staticmethod
-    def host_connect(state: "State", host: "Host"):
+    def host_connect(state: State, host: Host):
         pass
 
     @staticmethod
-    def host_connect_error(state: "State", host: "Host", error):
+    def host_connect_error(state: State, host: Host, error):
         pass
 
     @staticmethod
-    def host_disconnect(state: "State", host: "Host"):
+    def host_disconnect(state: State, host: Host):
         pass
 
     # Operation callbacks
     #
 
     @staticmethod
-    def operation_start(state: "State", op_hash):
+    def operation_start(state: State, op_hash):
         pass
 
     @staticmethod
-    def operation_host_start(state: "State", host: "Host", op_hash):
+    def operation_host_start(state: State, host: Host, op_hash):
         pass
 
     @staticmethod
-    def operation_host_success(state: "State", host: "Host", op_hash, retry_count: int = 0):
+    def operation_host_success(state: State, host: Host, op_hash, retry_count: int = 0):
         pass
 
     @staticmethod
     def operation_host_error(
-        state: "State", host: "Host", op_hash, retry_count: int = 0, max_retries: int = 0
+        state: State, host: Host, op_hash, retry_count: int = 0, max_retries: int = 0
     ):
         pass
 
     @staticmethod
-    def operation_host_retry(
-        state: "State", host: "Host", op_hash, retry_num: int, max_retries: int
-    ):
+    def operation_host_retry(state: State, host: Host, op_hash, retry_num: int, max_retries: int):
         pass
 
     @staticmethod
-    def operation_end(state: "State", op_hash):
+    def operation_end(state: State, op_hash):
         pass
 
 
@@ -107,7 +106,7 @@ class StateOperationMeta:
     names: set[str]
     args: list[str]
     op_order: tuple[int, ...]
-    global_arguments: "AllArguments"
+    global_arguments: AllArguments
 
     def __init__(self, op_order: tuple[int, ...]):
         self.op_order = op_order
@@ -118,10 +117,10 @@ class StateOperationMeta:
 
 @dataclass
 class StateOperationHostData:
-    command_generator: Callable[[], Iterator["PyinfraCommand"]]
-    global_arguments: "AllArguments"
-    operation_meta: "OperationMeta"
-    parent_op_hash: Optional[str] = None
+    command_generator: Callable[[], Iterator[PyinfraCommand]]
+    global_arguments: AllArguments
+    operation_meta: OperationMeta
+    parent_op_hash: str | None = None
 
 
 class StateHostMeta:
@@ -150,13 +149,13 @@ class State:
     initialised: bool = False
 
     # A pyinfra.api.Inventory which stores all our pyinfra.api.Host's
-    inventory: "Inventory"
+    inventory: Inventory
 
     # A pyinfra.api.Config
-    config: "Config"
+    config: Config
 
     # Main gevent pool
-    pool: "Pool"
+    pool: Pool
 
     # Current stage this state is in
     current_stage: StateStage = StateStage.Setup
@@ -178,16 +177,16 @@ class State:
     print_fact_output: bool = False
 
     # Used in CLI
-    cwd: Optional[str] = None  # base directory for locating files/templates/etc
-    current_deploy_filename: Optional[str] = None
-    current_exec_filename: Optional[str] = None
+    cwd: str | None = None  # base directory for locating files/templates/etc
+    current_deploy_filename: str | None = None
+    current_exec_filename: str | None = None
     current_op_file_number: int = 0
-    should_raise_failed_hosts: Optional[Callable[["State"], bool]] = None
+    should_raise_failed_hosts: Callable[[State], bool] | None = None
 
     def __init__(
         self,
-        inventory: Optional["Inventory"] = None,
-        config: Optional["Config"] = None,
+        inventory: Inventory | None = None,
+        config: Config | None = None,
         check_for_changes: bool = True,
         **kwargs,
     ):
@@ -205,8 +204,8 @@ class State:
 
     def init(
         self,
-        inventory: "Inventory",
-        config: Optional["Config"],
+        inventory: Inventory,
+        config: Config | None,
         initial_limit=None,
     ):
         # Config validation
@@ -229,9 +228,9 @@ class State:
         elif config.PARALLEL > MAX_PARALLEL:
             logger.warning(
                 (
-                    "Parallel set to {0}, but this may hit the open files limit of {1}.\n"
-                    "    Max recommended value: {2}"
-                ).format(config.PARALLEL, nofile_limit, MAX_PARALLEL),
+                    f"Parallel set to {config.PARALLEL}, but this may hit the open files limit of {nofile_limit}.\n"
+                    f"    Max recommended value: {MAX_PARALLEL}"
+                ),
             )
 
         # Actually initialise the state object
@@ -251,26 +250,26 @@ class State:
         self.config = config
 
         # Hosts we've activated at any time
-        self.activated_hosts: set["Host"] = set()
+        self.activated_hosts: set[Host] = set()
         # Active hosts that *haven't* failed yet
-        self.active_hosts: set["Host"] = set()
+        self.active_hosts: set[Host] = set()
         # Hosts that have failed
-        self.failed_hosts: set["Host"] = set()
+        self.failed_hosts: set[Host] = set()
 
         # Limit hosts changes dynamically to limit operations to a subset of hosts
-        self.limit_hosts: list["Host"] = initial_limit
+        self.limit_hosts: list[Host] = initial_limit
 
         # Op basics
         self.op_meta: dict[str, StateOperationMeta] = {}  # maps operation hash -> names/etc
 
         # Op dict for each host
-        self.ops: dict["Host", dict[str, StateOperationHostData]] = {host: {} for host in inventory}
+        self.ops: dict[Host, dict[str, StateOperationHostData]] = {host: {} for host in inventory}
 
         # Meta dict for each host
-        self.meta: dict["Host", StateHostMeta] = {host: StateHostMeta() for host in inventory}
+        self.meta: dict[Host, StateHostMeta] = {host: StateHostMeta() for host in inventory}
 
         # Results dict for each host
-        self.results: dict["Host", StateHostResults] = {
+        self.results: dict[Host, StateHostResults] = {
             host: StateHostResults() for host in inventory
         }
 
@@ -298,7 +297,7 @@ class State:
     def add_callback_handler(self, handler):
         if not isinstance(handler, BaseStateCallback):
             raise TypeError(
-                ("{0} is not a valid callback handler (use `BaseStateCallback`)").format(handler),
+                (f"{handler} is not a valid callback handler (use `BaseStateCallback`)"),
             )
         self.callback_handlers.append(handler)
 
@@ -346,28 +345,28 @@ class State:
     def get_op_meta(self, op_hash: str) -> StateOperationMeta:
         return self.op_meta[op_hash]
 
-    def get_meta_for_host(self, host: "Host") -> StateHostMeta:
+    def get_meta_for_host(self, host: Host) -> StateHostMeta:
         return self.meta[host]
 
-    def get_results_for_host(self, host: "Host") -> StateHostResults:
+    def get_results_for_host(self, host: Host) -> StateHostResults:
         return self.results[host]
 
     def get_op_data_for_host(
         self,
-        host: "Host",
+        host: Host,
         op_hash: str,
     ) -> StateOperationHostData:
         return self.ops[host][op_hash]
 
     def set_op_data_for_host(
         self,
-        host: "Host",
+        host: Host,
         op_hash: str,
         op_data: StateOperationHostData,
     ):
         self.ops[host][op_hash] = op_data
 
-    def activate_host(self, host: "Host"):
+    def activate_host(self, host: Host):
         """
         Flag a host as active.
         """
@@ -390,7 +389,7 @@ class State:
         activated_count = activated_count or len(self.activated_hosts)
 
         logger.debug(
-            "Failing hosts: {0}".format(
+            "Failing hosts: {}".format(
                 ", ".join(
                     (host.name for host in hosts_to_fail),
                 ),
@@ -416,13 +415,10 @@ class State:
                     return
 
                 raise PyinfraError(
-                    "Over {0}% of hosts failed ({1}%)".format(
-                        self.config.FAIL_PERCENT,
-                        int(round(percent_failed)),
-                    ),
+                    f"Over {self.config.FAIL_PERCENT}% of hosts failed ({int(round(percent_failed))}%)",
                 )
 
-    def is_host_in_limit(self, host: "Host"):
+    def is_host_in_limit(self, host: Host):
         """
         Returns a boolean indicating if the host is within the current state limit.
         """

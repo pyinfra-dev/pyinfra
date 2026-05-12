@@ -9,7 +9,7 @@
             "nginx": true
         },
         "files.FindInFile": {
-            "interpolate_variables=False, path=/etc/rc.conf.local, pattern=^nginx_enable=.*$": [
+            "extended_regex=False, interpolate_variables=False, path=/etc/rc.conf.local, pattern=^nginx_enable=.*$": [
                 "nginx_enable=\"YES\""
             ]
         }

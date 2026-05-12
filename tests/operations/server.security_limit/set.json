@@ -7,8 +7,8 @@
     },
     "facts": {
         "files.FindInFile": {
-            "interpolate_variables=False, path=/etc/security/limits.conf, pattern=^root[[:space:]]+hard[[:space:]]+memlock.*$": [],
-            "interpolate_variables=False, path=/etc/security/limits.conf, pattern=^root\thard\tmemlock\tunlimited$": []
+            "extended_regex=False, interpolate_variables=False, path=/etc/security/limits.conf, pattern=^root[[:space:]]+hard[[:space:]]+memlock.*$": [],
+            "extended_regex=False, interpolate_variables=False, path=/etc/security/limits.conf, pattern=^root\thard\tmemlock\tunlimited$": []
         }
     },
     "commands": [
