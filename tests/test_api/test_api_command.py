@@ -36,12 +36,12 @@ class TestStringCommand(TestCase):
     def test_masked(self):
         cmd = StringCommand(MaskString("adsfg"))
         assert cmd.get_raw_value() == "adsfg"
-        assert str(cmd) == "***"
+        assert str(cmd) == "*MASKED*"
 
     def test_mixed_masked(self):
         cmd = StringCommand("some", "stuff", MaskString("mask me"), "other", "stuff")
         assert cmd.get_raw_value() == "some stuff mask me other stuff"
-        assert str(cmd) == "some stuff *** other stuff"
+        assert str(cmd) == "some stuff *MASKED* other stuff"
 
     def test_nested(self):
         nested_cmd = StringCommand("some", "stuff")
@@ -130,7 +130,7 @@ class TestMakeFormattedStringCommand(TestCase):
     def test_masked_arg(self):
         cmd = make_formatted_string_command("echo {0}", MaskString("secret"))
         assert cmd.get_raw_value() == "echo secret"
-        assert str(cmd) == "echo ***"
+        assert str(cmd) == "echo *MASKED*"
 
     def test_path_with_multiple_segments(self):
         cmd = make_formatted_string_command("ls /{0}/{1}/{2}", "home", "user", "docs")

@@ -90,7 +90,7 @@ class TestLocalConnector(TestCase):
         )
 
         fake_echo.assert_called_with(
-            f"{host.print_prefix}>>> sh -c 'echo ***'",
+            f"{host.print_prefix}>>> sh -c 'echo *MASKED*'",
             err=True,
         )
 
