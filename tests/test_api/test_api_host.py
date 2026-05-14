@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from pyinfra.api import Config, State
 from pyinfra.api.host import HostData
+from pyinfra.context import ctx_config
 
 from ..util import make_inventory
 
@@ -74,3 +75,30 @@ class TestHostDeployContext(TestCase):
             assert host.current_deploy_name == "outer"
 
         assert host.current_deploy_name is None
+
+
+class TestHostTempDirConfig(TestCase):
+    def _make_host(self):
+        inventory = make_inventory()
+        State(inventory, Config())
+        return inventory.get_host("somehost")
+
+    def test_get_temp_dir_config_prefers_ctx_config_override(self):
+        # Regression for pyinfra-dev/pyinfra#1729: `config.TEMP_DIR` mutated
+        # inside a deploy file changes the per-deploy `ctx_config` copy, not
+        # `state.config`. The askpass helper must see the override.
+        host = self._make_host()
+        assert host.get_temp_dir_config() == "/tmp"
+
+        overlay = host.state.config.copy()
+        overlay.TEMP_DIR = "/home/me/tmp"
+
+        with ctx_config.use(overlay):
+            assert host.get_temp_dir_config() == "/home/me/tmp"
+
+        # And it must fall back to state.config once the ctx exits.
+        assert host.get_temp_dir_config() == "/tmp"
+
+    def test_get_temp_dir_config_falls_back_to_state_default(self):
+        host = self._make_host()
+        assert host.get_temp_dir_config() == host.state.config.DEFAULT_TEMP_DIR

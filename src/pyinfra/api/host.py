@@ -18,6 +18,7 @@ from pyinfra import logger
 from pyinfra.api.output import format_text
 from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
+from pyinfra.context import ctx_config
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
@@ -314,7 +315,15 @@ class Host:
         return temp_directory
 
     def get_temp_dir_config(self):
-        return self.state.config.TEMP_DIR or self.state.config.DEFAULT_TEMP_DIR
+        # Deploy files mutate the per-deploy `ctx_config` copy, not
+        # `state.config` (see pyinfra.context). Prefer that override so
+        # `config.TEMP_DIR = ...` inside a deploy lands the askpass
+        # script under the requested directory (issue #1729). Mirrors the
+        # precedence used by `pop_global_arguments`.
+        config = self.state.config
+        if ctx_config.isset():
+            config = ctx_config.get()
+        return config.TEMP_DIR or config.DEFAULT_TEMP_DIR
 
     def get_temp_filename(
         self,
