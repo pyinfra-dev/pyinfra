@@ -42,7 +42,10 @@ def test_load_key_with_certificate_no_cert_returns_bare_key(ssh_ca_keypair, tmp_
 def test_get_private_key_expands_tilde_for_cert(ssh_ca_keypair, monkeypatch):
     # Regression: get_private_key used the unexpanded key_filename when looking
     # for the adjacent cert, silently dropping certs for ~-prefixed paths.
-    monkeypatch.setenv("HOME", str(ssh_ca_keypair["ssh_dir"]))
+    home = str(ssh_ca_keypair["ssh_dir"])
+    monkeypatch.setenv("HOME", home)
+    # On Windows os.path.expanduser reads USERPROFILE, not HOME.
+    monkeypatch.setenv("USERPROFILE", home)
 
     state = mock.MagicMock(cwd=None, private_keys={})
 
