@@ -9,7 +9,7 @@ import pytest
 from pyinfra.operations import server
 from pyinfra_cli.commands import get_func_and_args
 from pyinfra_cli.exceptions import CliError
-from pyinfra_cli.util import json_encode
+from pyinfra_cli.util import json_encode, try_import_module_attribute
 
 
 class TestCliUtil(TestCase):
@@ -83,3 +83,22 @@ def test_user_op(user_sys_path):
     import test_ops
 
     assert res == (test_ops.dummy_op, (["arg1", "arg2"], {}))
+
+
+def test_try_import_module_attribute_falls_through_when_attr_missing(monkeypatch, tmp_path):
+    # Regression for pyinfra-dev/pyinfra#1747: when a top-level module that
+    # collides with a pyinfra fact/operation is importable but lacks the
+    # requested attribute, the bare candidate must not short-circuit the
+    # prefixed candidate.
+    stub_pip = tmp_path / "pip"
+    stub_pip.mkdir()
+    (stub_pip / "__init__.py").write_text("")
+
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.delitem(sys.modules, "pip", raising=False)
+
+    from pyinfra.facts.pip import Pip3Packages
+
+    result = try_import_module_attribute("pip.Pip3Packages", prefix="pyinfra.facts")
+
+    assert result is Pip3Packages
