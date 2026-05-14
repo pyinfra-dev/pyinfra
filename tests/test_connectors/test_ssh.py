@@ -92,7 +92,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
             # And check the Paramiko SSH call was correct
             self.fake_connect_mock.assert_called_with(
@@ -239,7 +239,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_password_from_prompt(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
@@ -270,7 +270,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_missing_password(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
