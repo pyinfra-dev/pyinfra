@@ -165,7 +165,7 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
 
     possible_modules = [mod_path]
     if prefix:
-        possible_modules.append(f"{prefix}.{mod_path}")
+        possible_modules.insert(0, f"{prefix}.{mod_path}")
 
     module = None
 
@@ -189,13 +189,13 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
 
     if module is None:
         if raise_for_none:
-            raise CliError(f"No such module: {possible_modules[0]}")
+            raise CliError(f"No such module: {mod_path}")
         return
 
     attr = getattr(module, attr_name, None)
     if attr is None:
         if raise_for_none:
-            raise CliError(f"No such attribute in module {possible_modules[0]}: {attr_name}")
+            raise CliError(f"No such attribute in module {mod_path}: {attr_name}")
         return
 
     return attr
