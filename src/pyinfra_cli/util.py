@@ -167,7 +167,7 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
     if prefix:
         possible_modules.append(f"{prefix}.{mod_path}")
 
-    module = None
+    any_module_found = False
 
     for possible in possible_modules:
         try:
@@ -182,23 +182,26 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
             # referenced above the find_spec call.
             logger.warning(f"Exception raised during inventory search on: {possible}: {e}")
             continue
-        else:
-            if spec is not None:
-                module = import_module(possible)
-                break
 
-    if module is None:
-        if raise_for_none:
-            raise CliError(f"No such module: {possible_modules[0]}")
+        if spec is None:
+            continue
+
+        any_module_found = True
+        candidate = import_module(possible)
+        # A bare module name may shadow a prefixed pyinfra fact/operation (eg. an
+        # installed `pip` package vs. `pyinfra.facts.pip`); keep trying remaining
+        # candidates when the attribute is missing rather than short-circuiting.
+        attr = getattr(candidate, attr_name, None)
+        if attr is not None:
+            return attr
+
+    if not raise_for_none:
         return
 
-    attr = getattr(module, attr_name, None)
-    if attr is None:
-        if raise_for_none:
-            raise CliError(f"No such attribute in module {possible_modules[0]}: {attr_name}")
-        return
+    if not any_module_found:
+        raise CliError(f"No such module: {possible_modules[0]}")
 
-    return attr
+    raise CliError(f"No such attribute in module {possible_modules[0]}: {attr_name}")
 
 
 def _parallel_load_hosts(state: State, callback: Callable, name: str):
