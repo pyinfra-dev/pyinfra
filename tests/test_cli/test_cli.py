@@ -210,6 +210,22 @@ class TestJsonOutput(PatchSSHTestCase):
         assert isinstance(payload["op_order"], list)
         assert payload["op_order"]
 
+    def test_json_deploy_without_yes_does_not_apply(self):
+        # Regression for pyinfra-dev/pyinfra#1662 review: --json must not
+        # imply --yes. A diffable operation run with --json and no --yes
+        # prints the proposed changes and exits without mutating the host.
+        result = run_cli("--json", self.inventory, "server.shell", "echo hi")
+        payload = self._parse_stdout(result)
+        assert payload["results"] is None
+        assert isinstance(payload["plan"], list)
+        assert payload["plan"]
+
+    def test_json_deploy_with_yes_applies(self):
+        result = run_cli("-y", "--json", self.inventory, "server.shell", "echo hi")
+        payload = self._parse_stdout(result)
+        assert payload["results"] is not None
+        assert set(payload["results"].keys()) == {"operations", "totals", "failed_hosts"}
+
 
 class TestDirectMainExecution(PatchSSHTestCase):
     """

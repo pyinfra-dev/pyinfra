@@ -344,11 +344,12 @@ def _main(
     json_output: bool = False,
     support: bool = False,
 ):
-    # In JSON mode keep the spinner quiet and force non-interactive behaviour
-    # so stdout stays pure JSON and prompts never block the pipe.
+    # In JSON mode keep the spinner quiet so stdout stays pure JSON. Do not
+    # force --yes: a JSON run must be able to diff a host without mutating
+    # it. Applying still requires an explicit --yes; without it the proposed
+    # changes are emitted as JSON instead of blocking on a confirm prompt.
     if json_output:
         environ.setdefault("PYINFRA_PROGRESS", "off")
-        yes = True
     # Setup working directory
     #
     if chdir:
@@ -402,7 +403,9 @@ def _main(
         ssh_password,
     )
 
-    if yes is False:
+    # JSON mode is non-interactive: a failure prompt would block the
+    # pure-JSON stdout pipe, so never install the confirm callbacks there.
+    if yes is False and not json_output:
         _set_fail_prompts(state, config)
 
     # Load up the inventory from the filesystem
@@ -472,12 +475,14 @@ def _main(
             print_run_json(state, dry=True)
         _exit()
 
-    if (
-        can_diff
-        and not yes
-        and not _do_confirm("Detected changes displayed above, skip this step with -y")
-    ):
-        _exit()
+    if can_diff and not yes:
+        if json_output:
+            # Non-interactive JSON run without --yes: emit the proposed
+            # changes (like --dry) and exit without touching the host.
+            print_run_json(state, dry=True)
+            _exit()
+        if not _do_confirm("Detected changes displayed above, skip this step with -y"):
+            _exit()
 
     logger.info("--> Beginning operation run...")
     state.set_stage(StateStage.Execute)

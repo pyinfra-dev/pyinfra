@@ -176,18 +176,22 @@ pyinfra inventory.py debug-inventory --json
 # Collect a fact as JSON
 pyinfra inventory.py fact server.LinuxName --json
 
-# Plan a deploy without running it
+# Show a deploy's proposed changes as JSON without touching the host
+pyinfra inventory.py deploy.py --json
+
+# Same, explicit dry run
 pyinfra inventory.py deploy.py --dry --json
 
-# Run a deploy and emit structured plan + results
-pyinfra inventory.py deploy.py --json
+# Apply the deploy and emit structured plan + results
+pyinfra inventory.py deploy.py --json --yes
 ```
 
 ### Non-interactive behaviour
 
-`--json` forces non-interactive execution so stdout stays pure JSON:
+`--json` runs non-interactively so stdout stays pure JSON:
 
-+ `--yes` is implied (any "continue?" prompt is auto-confirmed).
++ `--json` does not apply changes on its own. Without `--yes` (or with `--dry`) it prints the proposed changes and exits without touching the host. Pass `--yes` to apply the deploy and emit the results.
++ Host connection/failure prompts are skipped: the run fails non-interactively instead of asking whether to continue.
 + The progress spinner is disabled (`PYINFRA_PROGRESS=off`).
 
 Interactive prompts from deploy code (e.g. `input(...)`) will still block, so avoid them when using `--json`.
