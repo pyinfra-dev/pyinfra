@@ -1,0 +1,22 @@
+{
+    "args": ["this_is_a_command"],
+    "kwargs": {
+        "hour": 1,
+        "minute": 5
+    },
+    "facts": {
+        "crontab.Crontab": {
+            "user=None": {
+                "this_is_a_command": {
+                    "special_time": "@reboot",
+                    "comments": []
+                }
+            }
+        }
+    },
+    "commands": [
+        "crontab -l  > _tempfile_",
+        "sed -i.a-timestamp 's/.*this_is_a_command.*/5 1 * * * this_is_a_command/' _tempfile_ && rm -f _tempfile_.a-timestamp",
+        "crontab  _tempfile_"
+    ]
+}

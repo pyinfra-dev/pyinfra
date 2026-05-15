@@ -29,9 +29,7 @@ def iter_operations():
 
     for module_name in sorted(module_filenames):
         module = import_module(
-            "pyinfra.operations.{0}".format(
-                path.basename(module_name)[:-3],
-            ),
+            f"pyinfra.operations.{path.basename(module_name)[:-3]}",
         )
 
         for key, value in sorted(getmembers(module)):
@@ -47,9 +45,5 @@ class TestOperationGlobalArguments(TestCase):
             argspec = getfullargspec(op_func._pyinfra_op)
             for arg in argspec.args:
                 assert arg not in global_arg_keys, (
-                    "`{0}` argument found in {1}.{2} operation function".format(
-                        arg,
-                        op_module.__name__,
-                        op_func.__name__,
-                    )
+                    f"`{arg}` argument found in {op_module.__name__}.{op_func.__name__} operation function"
                 )

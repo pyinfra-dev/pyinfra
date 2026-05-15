@@ -43,7 +43,7 @@ def test_int_docker_put_file(helpers):
     # TODO: why does importing this at top level break things?
     from pyinfra.api.util import get_file_sha256
 
-    with open("README.md", "r") as f:
+    with open("README.md") as f:
         expected_sum = get_file_sha256(f)
 
     def check(host: testinfra.host.Host):

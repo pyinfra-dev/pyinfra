@@ -1,0 +1,24 @@
+{
+    "args": ["/home/myworktree"],
+    "kwargs": {
+        "repo": "/home/mainrepo",
+        "user": "myuser",
+        "group": "mygroup"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/mainrepo": {},
+            "path=/home/mainrepo/.git": {
+                "mode": 0
+            },
+            "path=/home/myworktree": null
+        }
+    },
+    "commands": [
+        "cd /home/mainrepo && git worktree add /home/myworktree",
+        "chown -R myuser:mygroup /home/myworktree",
+        "chown -R myuser:mygroup /home/mainrepo/.git/worktrees/myworktree",
+        "chown myuser:mygroup /home/mainrepo/.git/refs/heads/myworktree",
+        "chown -R myuser:mygroup /home/mainrepo/.git/logs/refs/heads/myworktree"
+    ]
+}

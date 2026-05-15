@@ -238,7 +238,7 @@ def fake_docker_shell(command, splitlines=None):
     if command == "docker rm -f containerid":
         return []
 
-    raise PyinfraError("Invalid command: {0}".format(command))
+    raise PyinfraError(f"Invalid command: {command}")
 
 
 @patch("pyinfra.connectors.docker.local.shell", fake_docker_shell)
@@ -269,7 +269,7 @@ def fake_podman_shell(command, splitlines=None):
     if command == "podman rm -f containerid":
         return []
 
-    raise PyinfraError("Invalid command: {0}".format(command))
+    raise PyinfraError(f"Invalid command: {command}")
 
 
 @patch("pyinfra.connectors.docker.local.shell", fake_podman_shell)

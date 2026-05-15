@@ -1,6 +1,6 @@
 from getpass import getpass
 from os import path
-from typing import TYPE_CHECKING, Type, Union
+from typing import TYPE_CHECKING
 
 from paramiko import (
     ECDSAKey,
@@ -20,14 +20,14 @@ if TYPE_CHECKING:
 
 
 def raise_connect_error(host: "Host", message, data):
-    message = "{0} ({1})".format(message, data)
+    message = f"{message} ({data})"
     raise ConnectError(message)
 
 
 def _load_private_key_file(filename: str, key_filename: str, key_password: str):
-    exception: Union[PyinfraError, SSHException] = PyinfraError("Invalid key: {0}".format(filename))
+    exception: PyinfraError | SSHException = PyinfraError(f"Invalid key: {filename}")
 
-    key_cls: Union[Type[RSAKey], Type[ECDSAKey], Type[Ed25519Key]]
+    key_cls: type[RSAKey] | type[ECDSAKey] | type[Ed25519Key]
 
     for key_cls in (RSAKey, ECDSAKey, Ed25519Key):
         try:
@@ -42,16 +42,14 @@ def _load_private_key_file(filename: str, key_filename: str, key_password: str):
                 # anywhere else without duplicating lots of key related code into cli.py.
                 if pyinfra.is_cli:
                     key_password = getpass(
-                        "Enter password for private key: {0}: ".format(
-                            key_filename,
-                        ),
+                        f"Enter password for private key: {key_filename}: ",
                     )
 
                 # API mode and no password? We can't continue!
                 else:
                     raise PyinfraError(
-                        "Private key file ({0}) is encrypted, set ssh_key_password to "
-                        "use this key".format(key_filename),
+                        f"Private key file ({key_filename}) is encrypted, set ssh_key_password to "
+                        "use this key",
                     )
 
             try:
@@ -97,14 +95,14 @@ def get_private_key(state: "State", key_filename: str, key_password: str) -> PKe
     # No break, so no key found
     if not key:
         if not key_file_exists:
-            raise PyinfraError("No such private key file: {0}".format(key_filename))
-        raise PyinfraError("Invalid private key file: {0}".format(key_filename))
+            raise PyinfraError(f"No such private key file: {key_filename}")
+        raise PyinfraError(f"Invalid private key file: {key_filename}")
 
     # Load any certificate, names from OpenSSH:
     # https://github.com/openssh/openssh-portable/blob/049297de975b92adcc2db77e3fb7046c0e3c695d/ssh-keygen.c#L2453  # noqa: E501
     for certificate_filename in (
-        "{0}-cert.pub".format(key_filename),
-        "{0}.pub".format(key_filename),
+        f"{key_filename}-cert.pub",
+        f"{key_filename}.pub",
     ):
         if path.isfile(certificate_filename):
             key.load_certificate(certificate_filename)

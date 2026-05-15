@@ -1,0 +1,20 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "home": "homedir",
+        "create_home": true,
+        "ensure_home": true
+    },
+    "facts": {
+        "server.Os": "OpenBSD",
+        "server.Users": {},
+        "server.Groups": {},
+        "server.Which": {
+            "command=useradd": "/usr/sbin/useradd"
+        },
+        "files.Directory": {
+            "path=homedir": null
+        }
+    },
+    "commands": ["useradd -d homedir -m someuser", "mkdir -p homedir", "chown someuser:someuser homedir"]
+}

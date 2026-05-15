@@ -2,7 +2,8 @@ import re
 from inspect import getmembers, ismodule
 from pathlib import Path
 from types import ModuleType
-from typing import Generator, Any
+from typing import Any
+from collections.abc import Generator
 
 
 def title_line(char, string):

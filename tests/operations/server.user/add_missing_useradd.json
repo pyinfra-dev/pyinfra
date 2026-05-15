@@ -1,0 +1,19 @@
+{
+    "args": ["pyinfra"],
+    "kwargs": {
+        "shell": "/bin/sh"
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.LinuxName": "Ubuntu",
+        "server.Users": {},
+        "server.Groups": {},
+        "server.Which": {
+            "command=useradd": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "useradd is not installed"
+    }
+}

@@ -80,7 +80,7 @@ def parse_win_ls_output(output, wanted_type):
                 "link": link,
             }
 
-            date_and_time = "{} {}".format(matches.group(2), matches.group(3))
+            date_and_time = f"{matches.group(2)} {matches.group(3)}"
 
             size = "0"
             if type == "file":

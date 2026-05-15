@@ -1,10 +1,11 @@
-# encoding: utf-8
-
 from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State
 from pyinfra.connectors.util import (
+    CommandOutput,
+    OutputLine,
+    _ensure_askpass_set_for_host,
     make_unix_command,
     make_unix_command_for_host,
     remove_any_sudo_askpass_file,
@@ -204,15 +205,14 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": "/tmp/weird path; id",
-            "su_askpass_path": None,
+            "sudo_askpass_path__/tmp": "/tmp/weird path; id",
         }
         host.run_shell_command = lambda cmd: commands.append(cmd.get_raw_value())
 
         remove_any_sudo_askpass_file(host)
 
         assert commands == ["rm -f '/tmp/weird path; id'"]
-        assert host.connector_data["sudo_askpass_path"] is None
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
 
     def test_command_exists_su_config_only(self):
         """
@@ -231,31 +231,52 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         commands = []
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": "/tmp/sudo-askpass",
-            "su_askpass_path": "/tmp/su-askpass",
+            "sudo_askpass_path__/tmp": "/tmp/sudo-askpass",
+            "su_askpass_path__/tmp": "/tmp/su-askpass",
         }
         host.run_shell_command = lambda cmd: commands.append(cmd.get_raw_value())
 
         remove_any_sudo_askpass_file(host)
 
-        assert commands == [
-            "rm -f /tmp/sudo-askpass",
+        assert sorted(commands) == [
             "rm -f /tmp/su-askpass",
+            "rm -f /tmp/sudo-askpass",
         ]
-        assert host.connector_data["sudo_askpass_path"] is None
-        assert host.connector_data["su_askpass_path"] is None
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
+        assert host.connector_data["su_askpass_path__/tmp"] is None
+
+    def test_clears_multiple_temp_dir_variants(self):
+        commands = []
+        host = MagicMock()
+        host.connector_data = {
+            "sudo_askpass_path__/tmp": "/tmp/sudo-askpass",
+            "sudo_askpass_path__/var/tmp": "/var/tmp/sudo-askpass",
+            "su_askpass_path__/dev/shm": "/dev/shm/su-askpass",
+        }
+        host.run_shell_command = lambda cmd: commands.append(cmd.get_raw_value())
+
+        remove_any_sudo_askpass_file(host)
+
+        assert sorted(commands) == [
+            "rm -f /dev/shm/su-askpass",
+            "rm -f /tmp/sudo-askpass",
+            "rm -f /var/tmp/sudo-askpass",
+        ]
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
+        assert host.connector_data["sudo_askpass_path__/var/tmp"] is None
+        assert host.connector_data["su_askpass_path__/dev/shm"] is None
 
     def test_swallows_errors_and_clears_state(self):
         """
-        Regression test for #1645: `host.disconnect()` → `remove_any_sudo_askpass_file`
+        Regression test for #1645: `host.disconnect()` -> `remove_any_sudo_askpass_file`
         is called after ``server.reboot`` when the SSH session is already dead.
         The remote ``rm`` must fail gracefully and the stored path must still
         be cleared so a reconnect will regenerate a fresh askpass file.
         """
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": "/tmp/sudo-askpass",
-            "su_askpass_path": "/tmp/su-askpass",
+            "sudo_askpass_path__/tmp": "/tmp/sudo-askpass",
+            "su_askpass_path__/tmp": "/tmp/su-askpass",
         }
 
         def failing_run(cmd):
@@ -263,20 +284,142 @@ class TestRemoveAnySudoAskpassFile(TestCase):
 
         host.run_shell_command = failing_run
 
-        # Must not raise — this is a best-effort cleanup.
+        # Must not raise, this is a best-effort cleanup.
         remove_any_sudo_askpass_file(host)
 
-        assert host.connector_data["sudo_askpass_path"] is None
-        assert host.connector_data["su_askpass_path"] is None
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
+        assert host.connector_data["su_askpass_path__/tmp"] is None
 
     def test_noop_when_no_state(self):
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": None,
-            "su_askpass_path": None,
+            "sudo_askpass_path__/tmp": None,
+            "su_askpass_path__/tmp": None,
         }
         host.run_shell_command = MagicMock()
 
         remove_any_sudo_askpass_file(host)
 
         host.run_shell_command.assert_not_called()
+
+
+class TestEnsureAskpassTempDir(TestCase):
+    """
+    The askpass helper must honour the resolved temp directory (issue #1623):
+    operation-level ``_temp_dir`` > ``config.TEMP_DIR`` > ``config.DEFAULT_TEMP_DIR``.
+    Per-host defaults for ``_temp_dir`` come through the standard global-argument
+    cascade (``host.data._temp_dir``), not via a separate code path here.
+    """
+
+    _counter = 0
+
+    @classmethod
+    def _next_host(cls):
+        cls._counter += 1
+        return f"askpass-temp-dir-test-host-{cls._counter}"
+
+    def _make_host(self, config=None):
+        name = self._next_host()
+        state = State(make_inventory(hosts=(name,)), config or Config())
+        host = state.inventory.get_host(name)
+        host.init(state)
+        return host
+
+    def _captured_script_run(self, host, temp_dir=None, stdout="/some/askpass/path"):
+        """
+        Call ``_ensure_askpass_set_for_host`` with ``host.run_shell_command``
+        patched so we can assert on the remote script text (whose first
+        argument to the mkstemp template is the temp directory).
+        """
+        captured = {}
+
+        def fake_run(command, *args, **kwargs):
+            captured["command"] = command
+            return (True, CommandOutput([OutputLine("stdout", stdout)]))
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+        _ensure_askpass_set_for_host(
+            host,
+            key="sudo_askpass_path",
+            env_var="PYINFRA_SUDO_PASSWORD",
+            temp_dir=temp_dir,
+        )
+        return captured["command"]
+
+    def test_default_temp_dir(self):
+        host = self._make_host()
+        script = self._captured_script_run(host)
+        assert "${TMPDIR:=/tmp}" in script
+
+    def test_config_temp_dir(self):
+        host = self._make_host(Config(TEMP_DIR="/var/tmp"))
+        script = self._captured_script_run(host)
+        assert "${TMPDIR:=/var/tmp}" in script
+
+    def test_op_temp_dir_wins_over_config(self):
+        host = self._make_host(Config(TEMP_DIR="/var/tmp"))
+        script = self._captured_script_run(host, temp_dir="/dev/shm/pyinfra")
+        assert "${TMPDIR:=/dev/shm/pyinfra}" in script
+
+    def test_distinct_temp_dirs_get_distinct_cache_entries(self):
+        host = self._make_host()
+        first = self._captured_script_run(host, temp_dir="/a", stdout="/a/askpass")
+        assert "${TMPDIR:=/a}" in first
+        second = self._captured_script_run(host, temp_dir="/b", stdout="/b/askpass")
+        assert "${TMPDIR:=/b}" in second
+        assert host.connector_data["sudo_askpass_path__/a"] == "/a/askpass"
+        assert host.connector_data["sudo_askpass_path__/b"] == "/b/askpass"
+
+    def test_same_temp_dir_reuses_cache(self):
+        host = self._make_host()
+        calls = {"count": 0}
+
+        def fake_run(command, *args, **kwargs):
+            calls["count"] += 1
+            return (True, CommandOutput([OutputLine("stdout", "/tmp/askpass-XYZ")]))
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+
+        first = _ensure_askpass_set_for_host(
+            host,
+            key="sudo_askpass_path",
+            env_var="PYINFRA_SUDO_PASSWORD",
+            temp_dir="/tmp",
+        )
+        second = _ensure_askpass_set_for_host(
+            host,
+            key="sudo_askpass_path",
+            env_var="PYINFRA_SUDO_PASSWORD",
+            temp_dir="/tmp",
+        )
+
+        assert first == second == "/tmp/askpass-XYZ"
+        assert calls["count"] == 1
+
+    def test_make_unix_command_for_host_threads_temp_dir(self):
+        host = self._make_host()
+        host.connector_data["prompted_sudo_password"] = "supersecret"
+
+        captured = {}
+
+        def fake_run(command, *args, **kwargs):
+            captured["command"] = command
+            return (
+                True,
+                CommandOutput([OutputLine("stdout", "/op/tmp/pyinfra-askpass-XYZ")]),
+            )
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+
+        with patch("pyinfra.connectors.util.make_unix_command") as fake_make:
+            fake_make.return_value = "mocked"
+            make_unix_command_for_host(
+                host.state,
+                host,
+                "uptime",
+                _sudo=True,
+                _sudo_password="supersecret",
+                _temp_dir="/op/tmp",
+            )
+
+        assert "${TMPDIR:=/op/tmp}" in captured["command"]

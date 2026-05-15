@@ -1,0 +1,9 @@
+{
+    "command": "dnf module list --disabled",
+    "requires_command": "dnf",
+    "output": [
+        "",
+        "Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled"
+    ],
+    "fact": []
+}

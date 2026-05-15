@@ -18,6 +18,9 @@
                 "user": "someuser",
                 "group": "someuser"
             }
+        },
+        "server.Which": {
+            "command=usermod": "/usr/sbin/usermod"
         }
     },
     "commands": [],
