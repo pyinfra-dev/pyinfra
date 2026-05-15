@@ -316,14 +316,21 @@ class Host:
 
     def get_temp_dir_config(self):
         # Deploy files mutate the per-deploy `ctx_config` copy, not
-        # `state.config` (see pyinfra.context). Prefer that override so
-        # `config.TEMP_DIR = ...` inside a deploy lands the askpass
-        # script under the requested directory (issue #1729). Mirrors the
-        # precedence used by `pop_global_arguments`.
+        # `state.config` (see pyinfra.context), so prefer an explicit
+        # override there: `config.TEMP_DIR = ...` inside a deploy must
+        # land the askpass script under the requested directory (issue
+        # #1729). A `ctx_config` carrying no explicit TEMP_DIR (the copy
+        # of a default config, or a context leaked from elsewhere) must
+        # not shadow a TEMP_DIR set on `state.config` via an
+        # inventory/config file, so fall through to it rather than
+        # swapping the config wholesale.
+        ctx = ctx_config.get() if ctx_config.isset() else None
         config = self.state.config
-        if ctx_config.isset():
-            config = ctx_config.get()
-        return config.TEMP_DIR or config.DEFAULT_TEMP_DIR
+        return (
+            (ctx.TEMP_DIR if ctx is not None else None)
+            or config.TEMP_DIR
+            or config.DEFAULT_TEMP_DIR
+        )
 
     def get_temp_filename(
         self,

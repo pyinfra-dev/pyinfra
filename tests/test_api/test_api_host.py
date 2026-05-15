@@ -102,3 +102,17 @@ class TestHostTempDirConfig(TestCase):
     def test_get_temp_dir_config_falls_back_to_state_default(self):
         host = self._make_host()
         assert host.get_temp_dir_config() == host.state.config.DEFAULT_TEMP_DIR
+
+    def test_get_temp_dir_config_state_config_wins_over_empty_ctx(self):
+        # A ctx_config without an explicit TEMP_DIR (the per-deploy copy of
+        # a default config, or a context leaked from another test under
+        # full-suite ordering) must not shadow a TEMP_DIR set on
+        # state.config via an inventory/config file. Deterministic guard
+        # for the order-dependent failure of test_connectors
+        # TestEnsureAskpassTempDir.test_config_temp_dir.
+        inventory = make_inventory()
+        State(inventory, Config(TEMP_DIR="/var/tmp"))
+        host = inventory.get_host("somehost")
+
+        with ctx_config.use(Config()):
+            assert host.get_temp_dir_config() == "/var/tmp"
