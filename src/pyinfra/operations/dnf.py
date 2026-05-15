@@ -211,6 +211,7 @@ def packages(
         version_join="=",
         latest=latest,
         expand_package_fact=lambda package: host.get_fact(RpmPackageProvides, package=package),
+        expand_match_any=True,
     )
 
 

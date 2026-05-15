@@ -5,13 +5,15 @@
     },
     "facts": {
         "deb.DebPackages": {},
-        "server.Date": "datetime:2015-01-01T00:00:00+00:00",
+        "server.Date": "datetime:2015-01-01T03:00:00+02:00",
         "files.File": {
             "path=/var/lib/apt/periodic/update-success-stamp": {
                 "mtime": "datetime:2015-01-01T00:00:00"
             }
         }
     },
-    "commands": [],
-    "noop_description": "apt is already up to date"
+    "commands": [
+        "apt-get update",
+        "touch /var/lib/apt/periodic/update-success-stamp"
+    ]
 }

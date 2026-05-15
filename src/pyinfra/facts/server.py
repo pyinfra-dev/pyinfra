@@ -107,6 +107,27 @@ class KernelVersion(FactBase):
         return "uname -r"
 
 
+class Uptime(FactBase[int]):
+    """
+    Returns the number of seconds the system has been up.
+    """
+
+    @override
+    def command(self) -> str:
+        self._kernel = host.get_fact(Kernel)
+        if self._kernel in ("Darwin", "FreeBSD"):
+            return "date +%s; sysctl -n kern.boottime | awk '{print $4}' | tr -d ','"
+
+        return "cut -d. -f1 /proc/uptime"
+
+    @override
+    def process(self, output: list[str]) -> int:
+        if self._kernel in ("Darwin", "FreeBSD"):
+            return int(output[0]) - int(output[1])
+
+        return int(output[0])
+
+
 # Deprecated/renamed -> Kernel
 class Os(FactBase[str]):
     """

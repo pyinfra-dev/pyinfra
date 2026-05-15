@@ -15,11 +15,11 @@ def crontab(
     present=True,
     user: str | None = None,
     cron_name: str | None = None,
-    minute="*",
-    hour="*",
-    month="*",
-    day_of_week="*",
-    day_of_month="*",
+    minute: list[str | int] | str | int | None = None,
+    hour: list[str | int] | str | int | None = None,
+    month: list[str | int] | str | int | None = None,
+    day_of_week: list[str | int] | str | int | None = None,
+    day_of_month: list[str | int] | str | int | None = None,
     special_time: str | None = None,
     interpolate_variables=False,
 ):
@@ -44,23 +44,44 @@ def crontab(
         This means commands must be unique within a given users crontab. If you require
         multiple identical commands, provide a different name argument for each.
 
+    Cron schedule:
+        The values for ``minute``, ``hour``, ``month``, ``day_of_week``,
+        ``day_of_month`` can be specified as an integer, a string containing
+        a cron schedule or a list of integers or strings. The effective default
+        value of all these arguments is "*" when ``special_time`` is not set.
+
     Special times:
         When provided, ``special_time`` will be used instead of any values passed in
         for ``minute``/``hour``/``month``/``day_of_week``/``day_of_month``.
 
-    **Example:**
+    **Examples:**
 
     .. code:: python
 
         from pyinfra.operations import crontab
+
         # simple example for a crontab
         crontab.crontab(
             name="Backup /etc weekly",
             command="/bin/tar cf /tmp/etc_bup.tar /etc",
-            name="backup_etc",
+            cron_name="backup_etc",
             day_of_week=0,
             hour=1,
             minute=0,
+        )
+
+        # execute every five minutes
+        crontab.crontab(
+            name="A harmless monitoring example",
+            command="/usr/bin/ping 127.0.0.1",
+            minute="*/5"
+        )
+
+        # execute on reboot
+        crontab.crontab(
+            name="Create a directory on reboot",
+            command="/usr/bin/mkdir /var/run/my_directory",
+            special_time="@reboot"
         )
     """
 
@@ -100,6 +121,16 @@ def crontab(
     if special_time:
         new_crontab_line = f"{special_time} {command}"
     else:
+        if minute is None:
+            minute = "*"
+        if hour is None:
+            hour = "*"
+        if day_of_month is None:
+            day_of_month = "*"
+        if month is None:
+            month = "*"
+        if day_of_week is None:
+            day_of_week = "*"
         new_crontab_line = f"{minute} {hour} {day_of_month} {month} {day_of_week} {command}"
 
     existing_crontab_match = f".*{existing_crontab_match}.*"
