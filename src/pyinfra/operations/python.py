@@ -4,7 +4,7 @@ The Python module allows you to execute Python code within the context of a depl
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from pyinfra.api import FunctionCommand, operation
 

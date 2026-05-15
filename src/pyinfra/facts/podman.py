@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Iterable, List, TypeVar
+from typing import Any, TypeVar
+from collections.abc import Iterable
 
 from typing_extensions import override
 
@@ -22,7 +23,7 @@ class PodmanFactBase(FactBase[T]):
         return "podman"
 
 
-class PodmanSystemInfo(PodmanFactBase[Dict[str, Any]]):
+class PodmanSystemInfo(PodmanFactBase[dict[str, Any]]):
     """
     Output of 'podman system info'
     """
@@ -32,13 +33,13 @@ class PodmanSystemInfo(PodmanFactBase[Dict[str, Any]]):
         return "podman system info --format=json"
 
     @override
-    def process(self, output: Iterable[str]) -> Dict[str, Any]:
+    def process(self, output: Iterable[str]) -> dict[str, Any]:
         output = json.loads(("").join(output))
         assert isinstance(output, dict)
         return output
 
 
-class PodmanPs(PodmanFactBase[List[Dict[str, Any]]]):
+class PodmanPs(PodmanFactBase[list[dict[str, Any]]]):
     """
     Output of 'podman ps'
     """
@@ -48,7 +49,7 @@ class PodmanPs(PodmanFactBase[List[Dict[str, Any]]]):
         return "podman ps --format=json --all"
 
     @override
-    def process(self, output: Iterable[str]) -> List[Dict[str, Any]]:
+    def process(self, output: Iterable[str]) -> list[dict[str, Any]]:
         output = json.loads(("").join(output))
         assert isinstance(output, list)
         return output  # type: ignore

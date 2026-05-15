@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "filename": "docker",
+        "present": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/etc/apt/sources.list.d/docker.sources": null
+        }
+    },
+    "commands": [],
+    "noop_description": "apt sources file \"/etc/apt/sources.list.d/docker.sources\" does not exist"
+}

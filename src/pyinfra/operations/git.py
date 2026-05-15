@@ -85,7 +85,7 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
         yield StringCommand(base_command, "--add", QuoteString(key), quoted_value)
 
     else:
-        host.noop("git config {0} is set to {1}".format(key, value))
+        host.noop(f"git config {key} is set to {value}")
 
 
 @operation()
@@ -140,7 +140,7 @@ def repo(
             yield from ssh.keyscan._inner(domain.group(1))
         else:
             raise OperationError(
-                "Could not parse domain (to SSH keyscan) from: {0}".format(src),
+                f"Could not parse domain (to SSH keyscan) from: {src}",
             )
 
     # Store git commands for directory prefix
@@ -187,7 +187,7 @@ def repo(
                     skip_pull = True
             if skip_pull:
                 host.noop(
-                    "git repository {0} is already up to date".format(dest),
+                    f"git repository {dest} is already up to date",
                 )
             elif rebase:
                 git_commands.append("pull --rebase")
@@ -358,7 +358,7 @@ def worktree(
             path=unix_path_join(repo, ".git"),
         ):
             raise OperationError(
-                "The following folder is not a valid GIT repository : {0}".format(repo),
+                f"The following folder is not a valid GIT repository : {repo}",
             )
 
         if repo is None:
@@ -391,6 +391,33 @@ def worktree(
         # Apply any user or group
         if user or group:
             yield chown(worktree, user, group, recursive=True)
+            # `git worktree add` writes per-worktree metadata under the source
+            # repo's `.git/worktrees/<name>/`, plus refs/logs for any new
+            # branch it creates. When the command runs as root (e.g. via
+            # `_sudo`), those files end up root-owned and break later git
+            # commands run as the worktree owner.
+            worktree_name = worktree.rstrip("/").rsplit("/", 1)[-1]
+            yield chown(
+                unix_path_join(repo, ".git", "worktrees", worktree_name),
+                user,
+                group,
+                recursive=True,
+            )
+            branch_for_chown = new_branch
+            if not branch_for_chown and not detached and not commitish:
+                branch_for_chown = worktree_name
+            if branch_for_chown:
+                yield chown(
+                    unix_path_join(repo, ".git", "refs", "heads", branch_for_chown),
+                    user,
+                    group,
+                )
+                yield chown(
+                    unix_path_join(repo, ".git", "logs", "refs", "heads", branch_for_chown),
+                    user,
+                    group,
+                    recursive=True,
+                )
 
     # It exists and we don't want it
     elif host.get_fact(Directory, path=worktree) and not present:
@@ -450,7 +477,7 @@ def worktree(
 
             if skip_pull:
                 host.noop(
-                    "git worktree {0} is already up to date".format(worktree),
+                    f"git worktree {worktree} is already up to date",
                 )
             else:
                 pull_args: list[str | QuoteString] = [

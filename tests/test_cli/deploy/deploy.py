@@ -56,8 +56,8 @@ my_deploy()
 # Do a loop which will generate duplicate op hashes
 for i in range(2):
     server.shell(
-        name="Loop-{0} main operation".format(i),
-        commands="echo loop_{0}_main_operation".format(i),
+        name=f"Loop-{i} main operation",
+        commands=f"echo loop_{i}_main_operation",
     )
 
 call_file_op()

@@ -16,7 +16,7 @@ class GitFactBase(FactBase):
 class GitBranch(GitFactBase):
     @override
     def command(self, repo) -> str:
-        return "! test -d {0} || (cd {0} && git describe --all)".format(repo)
+        return f"! test -d {repo} || (cd {repo} && git describe --all)"
 
     @override
     def process(self, output):
@@ -26,7 +26,7 @@ class GitBranch(GitFactBase):
 class GitTag(GitFactBase):
     @override
     def command(self, repo) -> str:
-        return "! test -d {0} || (cd {0} && git tag)".format(repo)
+        return f"! test -d {repo} || (cd {repo} && git tag)"
 
     @override
     def process(self, output):
@@ -42,7 +42,7 @@ class GitConfig(GitFactBase):
             level = "--system" if system else "--global"
             return f"git config {level} -l || true"
 
-        return "! test -d {0} || (cd {0} && git config --local -l)".format(repo)
+        return f"! test -d {repo} || (cd {repo} && git config --local -l)"
 
     @override
     def process(self, output):
@@ -58,7 +58,7 @@ class GitConfig(GitFactBase):
 class GitTrackingBranch(GitFactBase):
     @override
     def command(self, repo) -> str:
-        return r"! test -d {0} || (cd {0} && git status --branch --porcelain)".format(repo)
+        return rf"! test -d {repo} || (cd {repo} && git status --branch --porcelain)"
 
     @override
     def process(self, output):
@@ -83,7 +83,7 @@ class GitLocalCommit(GitFactBase):
 
     @override
     def command(self, repo: str, ref: str = "HEAD") -> str:
-        return "! test -d {0} || (cd {0} && git rev-parse {1} 2>/dev/null)".format(repo, ref)
+        return f"! test -d {repo} || (cd {repo} && git rev-parse {ref} 2>/dev/null)"
 
     @override
     def process(self, output: list[str]):
@@ -103,9 +103,7 @@ class GitRemoteBranchCommit(GitFactBase):
     @override
     def command(self, repo: str, remote: str = "origin", branch: str | None = None) -> str:
         ref = branch if branch else "HEAD"
-        return ("! test -d {0} || (cd {0} && git ls-remote {1} {2} 2>/dev/null | head -n1)").format(
-            repo, remote, ref
-        )
+        return f"! test -d {repo} || (cd {repo} && git ls-remote {remote} {ref} 2>/dev/null | head -n1)"
 
     @override
     def process(self, output: list[str]):

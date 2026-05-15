@@ -1,0 +1,6 @@
+{
+    "kwargs": {},
+    "commands": [
+        "docker system prune -f"
+    ]
+}

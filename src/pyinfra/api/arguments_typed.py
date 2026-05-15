@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Generator, Generic, Iterable, List, Mapping, Union
+from typing import TYPE_CHECKING, Generic
+from collections.abc import Callable, Generator, Iterable, Mapping
 
 from typing_extensions import ParamSpec, Protocol
 
@@ -47,10 +48,10 @@ class PyinfraOperation(Generic[P], Protocol):
         _success_exit_codes: Iterable[int] = (0,),
         _timeout: None | int = None,
         _get_pty: bool = False,
-        _stdin: None | Union[str, list[str], Iterable[str]] = None,
+        _stdin: None | str | list[str] | Iterable[str] = None,
         # Retry arguments
         _retries: None | int = None,
-        _retry_delay: None | Union[int, float] = None,
+        _retry_delay: None | int | float = None,
         _retry_until: None | Callable[[dict], bool] = None,
         _temp_dir: None | str = None,
         #
@@ -59,7 +60,7 @@ class PyinfraOperation(Generic[P], Protocol):
         name: None | str = None,
         _ignore_errors: bool = False,
         _continue_on_error: bool = False,
-        _if: Union[List[Callable[[], bool]], Callable[[], bool], None] = None,
+        _if: list[Callable[[], bool]] | Callable[[], bool] | None = None,
         #
         # ExecutionArguments
         #
@@ -74,4 +75,4 @@ class PyinfraOperation(Generic[P], Protocol):
         # op kwargs
         #
         **kwargs: P.kwargs,
-    ) -> "OperationMeta": ...
+    ) -> OperationMeta: ...

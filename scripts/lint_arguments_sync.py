@@ -121,10 +121,10 @@ def main() -> int:
     arguments_typed_path = path.join(repo_root, "src", "pyinfra", "api", "arguments_typed.py")
 
     # Parse both files
-    with open(arguments_path, "r", encoding="utf-8") as f:
+    with open(arguments_path, encoding="utf-8") as f:
         arguments_tree = ast.parse(f.read())
 
-    with open(arguments_typed_path, "r", encoding="utf-8") as f:
+    with open(arguments_typed_path, encoding="utf-8") as f:
         arguments_typed_tree = ast.parse(f.read())
 
     # Extract TypedDict keys from arguments.py

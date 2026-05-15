@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Union
 
 from typing_extensions import TypedDict, override
 
@@ -26,7 +25,7 @@ class AptRepo:
     url: str  # Repository URL
     distribution: str  # Suite/distribution name
     components: list[str]  # List of components (e.g., ["main", "contrib"])
-    options: dict[str, Union[str, list[str]]]  # Repository options
+    options: dict[str, str | list[str]]  # Repository options
 
     # Dict-like interface for backward compatibility
     def __getitem__(self, key: str):
@@ -100,7 +99,7 @@ class AptSourcesFile:
     trusted: str | None = None  # "yes"/"no"
 
     @classmethod
-    def from_deb822_lines(cls, lines: list[str]) -> "AptSourcesFile | None":
+    def from_deb822_lines(cls, lines: list[str]) -> AptSourcesFile | None:
         """Parse deb822 stanza lines into AptSourcesFile.
 
         Handles multi-line field values (continuation lines starting with a space
@@ -199,7 +198,7 @@ class AptSourcesFile:
     def expand_to_repos(self) -> list[AptRepo]:
         """Expand this sources file entry into individual AptRepo instances."""
         # Build options dict in the same format as legacy parsing
-        options: dict[str, Union[str, list[str]]] = {}
+        options: dict[str, str | list[str]] = {}
 
         if self.architectures:
             options["arch"] = (
