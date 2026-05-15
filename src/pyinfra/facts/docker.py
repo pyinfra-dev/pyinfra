@@ -135,10 +135,7 @@ class DockerPlugins(DockerFactBase):
 class DockerSingleMixin(DockerFactBase):
     @override
     def command(self, object_id):
-        return "docker {0} inspect {1} 2>&- || true".format(
-            self.docker_type,
-            object_id,
-        )
+        return f"docker {self.docker_type} inspect {object_id} 2>&- || true"
 
 
 class DockerContainer(DockerSingleMixin):
@@ -332,7 +329,7 @@ class DockerContainerFsChanges(DockerFactBase):
 
     @override
     def command(self, container_id) -> str:
-        return "docker container diff {0} 2>&- || true".format(container_id)
+        return f"docker container diff {container_id} 2>&- || true"
 
     @override
     def process(self, output):
@@ -354,7 +351,7 @@ class DockerContainerProcesses(DockerFactBase):
 
     @override
     def command(self, container_id) -> str:
-        return "docker container top {0} 2>&- || true".format(container_id)
+        return f"docker container top {container_id} 2>&- || true"
 
     @override
     def process(self, output):
@@ -389,9 +386,7 @@ class DockerImageHistory(_DockerJsonLinesFactBase):
 
     @override
     def command(self, image_id) -> str:
-        return (
-            "docker image history --no-trunc --format '{{{{json .}}}}' {0} 2>&- || true"
-        ).format(image_id)
+        return f"docker image history --no-trunc --format '{{{{json .}}}}' {image_id} 2>&- || true"
 
 
 class DockerAuths(FactBase[list[str]]):

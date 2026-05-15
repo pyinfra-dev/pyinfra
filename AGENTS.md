@@ -140,10 +140,34 @@ break docs generation.
 
 **Shell safety** — user-supplied values must be composed into shell commands using `StringCommand`
 + `QuoteString` / `MaskString` from `pyinfra.api`. Do not use plain string formatting (e.g.
-`"rm -f {}".format(path)`) for user-controlled values.
+`"rm -f {}".format(path)`) for user-controlled values. This applies to **every** user-controlled
+value regardless of type — wrap ports, integers, paths and other non-string args with
+`QuoteString` too; reviewers explicitly flag unquoted ints as injection risk.
 
 **Optional parameter defaults** — optional parameters must default to `None`, not `""`. Older
-operations in the codebase use `""` defaults; do not replicate this pattern.
+operations in the codebase use `""` defaults; do not replicate this pattern. Type these as
+`T | None` (e.g. `path: str | None = None`); do not use `Optional[T]`.
+
+**Distinguish unset from empty** — when a parameter is `T | None`, branch on `if x is not None:`
+rather than truthy `if x:`. Empty strings, `0`, and empty containers are valid user input and a
+truthy check silently drops them.
+
+**FactBase typing** — every `FactBase` subclass must annotate its `command()` and `process()`
+methods: `def command(self, repo: str) -> str:` and `def process(self, output: list[str]):`. The
+`output` argument is **already a `list[str]`** — do not re-wrap it with `list(output)` or iterate
+into a new list before indexing.
+
+**Fact "show file or empty" pattern** — prefer `! test -e PATH || cat PATH` over
+`cat PATH 2>/dev/null || true`. The first form only suppresses the missing-file case; the second
+swallows real `cat` errors and hides bugs.
+
+**Reuse existing helpers** — before adding chown/chmod/path/permission utilities, check
+`pyinfra.operations.util.file_utils` (and the rest of `operations.util/`). Reviewers consistently
+ask for duplicated logic to be replaced with the existing helper.
+
+**No `assert` in `src/`** — `python -O` strips assertions, silently dropping the check. Raise an
+explicit exception instead: `OperationError` for operation argument issues, `ValueError` /
+`TypeError` for library code. `assert` is fine in tests.
 
 **Type hints** — all new (non-test) code must be fully type hinted. Use modern Python 3.10+
 conventions: built-in generics (`list`, `set`, `dict`, `tuple`) instead of `typing` equivalents
@@ -160,3 +184,6 @@ etc.).
 - Tests pass (`scripts/dev-test.sh`)
 - Lint/types pass (`scripts/dev-lint.sh`)
 - New operations/facts include tests and documentation
+- **Atomic scope** — one change per PR. Split unrelated `__init__.py` re-exports, drive-by
+  refactors, and unrelated test edits into separate PRs even when the change is correct.
+  Reviewers consistently ask for unrelated edits to be removed before merge.

@@ -24,7 +24,7 @@ class SEBoolean(FactBase):
 
     @override
     def command(self, boolean):
-        return "getsebool {0}".format(boolean)
+        return f"getsebool {boolean}"
 
     @override
     def process(self, output):
@@ -49,7 +49,7 @@ class FileContext(FactBase):
 
     @override
     def command(self, path):
-        return "stat -c %C {0} || exit 0".format(path)
+        return f"stat -c %C {path} || exit 0"
 
     @override
     def process(self, output):
@@ -80,7 +80,7 @@ class FileContextMapping(FactBase):
 
     @override
     def command(self, target):
-        return "set -o pipefail && semanage fcontext -n -l | (grep '^{0}' || true)".format(target)
+        return f"set -o pipefail && semanage fcontext -n -l | (grep '^{target}' || true)"
 
     @override
     def process(self, output):
@@ -153,7 +153,7 @@ class SEPort(FactBase):
 
     @override
     def command(self, protocol, port):
-        return "(sepolicy network -p {0} 2>/dev/null || true) | grep {1}".format(port, protocol)
+        return f"(sepolicy network -p {port} 2>/dev/null || true) | grep {protocol}"
 
     @override
     def process(self, output):

@@ -34,8 +34,8 @@ def agent(server: str | None = None, port: int | None = None):
     args = []
 
     if server:
-        args.append("--server=%s" % server)
+        args.append(f"--server={server}")
     if port:
-        args.append("--masterport=%s" % port)
+        args.append(f"--masterport={port}")
 
-    yield "puppet agent -t %s" % " ".join(args)
+    yield f"puppet agent -t {' '.join(args)}"

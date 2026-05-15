@@ -1,0 +1,28 @@
+{
+    "args": ["pyinfra"],
+    "kwargs": {
+        "shell": "/bin/bash"
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.LinuxName": "Alpine",
+        "server.Users": {
+            "pyinfra": {
+                "home": "/home/pyinfra",
+                "shell": "/bin/sh",
+                "group": "pyinfra",
+                "groups": [],
+                "comment": "",
+                "password": ""
+            }
+        },
+        "server.Groups": ["pyinfra"],
+        "server.Which": {
+            "command=usermod": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "usermod is not installed (install the shadow package)"
+    }
+}

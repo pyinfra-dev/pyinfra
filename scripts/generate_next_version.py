@@ -8,7 +8,7 @@ def get_version_from_changelog():
 
     changelog_path = Path(__file__).parent.parent / "CHANGELOG.md"
 
-    with open(changelog_path, "r", encoding="utf-8") as fn:
+    with open(changelog_path, encoding="utf-8") as fn:
         for line in fn.readlines():
             match = pattern.match(line.strip())
             if match:

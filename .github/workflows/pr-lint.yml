@@ -1,0 +1,33 @@
+name: Lint PR title
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+  pull_request_target:
+    types: [opened, reopened, edited, synchronize]
+
+jobs:
+  pr-lint:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@45b9ed7cf24087a2f7785bf55be97394ba87e1c2 # v6
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          types: |
+            fix
+            feat
+            ci
+            chore
+            docs
+            style
+            refactor
+            test
+          scopes: |
+            api
+            cli
+            operations(\.[A-Za-z0-9.\-]+)?
+            facts(\.[A-Za-z0-9.\-]+)?
+            connectors(\.[A-Za-z0-9.\-]+)?
+          requireScope: false

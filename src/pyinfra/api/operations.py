@@ -3,7 +3,6 @@ from __future__ import annotations
 import time
 import traceback
 from itertools import product
-from socket import error as socket_error, timeout as timeout_error
 from typing import TYPE_CHECKING, cast
 
 import gevent
@@ -35,11 +34,11 @@ if TYPE_CHECKING:
 #
 
 
-def run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
+def run_host_op(state: State, host: Host, op_hash: str) -> bool:
     state.trigger_callbacks("operation_host_start", host, op_hash)
 
     if op_hash not in state.ops[host]:
-        logger.info("{0}{1}".format(host.print_prefix, format_text("Skipped", "blue")))
+        logger.info(f"{host.print_prefix}{format_text('Skipped', 'blue')}")
         return True
 
     op_meta = state.get_op_meta(op_hash)
@@ -59,7 +58,7 @@ def run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
             host.executing_op_hash = None
 
 
-def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
+def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
     op_data = state.get_op_data_for_host(host, op_hash)
     global_arguments = op_data.global_arguments
 
@@ -99,7 +98,7 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
             connector_arguments.update(command.connector_arguments)
 
             if not isinstance(command, PyinfraCommand):
-                raise TypeError("{0} is an invalid pyinfra command!".format(command))
+                raise TypeError(f"{command} is an invalid pyinfra command!")
 
             if isinstance(command, FunctionCommand):
                 try:
@@ -128,7 +127,7 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
                         host,
                         connector_arguments,
                     )
-                except (timeout_error, socket_error, SSHException) as e:
+                except (TimeoutError, OSError, SSHException) as e:
                     log_host_command_error(host, e, timeout=timeout)
                 all_output_lines.extend(output_lines)
                 # If we failed and have not already printed the stderr, print it
@@ -138,7 +137,7 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
             else:
                 try:
                     status = command.execute(state, host, connector_arguments)
-                except (timeout_error, socket_error, SSHException, IOError) as e:
+                except (TimeoutError, OSError, SSHException) as e:
                     log_host_command_error(host, e, timeout=timeout)
 
             # Break the loop to trigger a failure
@@ -206,7 +205,7 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
             _status_text = f"{_status_text} on retry {retry_attempt}"
 
         _log_status = format_text(_status_text, "green" if executed_commands > 0 else "cyan")
-        logger.info("{0}{1}".format(host.print_prefix, _log_status))
+        logger.info(f"{host.print_prefix}{_log_status}")
 
         state.trigger_callbacks("operation_host_success", host, op_hash, retry_attempt)
     else:
@@ -249,12 +248,12 @@ def _run_host_op(state: "State", host: "Host", op_hash: str) -> bool:
 #
 
 
-def _run_host_op_with_context(state: "State", host: "Host", op_hash: str):
+def _run_host_op_with_context(state: State, host: Host, op_hash: str):
     with ctx_host.use(host):
         return run_host_op(state, host, op_hash)
 
 
-def _run_host_ops(state: "State", host: "Host", progress=None):
+def _run_host_ops(state: State, host: Host, progress=None):
     """
     Run all ops for a single server.
     """
@@ -273,14 +272,11 @@ def _run_host_ops(state: "State", host: "Host", progress=None):
 
         if result is False:
             raise PyinfraError(
-                "Error in operation {0} on {1}".format(
-                    ", ".join(op_meta.names),
-                    host,
-                ),
+                f"Error in operation {', '.join(op_meta.names)} on {host}",
             )
 
 
-def _run_serial_ops(state: "State"):
+def _run_serial_ops(state: State):
     """
     Run all ops for all servers, one server at a time.
     """
@@ -298,7 +294,7 @@ def _run_serial_ops(state: "State"):
                 state.fail_hosts({host})
 
 
-def _run_no_wait_ops(state: "State"):
+def _run_no_wait_ops(state: State):
     """
     Run all ops for all servers at once.
     """
@@ -320,7 +316,7 @@ def _run_no_wait_ops(state: "State"):
         gevent.joinall(greenlets)
 
 
-def _run_single_op(state: "State", op_hash: str):
+def _run_single_op(state: State, op_hash: str):
     """
     Run a single operation for all servers. Can be configured to run in serial.
     """
@@ -378,7 +374,7 @@ def _run_single_op(state: "State", op_hash: str):
     state.trigger_callbacks("operation_end", op_hash)
 
 
-def run_ops(state: "State", serial: bool = False, no_wait: bool = False):
+def run_ops(state: State, serial: bool = False, no_wait: bool = False):
     """
     Runs all operations across all servers in a configurable manner.
 

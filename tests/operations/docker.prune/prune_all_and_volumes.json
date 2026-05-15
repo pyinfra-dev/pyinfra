@@ -1,0 +1,9 @@
+{
+    "kwargs": {
+        "all": true,
+        "volumes": true
+    },
+    "commands": [
+        "docker system prune -a --volumes -f"
+    ]
+}
