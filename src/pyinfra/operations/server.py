@@ -503,19 +503,15 @@ def etc_hosts(
 
     if present:
         if current_names == hostnames_list:
-            host.noop(
-                "{0} -> {1} already present in {2}".format(ip, " ".join(hostnames_list), path)
-            )
+            host.noop("{} -> {} already present in {}".format(ip, " ".join(hostnames_list), path))
             return
     else:
         if current_names is None:
-            host.noop("{0} already absent from {1}".format(ip, path))
+            host.noop(f"{ip} already absent from {path}")
             return
         if hostnames_list and not any(name in current_names for name in hostnames_list):
             host.noop(
-                "{0} in {1} does not reference any of: {2}".format(
-                    ip, path, " ".join(hostnames_list)
-                )
+                "{} in {} does not reference any of: {}".format(ip, path, " ".join(hostnames_list))
             )
             return
 
@@ -541,17 +537,17 @@ def etc_hosts(
         line_names = tokens[1:]
 
         if present:
-            new_lines.append("{0} {1}".format(ip, " ".join(hostnames_list)))
+            new_lines.append("{} {}".format(ip, " ".join(hostnames_list)))
         else:
             if hostnames_list:
                 remaining = [name for name in line_names if name not in hostnames_list]
                 if remaining:
-                    new_lines.append("{0} {1}".format(ip, " ".join(remaining)))
+                    new_lines.append("{} {}".format(ip, " ".join(remaining)))
                 # else: drop the line entirely
             # else: full removal, drop the line
 
     if present and not found:
-        new_lines.append("{0} {1}".format(ip, " ".join(hostnames_list)))
+        new_lines.append("{} {}".format(ip, " ".join(hostnames_list)))
 
     new_content = "\n".join(new_lines)
     if new_content:

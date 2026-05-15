@@ -1362,7 +1362,7 @@ class EtcHosts(FactBase[dict[str, list[str]]]):
 
     @override
     def command(self, path: str = "/etc/hosts") -> str:
-        return "cat {0} 2>/dev/null || true".format(path)
+        return f"cat {path} 2>/dev/null || true"
 
     @override
     def process(self, output: Iterable[str]) -> dict[str, list[str]]:
