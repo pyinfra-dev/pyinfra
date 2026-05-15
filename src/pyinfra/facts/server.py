@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
-import os
+import pathlib
 import re
 import shutil
 from datetime import datetime
+from pathlib import PurePosixPath
 from tempfile import mkdtemp
 from typing import Optional, Union
 from collections.abc import Iterable
@@ -941,16 +942,12 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
 
         temp_root = mkdtemp()
         try:
-            temp_etc_dir = os.path.join(temp_root, "etc")
-            os.mkdir(temp_etc_dir)
+            temp_etc_dir = pathlib.Path(temp_root) / "etc"
+            temp_etc_dir.mkdir()
 
             for filename, content in parts.items():
-                with open(
-                    os.path.join(temp_etc_dir, os.path.basename(filename)),
-                    "w",
-                    encoding="utf-8",
-                ) as fp:
-                    fp.write(content)
+                target = temp_etc_dir / PurePosixPath(filename).name
+                target.write_text(content, encoding="utf-8")
 
             parsed = distro.LinuxDistribution(
                 root_dir=temp_root,

@@ -328,15 +328,39 @@ class patch_files:
         return directories, files, files_data, symlinks
 
     def __enter__(self):
+        patch_self = self
+
+        def _path_exists(p):
+            return patch_self.exists(str(p))
+
+        def _path_is_file(p):
+            return patch_self.isfile(str(p))
+
+        def _path_is_dir(p):
+            return patch_self.isdir(str(p))
+
+        def _path_is_symlink(p):
+            return patch_self.islink(str(p))
+
+        def _path_mkdir(p, mode=0o777, parents=False, exist_ok=False):
+            return True
+
         self.patches = [
+            # Patch os.path.* on the shared os module so legacy callers
+            # (`from os import path` in server.py, ssh_util, etc.) keep working
+            # alongside the pathlib calls in operations/files.py.
             patch("pyinfra.operations.files.os.path.exists", self.exists),
             patch("pyinfra.operations.files.os.path.isfile", self.isfile),
             patch("pyinfra.operations.files.os.path.isdir", self.isdir),
             patch("pyinfra.operations.files.os.path.islink", self.islink),
+            patch.object(Path, "exists", new=_path_exists),
+            patch.object(Path, "is_file", new=_path_is_file),
+            patch.object(Path, "is_dir", new=_path_is_dir),
+            patch.object(Path, "is_symlink", new=_path_is_symlink),
+            patch.object(Path, "mkdir", new=_path_mkdir),
             patch("pyinfra.operations.files.os.readlink", self.readlink),
             patch("pyinfra.operations.files.os.walk", self.walk),
             patch("pyinfra.operations.files.os.stat", self.stat),
-            patch("pyinfra.operations.files.os.makedirs", lambda path: True),
             patch("pyinfra.api.util.stat", self.stat),
             # Builtin patches
             patch("pyinfra.operations.files.open", self.get_file, create=True),

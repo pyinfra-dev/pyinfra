@@ -1,5 +1,5 @@
 from getpass import getpass
-from os import path
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from paramiko import (
@@ -70,18 +70,18 @@ def get_private_key(state: "State", key_filename: str, key_password: str) -> PKe
 
     ssh_key_filenames = [
         # Global from executed directory
-        path.expanduser(key_filename),
+        str(Path(key_filename).expanduser()),
     ]
 
     if state.cwd:
         # Relative to the CWD
-        path.join(state.cwd, key_filename)
+        str(Path(state.cwd) / key_filename)
 
     key = None
     key_file_exists = False
 
     for filename in ssh_key_filenames:
-        if not path.isfile(filename):
+        if not Path(filename).is_file():
             continue
 
         key_file_exists = True
@@ -104,7 +104,7 @@ def get_private_key(state: "State", key_filename: str, key_password: str) -> PKe
         f"{key_filename}-cert.pub",
         f"{key_filename}.pub",
     ):
-        if path.isfile(certificate_filename):
+        if Path(certificate_filename).is_file():
             key.load_certificate(certificate_filename)
 
     state.private_keys[key_filename] = key
