@@ -10,12 +10,12 @@ server.shell(
 
 for item in [1, 2]:
     server.shell(
-        name="Task order loop {0}".format(item),
-        commands="echo loop_{0}".format(item),
+        name=f"Task order loop {item}",
+        commands=f"echo loop_{item}",
     )
     server.shell(
-        name="2nd Task order loop {0}".format(item),
-        commands="echo loop_{0}".format(item),
+        name=f"2nd Task order loop {item}",
+        commands=f"echo loop_{item}",
     )
 
 # Import a file *relative* to this one (./empty_task.py)

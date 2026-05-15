@@ -18,7 +18,7 @@ def _get_vagrant_ssh_config(queue, progress, target):
 
     queue.put(
         local.shell(
-            "vagrant ssh-config {0}".format(target),
+            f"vagrant ssh-config {target}",
             splitlines=True,
         ),
     )
@@ -82,7 +82,7 @@ def get_vagrant_config(limit=None):
 @memoize
 def get_vagrant_options():
     if path.exists("@vagrant.json"):
-        with open("@vagrant.json", "r", encoding="utf-8") as f:
+        with open("@vagrant.json", encoding="utf-8") as f:
             return json.loads(f.read())
     return {}
 
@@ -113,7 +113,7 @@ def _make_name_data(host):
     if "@vagrant" not in groups:
         groups.append("@vagrant")
 
-    return "@vagrant/{0}".format(host["Host"]), data, groups
+    return f"@vagrant/{host['Host']}", data, groups
 
 
 class VagrantInventoryConnector(BaseConnector):
@@ -174,10 +174,7 @@ class VagrantInventoryConnector(BaseConnector):
 
         if not hosts:
             if name:
-                raise InventoryError(
-                    "No running Vagrant instances matching `{0}` found!".format(name)
-                )
+                raise InventoryError(f"No running Vagrant instances matching `{name}` found!")
             raise InventoryError("No running Vagrant instances found!")
 
-        for host in hosts:
-            yield host
+        yield from hosts

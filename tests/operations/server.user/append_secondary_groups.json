@@ -28,7 +28,10 @@
                 "group": "somegroup"
             }
         },
-        "server.Groups": {}
+        "server.Groups": {},
+        "server.Which": {
+            "command=usermod": "/usr/sbin/usermod"
+        }
     },
     "commands": [
         "usermod -a -G group3,group4 someuser"

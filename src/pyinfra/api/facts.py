@@ -13,8 +13,8 @@ from __future__ import annotations
 import inspect
 import re
 from inspect import getcallargs
-from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from collections.abc import Callable
 
 import gevent
 from paramiko import SSHException
@@ -69,7 +69,7 @@ class FactBase(Generic[T]):
         """
         return None
 
-    def check_preconditions(self, state: "State", host: "Host") -> str | None:
+    def check_preconditions(self, state: State, host: Host) -> str | None:
         """Check that this fact's prerequisites are satisfied before running.
 
         Override this method to call ``host.get_fact(...)`` and return:
@@ -117,7 +117,7 @@ class FactBase(Generic[T]):
 
 class ShortFactBase(Generic[T]):
     name: str
-    fact: Type[FactBase]
+    fact: type[FactBase]
 
     @override
     def __init_subclass__(cls) -> None:
@@ -129,7 +129,7 @@ class ShortFactBase(Generic[T]):
         return data
 
 
-def get_short_facts(state: "State", host: "Host", short_fact, **kwargs):
+def get_short_facts(state: State, host: Host, short_fact, **kwargs):
     fact_data = get_fact(state, host, short_fact.fact, **kwargs)
     return short_fact().process_data(fact_data)
 
@@ -141,7 +141,7 @@ def _make_command(command_attribute, host_args):
     return command_attribute
 
 
-def _handle_fact_kwargs(state: "State", host: "Host", cls, args, kwargs):
+def _handle_fact_kwargs(state: State, host: Host, cls, args, kwargs):
     args = args or []
     kwargs = kwargs or {}
 
@@ -187,12 +187,12 @@ def get_facts(state, *args, **kwargs):
 
 
 def get_fact(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     cls: type[FactBase],
-    args: Optional[Any] = None,
-    kwargs: Optional[Any] = None,
-    ensure_hosts: Optional[Any] = None,
+    args: Any | None = None,
+    kwargs: Any | None = None,
+    ensure_hosts: Any | None = None,
     apply_failed_hosts: bool = True,
 ) -> Any:
     if issubclass(cls, ShortFactBase):
@@ -254,12 +254,12 @@ def get_fact(
 
 
 def _get_fact(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     cls: type[FactBase],
-    args: Optional[list] = None,
-    kwargs: Optional[dict] = None,
-    ensure_hosts: Optional[Any] = None,
+    args: list | None = None,
+    kwargs: dict | None = None,
+    ensure_hosts: Any | None = None,
     apply_failed_hosts: bool = True,
 ) -> Any:
     fact = cls()
@@ -325,7 +325,7 @@ def _get_fact(
             print_input=state.print_fact_input,
             **executor_kwargs,
         )
-    except (timeout_error, socket_error, SSHException) as e:
+    except (TimeoutError, OSError, SSHException) as e:
         log_host_command_error(
             host,
             e,
@@ -355,9 +355,7 @@ def _get_fact(
                 log_error_or_warning(
                     host,
                     global_kwargs["_ignore_errors"],
-                    description=("could not process fact: {0} {1}").format(
-                        name, get_kwargs_str(fact_kwargs)
-                    ),
+                    description=(f"could not process fact: {name} {get_kwargs_str(fact_kwargs)}"),
                     exception=e,
                 )
 
@@ -377,12 +375,9 @@ def _get_fact(
             status = True
 
     if status:
-        log_message = "{0}{1}".format(
+        log_message = "{}{}".format(
             host.print_prefix,
-            "Loaded fact {0}{1}".format(
-                format_text(name, bold=True),
-                f" ({get_kwargs_str(kwargs)})" if kwargs else "",
-            ),
+            f"Loaded fact {format_text(name, bold=True)}{f' ({get_kwargs_str(kwargs)})' if kwargs else ''}",
         )
         if state.print_fact_info:
             logger.info(log_message)
@@ -395,7 +390,7 @@ def _get_fact(
         log_error_or_warning(
             host,
             global_kwargs["_ignore_errors"],
-            description=("could not load fact: {0} {1}").format(name, get_kwargs_str(fact_kwargs)),
+            description=(f"could not load fact: {name} {get_kwargs_str(fact_kwargs)}"),
         )
 
     # Check we've not failed

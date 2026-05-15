@@ -4,7 +4,6 @@ import ntpath
 import os
 from pathlib import PurePath
 from shlex import quote
-from socket import timeout as SocketTimeoutError
 from typing import IO, AnyStr
 
 from paramiko import Channel
@@ -135,7 +134,7 @@ class SCPClient:
         msg = b""
         try:
             msg = self.channel.recv(512)
-        except SocketTimeoutError:
+        except TimeoutError:
             raise SCPException("Timeout waiting for scp response")
         # slice off the first byte, so this compare will work in py2 and py3
         if msg and msg[0:1] == b"\x00":
@@ -193,7 +192,7 @@ class SCPClient:
             msg = chan.recv(512)
             if msg and msg[0:1] != b"\x00":
                 raise SCPException(asunicode(msg[1:]))
-        except SocketTimeoutError:
+        except TimeoutError:
             chan.close()
             raise SCPException("Error receiving, socket.timeout")
 

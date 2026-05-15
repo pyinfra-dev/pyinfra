@@ -5,15 +5,11 @@ from io import IOBase
 from typing import (
     TYPE_CHECKING,
     Any,
-    Iterable,
-    Iterator,
-    Optional,
-    Type,
     TypeVar,
-    Union,
     cast,
     get_type_hints,
 )
+from collections.abc import Iterable, Iterator
 
 from typing_extensions import TypedDict, Unpack
 
@@ -34,9 +30,9 @@ default_sentinel = object()
 
 
 def host_to_connector_data(
-    connector_data: Type[T],
+    connector_data: type[T],
     connector_data_meta: dict[str, DataMeta],
-    host_data: "HostData",
+    host_data: HostData,
 ) -> T:
     data: T = cast(T, {})
     for key, type_ in get_type_hints(connector_data).items():
@@ -69,15 +65,15 @@ class ConnectorData(TypedDict, total=False):
 
 
 class BaseConnector(abc.ABC):
-    state: "State"
-    host: "Host"
+    state: State
+    host: Host
 
     handles_execution = False
 
-    data_cls: Type = ConnectorData
+    data_cls: type[Any] = ConnectorData
     data_meta: dict[str, DataMeta] = {}
 
-    def __init__(self, state: "State", host: "Host"):
+    def __init__(self, state: State, host: Host):
         self.state = state
         self.host = host
         self.data = host_to_connector_data(self.data_cls, self.data_meta, host.data)
@@ -103,11 +99,11 @@ class BaseConnector(abc.ABC):
     @abc.abstractmethod
     def run_shell_command(
         self,
-        command: "StringCommand",
+        command: StringCommand,
         print_output: bool,
         print_input: bool,
-        **arguments: Unpack["ConnectorArguments"],
-    ) -> tuple[bool, "CommandOutput"]:
+        **arguments: Unpack[ConnectorArguments],
+    ) -> tuple[bool, CommandOutput]:
         """
         Execute a command.
 
@@ -125,12 +121,12 @@ class BaseConnector(abc.ABC):
     @abc.abstractmethod
     def put_file(
         self,
-        filename_or_io: Union[str, IOBase],
+        filename_or_io: str | IOBase,
         remote_filename: str,
-        remote_temp_filename: Optional[str] = None,
+        remote_temp_filename: str | None = None,
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ) -> bool:
         """
         Upload a local file or IO object by copying it to a temporary directory
@@ -144,11 +140,11 @@ class BaseConnector(abc.ABC):
     def get_file(
         self,
         remote_filename: str,
-        filename_or_io: Union[str, IOBase],
-        remote_temp_filename: Optional[str] = None,
+        filename_or_io: str | IOBase,
+        remote_temp_filename: str | None = None,
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ) -> bool:
         """
         Download a local file by copying it to a temporary location and then writing
@@ -168,6 +164,6 @@ class BaseConnector(abc.ABC):
         flags: Iterable[str],
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ) -> bool:
         raise NotImplementedError("This connector does not support rsync")

@@ -1,5 +1,4 @@
 from os import path
-from typing import Optional
 
 import pyinfra
 from pyinfra import config, host, logger, state
@@ -10,7 +9,7 @@ from pyinfra.connectors.util import run_local_process
 from pyinfra.context import ctx_state
 
 
-def include(filename: str, data: Optional[dict] = None):
+def include(filename: str, data: dict | None = None):
     """
     Executes a local python file within the ``pyinfra.state.cwd``
     directory.
@@ -74,7 +73,7 @@ def shell(
         print_prefix = "localhost: "
 
         if print_input:
-            echo("{0}>>> {1}".format(print_prefix, command), err=True)
+            echo(f"{print_prefix}>>> {command}", err=True)
 
         return_code, output = run_local_process(
             command,
@@ -84,7 +83,7 @@ def shell(
 
         if return_code > 0 and not ignore_errors:
             raise PyinfraError(
-                "Local command failed: {0}\n{1}".format(command, output.stderr),
+                f"Local command failed: {command}\n{output.stderr}",
             )
 
         all_stdout.extend(output.stdout_lines)

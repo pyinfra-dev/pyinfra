@@ -55,7 +55,7 @@ def service(
     # there's no override file.
     if enabled is True:
         yield from files.file._inner(
-            path="/etc/init/{0}.override".format(service),
+            path=f"/etc/init/{service}.override",
             present=False,
         )
 
@@ -64,5 +64,5 @@ def service(
         file = StringIO("manual\n")
         yield from files.put._inner(
             src=file,
-            dest="/etc/init/{0}.override".format(service),
+            dest=f"/etc/init/{service}.override",
         )

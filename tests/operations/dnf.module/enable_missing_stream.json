@@ -1,0 +1,11 @@
+{
+    "kwargs": {
+        "module": "postgresql"
+    },
+    "facts": {},
+    "commands": [],
+    "exception": {
+        "name": "OperationValueError",
+        "message": "stream is required when enabled=True"
+    }
+}

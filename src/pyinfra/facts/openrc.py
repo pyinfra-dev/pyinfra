@@ -28,7 +28,7 @@ class OpenrcStatus(FactBase):
 
     @override
     def command(self, runlevel="default"):
-        return "rc-status {0}".format(runlevel)
+        return f"rc-status {runlevel}"
 
     @override
     def process(self, output):

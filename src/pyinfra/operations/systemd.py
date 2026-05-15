@@ -103,7 +103,7 @@ def service(
             ".scope",
         )
     ):
-        service = "{0}.service".format(service)
+        service = f"{service}.service"
 
     if daemon_reload:
         yield from _daemon_reload(

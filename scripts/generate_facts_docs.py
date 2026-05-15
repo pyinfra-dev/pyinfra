@@ -28,10 +28,10 @@ def build_facts_docs():
 
     for module_name in sorted(get_module_names(pyinfra_dir / "facts")):
         lines = []
-        print("--> Doing fact module: {0}".format(module_name))
-        module = import_module("pyinfra.facts.{0}".format(module_name))
+        print(f"--> Doing fact module: {module_name}")
+        module = import_module(f"pyinfra.facts.{module_name}")
 
-        full_title = "{0} Facts".format(module_name.title())
+        full_title = f"{module_name.title()} Facts"
         lines.append(full_title)
         lines.append(title_line("-", full_title))
         lines.append("")
@@ -74,10 +74,7 @@ def build_facts_docs():
                 argspec = getfullargspec(command_attr)
 
                 arg_defaults = (
-                    [
-                        "'{}'".format(arg) if isinstance(arg, str) else arg
-                        for arg in argspec.defaults
-                    ]
+                    [f"'{arg}'" if isinstance(arg, str) else arg for arg in argspec.defaults]
                     if argspec.defaults
                     else None
                 )
@@ -95,25 +92,25 @@ def build_facts_docs():
                 )
 
                 if len(argspec.args) and (argspec.args != ["self"]):
-                    args_string_and_brackets = ", {0}".format(
+                    args_string_and_brackets = ", {}".format(
                         ", ".join(
-                            ("{0}={1}".format(arg, defaults.get(arg)) if arg in defaults else arg)
+                            (f"{arg}={defaults.get(arg)}" if arg in defaults else arg)
                             for arg in argspec.args
                             if arg != "self"
                         ),
                     )
 
-            lines.append(".. _facts:{0}.{1}:".format(module_name, name))
+            lines.append(f".. _facts:{module_name}.{name}:")
             # Modules that re-export classes under an alias (e.g. facts/zfs.py
             # exposes both ZfsDatasets and Datasets pointing at the same class)
             # end up keyed by whichever name getmembers sees first. Emit the
             # canonical class name as an extra label so cross-refs from the
             # operations docs resolve regardless of import style.
             if cls.__name__ != name:
-                lines.append(".. _facts:{0}.{1}:".format(module_name, cls.__name__))
+                lines.append(f".. _facts:{module_name}.{cls.__name__}:")
             lines.append("")
 
-            title = ":code:`{0}.{1}`".format(module_name, name)
+            title = f":code:`{module_name}.{name}`"
             lines.append(title)
 
             # Underline name with -'s for title
@@ -139,7 +136,7 @@ def build_facts_docs():
             if doc:
                 lines.append("")
                 lines.append(
-                    "{0}".format(
+                    "{}".format(
                         "\n".join([format_doc_line(line) for line in doc.split("\n")]),
                     ).strip(),
                 )
@@ -148,8 +145,8 @@ def build_facts_docs():
             lines.append("")
 
         # Write out the file
-        module_filename = path.join(docs_dir, "facts", "{0}.rst".format(module_name))
-        print("--> Writing {0}".format(module_filename))
+        module_filename = path.join(docs_dir, "facts", f"{module_name}.rst")
+        print(f"--> Writing {module_filename}")
 
         with open(module_filename, "w", encoding="utf-8") as outfile:
             outfile.write("\n".join(lines))

@@ -14,7 +14,7 @@ def make_github_release():
 
     changelog_path = Path(__file__).parent.parent / "CHANGELOG.md"
 
-    with open(changelog_path, "r", encoding="utf-8") as f:
+    with open(changelog_path, encoding="utf-8") as f:
         changelog_data = f.read()
 
     changelog_lines = []

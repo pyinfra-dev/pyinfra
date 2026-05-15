@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, Iterable
+from collections.abc import Iterable
 
 from typing_extensions import override
 
@@ -31,17 +31,17 @@ def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
     # add user and machine flag if given in args
     if machine is not None:
         if user_name is not None:
-            systemctl_cmd.append("--machine={1}@{0}".format(machine, user_name))
+            systemctl_cmd.append(f"--machine={user_name}@{machine}")
         else:
-            systemctl_cmd.append("--machine={0}".format(machine))
+            systemctl_cmd.append(f"--machine={machine}")
     elif user_name is not None:
         # If only the user is given, assume that the connection should be made to the local machine
-        systemctl_cmd.append("--machine={0}@.host".format(user_name))
+        systemctl_cmd.append(f"--machine={user_name}@.host")
 
     return StringCommand(*systemctl_cmd)
 
 
-class SystemdStatus(FactBase[Dict[str, bool]]):
+class SystemdStatus(FactBase[dict[str, bool]]):
     """
     Returns a dictionary map of systemd units to booleans indicating whether they are active.
 
@@ -107,8 +107,8 @@ class SystemdStatus(FactBase[Dict[str, bool]]):
         return cmd
 
     @override
-    def process(self, output) -> Dict[str, bool]:
-        services: Dict[str, bool] = {}
+    def process(self, output) -> dict[str, bool]:
+        services: dict[str, bool] = {}
 
         current_unit = None
         for line in output:

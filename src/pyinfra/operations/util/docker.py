@@ -182,31 +182,31 @@ class ContainerSpec:
     def container_create_args(self):
         args = []
         for network in self.networks:
-            args.append("--network {0}".format(network))
+            args.append(f"--network {network}")
 
         for port in self.ports:
-            args.append("-p {0}".format(port))
+            args.append(f"-p {port}")
 
         for volume in self.volumes:
-            args.append("-v {0}".format(volume))
+            args.append(f"-v {volume}")
 
         for mount in self.mounts:
-            args.append("--mount {0}".format(mount))
+            args.append(f"--mount {mount}")
 
         for env_var in self.env_vars:
-            args.append("-e {0}".format(env_var))
+            args.append(f"-e {env_var}")
 
         for env_file in self.env_files:
-            args.append("--env-file {0}".format(env_file))
+            args.append(f"--env-file {env_file}")
 
         for label in self.labels:
-            args.append("--label {0}".format(label))
+            args.append(f"--label {label}")
 
         if self.pull_always:
             args.append("--pull always")
 
         if self.restart_policy:
-            args.append("--restart {0}".format(self.restart_policy))
+            args.append(f"--restart {self.restart_policy}")
 
         if self.auto_remove:
             args.append("--rm")
@@ -215,25 +215,25 @@ class ContainerSpec:
             args.append("--privileged")
 
         if self.hostname is not None:
-            args.append("--hostname {0}".format(self.hostname))
+            args.append(f"--hostname {self.hostname}")
 
         if self.entrypoint is not None:
-            args.append("--entrypoint {0}".format(self.entrypoint))
+            args.append(f"--entrypoint {self.entrypoint}")
 
         if self.user is not None:
-            args.append("--user {0}".format(self.user))
+            args.append(f"--user {self.user}")
 
         if self.cpus is not None:
-            args.append("--cpus {0}".format(self.cpus))
+            args.append(f"--cpus {self.cpus}")
 
         if self.memory is not None:
-            args.append("--memory {0}".format(self.memory))
+            args.append(f"--memory {self.memory}")
 
         for extra_arg in self.extra_args:
             args.append(extra_arg)
 
         for dns in self.dns:
-            args.append("--dns {0}".format(dns))
+            args.append(f"--dns {dns}")
 
         args.append(self.image)
         if self.command:
@@ -260,30 +260,30 @@ def _create_container(**kwargs):
         raise OperationError("Docker image not specified")
 
     command = [
-        "docker container create --name {0}".format(kwargs["container"])
+        f"docker container create --name {kwargs['container']}"
     ] + spec.container_create_args()
 
     return " ".join(command)
 
 
 def _remove_container(**kwargs):
-    return "docker container rm -f {0}".format(kwargs["container"])
+    return f"docker container rm -f {kwargs['container']}"
 
 
 def _start_container(**kwargs):
-    return "docker container start {0}".format(kwargs["container"])
+    return f"docker container start {kwargs['container']}"
 
 
 def _stop_container(**kwargs):
-    return "docker container stop {0}".format(kwargs["container"])
+    return f"docker container stop {kwargs['container']}"
 
 
 def _pull_image(**kwargs):
-    return "docker image pull {0}".format(kwargs["image"])
+    return f"docker image pull {kwargs['image']}"
 
 
 def _remove_image(**kwargs):
-    return "docker image rm {0}".format(kwargs["image"])
+    return f"docker image rm {kwargs['image']}"
 
 
 def _prune_command(**kwargs):
@@ -293,7 +293,7 @@ def _prune_command(**kwargs):
         command.append("-a")
 
     if kwargs["filter"] != "":
-        command.append("--filter={0}".format(kwargs["filter"]))
+        command.append(f"--filter={kwargs['filter']}")
 
     if kwargs["volumes"]:
         command.append("--volumes")
@@ -307,19 +307,19 @@ def _create_volume(**kwargs):
     command = []
     labels = kwargs["labels"] if kwargs["labels"] else []
 
-    command.append("docker volume create {0}".format(kwargs["volume"]))
+    command.append(f"docker volume create {kwargs['volume']}")
 
     if kwargs["driver"] != "":
-        command.append("-d {0}".format(kwargs["driver"]))
+        command.append(f"-d {kwargs['driver']}")
 
     for label in labels:
-        command.append("--label {0}".format(label))
+        command.append(f"--label {label}")
 
     return " ".join(command)
 
 
 def _remove_volume(**kwargs):
-    return "docker image rm {0}".format(kwargs["volume"])
+    return f"docker volume rm {kwargs['volume']}"
 
 
 def _create_network(**kwargs):
@@ -329,24 +329,24 @@ def _create_network(**kwargs):
     ipam_opts = kwargs["ipam_opts"] if kwargs["ipam_opts"] else []
     labels = kwargs["labels"] if kwargs["labels"] else []
 
-    command.append("docker network create {0}".format(kwargs["network"]))
+    command.append(f"docker network create {kwargs['network']}")
     if kwargs["driver"] != "":
-        command.append("-d {0}".format(kwargs["driver"]))
+        command.append(f"-d {kwargs['driver']}")
 
     if kwargs["gateway"] != "":
-        command.append("--gateway {0}".format(kwargs["gateway"]))
+        command.append(f"--gateway {kwargs['gateway']}")
 
     if kwargs["ip_range"] != "":
-        command.append("--ip-range {0}".format(kwargs["ip_range"]))
+        command.append(f"--ip-range {kwargs['ip_range']}")
 
     if kwargs["ipam_driver"] != "":
-        command.append("--ipam-driver {0}".format(kwargs["ipam_driver"]))
+        command.append(f"--ipam-driver {kwargs['ipam_driver']}")
 
     if kwargs["subnet"] != "":
-        command.append("--subnet {0}".format(kwargs["subnet"]))
+        command.append(f"--subnet {kwargs['subnet']}")
 
     if kwargs["scope"] != "":
-        command.append("--scope {0}".format(kwargs["scope"]))
+        command.append(f"--scope {kwargs['scope']}")
 
     if kwargs["ingress"]:
         command.append("--ingress")
@@ -355,59 +355,59 @@ def _create_network(**kwargs):
         command.append("--attachable")
 
     for host, address in aux_addresses.items():
-        command.append("--aux-address '{0}={1}'".format(host, address))
+        command.append(f"--aux-address '{host}={address}'")
 
     for opt in opts:
-        command.append("--opt {0}".format(opt))
+        command.append(f"--opt {opt}")
 
     for opt in ipam_opts:
-        command.append("--ipam-opt {0}".format(opt))
+        command.append(f"--ipam-opt {opt}")
 
     for label in labels:
-        command.append("--label {0}".format(label))
+        command.append(f"--label {label}")
     return " ".join(command)
 
 
 def _remove_network(**kwargs):
-    return "docker network rm {0}".format(kwargs["network"])
+    return f"docker network rm {kwargs['network']}"
 
 
 def _install_plugin(**kwargs):
-    command = ["docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])]
+    command = [f"docker plugin install {kwargs['plugin']} --grant-all-permissions"]
 
     plugin_options = kwargs["plugin_options"] if kwargs["plugin_options"] else {}
 
     if kwargs["alias"]:
-        command.append("--alias {0}".format(kwargs["alias"]))
+        command.append(f"--alias {kwargs['alias']}")
 
     if not kwargs["enabled"]:
         command.append("--disable")
 
     for option, value in plugin_options.items():
-        command.append("{0}={1}".format(option, value))
+        command.append(f"{option}={value}")
 
     return " ".join(command)
 
 
 def _remove_plugin(**kwargs):
-    return "docker plugin rm -f {0}".format(kwargs["plugin"])
+    return f"docker plugin rm -f {kwargs['plugin']}"
 
 
 def _enable_plugin(**kwargs):
-    return "docker plugin enable {0}".format(kwargs["plugin"])
+    return f"docker plugin enable {kwargs['plugin']}"
 
 
 def _disable_plugin(**kwargs):
-    return "docker plugin disable {0}".format(kwargs["plugin"])
+    return f"docker plugin disable {kwargs['plugin']}"
 
 
 def _set_plugin_options(**kwargs):
-    command = ["docker plugin set {0}".format(kwargs["plugin"])]
+    command = [f"docker plugin set {kwargs['plugin']}"]
     existent_options = kwargs.get("existing_options", {})
     required_options = kwargs.get("required_options", {})
     options_to_set = existent_options | required_options
     for option, value in options_to_set.items():
-        command.append("{0}={1}".format(option, value))
+        command.append(f"{option}={value}")
     return " ".join(command)
 
 
