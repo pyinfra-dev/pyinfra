@@ -151,12 +151,12 @@ class TestSSHUserConfigMissing(TestCase):
     lambda self: True,
 )
 @patch(
-    "pyinfra.connectors.sshuserclient.config.Path.expanduser",
-    lambda self: self,
+    "pyinfra.connectors.sshuserclient.config.posixpath.expanduser",
+    lambda path: path,
 )
 @patch(
-    "pyinfra.connectors.sshuserclient.config.Path.is_absolute",
-    lambda self: True,
+    "pyinfra.connectors.sshuserclient.config.posixpath.isabs",
+    lambda path: True,
 )
 @patch(
     "paramiko.config.LazyFqdn.__str__",

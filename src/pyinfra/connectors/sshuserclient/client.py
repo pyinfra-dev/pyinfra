@@ -4,6 +4,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import os
+import posixpath
 from pathlib import Path
 
 from gevent.lock import BoundedSemaphore
@@ -109,7 +110,7 @@ def get_ssh_config(user_config_file=None):
     logger.debug("Loading SSH config: %s", user_config_file)
 
     if user_config_file is None:
-        user_config_file = str(Path("~/.ssh/config").expanduser())
+        user_config_file = posixpath.expanduser("~/.ssh/config")
 
     if Path(user_config_file).exists():
         with open(user_config_file, encoding="utf-8") as f:
@@ -176,7 +177,7 @@ class SSHClient(ParamikoClient):
         config.update(kwargs)
 
         if _pyinfra_ssh_known_hosts_file:
-            host_keys_files = (str(Path(_pyinfra_ssh_known_hosts_file).expanduser()),)
+            host_keys_files = (posixpath.expanduser(_pyinfra_ssh_known_hosts_file),)
 
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_files)
@@ -242,7 +243,7 @@ class SSHClient(ParamikoClient):
         forward_agent = False
         identity_agent = None
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
-        host_keys_files: tuple[str, ...] = (str(Path("~/.ssh/known_hosts").expanduser()),)
+        host_keys_files: tuple[str, ...] = (posixpath.expanduser("~/.ssh/known_hosts"),)
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
@@ -268,7 +269,7 @@ class SSHClient(ParamikoClient):
         if "userknownhostsfile" in host_config:
             # OpenSSH supports multiple space-separated known hosts files
             host_keys_files = tuple(
-                str(Path(f).expanduser()) for f in host_config["userknownhostsfile"].split()
+                posixpath.expanduser(f) for f in host_config["userknownhostsfile"].split()
             )
 
         if "hostname" in host_config:
@@ -295,7 +296,7 @@ class SSHClient(ParamikoClient):
         if "identityagent" in host_config:
             agent_path = host_config["identityagent"]
             if agent_path.lower() != "none":
-                identity_agent = str(Path(agent_path).expanduser())
+                identity_agent = posixpath.expanduser(agent_path)
 
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])

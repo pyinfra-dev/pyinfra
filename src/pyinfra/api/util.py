@@ -6,6 +6,7 @@ from hashlib import md5, sha1, sha256
 from inspect import getframeinfo, stack
 from io import BytesIO, StringIO
 import os.path
+import posixpath
 from os import getcwd, stat
 from pathlib import Path
 from socket import error as socket_error, timeout as timeout_error
@@ -36,16 +37,16 @@ PYINFRA_INSTALL_DIR = str(Path(__file__).parent.parent)
 
 
 def get_file_path(state: State, filename: str):
-    if Path(filename).is_absolute():
+    if posixpath.isabs(filename):
         return filename
 
     assert state.cwd is not None, "Cannot use `get_file_path` with no `state.cwd` set"
     relative_to = state.cwd
 
     if state.current_exec_filename and (filename.startswith("./") or filename.startswith(".\\")):
-        relative_to = str(Path(state.current_exec_filename).parent)
+        relative_to = posixpath.dirname(state.current_exec_filename)
 
-    return str(Path(relative_to) / filename)
+    return posixpath.join(relative_to, filename)
 
 
 def get_kwargs_str(kwargs: dict[Any, Any]):

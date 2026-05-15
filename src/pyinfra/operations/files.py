@@ -897,7 +897,7 @@ def get(
     """
 
     if add_deploy_dir and state.cwd:
-        dest = str(Path(state.cwd) / dest)
+        dest = posixpath.join(state.cwd, dest)
 
     if create_local_dir:
         local_pathname = Path(dest).parent
@@ -1087,7 +1087,7 @@ def put(
         assert isinstance(src, (str, Path))
         # Add deploy directory?
         if add_deploy_dir and state.cwd:
-            src = str(Path(state.cwd) / src)
+            src = posixpath.join(state.cwd, src)
 
         local_file = src
 
@@ -1397,7 +1397,7 @@ def template(
     '''
 
     if not hasattr(src, "read") and state.cwd:
-        src = str(Path(state.cwd) / src)
+        src = posixpath.join(state.cwd, src)
 
     # Ensure host/state/inventory are available inside templates (if not set)
     data.setdefault("host", host)

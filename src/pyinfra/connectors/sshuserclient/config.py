@@ -4,6 +4,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import glob
+import posixpath
 import re
 from os import environ
 from pathlib import Path
@@ -87,11 +88,11 @@ def _expand_include_statements(file_obj, parsed_files=None):
             parsed_files = []
 
         # The path can be relative to its parent configuration file
-        if Path(value).is_absolute() is False and value[0] != "~":
-            folder = str(Path(file_obj.name).parent)
-            value = str(Path(folder) / value)
+        if posixpath.isabs(value) is False and value[0] != "~":
+            folder = posixpath.dirname(file_obj.name)
+            value = posixpath.join(folder, value)
 
-        value = str(Path(value).expanduser())
+        value = posixpath.expanduser(value)
 
         for filename in glob.iglob(value):
             if Path(filename).is_file():
