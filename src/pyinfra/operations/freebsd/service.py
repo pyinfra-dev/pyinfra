@@ -4,7 +4,6 @@ Manage FreeBSD services.
 
 from __future__ import annotations
 
-from typing_extensions import List, Optional, Union
 
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
@@ -21,10 +20,10 @@ SRV_CUSTOM: str = "custom"
 @operation()
 def service(
     srvname: str,
-    jail: Optional[str] = None,
+    jail: str | None = None,
     srvstate: str = SRV_STARTED,
-    command: Optional[Union[str, List[str]]] = None,
-    environment: Optional[List[str]] = None,
+    command: str | list[str] | None = None,
+    environment: list[str] | None = None,
     verbose: bool = False,
 ):
     """
@@ -68,7 +67,7 @@ def service(
         host.noop(f"Cannot find rc(8) script '{srvname}'")
         return
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.append("service")
 

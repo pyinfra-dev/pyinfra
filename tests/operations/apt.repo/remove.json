@@ -12,7 +12,7 @@
             "options": {}
         }],
         "files.FindInFile": {
-            "interpolate_variables=False, path=/etc/apt/sources.list, pattern=^.*deb http://archive\\.canonical\\.com/ubuntu hardy partner.*$": [""]
+            "extended_regex=False, interpolate_variables=False, path=/etc/apt/sources.list, pattern=^.*deb http://archive\\.canonical\\.com/ubuntu hardy partner.*$": [""]
         }
     },
     "commands": [

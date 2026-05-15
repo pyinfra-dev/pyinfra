@@ -11,7 +11,8 @@ from functools import wraps
 from inspect import signature
 from io import StringIO
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Callable, Generator, Iterator, Optional, cast
+from typing import TYPE_CHECKING, Any, cast
+from collections.abc import Callable, Generator, Iterator
 
 from typing_extensions import ParamSpec, override
 
@@ -43,15 +44,15 @@ if TYPE_CHECKING:
 class OperationMeta:
     _hash: str
 
-    _combined_output: Optional["CommandOutput"] = None
-    _commands: Optional[list[Any]] = None
-    _maybe_is_change: Optional[bool] = None
-    _success: Optional[bool] = None
+    _combined_output: CommandOutput | None = None
+    _commands: list[Any] | None = None
+    _maybe_is_change: bool | None = None
+    _success: bool | None = None
     _retry_attempts: int = 0
     _max_retries: int = 0
-    _retry_succeeded: Optional[bool] = None
+    _retry_succeeded: bool | None = None
 
-    def __init__(self, hash, is_change: Optional[bool]):
+    def __init__(self, hash, is_change: bool | None):
         self._hash = hash
         self._maybe_is_change = is_change
 
@@ -83,7 +84,7 @@ class OperationMeta:
         self,
         success: bool,
         commands: list[Any],
-        combined_output: "CommandOutput",
+        combined_output: CommandOutput,
         retry_attempts: int = 0,
         max_retries: int = 0,
     ) -> None:
@@ -184,7 +185,7 @@ class OperationMeta:
         return self._retry_attempts > 0
 
     @property
-    def retry_succeeded(self) -> Optional[bool]:
+    def retry_succeeded(self) -> bool | None:
         """
         Returns whether this operation succeeded after retries.
         Returns None if the operation was not retried.
@@ -216,8 +217,8 @@ def add_op(state: State, op_func, *args, **kwargs):
 
     if pyinfra.is_cli:
         raise PyinfraError(
-            ("`add_op` should not be called when pyinfra is executing in CLI mode! ({0})").format(
-                get_call_location(),
+            (
+                f"`add_op` should not be called when pyinfra is executing in CLI mode! ({get_call_location()})"
             ),
         )
 
@@ -239,9 +240,9 @@ P = ParamSpec("P")
 
 def operation(
     is_idempotent: bool = True,
-    idempotent_notice: Optional[str] = None,
+    idempotent_notice: str | None = None,
     is_deprecated: bool = False,
-    deprecated_for: Optional[str] = None,
+    deprecated_for: str | None = None,
     _set_in_op: bool = True,
 ) -> Callable[[Callable[P, Generator]], PyinfraOperation[P]]:
     """
@@ -387,7 +388,7 @@ def get_operation_name_from_func(func):
     if func.__module__:
         module_bits = func.__module__.split(".")
         module_name = module_bits[-1]
-        return "{0}.{1}".format(module_name, func.__name__)
+        return f"{module_name}.{func.__name__}"
     else:
         return func.__name__
 
@@ -404,7 +405,7 @@ def generate_operation_name(func, host, kwargs, global_arguments):
         names = {name}
 
     if host.current_deploy_name:
-        names = {"{0} | {1}".format(host.current_deploy_name, name) for name in names}
+        names = {f"{host.current_deploy_name} | {name}" for name in names}
 
     return names, add_args
 
@@ -430,8 +431,8 @@ def solve_operation_consistency(names, state, host):
     # the op hash and also handle below with the op order.
     duplicate_op_count = 0
     while op_hash in host.op_hash_order:
-        logger.debug("Duplicate hash ({0}) detected!".format(op_hash))
-        op_hash = "{0}-{1}".format(op_hash, duplicate_op_count)
+        logger.debug(f"Duplicate hash ({op_hash}) detected!")
+        op_hash = f"{op_hash}-{duplicate_op_count}"
         duplicate_op_count += 1
 
     host.op_hash_order.append(op_hash)
@@ -458,7 +459,7 @@ def ensure_shared_op_meta(
         op_meta_value = op_meta.global_arguments.get(key, op_meta_default)
 
         if op_meta_value is not op_meta_default and global_value != op_meta_value:
-            raise OperationValueError("Cannot have different values for `{0}`.".format(key))
+            raise OperationValueError(f"Cannot have different values for `{key}`.")
 
         op_meta.global_arguments[key] = global_value  # type: ignore[literal-required]
 

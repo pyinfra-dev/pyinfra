@@ -55,7 +55,7 @@ def parse_commands(commands):
             json_command = ["download", str(command.src), str(command.dest)]
 
         else:
-            raise Exception("{0} is not a valid command!".format(command))
+            raise Exception(f"{command} is not a valid command!")
 
         if command.connector_arguments:
             command.connector_arguments["command"] = json_command
@@ -89,7 +89,7 @@ def make_operation_tests(arg):
     # Get the operation we're testing against
     module_name, op_name = arg.rsplit(".", 1)
 
-    module = import_module("pyinfra.operations.{0}".format(module_name))
+    module = import_module(f"pyinfra.operations.{module_name}")
     op = getattr(module, op_name)
 
     # Generate a test class
@@ -99,7 +99,7 @@ def make_operation_tests(arg):
         TestCase,
         metaclass=TestGenerator,
         tests_dir=path.join("tests", "operations", arg),
-        test_prefix="test_{0}_{1}_".format(module_name, op_name),
+        test_prefix=f"test_{module_name}_{op_name}_",
         test_method="_test",
     ):
         @classmethod
@@ -114,7 +114,7 @@ def make_operation_tests(arg):
             ):
                 return
 
-            op_test_name = "{0}/{1}.json".format(arg, test_name)
+            op_test_name = f"{arg}/{test_name}.json"
 
             # Create a host with this tests facts and attach to context host
             host = create_host(self.state, facts=test_data.get("facts", {}))
@@ -154,10 +154,7 @@ def make_operation_tests(arg):
                 else:
                     assert host.noop_description is not None, "no noop description was set"
                     warnings.warn(
-                        'No noop_description set for test: {0} (got "{1}")'.format(
-                            op_test_name,
-                            host.noop_description,
-                        ),
+                        f'No noop_description set for test: {op_test_name} (got "{host.noop_description}")',
                     )
 
     return TestTests

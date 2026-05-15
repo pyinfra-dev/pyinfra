@@ -70,7 +70,7 @@ class DockerSSHConnector(BaseConnector):
         show_warning()
 
         yield (
-            "@dockerssh/{0}:{1}".format(hostname, image),
+            f"@dockerssh/{hostname}:{image}",
             {"ssh_hostname": hostname, "docker_image": image},
             ["@dockerssh"],
         )
@@ -97,7 +97,7 @@ class DockerSSHConnector(BaseConnector):
                     ),
                 )
                 if not status:
-                    raise IOError(output.stderr)
+                    raise OSError(output.stderr)
                 container_id = output.stdout_lines[-1]
 
         except PyinfraError as e:
@@ -123,11 +123,7 @@ class DockerSSHConnector(BaseConnector):
             )
 
         logger.info(
-            "{0}{1} build complete, image ID: {2}".format(
-                self.host.print_prefix,
-                self.docker_cmd,
-                format_text(image_id, bold=True),
-            ),
+            f"{self.host.print_prefix}{self.docker_cmd} build complete, image ID: {format_text(image_id, bold=True)}",
         )
 
     @override
@@ -196,7 +192,7 @@ class DockerSSHConnector(BaseConnector):
         # upload file to remote server
         ssh_status = self.ssh.put_file(local_temp_filename, remote_temp_filename)
         if not ssh_status:
-            raise IOError("Failed to copy file over ssh")
+            raise OSError("Failed to copy file over ssh")
 
         try:
             docker_id = self.host.host_data["docker_container_id"]
@@ -222,14 +218,11 @@ class DockerSSHConnector(BaseConnector):
             )
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
             echo(
-                "{0}file uploaded to container: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+                f"{self.host.print_prefix}file uploaded to container: {remote_filename}",
                 err=True,
             )
 
@@ -276,17 +269,14 @@ class DockerSSHConnector(BaseConnector):
             )
 
         if not ssh_status:
-            raise IOError("failed to copy file over ssh")
+            raise OSError("failed to copy file over ssh")
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
             echo(
-                "{0}file downloaded from container: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+                f"{self.host.print_prefix}file downloaded from container: {remote_filename}",
                 err=True,
             )
 
@@ -303,7 +293,7 @@ class DockerSSHConnector(BaseConnector):
         )
 
         if not remove_status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
 
 @memoize
@@ -370,7 +360,7 @@ class PodmanSSHConnector(DockerSSHConnector):
         show_warning_podman()
 
         yield (
-            "@podmanssh/{0}:{1}".format(hostname, image),
+            f"@podmanssh/{hostname}:{image}",
             {"ssh_hostname": hostname, "docker_image": image},
             ["@podmanssh"],
         )

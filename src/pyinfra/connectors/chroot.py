@@ -1,7 +1,7 @@
 import os
 import shlex
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from typing_extensions import Unpack, override
 
@@ -42,16 +42,16 @@ class ChrootConnector(BaseConnector):
 
     @override
     @staticmethod
-    def make_names_data(name: Optional[str] = None):
+    def make_names_data(name: str | None = None):
         if not name:
             raise InventoryError("No directory provided!")
 
         show_warning()
 
         yield (
-            "@chroot/{0}".format(name),
+            f"@chroot/{name}",
             {
-                "chroot_directory": "/{0}".format(name.lstrip("/")),
+                "chroot_directory": f"/{name.lstrip('/')}",
             },
             ["@chroot"],
         )
@@ -65,7 +65,7 @@ class ChrootConnector(BaseConnector):
         try:
             with progress_spinner({"chroot run"}):
                 local.shell(
-                    "chroot {0} ls".format(shlex.quote(chroot_directory)),
+                    f"chroot {shlex.quote(chroot_directory)} ls",
                     splitlines=True,
                 )
         except PyinfraError as e:
@@ -144,14 +144,11 @@ class ChrootConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
             echo(
-                "{0}file uploaded to chroot: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+                f"{self.host.print_prefix}file uploaded to chroot: {remote_filename}",
                 err=True,
             )
 
@@ -199,14 +196,11 @@ class ChrootConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
             echo(
-                "{0}file downloaded from chroot: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+                f"{self.host.print_prefix}file downloaded from chroot: {remote_filename}",
                 err=True,
             )
 
