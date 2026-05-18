@@ -9,10 +9,10 @@ import gevent
 from typing_extensions import Unpack, override
 
 from pyinfra.context import LocalContextObject, ctx_config, ctx_host
+from pyinfra import logger
 from .hiddenvalue import HiddenValue
 
 from .arguments import ConnectorArguments
-import warnings
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -57,8 +57,8 @@ def make_formatted_string_command(string: str, *args, **kwargs) -> StringCommand
 
 class MaskString(str):
     def __new__(cls, s):
-        warnings.warn("MaskString is deprecated please switch to HiddenValue")
-        return super().__new__(s)
+        logger.warning("MaskString is deprecated please switch to HiddenValue")
+        return super().__new__(cls, s)
 
 
 class QuoteString:
