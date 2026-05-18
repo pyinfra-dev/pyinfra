@@ -14,7 +14,8 @@ from distro import distro
 from typing_extensions import TypedDict, override
 
 from pyinfra import host
-from pyinfra.api import FactBase, ShortFactBase
+from pyinfra.api import FactBase, ShortFactBase, StringCommand
+from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.util import try_int
 from pyinfra.facts import crontab
 
@@ -1361,8 +1362,8 @@ class EtcHosts(FactBase[dict[str, list[str]]]):
     default = dict
 
     @override
-    def command(self, path: str = "/etc/hosts") -> str:
-        return f"cat {path} 2>/dev/null || true"
+    def command(self, path: str = "/etc/hosts") -> StringCommand:
+        return make_formatted_string_command("cat {0} 2>/dev/null || true", QuoteString(path))
 
     @override
     def process(self, output: Iterable[str]) -> dict[str, list[str]]:
