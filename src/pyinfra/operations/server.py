@@ -751,7 +751,7 @@ def user_authorized_keys(
 
     + user: name of the user to ensure
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
-    + group: the users primary group
+    + group: the user's primary group
     + delete_keys: whether to remove any keys not specified in ``public_keys``
 
     Public keys:
@@ -874,10 +874,10 @@ def user(
 
     + user: name of the user to ensure
     + present: whether this user should exist
-    + home: the users home directory
-    + shell: the users shell
-    + group: the users primary group
-    + groups: the users secondary groups
+    + home: the user's home directory
+    + shell: the user's shell
+    + group: the user's primary group
+    + groups: the user's secondary groups
     + append: whether to add `user` to `groups`, w/o losing membership of other groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + delete_keys: whether to remove any keys not specified in ``public_keys``
