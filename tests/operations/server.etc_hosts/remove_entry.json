@@ -1,0 +1,32 @@
+{
+    "args": ["192.168.1.10"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "server.EtcHosts": {
+            "path=/etc/hosts": {
+                "127.0.0.1": ["localhost"],
+                "192.168.1.10": ["db.internal", "db"],
+                "::1": ["localhost"]
+            }
+        },
+        "files.FileContents": {
+            "path=/etc/hosts": [
+                "127.0.0.1 localhost",
+                "192.168.1.10 db.internal db",
+                "::1 localhost"
+            ]
+        },
+        "files.File": {
+            "path=/etc/hosts": {}
+        },
+        "files.Directory": {
+            "path=/etc": true,
+            "path=/etc/hosts": false
+        }
+    },
+    "commands": [
+        ["upload", "127.0.0.1 localhost\n::1 localhost\n", "/etc/hosts"]
+    ]
+}

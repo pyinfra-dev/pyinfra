@@ -1,0 +1,16 @@
+{
+    "args": ["192.168.1.10"],
+    "kwargs": {
+        "hostnames": "not-here",
+        "present": false
+    },
+    "facts": {
+        "server.EtcHosts": {
+            "path=/etc/hosts": {
+                "192.168.1.10": ["db.internal", "db"]
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "192.168.1.10 in /etc/hosts does not reference any of: not-here"
+}
