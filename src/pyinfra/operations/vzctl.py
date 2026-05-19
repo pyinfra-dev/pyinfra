@@ -18,12 +18,12 @@ def start(ctid: str, force=False):
     + force: whether to force container start
     """
 
-    args = ["{0}".format(ctid)]
+    args = [f"{ctid}"]
 
     if force:
         args.append("--force")
 
-    yield "vzctl start {0}".format(" ".join(args))
+    yield f"vzctl start {' '.join(args)}"
 
 
 @operation(is_idempotent=False)
@@ -34,9 +34,9 @@ def stop(ctid: str):
     + ctid: CTID of the container to stop
     """
 
-    args = ["{0}".format(ctid)]
+    args = [f"{ctid}"]
 
-    yield "vzctl stop {0}".format(" ".join(args))
+    yield f"vzctl stop {' '.join(args)}"
 
 
 @operation(is_idempotent=False)
@@ -60,7 +60,7 @@ def mount(ctid: str):
     + ctid: CTID of the container to mount
     """
 
-    yield "vzctl mount {0}".format(ctid)
+    yield f"vzctl mount {ctid}"
 
 
 @operation(is_idempotent=False)
@@ -71,7 +71,7 @@ def unmount(ctid: str):
     + ctid: CTID of the container to unmount
     """
 
-    yield "vzctl umount {0}".format(ctid)
+    yield f"vzctl umount {ctid}"
 
 
 @operation(is_idempotent=False)
@@ -82,7 +82,7 @@ def delete(ctid: str):
     + ctid: CTID of the container to delete
     """
 
-    yield "vzctl delete {0}".format(ctid)
+    yield f"vzctl delete {ctid}"
 
 
 @operation(is_idempotent=False)
@@ -97,15 +97,15 @@ def create(ctid: str, template: str | None = None):
     current_containers = host.get_fact(OpenvzContainers)
     if ctid in current_containers:
         raise OperationError(
-            "An OpenVZ container with CTID {0} already exists".format(ctid),
+            f"An OpenVZ container with CTID {ctid} already exists",
         )
 
-    args = ["{0}".format(ctid)]
+    args = [f"{ctid}"]
 
     if template:
-        args.append("--ostemplate {0}".format(template))
+        args.append(f"--ostemplate {template}")
 
-    yield "vzctl create {0}".format(" ".join(args))
+    yield f"vzctl create {' '.join(args)}"
 
 
 @operation(is_idempotent=False)
@@ -122,7 +122,7 @@ def set(ctid: str, save=True, **settings):
         ``hostname='my-host.net'`` becomes ``--hostname my-host.net``.
     """
 
-    args = ["{0}".format(ctid)]
+    args = [f"{ctid}"]
 
     if save:
         args.append("--save")
@@ -130,8 +130,8 @@ def set(ctid: str, save=True, **settings):
     for key, value in settings.items():
         # Handle list values (e.g. --nameserver X --nameserver X)
         if isinstance(value, list):
-            args.extend("--{0} {1}".format(key, v) for v in value)
+            args.extend(f"--{key} {v}" for v in value)
         else:
-            args.append("--{0} {1}".format(key, value))
+            args.append(f"--{key} {value}")
 
-    yield "vzctl set {0}".format(" ".join(args))
+    yield f"vzctl set {' '.join(args)}"

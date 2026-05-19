@@ -5,7 +5,8 @@ creation (eg pyinfra-openstack).
 """
 
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Optional, cast
+from typing import TYPE_CHECKING, Any, cast
+from collections.abc import Callable
 
 from typing_extensions import ParamSpec
 
@@ -37,8 +38,8 @@ def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs)
     if pyinfra.is_cli:
         raise PyinfraError(
             (
-                "`add_deploy` should not be called when pyinfra is executing in CLI mode! ({0})"
-            ).format(get_call_location()),
+                f"`add_deploy` should not be called when pyinfra is executing in CLI mode! ({get_call_location()})"
+            ),
         )
 
     hosts = kwargs.pop("host", state.inventory.get_active_hosts())
@@ -55,7 +56,7 @@ P = ParamSpec("P")
 
 
 def deploy(
-    name: Optional[str] = None, data_defaults: Optional[dict] = None
+    name: str | None = None, data_defaults: dict | None = None
 ) -> Callable[[Callable[P, Any]], PyinfraOperation[P]]:
     """
     Decorator that takes a deploy function (normally from a pyinfra_* package)
@@ -64,10 +65,8 @@ def deploy(
 
     if name and not isinstance(name, str):
         raise PyinfraError(
-            (
-                "The `deploy` decorator must be called, ie `@deploy()`, "
-                "see: https://docs.pyinfra.com/en/3.x/compatibility.html#upgrading-pyinfra-from-2-x-3-x"  # noqa
-            )
+            "The `deploy` decorator must be called, ie `@deploy()`, "
+            "see: https://docs.pyinfra.com/en/3.x/compatibility.html#upgrading-pyinfra-from-2-x-3-x"  # noqa
         )
 
     def decorator(func: Callable[P, Any]) -> PyinfraOperation[P]:

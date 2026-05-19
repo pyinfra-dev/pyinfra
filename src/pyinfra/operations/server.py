@@ -14,20 +14,23 @@ from typing import TYPE_CHECKING
 from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, QuoteString, StringCommand, operation
 from pyinfra.api.util import try_int
-from pyinfra.connectors.util import remove_any_sudo_askpass_file
-from pyinfra.facts.files import Directory, FindInFile, Link
+from pyinfra.connectors.util import clear_askpass_cache, remove_any_sudo_askpass_file
+from pyinfra.facts.files import Directory, FileContents, FindInFile, Link
 from pyinfra.facts.server import (
     AuthorizedKeys,
+    EtcHosts,
     Groups,
     Home,
     Hostname,
     Kernel,
     KernelModules,
+    LinuxName,
     Locales,
     Mounts,
     Os,
     Sysctl,
     Timezone,
+    Uptime,
     Users,
     Which,
 )
@@ -77,6 +80,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
             reboot_timeout=600,
         )
     """
+    pre_reboot_uptime: list[int] = []
 
     # Remove this now, before we reboot the server - if the reboot fails (expected or
     # not) we'll error if we don't clean this up now. Will simply be re-uploaded if
@@ -86,6 +90,11 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield FunctionCommand(remove_any_askpass_file, (), {})
 
+    def capture_uptime(state, host):
+        pre_reboot_uptime.append(host.get_fact(Uptime))
+
+    yield FunctionCommand(capture_uptime, (), {})
+
     yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
 
     def wait_and_reconnect(state, host):  # pragma: no cover
@@ -93,23 +102,38 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         max_retries = round(reboot_timeout / interval)
 
         # The remote askpass files (if any) live on a host that has just
-        # rebooted — the SSH session is dead and there is nothing to clean up.
+        # rebooted, the SSH session is dead and there is nothing to clean up.
         # Clear the stored paths before disconnecting so the disconnect path
         # does not attempt an ``rm -f`` over the broken connection.
-        host.connector_data["sudo_askpass_path"] = None
-        host.connector_data["su_askpass_path"] = None
+        clear_askpass_cache(host)
 
         host.disconnect()  # make sure we are properly disconnected
         retries = 0
 
+        pre_uptime = pre_reboot_uptime[0]
+
         while True:
             host.connect(show_errors=False)
+
             if host.connected:
-                break
+                post_uptime = host.get_fact(Uptime)
+                logger.debug(
+                    "Connected (current_uptime=%ss, pre_reboot_uptime=%ss)",
+                    post_uptime,
+                    pre_uptime,
+                )
+
+                if post_uptime < pre_uptime + delay:
+                    logger.debug("Reboot confirmed.")
+                    break
+
+                logger.debug("Host reachable but uptime unchanged; reboot still in progress")
+            else:
+                logger.debug("Waiting for host to become reachable...")
 
             if retries > max_retries:
                 raise Exception(
-                    ("Server did not reboot in time (reboot_timeout={0}s)").format(reboot_timeout),
+                    (f"Server did not reboot in time (reboot_timeout={reboot_timeout}s)"),
                 )
 
             sleep(interval)
@@ -119,7 +143,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     # On certain systems sudo files are lost on reboot
     def clean_sudo_info(state, host):
-        host.connector_data["sudo_askpass_path"] = None
+        clear_askpass_cache(host)
 
     yield FunctionCommand(clean_sudo_info, (), {})
 
@@ -142,14 +166,12 @@ def wait(port: int):
         )
     """
 
-    yield r"""
-        while ! (netstat -an | grep LISTEN | grep -e "\.{0}" -e ":{0}"); do
-            echo "waiting for port {0}..."
+    yield rf"""
+        while ! (netstat -an | grep LISTEN | grep -e "\.{port}" -e ":{port}"); do
+            echo "waiting for port {port}..."
             sleep 1
         done
-    """.format(
-        port,
-    )
+    """
 
 
 @operation(is_idempotent=False)
@@ -175,8 +197,7 @@ def shell(commands: str | list[str]):
     if isinstance(commands, str):
         commands = [commands]
 
-    for command in commands:
-        yield command
+    yield from commands
 
 
 @operation(is_idempotent=False)
@@ -235,7 +256,7 @@ def script_template(src: str, args=(), **data):
         )
     """
 
-    temp_file = host.get_temp_filename("{0}{1}".format(src, data))
+    temp_file = host.get_temp_filename(f"{src}{data}")
     yield from files.template._inner(src, temp_file, **data)
 
     yield chmod(temp_file, "+x")
@@ -284,12 +305,7 @@ def modprobe(module: str, present=True, force=False):
 
     else:
         host.noop(
-            "{0} {1} {2} {3}".format(
-                "modules" if len(list_value) > 1 else "module",
-                "/".join(list_value),
-                "are" if len(list_value) > 1 else "is",
-                "loaded" if present else "not loaded",
-            ),
+            f"{'modules' if len(list_value) > 1 else 'module'} {'/'.join(list_value)} {'are' if len(list_value) > 1 else 'is'} {'loaded' if present else 'not loaded'}",
         )
 
 
@@ -380,10 +396,7 @@ def mount(
 
     else:
         host.noop(
-            "filesystem {0} is {1}".format(
-                path,
-                "mounted" if mounted else "not mounted",
-            ),
+            f"filesystem {path} is {'mounted' if mounted else 'not mounted'}",
         )
 
 
@@ -438,10 +451,132 @@ def hostname(hostname: str, hostname_file: str | None = None):
 
     if hostname_file:
         # Create a whole new hostname file
-        file = StringIO("{0}\n".format(hostname))
+        file = StringIO(f"{hostname}\n")
 
         # And ensure it exists
         yield from files.put._inner(src=file, dest=hostname_file)
+
+
+@operation()
+def etc_hosts(
+    ip: str,
+    hostnames: str | list[str] | None = None,
+    present: bool = True,
+    path: str = "/etc/hosts",
+):
+    """
+    Add, update or remove an entry in ``/etc/hosts`` (or another hosts-file path)
+    keyed by IP address.
+
+    + ip: the IP address the entry is keyed by
+    + hostnames: hostname (``str``) or list of hostnames to associate with ``ip``
+    + present: whether the entry should be present (``True``) or absent (``False``)
+    + path: path to the hosts file (defaults to ``/etc/hosts``)
+
+    Behavior:
+        When ``present=True`` the line for ``ip`` is ensured to be exactly
+        ``<ip> <hostnames...>``, adding it if missing or replacing it if the
+        stored hostnames differ. Other lines are left untouched.
+
+        When ``present=False`` and ``hostnames`` is omitted, every line for ``ip``
+        is removed. When ``hostnames`` is given, only those names are dropped
+        from the IP's line; the line is removed entirely if no hostnames remain.
+
+    Comments on the edited line are not preserved.
+
+    **Examples:**
+
+    .. code:: python
+
+        server.etc_hosts(
+            name="Register db.internal in /etc/hosts",
+            ip="192.168.1.10",
+            hostnames=["db.internal", "db"],
+        )
+
+        server.etc_hosts(
+            name="Drop the legacy hostname",
+            ip="192.168.1.10",
+            hostnames="db",
+            present=False,
+        )
+
+        server.etc_hosts(
+            name="Remove 10.0.0.1 entirely",
+            ip="10.0.0.1",
+            present=False,
+        )
+    """
+
+    if isinstance(hostnames, str):
+        hostnames_list = hostnames.split()
+    elif hostnames is None:
+        hostnames_list = []
+    else:
+        hostnames_list = list(hostnames)
+
+    if present and not hostnames_list:
+        raise OperationError("hostnames must be provided when present=True")
+
+    # Use the parsed EtcHosts fact to decide whether any change is needed before
+    # touching the file; this keeps the happy path a single fact lookup and avoids
+    # rewriting the file when it already matches the desired state.
+    current_entries = host.get_fact(EtcHosts, path=path)
+    current_names = current_entries.get(ip)
+
+    if present:
+        if current_names == hostnames_list:
+            host.noop("{} -> {} already present in {}".format(ip, " ".join(hostnames_list), path))
+            return
+    else:
+        if current_names is None:
+            host.noop(f"{ip} already absent from {path}")
+            return
+        if hostnames_list and not any(name in current_names for name in hostnames_list):
+            host.noop(
+                "{} in {} does not reference any of: {}".format(ip, path, " ".join(hostnames_list))
+            )
+            return
+
+    # Mutation needed: rewrite the file so that comments and other entries survive.
+    existing = host.get_fact(FileContents, path=path)
+    existing_lines: list[str] = [line.rstrip("\r\n") for line in existing] if existing else []
+
+    new_lines: list[str] = []
+    found = False
+
+    for line in existing_lines:
+        stripped = line.split("#", 1)[0].strip()
+        if not stripped:
+            new_lines.append(line)
+            continue
+
+        tokens = stripped.split()
+        if tokens[0] != ip:
+            new_lines.append(line)
+            continue
+
+        found = True
+        line_names = tokens[1:]
+
+        if present:
+            new_lines.append("{} {}".format(ip, " ".join(hostnames_list)))
+        else:
+            if hostnames_list:
+                remaining = [name for name in line_names if name not in hostnames_list]
+                if remaining:
+                    new_lines.append("{} {}".format(ip, " ".join(remaining)))
+                # else: drop the line entirely
+            # else: full removal, drop the line
+
+    if present and not found:
+        new_lines.append("{} {}".format(ip, " ".join(hostnames_list)))
+
+    new_content = "\n".join(new_lines)
+    if new_content:
+        new_content += "\n"
+
+    yield from files.put._inner(src=StringIO(new_content), dest=path)
 
 
 @operation()
@@ -471,10 +606,10 @@ def timezone(timezone: str):
         return
 
     if host.get_fact(Which, command="timedatectl"):
-        yield "timedatectl set-timezone {0}".format(timezone)
+        yield f"timedatectl set-timezone {timezone}"
     else:
-        yield "ln -sf /usr/share/zoneinfo/{0} /etc/localtime".format(timezone)
-        yield "echo {0} > /etc/timezone".format(timezone)
+        yield f"ln -sf /usr/share/zoneinfo/{timezone} /etc/localtime"
+        yield f"echo {timezone} > /etc/timezone"
 
 
 @operation()
@@ -504,9 +639,16 @@ def sysctl(
         )
     """
 
-    string_value = " ".join(["{0}".format(v) for v in value]) if isinstance(value, list) else value
+    string_value = " ".join([f"{v}" for v in value]) if isinstance(value, list) else value
 
-    value = [try_int(v) for v in value] if isinstance(value, list) else try_int(value)
+    if isinstance(value, list):
+        value = [try_int(v) for v in value]
+        if len(value) == 1:
+            value = value[0]
+    elif isinstance(value, str) and len(value.split()) > 1:
+        value = [try_int(v) for v in value.split()]
+    else:
+        value = try_int(value)
 
     existing_sysctls = host.get_fact(Sysctl, keys=[key])
     existing_value = existing_sysctls.get(key)
@@ -517,13 +659,13 @@ def sysctl(
             StringCommand(QuoteString(key), "=", QuoteString(str(string_value)), _separator=""),
         )
     else:
-        host.noop("sysctl {0} is set to {1}".format(key, string_value))
+        host.noop(f"sysctl {key} is set to {string_value}")
 
     if persist:
         yield from files.line._inner(
             path=persist_file,
-            line="{0}[[:space:]]*=[[:space:]]*{1}".format(key, string_value),
-            replace="{0} = {1}".format(key, string_value),
+            line=f"{key}[[:space:]]*=[[:space:]]*{string_value}",
+            replace=f"{key} = {string_value}",
         )
 
 
@@ -558,7 +700,7 @@ def service(
         )
     """
 
-    service_operation: "PyinfraOperation"
+    service_operation: PyinfraOperation
 
     if host.get_fact(Which, command="systemctl"):
         service_operation = systemd.service
@@ -572,17 +714,23 @@ def service(
     elif host.get_fact(Which, command="sv"):
         service_operation = runit.service
 
+    # NOTE: must run before the sysvinit check: BSDs ship `service` in base (distinct from the
+    # Linux sysvinit wrapper), so matching on Which command="service" first would misroute BSD
+    # hosts to sysvinit. See https://github.com/pyinfra-dev/pyinfra/issues/1496.
+    # The OS list is explicit (rather than "not Linux") so other /etc/rc.d-having systems are not
+    # accidentally routed through bsdinit; see https://github.com/Fizzadar/pyinfra/issues/819 for
+    # the original motivation to exclude Linux here.
+    elif host.get_fact(Os) in ("FreeBSD", "OpenBSD", "NetBSD", "DragonFly") and bool(
+        host.get_fact(Directory, path="/etc/rc.d")
+    ):
+        service_operation = bsdinit.service
+
     elif (
         host.get_fact(Which, command="service")
         or host.get_fact(Link, path="/etc/init.d")
         or host.get_fact(Directory, path="/etc/init.d")
     ):
         service_operation = sysvinit.service
-
-    # NOTE: important that we are not Linux here because /etc/rc.d will exist but checking it's
-    # contents may trigger things (like a reboot: https://github.com/Fizzadar/pyinfra/issues/819)
-    elif host.get_fact(Os) != "Linux" and bool(host.get_fact(Directory, path="/etc/rc.d")):
-        service_operation = bsdinit.service
 
     else:
         raise OperationError(
@@ -621,7 +769,7 @@ def packages(
         )
     """
 
-    package_operation: "PyinfraOperation"
+    package_operation: PyinfraOperation
 
     # TODO: improve this - use LinuxDistribution fact + mapping with fallback below?
     # Here to be preferred on openSUSE which also provides aptitude
@@ -783,7 +931,7 @@ def user_authorized_keys(
             try_path = path.join(state.cwd, key)
 
         if path.exists(try_path):
-            with open(try_path, "r") as f:
+            with open(try_path) as f:
                 return [key.strip() for key in f.readlines()]
 
         return [key.strip()]
@@ -818,7 +966,7 @@ def user_authorized_keys(
             )
         else:
             keys_file = StringIO(
-                "{0}\n".format(
+                "{}\n".format(
                     "\n".join(public_keys),
                 ),
             )
@@ -930,7 +1078,7 @@ def user(
         groups = []
 
     if home is None:
-        home = "/home/{0}".format(user)
+        home = f"/home/{user}"
         if existing_user:
             home = existing_user.get("home", home)
 
@@ -940,6 +1088,12 @@ def user(
             if os_type == "FreeBSD":
                 yield StringCommand("pw", "userdel", "-n", QuoteString(user))
             else:
+                if os_type == "Linux" and not host.get_fact(Which, command="userdel"):
+                    if host.get_fact(LinuxName) == "Alpine":
+                        raise OperationError(
+                            "userdel is not installed (install the shadow package)"
+                        )
+                    raise OperationError("userdel is not installed")
                 yield StringCommand("userdel", QuoteString(user))
         return
 
@@ -987,7 +1141,7 @@ def user(
 
         if create_home:
             args.append("-m")
-        elif os_type != "FreeBSD":
+        elif os_type not in ("FreeBSD", "OpenBSD"):
             args.append("-M")
 
         if password and os_type != "FreeBSD":
@@ -1012,6 +1166,10 @@ def user(
             else:
                 yield StringCommand("pw", "useradd", "-n", QuoteString(user), *args)
         else:
+            if os_type == "Linux" and not host.get_fact(Which, command="useradd"):
+                if host.get_fact(LinuxName) == "Alpine":
+                    raise OperationError("useradd is not installed (install the shadow package)")
+                raise OperationError("useradd is not installed")
             yield StringCommand("useradd", *args, QuoteString(user))
 
     # User exists and we want them, check home/shell/keys/password
@@ -1069,6 +1227,12 @@ def user(
             if os_type == "FreeBSD":
                 yield StringCommand("pw", "usermod", "-n", QuoteString(user), *mod_args)
             else:
+                if os_type == "Linux" and not host.get_fact(Which, command="usermod"):
+                    if host.get_fact(LinuxName) == "Alpine":
+                        raise OperationError(
+                            "usermod is not installed (install the shadow package)"
+                        )
+                    raise OperationError("usermod is not installed")
                 yield StringCommand("usermod", *mod_args, QuoteString(user))
 
     # Ensure home directory ownership
@@ -1088,7 +1252,7 @@ def user(
             public_keys=public_keys,
             group=group,
             delete_keys=delete_keys,
-            authorized_key_directory="{0}/.ssh".format(home),
+            authorized_key_directory=f"{home}/.ssh",
             authorized_key_filename=None,
         )
 
@@ -1123,7 +1287,7 @@ def locale(
 
     locales = host.get_fact(Locales)
 
-    logger.debug("Enabled locales: {0}".format(locales))
+    logger.debug(f"Enabled locales: {locales}")
 
     locales_definitions_file = "/etc/locale.gen"
 
@@ -1182,7 +1346,7 @@ def kill(pid: int, signal: str = "TERM"):
         )
     """
 
-    yield "kill -{0} {1}".format(signal, pid)
+    yield f"kill -{signal} {pid}"
 
 
 @operation()

@@ -43,7 +43,7 @@ def get_facts_and_args(commands):
     for command in commands:
         if "=" in command:
             if not current_fact:
-                raise CliError("Invalid fact commands: `{0}`".format(commands))
+                raise CliError(f"Invalid fact commands: `{commands}`")
 
             key, value = command.split("=", 1)
             current_fact[2][key] = parse_cli_arg(value)

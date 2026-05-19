@@ -1,7 +1,7 @@
 {
     "arg": "my;package",
-    "command": "repoquery --queryformat '%{NAME} %{VERSION}-%{RELEASE}\\n' --whatprovides 'my;package' || true",
-    "requires_command": "repoquery",
+    "command": "dnf repoquery --quiet --queryformat '%{NAME} %{VERSION}-%{RELEASE}\\n' --whatprovides 'my;package' || true",
+    "requires_command": "dnf",
     "output": [
         "my-package 1.0.0-1.el8"
     ],

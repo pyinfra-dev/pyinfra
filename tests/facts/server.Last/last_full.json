@@ -1,0 +1,38 @@
+{
+    "command": "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true",
+    "requires_command": "last",
+    "output": [
+        "alice    pts/0        192.168.1.5      Thu Apr 17 14:00:00 2026   still logged in",
+        "bob      pts/1        10.0.0.12        Thu Apr 17 12:00:00 2026 - Thu Apr 17 13:00:00 2026  (01:00)",
+        "reboot   system boot  6.19.10-arch1-1  Thu Apr 17 11:00:00 2026 - Thu Apr 17 12:00:00 2026  (01:00)",
+        "carol    pts/2                         Thu Apr 17 09:00:00 2026 - Thu Apr 17 09:30:00 2026  (00:30)",
+        "",
+        "wtmp begins Thu Apr 17 09:00:00 2026"
+    ],
+    "fact": [
+        {
+            "user": "alice",
+            "tty": "pts/0",
+            "host": "192.168.1.5",
+            "time": "Thu Apr 17 14:00:00 2026 still logged in"
+        },
+        {
+            "user": "bob",
+            "tty": "pts/1",
+            "host": "10.0.0.12",
+            "time": "Thu Apr 17 12:00:00 2026 - Thu Apr 17 13:00:00 2026 (01:00)"
+        },
+        {
+            "user": "reboot",
+            "tty": "system boot",
+            "host": "6.19.10-arch1-1",
+            "time": "Thu Apr 17 11:00:00 2026 - Thu Apr 17 12:00:00 2026 (01:00)"
+        },
+        {
+            "user": "carol",
+            "tty": "pts/2",
+            "host": "",
+            "time": "Thu Apr 17 09:00:00 2026 - Thu Apr 17 09:30:00 2026 (00:30)"
+        }
+    ]
+}

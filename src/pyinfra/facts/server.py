@@ -6,14 +6,16 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Optional, Union
+from collections.abc import Iterable
 
 from dateutil.parser import parse as parse_date
 from distro import distro
 from typing_extensions import TypedDict, override
 
 from pyinfra import host
-from pyinfra.api import FactBase, ShortFactBase
+from pyinfra.api import FactBase, ShortFactBase, StringCommand
+from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.util import try_int
 from pyinfra.facts import crontab
 
@@ -65,13 +67,13 @@ class TmpDir(FactBase):
     def command(self):
         return """
 if [ -n "$TMPDIR" ] && [ -d "$TMPDIR" ] && [ -w "$TMPDIR" ]; then
-    echo "$TMPDIR"
+    echo "$TMPDIR";
 elif [ -n "$TMP" ] && [ -d "$TMP" ] && [ -w "$TMP" ]; then
-    echo "$TMP"
+    echo "$TMP";
 elif [ -n "$TEMP" ] && [ -d "$TEMP" ] && [ -w "$TEMP" ]; then
-    echo "$TEMP"
+    echo "$TEMP";
 else
-    echo ""
+    echo "";
 fi
         """.strip()
 
@@ -104,6 +106,27 @@ class KernelVersion(FactBase):
     @override
     def command(self):
         return "uname -r"
+
+
+class Uptime(FactBase[int]):
+    """
+    Returns the number of seconds the system has been up.
+    """
+
+    @override
+    def command(self) -> str:
+        self._kernel = host.get_fact(Kernel)
+        if self._kernel in ("Darwin", "FreeBSD"):
+            return "date +%s; sysctl -n kern.boottime | awk '{print $4}' | tr -d ','"
+
+        return "cut -d. -f1 /proc/uptime"
+
+    @override
+    def process(self, output: list[str]) -> int:
+        if self._kernel in ("Darwin", "FreeBSD"):
+            return int(output[0]) - int(output[1])
+
+        return int(output[0])
 
 
 # Deprecated/renamed -> Kernel
@@ -177,7 +200,7 @@ class Which(FactBase[Optional[str]]):
 
     @override
     def command(self, command):
-        return "command -v {0} || true".format(command)
+        return f"command -v {command} || true"
 
 
 class Date(FactBase[datetime]):
@@ -225,7 +248,7 @@ class MountsDict(TypedDict):
     options: list[str]
 
 
-class Mounts(FactBase[Dict[str, MountsDict]]):
+class Mounts(FactBase[dict[str, MountsDict]]):
     """
     Returns a dictionary of mounted filesystems and information.
 
@@ -319,7 +342,7 @@ class Mounts(FactBase[Dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
+class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
     """
     Returns the process occupying a port and its PID.
 
@@ -354,7 +377,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             return f"netstat -{proto_flag}lnp 2>/dev/null | awk '$4 ~ /:{port}$/'"
 
     @override
-    def process(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def process(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         if self._tool == "ss":
             return self._process_ss(output)
         elif self._tool == "netstat":
@@ -363,7 +386,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             return self._process_sockstat(output)
         return None, None
 
-    def _process_ss(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_ss(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         for line in output:
             if '"' not in line or "pid=" not in line:
                 continue
@@ -372,7 +395,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
             return (proc, pid)
         return None, None
 
-    def _process_netstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_netstat(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         for line in output:
             line = line.strip()
             if not line:
@@ -386,7 +409,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
                     break
         return None, None
 
-    def _process_sockstat(self, output: Iterable[str]) -> Union[Tuple[str, int], Tuple[None, None]]:
+    def _process_sockstat(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
         for line in output:
             line = line.strip()
             if not line or line.startswith("USER"):
@@ -397,7 +420,7 @@ class Port(FactBase[Union[Tuple[str, int], Tuple[None, None]]]):
         return None, None
 
 
-class Ports(FactBase[List[dict[str, Union[int, str]]]]):
+class Ports(FactBase[list[dict[str, int | str]]]):
     """
     Returns a list of all listening ports with their processes and PIDs.
 
@@ -426,7 +449,7 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
             return "netstat -tunp 2>/dev/null || true"
 
     @override
-    def process(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
+    def process(self, output: Iterable[str]) -> list[dict[str, int | str]]:
         if self._tool == "ss":
             return self._process_ss(output)
         elif self._tool == "netstat":
@@ -435,8 +458,8 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
             return self._process_sockstat(output)
         return []
 
-    def _process_ss(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
-        results: List[dict[str, Union[int, str]]] = []
+    def _process_ss(self, output: Iterable[str]) -> list[dict[str, int | str]]:
+        results: list[dict[str, int | str]] = []
 
         for line in output:
             if '"' not in line or "pid=" not in line:
@@ -471,8 +494,8 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
                     results.append({"port": port, "ip": ip, "protocol": protocol, "process": proc})
         return results
 
-    def _process_netstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
-        results: List[dict[str, Union[int, str]]] = []
+    def _process_netstat(self, output: Iterable[str]) -> list[dict[str, int | str]]:
+        results: list[dict[str, int | str]] = []
         for line in output:
             line = line.strip()
             if not line:
@@ -498,8 +521,8 @@ class Ports(FactBase[List[dict[str, Union[int, str]]]]):
                         break
         return results
 
-    def _process_sockstat(self, output: Iterable[str]) -> List[dict[str, Union[int, str]]]:
-        results: List[dict[str, Union[int, str]]] = []
+    def _process_sockstat(self, output: Iterable[str]) -> list[dict[str, int | str]]:
+        results: list[dict[str, int | str]] = []
         for line in output:
             line = line.strip()
             if not line or line.startswith("USER"):
@@ -700,7 +723,7 @@ class Sysctl(FactBase):
         return sysctls
 
 
-class Groups(FactBase[List[str]]):
+class Groups(FactBase[list[str]]):
     """
     Returns a list of groups on the system.
     """
@@ -810,7 +833,7 @@ class Users(FactBase):
         return users
 
 
-class AuthorizedKeys(FactBase[List[str]]):
+class AuthorizedKeys(FactBase[list[str]]):
     """
     Returns the SSH public keys listed in a user's ``~/.ssh/authorized_keys`` file as a
     list of full key strings. Empty lines and lines starting with ``#`` are skipped; the
@@ -827,14 +850,14 @@ class AuthorizedKeys(FactBase[List[str]]):
     default = list
 
     @override
-    def command(self, user: str, path: Optional[str] = None) -> str:
+    def command(self, user: str, path: str | None = None) -> str:
         # Tilde expansion resolves the user's home without another fact round-trip.
-        target = path if path is not None else "~{0}/.ssh/authorized_keys".format(user)
-        return "cat {0} 2>/dev/null || true".format(target)
+        target = path if path is not None else f"~{user}/.ssh/authorized_keys"
+        return f"cat {target} 2>/dev/null || true"
 
     @override
-    def process(self, output: Iterable[str]) -> List[str]:
-        keys: List[str] = []
+    def process(self, output: Iterable[str]) -> list[str]:
+        keys: list[str] = []
         for raw in output:
             line = raw.strip()
             if not line or line.startswith("#"):
@@ -844,10 +867,10 @@ class AuthorizedKeys(FactBase[List[str]]):
 
 
 class LinuxDistributionDict(TypedDict):
-    name: Optional[str]
-    major: Optional[int]
-    minor: Optional[int]
-    release_meta: Dict
+    name: str | None
+    major: int | None
+    minor: int | None
+    release_meta: dict
 
 
 class LinuxDistribution(FactBase[LinuxDistributionDict]):
@@ -970,7 +993,7 @@ class LinuxName(ShortFactBase[str]):
 
 
 class SelinuxDict(TypedDict):
-    mode: Optional[str]
+    mode: str | None
 
 
 class Selinux(FactBase[SelinuxDict]):
@@ -1013,7 +1036,7 @@ class Selinux(FactBase[SelinuxDict]):
         return selinux_info
 
 
-class LinuxGui(FactBase[List[str]]):
+class LinuxGui(FactBase[list[str]]):
     """
     Returns a list of available Linux GUIs.
     """
@@ -1056,7 +1079,7 @@ class HasGui(ShortFactBase[bool]):
         return len(data) > 0
 
 
-class Locales(FactBase[List[str]]):
+class Locales(FactBase[list[str]]):
     """
     Returns installed locales on the target host.
 
@@ -1219,7 +1242,7 @@ echo "no_reboot_required"
         return list(output)[0].strip() == "reboot_required"
 
 
-class Processes(FactBase["Dict[int, ProcessDict]"]):
+class Processes(FactBase[dict[int, ProcessDict]]):
     """
     Returns a dictionary of running processes keyed by PID.
 
@@ -1318,3 +1341,211 @@ class Processes(FactBase["Dict[int, ProcessDict]"]):
                 }
 
         return processes
+
+
+class EtcHosts(FactBase[dict[str, list[str]]]):
+    """
+    Returns ``/etc/hosts`` (or the file at ``path``) parsed as a mapping of IP address
+    to the list of hostnames declared on the matching lines. Comments and empty lines
+    are ignored; when the same IP is listed more than once, hostnames are merged in
+    file order.
+
+    .. code:: python
+
+        {
+            "127.0.0.1": ["localhost", "localhost.localdomain"],
+            "::1": ["localhost"],
+            "192.168.1.10": ["db.internal"],
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self, path: str = "/etc/hosts") -> StringCommand:
+        return make_formatted_string_command("cat {0} 2>/dev/null || true", QuoteString(path))
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[str, list[str]]:
+        entries: dict[str, list[str]] = {}
+        for raw in output:
+            line = raw.split("#", 1)[0].strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            ip, hostnames = parts[0], parts[1:]
+            existing = entries.setdefault(ip, [])
+            for name in hostnames:
+                if name not in existing:
+                    existing.append(name)
+        return entries
+
+
+class LastRecordDict(TypedDict):
+    user: str
+    tty: str
+    host: str
+    time: str
+
+
+class Last(FactBase[list[LastRecordDict]]):
+    """
+    Returns login records parsed from ``last`` as a list of dicts.
+
+    Parsing is intentionally light: ``time`` holds the raw trailing string from the
+    ``last`` output (e.g. ``"Thu Apr 17 14:00   still logged in"``) so that callers can
+    re-parse the date format that matches their system if needed.
+
+    .. code:: python
+
+        [
+            {
+                "user": "alice",
+                "tty": "pts/0",
+                "host": "192.168.1.5",
+                "time": "Thu Apr 17 14:00   still logged in",
+            },
+            {
+                "user": "reboot",
+                "tty": "system boot",
+                "host": "6.19.10-arch1-1",
+                "time": "Thu Apr 17 11:00 - 12:00  (01:00)",
+            },
+        ]
+    """
+
+    default = list
+
+    _WEEKDAYS = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+
+    @override
+    def requires_command(self) -> str:
+        return "last"
+
+    @override
+    def command(self) -> str:
+        # -Fwi (util-linux): full timestamps, wide columns, IPs instead of hostnames.
+        # -w alone works on FreeBSD; busybox last rejects all flags, so also fall back
+        # to the bare command.
+        return "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true"
+
+    @override
+    def process(self, output: Iterable[str]) -> list[LastRecordDict]:
+        records: list[LastRecordDict] = []
+        for raw in output:
+            line = raw.rstrip()
+            if not line:
+                continue
+
+            lower = line.lower()
+            if lower.startswith(("wtmp begins", "btmp begins")):
+                continue
+            # util-linux may emit a "user tty ..." header with -x; skip it
+            if lower.startswith(("user ", "username ")):
+                continue
+
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+
+            user = parts[0]
+            if user == "reboot" and parts[1] == "system" and parts[2] == "boot":
+                tty = "system boot"
+                rest = parts[3:]
+            else:
+                tty = parts[1]
+                rest = parts[2:]
+
+            if not rest:
+                continue
+
+            if rest[0] in self._WEEKDAYS:
+                host = ""
+                time_parts = rest
+            else:
+                host = rest[0]
+                time_parts = rest[1:]
+
+            records.append(
+                {
+                    "user": user,
+                    "tty": tty,
+                    "host": host,
+                    "time": " ".join(time_parts),
+                }
+            )
+
+        return records
+
+
+class LoadAverage(FactBase[dict[str, float]]):
+    """
+    Returns the system load average keyed by window (1, 5 and 15 minutes).
+
+    Reads ``/proc/loadavg`` when available (Linux) and falls back to parsing
+    ``uptime`` output on systems without procfs (e.g. FreeBSD).
+
+    .. code:: python
+
+        {
+            "1": 0.12,
+            "5": 0.21,
+            "15": 0.22,
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self) -> str:
+        return "cat /proc/loadavg 2>/dev/null || uptime"
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[str, float]:
+        for raw in output:
+            line = raw.strip()
+            if not line:
+                continue
+
+            tokens = line.split()
+            # /proc/loadavg: "0.00 0.00 0.00 1/145 71536"
+            if len(tokens) >= 3:
+                try:
+                    return {
+                        "1": float(tokens[0]),
+                        "5": float(tokens[1]),
+                        "15": float(tokens[2]),
+                    }
+                except ValueError:
+                    pass
+
+            # uptime: "... load average[s]: 0.12, 0.21, 0.22"
+            match = re.search(r"load averages?:\s*([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)", line)
+            if match:
+                return {
+                    "1": float(match.group(1)),
+                    "5": float(match.group(2)),
+                    "15": float(match.group(3)),
+                }
+
+        return {}
+
+
+class Lastb(Last):
+    """
+    Returns failed login records parsed from ``lastb`` (``/var/log/btmp``).
+
+    Output shape matches :class:`Last`; see that fact for details. ``lastb`` usually
+    requires root to read ``/var/log/btmp``.
+    """
+
+    @override
+    def requires_command(self) -> str:
+        return "lastb"
+
+    @override
+    def command(self) -> str:
+        # lastb only ships with util-linux; -Fwi matches the Last fact.
+        return "lastb -Fwi 2>/dev/null || lastb 2>/dev/null || true"

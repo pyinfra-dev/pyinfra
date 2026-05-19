@@ -41,7 +41,7 @@ def parse_iptables_rule(line):
         arg_string = " ".join(args)
 
         if key and key in IPTABLES_ARGS:
-            definition_key = "not_{0}".format(IPTABLES_ARGS[key]) if not_arg else IPTABLES_ARGS[key]
+            definition_key = f"not_{IPTABLES_ARGS[key]}" if not_arg else IPTABLES_ARGS[key]
             definition[definition_key] = arg_string
         else:
             definition.setdefault("extras", []).extend((key, arg_string))
@@ -92,12 +92,12 @@ class IptablesRules(FactBase):
     default = list
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "iptables-save"
 
     @override
     def command(self, table="filter"):
-        return "iptables-save -t {0}".format(table)
+        return f"iptables-save -t {table}"
 
     @override
     def process(self, output):
@@ -125,12 +125,12 @@ class Ip6tablesRules(IptablesRules):
     """
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "ip6tables-save"
 
     @override
     def command(self, table="filter"):
-        return "ip6tables-save -t {0}".format(table)
+        return f"ip6tables-save -t {table}"
 
 
 class IptablesChains(FactBase):
@@ -147,12 +147,12 @@ class IptablesChains(FactBase):
     default = dict
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "iptables-save"
 
     @override
     def command(self, table="filter"):
-        return "iptables-save -t {0}".format(table)
+        return f"iptables-save -t {table}"
 
     @override
     def process(self, output):
@@ -185,4 +185,4 @@ class Ip6tablesChains(IptablesChains):
 
     @override
     def command(self, table="filter"):
-        return "ip6tables-save -t {0}".format(table)
+        return f"ip6tables-save -t {table}"

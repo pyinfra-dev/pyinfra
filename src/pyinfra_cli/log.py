@@ -41,7 +41,7 @@ class LogFormatter(logging.Formatter):
             if path_start:
                 pyinfra_path = record.pathname[path_start:-3]  # -3 removes `.py`
                 module_name = pyinfra_path.replace("/", ".")
-                message = "[{0}] {1}".format(module_name, message)
+                message = f"[{module_name}] {message}"
 
         # We only handle strings here
         if isinstance(message, str):
@@ -52,7 +52,7 @@ class LogFormatter(logging.Formatter):
                 if not self.previous_was_header:
                     click.echo(err=True)
             else:
-                message = "    {0}".format(message)
+                message = f"    {message}"
 
             if record.levelno in self.level_to_format:
                 message = self.level_to_format[record.levelno](message)

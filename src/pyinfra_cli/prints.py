@@ -4,7 +4,8 @@ import json
 import platform
 import re
 import sys
-from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING
+from collections.abc import Callable, Iterator
 
 import click
 
@@ -25,7 +26,7 @@ def _strip_ansi(value):
 
 
 def _get_group_combinations(inventory: Iterator[Host]):
-    group_combinations: Dict[Tuple, List[Host]] = {}
+    group_combinations: dict[tuple, list[Host]] = {}
 
     for host in inventory:
         # Tuple for hashability, set to normalise order
@@ -52,7 +53,143 @@ def jsonify(data, *args, **kwargs):
     return json.dumps(data, *args, **kwargs)
 
 
-def print_state_operations(state: "State"):
+def print_json(payload) -> None:
+    click.echo(jsonify(payload, default=json_encode))
+
+
+def _host_to_dict(host: Host) -> dict:
+    """
+    Serialise a host for ``debug-inventory --json``.
+
+    ``data`` is the host's inventory data passed through as-is. It is
+    dumped by ``print_json`` (with ``json_encode`` as the fallback
+    encoder), so any value that is neither natively JSON-serialisable nor
+    handled by ``json_encode`` (arbitrary Python objects, etc.) will raise
+    when the payload is written. Keep inventory data JSON-friendly when
+    you intend to consume this output.
+    """
+    return {
+        "name": host.name,
+        "groups": list(host.groups),
+        "data": host.data,
+    }
+
+
+def print_inventory_json(state: State) -> None:
+    print_json([_host_to_dict(host) for host in state.inventory])
+
+
+def print_facts_json(fact_data: dict) -> None:
+    print_json(fact_data)
+
+
+def print_state_operations_json(state: State) -> None:
+    state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
+    payload = {
+        "operations": state_ops,
+        "op_meta": state.op_meta,
+        "op_order": [
+            {
+                "op_hash": op_hash,
+                "names": sorted(state.op_meta[op_hash].names),
+                "hosts": sorted(host.name for host, ops in state.ops.items() if op_hash in ops),
+            }
+            for op_hash in state.get_op_order()
+        ],
+    }
+    print_json(payload)
+
+
+def build_plan_json(state: State) -> list[dict]:
+    operations: list[dict] = []
+    for op_hash in state.get_op_order():
+        hosts_in_op: list[str] = []
+        hosts_maybe_in_op: list[str] = []
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash not in state.ops[host]:
+                continue
+            op_data = state.get_op_data_for_host(host, op_hash)
+            if not op_data.operation_meta._maybe_is_change:
+                continue
+            if op_data.global_arguments["_if"]:
+                hosts_maybe_in_op.append(host.name)
+            else:
+                hosts_in_op.append(host.name)
+
+        meta = state.op_meta[op_hash]
+        operations.append(
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(meta),
+                "names": sorted(meta.names),
+                "args": list(meta.args),
+                "hosts_with_change": sorted(hosts_in_op),
+                "hosts_with_conditional_change": sorted(hosts_maybe_in_op),
+            }
+        )
+    return operations
+
+
+def build_results_json(state: State) -> dict:
+    operations: list[dict] = []
+    totals = {"hosts": 0, "success": 0, "error": 0, "no_change": 0}
+
+    for op_hash in state.get_op_order():
+        hosts_in_op = 0
+        success: list[str] = []
+        error: list[str] = []
+        no_change: list[str] = []
+
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash not in state.ops[host]:
+                continue
+
+            hosts_in_op += 1
+            op_meta = state.ops[host][op_hash].operation_meta
+            if op_meta.did_succeed(_raise_if_not_complete=False):
+                if op_meta.did_change():
+                    success.append(host.name)
+                else:
+                    no_change.append(host.name)
+            else:
+                error.append(host.name)
+
+        meta = state.op_meta[op_hash]
+        operations.append(
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(meta),
+                "names": sorted(meta.names),
+                "args": list(meta.args),
+                "hosts": hosts_in_op,
+                "success": sorted(success),
+                "error": sorted(error),
+                "no_change": sorted(no_change),
+            }
+        )
+
+        totals["hosts"] += hosts_in_op
+        totals["success"] += len(success)
+        totals["error"] += len(error)
+        totals["no_change"] += len(no_change)
+
+    return {
+        "operations": operations,
+        "totals": totals,
+        "failed_hosts": sorted(host.name for host in state.failed_hosts),
+    }
+
+
+def print_run_json(state: State, dry: bool) -> None:
+    payload: dict = {"plan": build_plan_json(state)}
+    if dry:
+        payload["results"] = None
+    else:
+        payload["results"] = build_results_json(state)
+    print_json(payload)
+
+
+def print_state_operations(state: State):
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
 
     click.echo(err=True)
@@ -70,11 +207,7 @@ def print_state_operations(state: "State"):
         hosts = set(host for host, operations in state.ops.items() if op_hash in operations)
 
         click.echo(
-            "    {0} (names={1}, hosts={2})".format(
-                op_hash,
-                meta.names,
-                hosts,
-            ),
+            f"    {op_hash} (names={meta.names}, hosts={hosts})",
             err=True,
         )
 
@@ -90,7 +223,7 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
 
         else:
             click.echo(
-                "    {0}".format(", ".join((click.style(name, bold=True) for name in items))),
+                f"    {', '.join(click.style(name, bold=True) for name in items)}",
                 err=True,
             )
 
@@ -100,7 +233,7 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
 
     if items:
         click.echo(
-            "    {0}".format(", ".join((click.style(name, bold=True) for name in items))),
+            f"    {', '.join(click.style(name, bold=True) for name in items)}",
             err=True,
         )
 
@@ -109,11 +242,11 @@ def print_fact(fact_data):
     click.echo(jsonify(fact_data, indent=4, default=json_encode), err=True)
 
 
-def print_inventory(state: "State"):
+def print_inventory(state: State):
     for host in state.inventory:
         click.echo(err=True)
         click.echo(host.print_prefix, err=True)
-        click.echo("--> Groups: {0}".format(", ".join(host.groups)), err=True)
+        click.echo(f"--> Groups: {', '.join(host.groups)}", err=True)
         click.echo("--> Data:", err=True)
         click.echo(jsonify(host.data, indent=4, default=json_encode), err=True)
 
@@ -122,9 +255,7 @@ def print_facts(facts):
     for name, data in facts.items():
         click.echo(err=True)
         click.echo(
-            "--> Fact data for: {0}".format(
-                click.style(name, bold=True),
-            ),
+            f"--> Fact data for: {click.style(name, bold=True)}",
             err=True,
         )
         print_fact(data)
@@ -143,11 +274,11 @@ def print_support_info() -> None:
 """,
     )
 
-    click.echo("    System: {0}".format(platform.system()), err=True)
-    click.echo("      Platform: {0}".format(platform.platform()), err=True)
-    click.echo("      Release: {0}".format(platform.uname()[2]), err=True)
-    click.echo("      Machine: {0}".format(platform.uname()[4]), err=True)
-    click.echo("    pyinfra: v{0}".format(__version__), err=True)
+    click.echo(f"    System: {platform.system()}", err=True)
+    click.echo(f"      Platform: {platform.platform()}", err=True)
+    click.echo(f"      Release: {platform.uname()[2]}", err=True)
+    click.echo(f"      Machine: {platform.uname()[4]}", err=True)
+    click.echo(f"    pyinfra: v{__version__}", err=True)
 
     seen_reqs: set[str] = set()
     for requirement_string in sorted(requires("pyinfra") or []):
@@ -157,20 +288,16 @@ def print_support_info() -> None:
         seen_reqs.add(requirement.name)
         try:
             click.echo(
-                "      {0}: v{1}".format(requirement.name, version(requirement.name)),
+                f"      {requirement.name}: v{version(requirement.name)}",
                 err=True,
             )
         except PackageNotFoundError:
             # package not installed in this environment
             continue
 
-    click.echo("    Executable: {0}".format(sys.argv[0]), err=True)
+    click.echo(f"    Executable: {sys.argv[0]}", err=True)
     click.echo(
-        "    Python: {0} ({1}, {2})".format(
-            platform.python_version(),
-            platform.python_implementation(),
-            platform.python_compiler(),
-        ),
+        f"    Python: {platform.python_version()} ({platform.python_implementation()}, {platform.python_compiler()})",
         err=True,
     )
 
@@ -207,10 +334,7 @@ def print_rows(rows):
                 padding = desired_width - len(stripped)
 
                 justified.append(
-                    "{0}{1}".format(
-                        column,
-                        " ".join("" for _ in range(padding)),
-                    ),
+                    f"{column}{' '.join('' for _ in range(padding))}",
                 )
 
             line = "".join(justified)
@@ -230,13 +354,13 @@ def pretty_op_name(op_meta):
     name = list(op_meta.names)[0]
 
     if op_meta.args:
-        name = "{0} ({1})".format(name, ", ".join(str(arg) for arg in op_meta.args))
+        name = f"{name} ({', '.join(str(arg) for arg in op_meta.args)})"
 
     return name
 
 
-def print_meta(state: "State"):
-    rows: List[Tuple[Callable, Union[List[str], str]]] = [
+def print_meta(state: State):
+    rows: list[tuple[Callable, list[str] | str]] = [
         (logger.info, ["Operation", "Change", "Conditional Change"]),
     ]
 
@@ -260,18 +384,12 @@ def print_meta(state: "State"):
                     (
                         "-"
                         if len(hosts_in_op) == 0
-                        else "{0} ({1})".format(
-                            len(hosts_in_op),
-                            truncate(", ".join(sorted(hosts_in_op)), 48),
-                        )
+                        else f"{len(hosts_in_op)} ({truncate(', '.join(sorted(hosts_in_op)), 48)})"
                     ),
                     (
                         "-"
                         if len(hosts_maybe_in_op) == 0
-                        else "{0} ({1})".format(
-                            len(hosts_maybe_in_op),
-                            truncate(", ".join(sorted(hosts_maybe_in_op)), 48),
-                        )
+                        else f"{len(hosts_maybe_in_op)} ({truncate(', '.join(sorted(hosts_maybe_in_op)), 48)})"
                     ),
                 ],
             )
@@ -280,8 +398,8 @@ def print_meta(state: "State"):
     print_rows(rows)
 
 
-def print_results(state: "State"):
-    rows: List[Tuple[Callable, Union[List[str], str]]] = [
+def print_results(state: State):
+    rows: list[tuple[Callable, list[str] | str]] = [
         (logger.info, ["Operation", "Hosts", "Success", "Error", "No Change"]),
     ]
 

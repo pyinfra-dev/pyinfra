@@ -203,7 +203,7 @@ class FakeHost:
 
     @staticmethod
     def _get_fact_key(fact_cls):
-        return "{0}.{1}".format(fact_cls.__module__.split(".")[-1], fact_cls.__name__)
+        return "{}.{}".format(fact_cls.__module__.split(".")[-1], fact_cls.__name__)
 
     @staticmethod
     def _check_fact_args(fact_cls, kwargs):
@@ -356,7 +356,7 @@ class patch_files:
             normalized_path = path.normpath(filename)
             return FakeFile(normalized_path, self._files_data.get(normalized_path))
 
-        raise IOError("Missing FakeFile: {0}".format(filename))
+        raise OSError(f"Missing FakeFile: {filename}")
 
     def exists(self, filename, *args):
         return self.isfile(filename) or self.isdir(filename) or self.islink(filename)
@@ -377,7 +377,7 @@ class patch_files:
         normalized_path = path.normpath(pathname)
         if normalized_path in self._symlinks:
             return self._symlinks[normalized_path]
-        raise OSError("No such file or directory: {0}".format(pathname))
+        raise OSError(f"No such file or directory: {pathname}")
 
     def stat(self, pathname):
         try:
@@ -392,7 +392,7 @@ class patch_files:
         elif self.isdir(pathname):
             default_mode = 16877  # 755 directory
         else:
-            raise IOError("No such file or directory: {0}".format(pathname))
+            raise OSError(f"No such file or directory: {pathname}")
 
         default_timeval = datetime.fromisoformat("2008-08-09T13:21:44").timestamp()
         defaults = dict(
@@ -498,8 +498,7 @@ class patch_files:
             # Don't traverse symlinked directories when followlinks=False
             if not followlinks and self.islink(full_child):
                 continue
-            for recursive_return in self.walk(full_child, topdown, onerror, followlinks):
-                yield recursive_return
+            yield from self.walk(full_child, topdown, onerror, followlinks)
 
 
 def create_host(state, name=None, facts=None, data=None):

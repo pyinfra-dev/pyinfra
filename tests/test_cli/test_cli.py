@@ -1,3 +1,4 @@
+import json
 from os import path
 from unittest import TestCase
 
@@ -151,6 +152,81 @@ class TestExecCli(PatchSSHTestCase):
         assert result.exit_code == 0, result.stderr
 
 
+class TestJsonOutput(PatchSSHTestCase):
+    inventory = path.join("tests", "test_cli", "deploy", "inventories", "inventory.py")
+
+    def _parse_stdout(self, result):
+        assert result.exit_code == 0, result.stderr
+        assert result.stdout, "stdout must not be empty in --json mode"
+        return json.loads(result.stdout)
+
+    def test_json_debug_inventory(self):
+        result = run_cli("--json", self.inventory, "debug-inventory")
+        payload = self._parse_stdout(result)
+        assert isinstance(payload, list)
+        names = {host["name"] for host in payload}
+        assert {"somehost", "anotherhost"} <= names
+        for host in payload:
+            assert set(host.keys()) == {"name", "groups", "data"}
+
+    def test_json_fact(self):
+        result = run_cli("--json", self.inventory, "fact", "server.Os")
+        payload = self._parse_stdout(result)
+        assert "server.Os" in payload
+        assert "somehost" in payload["server.Os"]
+
+    def test_json_dry_run(self):
+        result = run_cli("--json", "--dry", self.inventory, "exec", "--", "echo hi")
+        payload = self._parse_stdout(result)
+        assert "plan" in payload
+        assert payload["results"] is None
+        assert isinstance(payload["plan"], list)
+        assert payload["plan"]
+        first_op = payload["plan"][0]
+        assert first_op["names"] == ["server.shell"]
+        assert "op_hash" in first_op
+
+    def test_json_deploy_results(self):
+        result = run_cli("-y", "--json", self.inventory, "exec", "--", "echo hi")
+        payload = self._parse_stdout(result)
+        assert "plan" in payload
+        assert payload["results"] is not None
+        results = payload["results"]
+        assert set(results.keys()) == {"operations", "totals", "failed_hosts"}
+        assert results["totals"]["hosts"] >= 1
+        assert results["failed_hosts"] == []
+
+    def test_json_debug_operations(self):
+        result = run_cli(
+            "--json",
+            "--debug-operations",
+            self.inventory,
+            "exec",
+            "--",
+            "echo hi",
+        )
+        payload = self._parse_stdout(result)
+        assert set(payload.keys()) == {"operations", "op_meta", "op_order"}
+        assert isinstance(payload["op_order"], list)
+        assert payload["op_order"]
+
+    def test_json_deploy_without_yes_does_not_apply(self):
+        # Regression for pyinfra-dev/pyinfra#1662 review: --json must not
+        # imply --yes. A diffable operation run with --json and no --yes
+        # prints the proposed changes and exits without mutating the host.
+        result = run_cli("--json", self.inventory, "server.shell", "echo hi")
+        payload = self._parse_stdout(result)
+        assert payload["results"] is None
+        assert isinstance(payload["plan"], list)
+        assert payload["plan"]
+
+    def test_json_deploy_with_yes_applies(self):
+        result = run_cli("-y", "--json", self.inventory, "server.shell", "echo hi")
+        payload = self._parse_stdout(result)
+        assert payload["results"] is not None
+        assert set(payload["results"].keys()) == {"operations", "totals", "failed_hosts"}
+
+
 class TestDirectMainExecution(PatchSSHTestCase):
     """
     These tests are very similar as above, without the click wrappers - basically
@@ -175,6 +251,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 sudo=False,
                 sudo_user=None,
                 use_sudo_password=False,
+                use_sudo_login=False,
                 su_user=None,
                 dzdo=False,
                 dzdo_user=None,

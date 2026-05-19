@@ -165,6 +165,43 @@ For additional debug info, use one of these options:
 + `--debug-operations` Print operations after generating and exit.
 
 
+## JSON output
+
+Pass `--json` to emit machine-readable JSON on stdout instead of the usual pretty printer. This works with `debug-inventory`, `fact`, `--debug-operations`, `--dry` runs and regular deploys so the output can be piped into other tools.
+
+```sh
+# Dump the resolved inventory as JSON
+pyinfra inventory.py debug-inventory --json
+
+# Collect a fact as JSON
+pyinfra inventory.py fact server.LinuxName --json
+
+# Show a deploy's proposed changes as JSON without touching the host
+pyinfra inventory.py deploy.py --json
+
+# Same, explicit dry run
+pyinfra inventory.py deploy.py --dry --json
+
+# Apply the deploy and emit structured plan + results
+pyinfra inventory.py deploy.py --json --yes
+```
+
+### Non-interactive behaviour
+
+`--json` runs non-interactively so stdout stays pure JSON:
+
++ `--json` does not apply changes on its own. Without `--yes` (or with `--dry`) it prints the proposed changes and exits without touching the host. Pass `--yes` to apply the deploy and emit the results.
++ Host connection/failure prompts are skipped: the run fails non-interactively instead of asking whether to continue.
++ The progress spinner is disabled (`PYINFRA_PROGRESS=off`).
+
+Interactive prompts from deploy code (e.g. `input(...)`) will still block, so avoid them when using `--json`.
+
+### Caveats
+
++ Inventory `data` is serialised as-is. If a host carries values that are not JSON-serialisable (custom Python objects, sets, datetimes with no encoder, etc.) the command will fail. Use primitive/JSON-friendly types in inventory data when you plan to consume the output.
++ Log messages and errors are still written to stderr, so redirect with `pyinfra ... --json 2>/dev/null > out.json` if you need stdout to contain only JSON.
+
+
 ## Shell Autocompletion
 
 Add the following to your `~/.bash_profile` or `~/.profile` files:

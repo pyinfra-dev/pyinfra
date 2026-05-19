@@ -1,0 +1,16 @@
+{
+    "command": "dnf module list --enabled",
+    "requires_command": "dnf",
+    "output": [
+        "Updating Subscription Management repositories.",
+        "Last metadata expiration check: 0:33:24 ago on Mon 24 Jul 2023 04:59:01 PM CEST.",
+        "Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)",
+        "Name         Stream        Profiles              Summary",
+        "postgresql   16 [e]        client, server [d]    PostgreSQL server and client module",
+        "",
+        "Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled"
+    ],
+    "fact": {
+        "postgresql": "16"
+    }
+}

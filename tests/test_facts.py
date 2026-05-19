@@ -32,14 +32,14 @@ def _make_command(command_attribute, args):
 
 def make_fact_tests(folder_name):
     module_name, fact_name = folder_name.split(".")
-    module = import_module("pyinfra.facts.{0}".format(module_name))
+    module = import_module(f"pyinfra.facts.{module_name}")
     fact = getattr(module, fact_name)()
 
     class TestTests(
         TestCase,
         metaclass=TestGenerator,
         tests_dir=path.join("tests", "facts", folder_name),
-        test_prefix="test_{0}_".format(fact.name),
+        test_prefix=f"test_{fact.name}_",
         test_method="_test",
     ):
         @classmethod
@@ -67,10 +67,7 @@ def make_fact_tests(folder_name):
                 assert get_command_string(StringCommand(command)) == test_data["command"]
             else:
                 warnings.warn(
-                    'No command set for test: {0} (got "{1}")'.format(
-                        test_name,
-                        command,
-                    ),
+                    f'No command set for test: {test_name} (got "{command}")',
                 )
 
             requires_command = _make_command(fact.requires_command, test_args)
@@ -80,10 +77,7 @@ def make_fact_tests(folder_name):
                     assert requires_command == test_data["requires_command"]
                 else:
                     warnings.warn(
-                        'No requires command set for test: {0} (got "{1}")'.format(
-                            test_name,
-                            requires_command,
-                        ),
+                        f'No requires command set for test: {test_name} (got "{requires_command}")',
                     )
 
             command_output = test_data["output"]
@@ -112,7 +106,7 @@ def make_fact_tests(folder_name):
                 )
                 raise e
 
-    TestTests.__name__ = "Fact{0}".format(fact.name)
+    TestTests.__name__ = f"Fact{fact.name}"
     return TestTests
 
 

@@ -1,0 +1,13 @@
+{
+    "kwargs": {
+        "module": "postgresql",
+        "stream": "16"
+    },
+    "facts": {
+        "dnf.DnfEnabledModules": {
+            "postgresql": "16"
+        }
+    },
+    "commands": [],
+    "noop_description": "dnf module postgresql:16 is already enabled"
+}

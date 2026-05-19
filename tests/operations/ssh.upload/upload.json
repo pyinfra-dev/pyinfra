@@ -12,7 +12,7 @@
             }
         },
         "files.FindInFile": {
-            "interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net": [true]
+            "extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net": [true]
         }
     },
     "commands": [

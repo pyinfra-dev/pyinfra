@@ -4,7 +4,6 @@ Fetch and install binary updates to FreeBSD.
 
 from __future__ import annotations
 
-from typing_extensions import List, Optional, Union
 
 from pyinfra.api import QuoteString, StringCommand, operation
 
@@ -12,13 +11,13 @@ from pyinfra.api import QuoteString, StringCommand, operation
 @operation()
 def update(
     force: bool = False,
-    basedir: Optional[str] = None,
-    workdir: Optional[str] = None,
-    conffile: Optional[str] = None,
-    jail: Optional[str] = None,
-    key: Optional[str] = None,
-    currently_running: Optional[str] = None,
-    server: Optional[str] = None,
+    basedir: str | None = None,
+    workdir: str | None = None,
+    conffile: str | None = None,
+    jail: str | None = None,
+    key: str | None = None,
+    currently_running: str | None = None,
+    server: str | None = None,
 ):
     """
     Based on the currently installed world and the configuration options set, fetch
@@ -40,7 +39,7 @@ def update(
         freebsd_update.update()
     """
 
-    args: List[Union[str, "QuoteString"]] = []
+    args: list[str | QuoteString] = []
 
     args.extend(["PAGER=cat", "freebsd-update", "--not-running-from-cron"])
 

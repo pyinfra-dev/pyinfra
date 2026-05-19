@@ -1,0 +1,11 @@
+{
+    "kwargs": {
+        "filename": "docker",
+        "uris": ["https://download.docker.com/linux/debian"]
+    },
+    "facts": {},
+    "exception": {
+        "name": "OperationError",
+        "message": "apt.sources_file requires at least one URI and one suite"
+    }
+}

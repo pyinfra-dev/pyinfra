@@ -1,0 +1,13 @@
+{
+    "command": "dnf module list --enabled",
+    "requires_command": "dnf",
+    "output": [
+        "Name         Stream        Profiles              Summary",
+        "postgresql   16 [e]        client, server [d]    PostgreSQL server and client module",
+        "",
+        "Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled"
+    ],
+    "fact": {
+        "postgresql": "16"
+    }
+}

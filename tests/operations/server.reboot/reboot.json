@@ -2,6 +2,7 @@
     "args": [],
     "commands": [
         ["remove_any_askpass_file", [], {}],
+        ["capture_uptime", [], {}],
         {
             "command": "reboot",
             "_success_exit_codes": [0, -1]

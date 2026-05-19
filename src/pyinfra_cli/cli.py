@@ -3,8 +3,8 @@ import sys
 import warnings
 from fnmatch import fnmatch
 from getpass import getpass
-from os import chdir as os_chdir, getcwd, path
-from typing import Iterable, List, Tuple, Union
+from collections.abc import Iterable
+from os import chdir as os_chdir, environ, getcwd, path
 
 import click
 
@@ -25,10 +25,14 @@ from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
     print_facts,
+    print_facts_json,
     print_inventory,
+    print_inventory_json,
     print_meta,
     print_results,
+    print_run_json,
     print_state_operations,
+    print_state_operations_json,
     print_support_info,
 )
 from .util import exec_file, load_deploy_file, load_func, parse_cli_arg
@@ -129,6 +133,12 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     default=False,
     help="Whether to use a password with sudo.",
 )
+@click.option(
+    "--use-sudo-login",
+    is_flag=True,
+    default=False,
+    help="Use a login shell when sudo-ing.",
+)
 @click.option("--su-user", help="Which user to su to.")
 @click.option(
     "--dzdo",
@@ -215,6 +225,16 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     default=False,
     help="Print operations after generating and exit.",
 )
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    default=False,
+    help=(
+        "Emit pure JSON output on stdout (for facts, debug-inventory, "
+        "debug-operations, dry runs and deploy results)."
+    ),
+)
 @click.version_option(
     version=__version__,
     prog_name="pyinfra",
@@ -286,7 +306,7 @@ class CliCommands:
 
 def _main(
     inventory,
-    operations: Union[List, Tuple],
+    operations: list | tuple,
     verbosity: int,
     chdir: str,
     ssh_user,
@@ -300,6 +320,7 @@ def _main(
     sudo: bool,
     sudo_user: str,
     use_sudo_password: bool,
+    use_sudo_login: bool,
     su_user: str,
     dzdo: bool,
     dzdo_user: str,
@@ -320,8 +341,15 @@ def _main(
     debug_all: bool,
     debug_facts: bool,
     debug_operations: bool,
+    json_output: bool = False,
     support: bool = False,
 ):
+    # In JSON mode keep the spinner quiet so stdout stays pure JSON. Do not
+    # force --yes: a JSON run must be able to diff a host without mutating
+    # it. Applying still requires an explicit --yes; without it the proposed
+    # changes are emitted as JSON instead of blocking on a confirm prompt.
+    if json_output:
+        environ.setdefault("PYINFRA_PROGRESS", "off")
     # Setup working directory
     #
     if chdir:
@@ -350,6 +378,7 @@ def _main(
         sudo,
         sudo_user,
         use_sudo_password,
+        use_sudo_login,
         same_sudo_password,
         su_user,
         dzdo,
@@ -374,7 +403,9 @@ def _main(
         ssh_password,
     )
 
-    if yes is False:
+    # JSON mode is non-interactive: a failure prompt would block the
+    # pure-JSON stdout pipe, so never install the confirm callbacks there.
+    if yes is False and not json_output:
         _set_fail_prompts(state, config)
 
     # Load up the inventory from the filesystem
@@ -395,7 +426,10 @@ def _main(
     state.init(inventory, config, initial_limit=initial_limit)
 
     if command == CliCommands.DEBUG_INVENTORY:
-        print_inventory(state)
+        if json_output:
+            print_inventory_json(state)
+        else:
+            print_inventory(state)
         _exit()
 
     # Connect to the hosts & start handling the user commands
@@ -406,12 +440,12 @@ def _main(
 
     state.set_stage(StateStage.Prepare)
     can_diff, state, config = _handle_commands(
-        state, config, command, original_operations, operations
+        state, config, command, original_operations, operations, json_output=json_output
     )
 
     # Print proposed changes, execute unless --dry, and exit
     #
-    if can_diff:
+    if can_diff and not json_output:
         if yes:
             logger.info("--> Skipping change detection")
         else:
@@ -429,19 +463,26 @@ def _main(
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
         if debug_operations:
-            print_state_operations(state)
+            if json_output:
+                print_state_operations_json(state)
+            else:
+                print_state_operations(state)
 
         _exit()
 
     if dry:
+        if json_output:
+            print_run_json(state, dry=True)
         _exit()
 
-    if (
-        can_diff
-        and not yes
-        and not _do_confirm("Detected changes displayed above, skip this step with -y")
-    ):
-        _exit()
+    if can_diff and not yes:
+        if json_output:
+            # Non-interactive JSON run without --yes: emit the proposed
+            # changes (like --dry) and exit without touching the host.
+            print_run_json(state, dry=True)
+            _exit()
+        if not _do_confirm("Detected changes displayed above, skip this step with -y"):
+            _exit()
 
     logger.info("--> Beginning operation run...")
     state.set_stage(StateStage.Execute)
@@ -449,7 +490,10 @@ def _main(
 
     logger.info("--> Results:")
     state.set_stage(StateStage.Disconnect)
-    print_results(state)
+    if json_output:
+        print_run_json(state, dry=False)
+    else:
+        print_results(state)
     _exit()
 
 
@@ -471,7 +515,7 @@ def _do_confirm(msg: str) -> bool:
         return False
     # Go up, clear the line, go up again - as if the confirmation statement was never here!
     click.echo(
-        "\033[1A{0}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
+        "\033[1A{}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
         err=True,
         nl=False,
     )
@@ -535,9 +579,7 @@ def _validate_operations(operations, chdir):
                 filenames.append(correct_filename)
                 continue
             raise CliError(
-                "No deploy file: {0}".format(
-                    path.join(chdir, filename) if chdir else filename,
-                ),
+                f"No deploy file: {path.join(chdir, filename) if chdir else filename}",
             )
 
         operations = filenames
@@ -549,15 +591,13 @@ def _validate_operations(operations, chdir):
 
     else:
         raise CliError(
-            """Invalid operations: {0}
+            f"""Invalid operations: {operations}
 
     Operation usage:
     pyinfra INVENTORY deploy_web.py [deploy_db.py]...
     pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
     pyinfra INVENTORY exec -- echo "hello world"
-    pyinfra INVENTORY fact os [users]...""".format(
-                operations,
-            ),
+    pyinfra INVENTORY fact os [users]...""",
         )
 
     return original_operations, operations, command, chdir
@@ -598,6 +638,7 @@ def _set_config(
     sudo,
     sudo_user,
     use_sudo_password,
+    use_sudo_login,
     same_sudo_password,
     su_user,
     dzdo,
@@ -626,6 +667,9 @@ def _set_config(
 
     if use_sudo_password:
         config.USE_SUDO_PASSWORD = use_sudo_password
+
+    if use_sudo_login:
+        config.USE_SUDO_LOGIN = True
 
     if same_sudo_password:
         config.SUDO_PASSWORD = getpass("sudo password: ")
@@ -718,7 +762,7 @@ def _apply_inventory_limit(inventory, limit):
                 limit_hosts = [host for host in inventory if fnmatch(host.name, limiter)]
 
             if not limit_hosts:
-                logger.warning("No host matches found for --limit pattern: {0}".format(limiter))
+                logger.warning(f"No host matches found for --limit pattern: {limiter}")
 
             all_limit_hosts.extend(limit_hosts)
         initial_limit = list(set(all_limit_hosts))
@@ -728,11 +772,14 @@ def _apply_inventory_limit(inventory, limit):
 
 # Operations Execution
 #
-def _handle_commands(state, config, command, original_operations, operations):
+def _handle_commands(state, config, command, original_operations, operations, json_output=False):
     if command is CliCommands.FACT:
         logger.info("--> Gathering facts...")
         state, fact_data = _run_fact_operations(state, config, operations)
-        print_facts(fact_data)
+        if json_output:
+            print_facts_json(fact_data)
+        else:
+            print_facts(fact_data)
         _exit()
 
     can_diff = True
@@ -768,8 +815,8 @@ def _run_fact_operations(state, config, operations):
 
         if args or kwargs:
             _fact_args = args or ""
-            _fact_details = " ({0})".format(get_kwargs_str(kwargs)) if kwargs else ""
-            fact_key = "{0}{1}{2}".format(fact_cls.name, _fact_args, _fact_details)
+            _fact_details = f" ({get_kwargs_str(kwargs)})" if kwargs else ""
+            fact_key = f"{fact_cls.name}{_fact_args}{_fact_details}"
 
         try:
             fact_data[fact_key] = get_facts(
@@ -804,7 +851,7 @@ def _prepare_deploy_operations(state, config, operations):
         config.lock_current_state()
 
         _log_styled_msg = click.style(filename, bold=True)
-        logger.info("Loading: {0}".format(_log_styled_msg))
+        logger.info(f"Loading: {_log_styled_msg}")
 
         state.current_op_file_number = i
         load_deploy_file(state, filename)
