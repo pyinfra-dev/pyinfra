@@ -17,6 +17,8 @@
             "branch=master, remote=origin, repo=/home/myrepo": "1a2b3c4d5e6f7890abcdef1234567890abcdef12"
         }
     },
-    "commands": [],
+    "commands": [
+        "cd /home/myrepo && git remote set-url origin myrepo"
+    ],
     "noop_description": "git repository /home/myrepo is already up to date"
 }

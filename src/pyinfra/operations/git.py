@@ -160,6 +160,9 @@ def repo(
 
     # Ensuring existing repo
     else:
+        # Keep repository origin in sync with src, which may differ from last run
+        git_commands.append(StringCommand("remote", "set-url", "origin", QuoteString(src)))
+
         is_tag = False
         current_branch = host.get_fact(GitBranch, repo=dest)
         if branch is not None and current_branch != branch:
