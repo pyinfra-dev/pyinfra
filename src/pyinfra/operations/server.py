@@ -893,7 +893,7 @@ def user(
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
         ``/home/{name}``. When ``create_home`` is ``True`` any newly created users
         will be created with the ``-m`` flag to build a new home directory from the
-        systems skeleton directory.
+        system's skeleton directory.
 
     Public keys:
         These can be provided as strings containing the public key or as a path to
