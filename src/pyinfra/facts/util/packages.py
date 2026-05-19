@@ -45,7 +45,7 @@ class PackageInfo:
     of a package, but rpm-family installonly packages (kernels), portage
     SLOTs and dpkg multi-arch can produce more than one. The
     :pyattr:`installed_version` property returns the highest installed
-    version (or ``""`` when none are reported).
+    version (or ``None`` when none are reported).
     """
 
     name: str
@@ -54,8 +54,8 @@ class PackageInfo:
     status: PackageStatus = PackageStatus.INSTALLED
 
     @property
-    def installed_version(self) -> str:
-        return self.installed_versions[-1] if self.installed_versions else ""
+    def installed_version(self) -> str | None:
+        return self.installed_versions[-1] if self.installed_versions else None
 
 
 def build_package_map(
