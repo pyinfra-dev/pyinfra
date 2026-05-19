@@ -407,10 +407,7 @@ class AptPackages(FactBase):
     # Lines look like: ``name/source-info,now version arch [installed,flags]``
     # The leading anchor and ``[installed`` tail filter out the optional
     # "Listing..." header and any other noise.
-    regex = r"^({0})/\S+\s+({1})\s+\S+\s+\[installed".format(
-        APT_PACKAGE_NAME_REGEX,
-        APT_PACKAGE_VERSION_REGEX,
-    )
+    regex = rf"^({APT_PACKAGE_NAME_REGEX})/\S+\s+({APT_PACKAGE_VERSION_REGEX})\s+\S+\s+\[installed"
 
     @override
     def process(self, output):
