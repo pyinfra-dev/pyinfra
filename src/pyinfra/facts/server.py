@@ -14,7 +14,8 @@ from distro import distro
 from typing_extensions import TypedDict, override
 
 from pyinfra import host
-from pyinfra.api import FactBase, ShortFactBase
+from pyinfra.api import FactBase, ShortFactBase, StringCommand
+from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.util import try_int
 from pyinfra.facts import crontab
 
@@ -1340,3 +1341,211 @@ class Processes(FactBase[dict[int, ProcessDict]]):
                 }
 
         return processes
+
+
+class EtcHosts(FactBase[dict[str, list[str]]]):
+    """
+    Returns ``/etc/hosts`` (or the file at ``path``) parsed as a mapping of IP address
+    to the list of hostnames declared on the matching lines. Comments and empty lines
+    are ignored; when the same IP is listed more than once, hostnames are merged in
+    file order.
+
+    .. code:: python
+
+        {
+            "127.0.0.1": ["localhost", "localhost.localdomain"],
+            "::1": ["localhost"],
+            "192.168.1.10": ["db.internal"],
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self, path: str = "/etc/hosts") -> StringCommand:
+        return make_formatted_string_command("cat {0} 2>/dev/null || true", QuoteString(path))
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[str, list[str]]:
+        entries: dict[str, list[str]] = {}
+        for raw in output:
+            line = raw.split("#", 1)[0].strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            ip, hostnames = parts[0], parts[1:]
+            existing = entries.setdefault(ip, [])
+            for name in hostnames:
+                if name not in existing:
+                    existing.append(name)
+        return entries
+
+
+class LastRecordDict(TypedDict):
+    user: str
+    tty: str
+    host: str
+    time: str
+
+
+class Last(FactBase[list[LastRecordDict]]):
+    """
+    Returns login records parsed from ``last`` as a list of dicts.
+
+    Parsing is intentionally light: ``time`` holds the raw trailing string from the
+    ``last`` output (e.g. ``"Thu Apr 17 14:00   still logged in"``) so that callers can
+    re-parse the date format that matches their system if needed.
+
+    .. code:: python
+
+        [
+            {
+                "user": "alice",
+                "tty": "pts/0",
+                "host": "192.168.1.5",
+                "time": "Thu Apr 17 14:00   still logged in",
+            },
+            {
+                "user": "reboot",
+                "tty": "system boot",
+                "host": "6.19.10-arch1-1",
+                "time": "Thu Apr 17 11:00 - 12:00  (01:00)",
+            },
+        ]
+    """
+
+    default = list
+
+    _WEEKDAYS = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+
+    @override
+    def requires_command(self) -> str:
+        return "last"
+
+    @override
+    def command(self) -> str:
+        # -Fwi (util-linux): full timestamps, wide columns, IPs instead of hostnames.
+        # -w alone works on FreeBSD; busybox last rejects all flags, so also fall back
+        # to the bare command.
+        return "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true"
+
+    @override
+    def process(self, output: Iterable[str]) -> list[LastRecordDict]:
+        records: list[LastRecordDict] = []
+        for raw in output:
+            line = raw.rstrip()
+            if not line:
+                continue
+
+            lower = line.lower()
+            if lower.startswith(("wtmp begins", "btmp begins")):
+                continue
+            # util-linux may emit a "user tty ..." header with -x; skip it
+            if lower.startswith(("user ", "username ")):
+                continue
+
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+
+            user = parts[0]
+            if user == "reboot" and parts[1] == "system" and parts[2] == "boot":
+                tty = "system boot"
+                rest = parts[3:]
+            else:
+                tty = parts[1]
+                rest = parts[2:]
+
+            if not rest:
+                continue
+
+            if rest[0] in self._WEEKDAYS:
+                host = ""
+                time_parts = rest
+            else:
+                host = rest[0]
+                time_parts = rest[1:]
+
+            records.append(
+                {
+                    "user": user,
+                    "tty": tty,
+                    "host": host,
+                    "time": " ".join(time_parts),
+                }
+            )
+
+        return records
+
+
+class LoadAverage(FactBase[dict[str, float]]):
+    """
+    Returns the system load average keyed by window (1, 5 and 15 minutes).
+
+    Reads ``/proc/loadavg`` when available (Linux) and falls back to parsing
+    ``uptime`` output on systems without procfs (e.g. FreeBSD).
+
+    .. code:: python
+
+        {
+            "1": 0.12,
+            "5": 0.21,
+            "15": 0.22,
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self) -> str:
+        return "cat /proc/loadavg 2>/dev/null || uptime"
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[str, float]:
+        for raw in output:
+            line = raw.strip()
+            if not line:
+                continue
+
+            tokens = line.split()
+            # /proc/loadavg: "0.00 0.00 0.00 1/145 71536"
+            if len(tokens) >= 3:
+                try:
+                    return {
+                        "1": float(tokens[0]),
+                        "5": float(tokens[1]),
+                        "15": float(tokens[2]),
+                    }
+                except ValueError:
+                    pass
+
+            # uptime: "... load average[s]: 0.12, 0.21, 0.22"
+            match = re.search(r"load averages?:\s*([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)", line)
+            if match:
+                return {
+                    "1": float(match.group(1)),
+                    "5": float(match.group(2)),
+                    "15": float(match.group(3)),
+                }
+
+        return {}
+
+
+class Lastb(Last):
+    """
+    Returns failed login records parsed from ``lastb`` (``/var/log/btmp``).
+
+    Output shape matches :class:`Last`; see that fact for details. ``lastb`` usually
+    requires root to read ``/var/log/btmp``.
+    """
+
+    @override
+    def requires_command(self) -> str:
+        return "lastb"
+
+    @override
+    def command(self) -> str:
+        # lastb only ships with util-linux; -Fwi matches the Last fact.
+        return "lastb -Fwi 2>/dev/null || lastb 2>/dev/null || true"
