@@ -61,9 +61,9 @@ def raise_exception(exception: Exception, *args, **kwargs):
     .. code:: python
 
         python.raise_exception(
+            NotImplementedError,
+            "This is not implemented",
             name="Raise NotImplementedError exception",
-            exception=NotImplementedError,
-            message="This is not implemented",
         )
     """
 
