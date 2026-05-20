@@ -167,12 +167,19 @@ See :doc:`facts` for a full list of available facts and arguments.
 Fact Errors
 ^^^^^^^^^^^
 
-When facts fail due to an error the host will be marked as failed just as it would when an operation fails. This can be avoided by passing the ``_ignore_errors`` argument:
+When a fact command exits with a non-zero status the host is marked as failed, just as when an operation fails. This can be avoided by passing the ``_ignore_errors`` argument:
 
 .. code:: python
 
     if host.get_fact(LinuxName, _ignore_errors=True):
         ...
+
+Two other "fact skipped" paths do **not** fail the host. They are phase-aware:
+
+- ``requires_command`` declares a binary that must be present on the host. If the binary is absent, the fact returns its ``default()`` value. In the prepare phase the skip is silent; in the execute phase a warning is logged. In v4 the execute phase will raise instead.
+- ``check_preconditions()`` lets a fact declare a runtime prerequisite (for example a kernel module loaded). When the precondition is not met the same phase-aware behavior applies.
+
+See :doc:`api/facts` for the full design and exception hierarchy.
 
 The ``inventory`` Object
 ------------------------
