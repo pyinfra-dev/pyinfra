@@ -3,8 +3,8 @@ import sys
 import warnings
 from fnmatch import fnmatch
 from getpass import getpass
-from os import chdir as os_chdir, getcwd, path
 from collections.abc import Iterable
+from os import chdir as os_chdir, environ, getcwd, path
 
 import click
 
@@ -25,10 +25,14 @@ from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
     print_facts,
+    print_facts_json,
     print_inventory,
+    print_inventory_json,
     print_meta,
     print_results,
+    print_run_json,
     print_state_operations,
+    print_state_operations_json,
     print_support_info,
 )
 from .util import exec_file, load_deploy_file, load_func, parse_cli_arg
@@ -221,6 +225,16 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     default=False,
     help="Print operations after generating and exit.",
 )
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    default=False,
+    help=(
+        "Emit pure JSON output on stdout (for facts, debug-inventory, "
+        "debug-operations, dry runs and deploy results)."
+    ),
+)
 @click.version_option(
     version=__version__,
     prog_name="pyinfra",
@@ -327,8 +341,15 @@ def _main(
     debug_all: bool,
     debug_facts: bool,
     debug_operations: bool,
+    json_output: bool = False,
     support: bool = False,
 ):
+    # In JSON mode keep the spinner quiet so stdout stays pure JSON. Do not
+    # force --yes: a JSON run must be able to diff a host without mutating
+    # it. Applying still requires an explicit --yes; without it the proposed
+    # changes are emitted as JSON instead of blocking on a confirm prompt.
+    if json_output:
+        environ.setdefault("PYINFRA_PROGRESS", "off")
     # Setup working directory
     #
     if chdir:
@@ -382,7 +403,9 @@ def _main(
         ssh_password,
     )
 
-    if yes is False:
+    # JSON mode is non-interactive: a failure prompt would block the
+    # pure-JSON stdout pipe, so never install the confirm callbacks there.
+    if yes is False and not json_output:
         _set_fail_prompts(state, config)
 
     # Load up the inventory from the filesystem
@@ -403,7 +426,10 @@ def _main(
     state.init(inventory, config, initial_limit=initial_limit)
 
     if command == CliCommands.DEBUG_INVENTORY:
-        print_inventory(state)
+        if json_output:
+            print_inventory_json(state)
+        else:
+            print_inventory(state)
         _exit()
 
     # Connect to the hosts & start handling the user commands
@@ -414,12 +440,12 @@ def _main(
 
     state.set_stage(StateStage.Prepare)
     can_diff, state, config = _handle_commands(
-        state, config, command, original_operations, operations
+        state, config, command, original_operations, operations, json_output=json_output
     )
 
     # Print proposed changes, execute unless --dry, and exit
     #
-    if can_diff:
+    if can_diff and not json_output:
         if yes:
             logger.info("--> Skipping change detection")
         else:
@@ -437,19 +463,26 @@ def _main(
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
         if debug_operations:
-            print_state_operations(state)
+            if json_output:
+                print_state_operations_json(state)
+            else:
+                print_state_operations(state)
 
         _exit()
 
     if dry:
+        if json_output:
+            print_run_json(state, dry=True)
         _exit()
 
-    if (
-        can_diff
-        and not yes
-        and not _do_confirm("Detected changes displayed above, skip this step with -y")
-    ):
-        _exit()
+    if can_diff and not yes:
+        if json_output:
+            # Non-interactive JSON run without --yes: emit the proposed
+            # changes (like --dry) and exit without touching the host.
+            print_run_json(state, dry=True)
+            _exit()
+        if not _do_confirm("Detected changes displayed above, skip this step with -y"):
+            _exit()
 
     logger.info("--> Beginning operation run...")
     state.set_stage(StateStage.Execute)
@@ -457,7 +490,10 @@ def _main(
 
     logger.info("--> Results:")
     state.set_stage(StateStage.Disconnect)
-    print_results(state)
+    if json_output:
+        print_run_json(state, dry=False)
+    else:
+        print_results(state)
     _exit()
 
 
@@ -736,11 +772,14 @@ def _apply_inventory_limit(inventory, limit):
 
 # Operations Execution
 #
-def _handle_commands(state, config, command, original_operations, operations):
+def _handle_commands(state, config, command, original_operations, operations, json_output=False):
     if command is CliCommands.FACT:
         logger.info("--> Gathering facts...")
         state, fact_data = _run_fact_operations(state, config, operations)
-        print_facts(fact_data)
+        if json_output:
+            print_facts_json(fact_data)
+        else:
+            print_facts(fact_data)
         _exit()
 
     can_diff = True

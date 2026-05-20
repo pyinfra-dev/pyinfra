@@ -1,0 +1,5 @@
+command: apt list --installed 2>/dev/null
+requires_command: apt
+output: |
+  Listing...
+fact: {}
