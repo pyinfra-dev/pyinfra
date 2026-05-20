@@ -92,7 +92,7 @@ class IptablesRules(FactBase):
     default = list
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "iptables-save"
 
     @override
@@ -125,7 +125,7 @@ class Ip6tablesRules(IptablesRules):
     """
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "ip6tables-save"
 
     @override
@@ -147,7 +147,7 @@ class IptablesChains(FactBase):
     default = dict
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "iptables-save"
 
     @override
