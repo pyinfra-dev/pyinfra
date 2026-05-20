@@ -30,6 +30,7 @@ from pyinfra.facts.server import (
     Os,
     Sysctl,
     Timezone,
+    Uptime,
     Users,
     Which,
 )
@@ -79,6 +80,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
             reboot_timeout=600,
         )
     """
+    pre_reboot_uptime: list[int] = []
 
     # Remove this now, before we reboot the server - if the reboot fails (expected or
     # not) we'll error if we don't clean this up now. Will simply be re-uploaded if
@@ -87,6 +89,11 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         remove_any_sudo_askpass_file(host)
 
     yield FunctionCommand(remove_any_askpass_file, (), {})
+
+    def capture_uptime(state, host):
+        pre_reboot_uptime.append(host.get_fact(Uptime))
+
+    yield FunctionCommand(capture_uptime, (), {})
 
     yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
 
@@ -103,10 +110,26 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         host.disconnect()  # make sure we are properly disconnected
         retries = 0
 
+        pre_uptime = pre_reboot_uptime[0]
+
         while True:
             host.connect(show_errors=False)
+
             if host.connected:
-                break
+                post_uptime = host.get_fact(Uptime)
+                logger.debug(
+                    "Connected (current_uptime=%ss, pre_reboot_uptime=%ss)",
+                    post_uptime,
+                    pre_uptime,
+                )
+
+                if post_uptime < pre_uptime + delay:
+                    logger.debug("Reboot confirmed.")
+                    break
+
+                logger.debug("Host reachable but uptime unchanged; reboot still in progress")
+            else:
+                logger.debug("Waiting for host to become reachable...")
 
             if retries > max_retries:
                 raise Exception(
@@ -874,7 +897,7 @@ def user_authorized_keys(
 
     + user: name of the user to ensure
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
-    + group: the users primary group
+    + group: the user's primary group
     + delete_keys: whether to remove any keys not specified in ``public_keys``
 
     Public keys:
@@ -997,10 +1020,10 @@ def user(
 
     + user: name of the user to ensure
     + present: whether this user should exist
-    + home: the users home directory
-    + shell: the users shell
-    + group: the users primary group
-    + groups: the users secondary groups
+    + home: the user's home directory
+    + shell: the user's shell
+    + group: the user's primary group
+    + groups: the user's secondary groups
     + append: whether to add `user` to `groups`, w/o losing membership of other groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + delete_keys: whether to remove any keys not specified in ``public_keys``
@@ -1016,7 +1039,7 @@ def user(
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
         ``/home/{name}``. When ``create_home`` is ``True`` any newly created users
         will be created with the ``-m`` flag to build a new home directory from the
-        systems skeleton directory.
+        system's skeleton directory.
 
     Public keys:
         These can be provided as strings containing the public key or as a path to

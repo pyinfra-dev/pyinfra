@@ -93,14 +93,16 @@ def repo(
     src: str,
     dest: str,
     branch: str | None = None,
-    pull=True,
-    rebase=False,
+    pull: bool = True,
+    rebase: bool = False,
     user: str | None = None,
     group: str | None = None,
-    ssh_keyscan=False,
-    update_submodules=False,
-    recursive_submodules=False,
+    ssh_keyscan: bool = False,
+    update_submodules: bool = False,
+    recursive_submodules: bool = False,
     depth: int | None = None,
+    *,
+    fetch_tags: bool = False,
 ):
     """
     Clone/pull git repositories.
@@ -116,6 +118,7 @@ def repo(
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
     + depth: create a shallow clone with a history truncated to the specified number of commits
+    + fetch_tags: Whether all tags should be fetched prior to attempting to check out the specified revision
 
     **Example:**
 
@@ -163,7 +166,12 @@ def repo(
         is_tag = False
         current_branch = host.get_fact(GitBranch, repo=dest)
         if branch is not None and current_branch != branch:
-            git_commands.append("fetch")  # fetch to ensure we have the branch locally
+            # fetch to ensure we have the branch/tag locally
+            if fetch_tags:
+                git_commands.append(StringCommand("fetch", "--tags"))
+            else:
+                git_commands.append(StringCommand("fetch"))
+
             git_commands.append(StringCommand("checkout", QuoteString(branch)))
         if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
             git_commands.append(StringCommand("checkout", QuoteString(branch)))

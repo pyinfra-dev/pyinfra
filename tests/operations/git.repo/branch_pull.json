@@ -1,7 +1,8 @@
 {
     "args": ["myrepo", "/home/myrepo"],
     "kwargs": {
-        "branch": "mybranch"
+        "branch": "mybranch",
+        "fetch_tags": true
     },
     "facts": {
         "files.Directory": {
@@ -25,7 +26,7 @@
         }
     },
     "commands": [
-        "cd /home/myrepo && git fetch",
+        "cd /home/myrepo && git fetch --tags",
         "cd /home/myrepo && git checkout mybranch",
         "cd /home/myrepo && git pull"
     ],
