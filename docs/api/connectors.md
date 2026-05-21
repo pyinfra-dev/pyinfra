@@ -246,6 +246,53 @@ Without proper command wrapping, shell operators and complex commands will fail.
 
 For complete examples see pyinfra's built-in connectors in `pyinfra/connectors/docker.py`, `pyinfra/connectors/chroot.py`, `pyinfra/connectors/ssh.py` and `pyinfra/connectors/local.py`, as well as the command wrapping utilities in `pyinfra/connectors/util.py`.
 
+## Making a connector chain-compatible
+
+To allow a connector to be used as an **inner** layer in a :doc:`chain </connectors/chain>`,
+it must implement three wrapping methods and declare how to resolve its runtime identifier.
+
+### Runtime identifier
+
+Set the `runtime_id_field` class attribute to the data key that holds the connector's
+runtime identifier (container name, chroot directory, etc.). The default
+`get_runtime_id()` implementation reads `self.data[self.runtime_id_field]`:
+
+```py
+class MyConnector(BaseConnector):
+    runtime_id_field = "my_container_id"
+```
+
+For more complex resolution (e.g. combining multiple data keys), override
+`get_runtime_id()` directly:
+
+```py
+class MyConnector(BaseConnector):
+    def get_runtime_id(self) -> str:
+        return f"{self.data['remote']}:{self.data['name']}"
+```
+
+`get_runtime_id()` is called *before* `connect()`, so it must work solely from data
+available at construction time.
+
+### Command wrapping
+
+```py
+def wrap_exec_command(self, command: StringCommand, container_id: str) -> StringCommand:
+    """Return a command that runs ``command`` inside this connector's target."""
+    return StringCommand("my-tool", "exec", container_id, "--", "sh", "-c", QuoteString(command))
+
+def wrap_copy_into(self, src_on_parent: str, dest: str, container_id: str) -> StringCommand:
+    """Return a command that copies from parent into this connector's target."""
+    return StringCommand("my-tool", "cp", src_on_parent, f"{container_id}/{dest}")
+
+def wrap_copy_out(self, src: str, dest_on_parent: str, container_id: str) -> StringCommand:
+    """Return a command that copies from this connector's target to parent."""
+    return StringCommand("my-tool", "cp", f"{container_id}/{src}", dest_on_parent)
+```
+
+The `container_id` parameter is the value returned by `get_runtime_id()`. The returned
+command will be executed in the *parent* connector's context.
+
 
 ## pyproject.toml
 
