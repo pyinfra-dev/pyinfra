@@ -174,13 +174,8 @@ When a fact command exits with a non-zero status the host is marked as failed, j
     if host.get_fact(LinuxName, _ignore_errors=True):
         ...
 
-Two other "fact skipped" paths do **not** fail the host. They are phase-aware:
-
-- ``requires_command`` declares a binary that must be present on the host. If the binary is absent, the fact returns its ``default()`` value. In the prepare phase the skip is silent; in the execute phase a warning is logged. In v4 the execute phase will raise instead.
-- ``check_preconditions()`` lets a fact declare a runtime prerequisite (for example a kernel module loaded). When the precondition is not met the same phase-aware behavior applies.
-
-See :doc:`api/facts` for the full design and exception hierarchy.
-
+.. Important::
+    Facts may choose to silently ignore errors for missing commands (eg mysql not installed) and instead return a default value. In v4 this will raise an error during the execution phase.
 The ``inventory`` Object
 ------------------------
 
