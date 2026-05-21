@@ -95,6 +95,7 @@ local = "pyinfra.connectors.local:LocalConnector"
 ssh = "pyinfra.connectors.ssh:SSHConnector"
 dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
 podmanssh = "pyinfra.connectors.dockerssh:PodmanSSHConnector"
+chain = "pyinfra.connectors.chain:ChainedConnector"
 # Testing / development connector (no-op simulation)
 fake = "pyinfra.connectors.fake:FakeConnector"
 # Inventory only connectors

@@ -97,6 +97,13 @@ class Inventory:
                 if "/" in connector_name:
                     connector_name, arg_string = connector_name.split("/", 1)
 
+                # Chain syntax: @outer/arg/@inner/arg[/@deeper/arg...]
+                # The sentinel "/@" cannot appear in a hostname, image tag, or container name.
+                if arg_string and "/@" in arg_string:
+                    # Re-prepend the outer connector and route to the chain connector.
+                    arg_string = f"@{connector_name}/{arg_string}"
+                    connector_name = "chain"
+
                 if connector_name not in get_all_connectors():
                     raise NoConnectorError(
                         f"Invalid connector: {connector_name}",
