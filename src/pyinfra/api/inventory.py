@@ -112,6 +112,13 @@ class Inventory:
                 if "/" in connector_name:
                     connector_name, arg_string = connector_name.split("/", 1)
 
+                # Chain syntax: @outer/arg/@inner/arg[/@deeper/arg...]
+                # The sentinel "/@" cannot appear in a hostname, image tag, or container name.
+                if arg_string and "/@" in arg_string:
+                    # Re-prepend the outer connector and route to the chain connector.
+                    arg_string = f"@{connector_name}/{arg_string}"
+                    connector_name = "chain"
+
                 # Imports this connector only: installed packages that cannot be imported
                 # are only a problem when something asks for one.
                 connector = get_connector(connector_name)

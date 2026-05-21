@@ -13,7 +13,7 @@ from collections.abc import Iterable, Iterator
 
 from typing_extensions import TypedDict, Unpack
 
-from pyinfra.api.exceptions import ConnectorDataTypeError
+from pyinfra.api.exceptions import ConnectError, ConnectorDataTypeError
 from pyinfra.api.util import raise_if_bad_type
 
 if TYPE_CHECKING:
@@ -72,6 +72,12 @@ class BaseConnector(abc.ABC):
 
     data_cls: type[Any] = ConnectorData
     data_meta: dict[str, DataMeta] = {}
+
+    # Set to the data key that holds this connector's runtime identifier
+    # (e.g. "docker_identifier", "chroot_directory"). BaseConnector.get_runtime_id()
+    # reads self.data[self.runtime_id_field]. Override get_runtime_id() directly
+    # for more complex resolution.
+    runtime_id_field: str | None = None
 
     def __init__(self, state: State, host: Host):
         self.state = state
@@ -153,6 +159,73 @@ class BaseConnector(abc.ABC):
         Returns:
             bool: indicating success or failure.
         """
+
+    def get_runtime_id(self) -> str:
+        """
+        Return the runtime identifier for this connector when used as an inner
+        layer in a :class:`~pyinfra.connectors.chain.ChainedConnector`.
+
+        The default implementation reads ``self.data[self.runtime_id_field]``.
+        Override this method for more complex resolution (e.g. combining multiple
+        data keys or applying transformations).
+
+        This is called *before* :meth:`connect()`, so it must work solely from
+        data available at construction time.
+
+        Raises ``NotImplementedError`` by default if ``runtime_id_field`` is
+        ``None`` — connectors that cannot be used as an inner layer do not need
+        to implement this.
+        """
+        if self.runtime_id_field is None:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} cannot be used as an inner connector in a chain"
+            )
+        value = self.data.get(self.runtime_id_field)
+        if not value:
+            raise ConnectError(
+                f"{self.__class__.__name__} used as inner layer but "
+                f"no {self.runtime_id_field} found in host data"
+            )
+        return str(value)
+
+    def wrap_exec_command(self, command: StringCommand, container_id: str) -> StringCommand:
+        """
+        Return a command that, when executed in the *parent* connector's context,
+        runs ``command`` inside this connector's target.
+
+        Only connectors that can be used as an *inner* layer in a chain need to
+        implement this.  The ``container_id`` parameter carries the runtime
+        identifier returned by :meth:`get_runtime_id`.
+
+        Raises ``NotImplementedError`` by default — connectors that cannot be
+        used as an inner layer (e.g. SSH, which depends on paramiko sockets
+        rather than a plain shell string) are excluded automatically.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} cannot be used as an inner connector in a chain"
+        )
+
+    def wrap_copy_into(self, src_on_parent: str, dest: str, container_id: str) -> StringCommand:
+        """
+        Return a command that, when executed in the *parent* connector's context,
+        copies the file at ``src_on_parent`` (a path already present on the parent)
+        into this connector's target at ``dest``.
+
+        Same conventions as :meth:`wrap_exec_command`.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} cannot be used as an inner connector in a chain"
+        )
+
+    def wrap_copy_out(self, src: str, dest_on_parent: str, container_id: str) -> StringCommand:
+        """
+        Return a command that, when executed in the *parent* connector's context,
+        copies the file at ``src`` inside this connector's target to
+        ``dest_on_parent`` on the parent.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} cannot be used as an inner connector in a chain"
+        )
 
     def check_can_rsync(self) -> None:
         raise NotImplementedError("This connector does not support rsync")
