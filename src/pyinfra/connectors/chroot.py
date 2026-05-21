@@ -3,7 +3,7 @@ import shlex
 from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
-from typing_extensions import Unpack, override
+from typing_extensions import TypedDict, Unpack, override
 
 from pyinfra import local, logger
 from pyinfra.api.output import echo
@@ -12,7 +12,7 @@ from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 from pyinfra.progress import progress_spinner
 
-from .base import BaseConnector
+from .base import BaseConnector, DataMeta
 from .local import LocalConnector
 from .util import extract_control_arguments, make_unix_command_for_host
 
@@ -27,12 +27,25 @@ def show_warning() -> None:
     logger.warning("The @chroot connector is in beta!")
 
 
+class ConnectorData(TypedDict):
+    chroot_directory: str
+
+
+connector_data_meta: dict[str, DataMeta] = {
+    "chroot_directory": DataMeta("Directory to chroot into"),
+}
+
+
 class ChrootConnector(BaseConnector):
     """
     The chroot connector allows you to execute operations within another root.
     """
 
     handles_execution = True
+
+    data_cls = ConnectorData
+    data_meta = connector_data_meta
+    runtime_id_field = "chroot_directory"
 
     local: LocalConnector
 
@@ -72,6 +85,32 @@ class ChrootConnector(BaseConnector):
             raise ConnectError(e.args[0])
 
         self.host.connector_data["chroot_directory"] = chroot_directory
+
+    @override
+    def wrap_exec_command(self, command: "StringCommand", container_id: str) -> "StringCommand":
+        return StringCommand(
+            "chroot",
+            QuoteString(container_id),
+            "sh",
+            "-c",
+            QuoteString(command),
+        )
+
+    @override
+    def wrap_copy_into(self, src_on_parent: str, dest: str, container_id: str) -> "StringCommand":
+        return StringCommand(
+            "cp",
+            QuoteString(src_on_parent),
+            QuoteString(f"{container_id}/{dest.lstrip('/')}"),
+        )
+
+    @override
+    def wrap_copy_out(self, src: str, dest_on_parent: str, container_id: str) -> "StringCommand":
+        return StringCommand(
+            "cp",
+            QuoteString(f"{container_id}/{src.lstrip('/')}"),
+            QuoteString(dest_on_parent),
+        )
 
     @override
     def run_shell_command(
