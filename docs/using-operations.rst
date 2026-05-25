@@ -233,6 +233,9 @@ All operations return an operation meta object which provides information about 
     server.shell(commands=["..."], _if=any_changed(create_user, create_otheruser))
     server.shell(commands=["..."], _if=all_changed(create_user, create_otheruser))
 
+.. Important::
+    ``_if`` must be a callable, or a list of callables. Passing a value directly (e.g. ``_if=host.get_fact(MyFact)``) does not gate the operation: most non-callable values raise ``ArgumentTypeError`` at prepare time, and ``None`` is treated as "no condition" so the operation always runs. Wrap the value in a lambda to gate on it: ``_if=lambda: bool(host.get_fact(MyFact))``.
+
 Output & Callbacks
 ------------------
 

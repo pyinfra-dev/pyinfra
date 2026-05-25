@@ -41,7 +41,7 @@ Sudo is controlled by one of the :ref:`privilege and user escalation arguments <
 How do I chmod or chown a file/directory/link?
 ----------------------------------------------
 
-Use the LINK ``files.file``, ``files.directory`` or ``files.link`` operations to set the permissions and ownership of files, directories & links:
+Use the ``files.file``, ``files.directory`` or ``files.link`` operations to set the permissions and ownership of files, directories & links:
 
 .. code:: python
 

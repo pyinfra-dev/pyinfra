@@ -1,0 +1,18 @@
+{
+    "command": "cat /etc/hosts 2>/dev/null || true",
+    "output": [
+        "# This is /etc/hosts",
+        "",
+        "127.0.0.1\tlocalhost localhost.localdomain",
+        "::1\t\tlocalhost # IPv6 loopback",
+        "192.168.1.10  db.internal",
+        "192.168.1.10  db   # duplicate IP, extra alias",
+        "nohostname",
+        "   "
+    ],
+    "fact": {
+        "127.0.0.1": ["localhost", "localhost.localdomain"],
+        "::1": ["localhost"],
+        "192.168.1.10": ["db.internal", "db"]
+    }
+}
