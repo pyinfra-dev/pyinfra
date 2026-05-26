@@ -21,6 +21,9 @@ Usage: pyinfra [OPTIONS] INVENTORY OPERATIONS...
 # Run one or more deploys against the inventory
 pyinfra INVENTORY deploy_web.py [deploy_db.py]...
 
+# Run a remote deploy file by URL (http or https)
+pyinfra INVENTORY https://raw.githubusercontent.com/example/repo/main/deploy.py
+
 # Run a single operation against the inventory
 pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
 
@@ -34,6 +37,10 @@ pyinfra INVENTORY fact files.File path=/path/to/file...
 # Debug (print) inventory hosts, groups and data
 pyinfra INVENTORY debug-inventory
 ```
+
+### Remote deploy files
+
+Deploy file arguments may be `http://` or `https://` URLs. The file is downloaded to a temporary path and executed in place. A warning is printed for each fetch since the source is not verified. There is no caching, no checksum or signature check, and no auth: do not point pyinfra at a URL you do not control or trust.
 
 ### Verbosity
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import atexit
 import json
 import os
+import tempfile
 from datetime import datetime
 from importlib import import_module
 from importlib.util import find_spec
@@ -10,11 +12,13 @@ from os import path
 from pathlib import Path
 from types import CodeType, FunctionType, ModuleType
 from collections.abc import Callable
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 import click
 import gevent
 
-from pyinfra import logger, state
+from pyinfra import __version__, logger, state
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
@@ -33,6 +37,50 @@ from .exceptions import CliError, UnexpectedExternalError
 
 # Cache for compiled Python deploy code
 PYTHON_CODES: dict[str, CodeType] = {}
+
+_REMOTE_TEMP_FILES: list[str] = []
+_REMOTE_CLEANUP_REGISTERED = False
+
+
+def is_remote_url(arg: str) -> bool:
+    return urlparse(arg).scheme in ("http", "https")
+
+
+def _cleanup_remote_temp_files() -> None:
+    for tmp_path in _REMOTE_TEMP_FILES:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+def fetch_remote_deploy_file(url: str, timeout: int = 30) -> str:
+    global _REMOTE_CLEANUP_REGISTERED
+
+    logger.warning(f"Fetching remote deploy file: {url} (source not verified)")
+    req = Request(url, headers={"User-Agent": f"pyinfra/{__version__}"})
+    try:
+        with urlopen(req, timeout=timeout) as resp:
+            if resp.status != 200:
+                raise CliError(
+                    f"Remote deploy fetch failed: {url} -> HTTP {resp.status}",
+                )
+            data = resp.read()
+    except CliError:
+        raise
+    except Exception as e:
+        raise CliError(f"Remote deploy fetch failed: {url} -> {e}")
+
+    fd, tmp_path = tempfile.mkstemp(suffix=".py", prefix="pyinfra-remote-")
+    with os.fdopen(fd, "wb") as f:
+        f.write(data)
+
+    _REMOTE_TEMP_FILES.append(tmp_path)
+    if not _REMOTE_CLEANUP_REGISTERED:
+        atexit.register(_cleanup_remote_temp_files)
+        _REMOTE_CLEANUP_REGISTERED = True
+
+    return tmp_path
 
 
 def is_subdir(child, parent):
