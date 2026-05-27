@@ -261,7 +261,15 @@ def parse_apt_repo(name: str) -> AptRepo | None:
     Returns:
         AptRepo instance or None if parsing failed
     """
-    regex = r"^(deb(?:-src)?)(?:\s+\[([^\]]+)\])?\s+([^\s]+)\s+([^\s]+)\s+([a-z-\s\d]*)$"
+    # Components are optional: "flat" repositories (#1775) use a suite ending in "/"
+    # and supply no components, e.g.
+    #   deb [signed-by=/etc/.../key.gpg] https://example.com/path /
+    # The components group is also kept optional for non-flat lines that omit
+    # the trailing whitespace, matching apt's tolerance.
+    regex = (
+        r"^(deb(?:-src)?)(?:\s+\[([^\]]+)\])?\s+([^\s]+)\s+([^\s]+)"
+        r"(?:\s+([a-z-\s\d]+))?\s*$"
+    )
 
     matches = re.match(regex, name)
 
@@ -279,11 +287,14 @@ def parse_apt_repo(name: str) -> AptRepo | None:
 
             options[key] = value
 
+    components_match = matches.group(5)
+    components = list(components_match.split()) if components_match else []
+
     return AptRepo(
         type=matches.group(1),
         url=matches.group(3),
         distribution=matches.group(4),
-        components=list(matches.group(5).split()),
+        components=components,
         options=options,
     )
 
