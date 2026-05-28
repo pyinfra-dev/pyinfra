@@ -176,6 +176,7 @@ When a fact command exits with a non-zero status the host is marked as failed, j
 
 .. Important::
     Facts may choose to silently ignore errors for missing commands (eg mysql not installed) and instead return a default value. In v4 this will raise an error during the execution phase.
+
 The ``inventory`` Object
 ------------------------
 
