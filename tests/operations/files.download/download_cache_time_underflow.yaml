@@ -1,0 +1,14 @@
+args:
+  - http://myfile
+kwargs:
+  dest: /home/myfile
+  cache_time: 9999999999999
+facts:
+  server.Date: datetime:2015-01-01T00:30:00
+  files.File:
+    path=/home/myfile:
+      mtime: datetime:2015-01-01T00:00:00
+  server.Which:
+    command=curl: "yes"
+commands: []
+noop_description: file /home/myfile has already been downloaded

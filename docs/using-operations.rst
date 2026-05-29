@@ -167,12 +167,15 @@ See :doc:`facts` for a full list of available facts and arguments.
 Fact Errors
 ^^^^^^^^^^^
 
-When facts fail due to an error the host will be marked as failed just as it would when an operation fails. This can be avoided by passing the ``_ignore_errors`` argument:
+When a fact command exits with a non-zero status the host is marked as failed, just as when an operation fails. This can be avoided by passing the ``_ignore_errors`` argument:
 
 .. code:: python
 
     if host.get_fact(LinuxName, _ignore_errors=True):
         ...
+
+.. Important::
+    Facts may choose to silently ignore errors for missing commands (eg mysql not installed) and instead return a default value. In v4 this will raise an error during the execution phase.
 
 The ``inventory`` Object
 ------------------------

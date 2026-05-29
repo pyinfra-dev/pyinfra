@@ -7,8 +7,8 @@
     },
     "commands": [
         {
-            "raw": "PGPASSWORD=\"somepass\" psql -d somedb -U root < somefile",
-            "masked": "*** psql -d somedb -U root < somefile"
+            "raw": "PGPASSWORD=somepass psql -d somedb -U root < somefile",
+            "masked": "PGPASSWORD='*MASKED*' psql -d somedb -U root < somefile"
         }
     ],
     "idempotent": false
