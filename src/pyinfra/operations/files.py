@@ -151,7 +151,12 @@ def download(
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
-            ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
+            try:
+                ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(
+                    seconds=cache_time,
+                )
+            except OverflowError:
+                ctime = datetime.min if cache_time > 0 else datetime.max
             if info["mtime"] and info["mtime"] < ctime:
                 download = True
 

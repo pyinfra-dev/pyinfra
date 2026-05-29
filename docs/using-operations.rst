@@ -167,12 +167,15 @@ See :doc:`facts` for a full list of available facts and arguments.
 Fact Errors
 ^^^^^^^^^^^
 
-When facts fail due to an error the host will be marked as failed just as it would when an operation fails. This can be avoided by passing the ``_ignore_errors`` argument:
+When a fact command exits with a non-zero status the host is marked as failed, just as when an operation fails. This can be avoided by passing the ``_ignore_errors`` argument:
 
 .. code:: python
 
     if host.get_fact(LinuxName, _ignore_errors=True):
         ...
+
+.. Important::
+    Facts may choose to silently ignore errors for missing commands (eg mysql not installed) and instead return a default value. In v4 this will raise an error during the execution phase.
 
 The ``inventory`` Object
 ------------------------
@@ -232,6 +235,9 @@ All operations return an operation meta object which provides information about 
     from pyinfra.operations.util import any_changed, all_changed
     server.shell(commands=["..."], _if=any_changed(create_user, create_otheruser))
     server.shell(commands=["..."], _if=all_changed(create_user, create_otheruser))
+
+.. Important::
+    ``_if`` must be a callable, or a list of callables. Passing a value directly (e.g. ``_if=host.get_fact(MyFact)``) does not gate the operation: most non-callable values raise ``ArgumentTypeError`` at prepare time, and ``None`` is treated as "no condition" so the operation always runs. Wrap the value in a lambda to gate on it: ``_if=lambda: bool(host.get_fact(MyFact))``.
 
 Output & Callbacks
 ------------------

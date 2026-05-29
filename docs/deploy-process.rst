@@ -183,3 +183,84 @@ Since this gets executed before nginx is installed by ``apt.packages`` operation
         reloaded=True,
         _if=remove_default_site.did_change,
     )
+
+.. _loops-cycle-errors:
+
+Loops & Cycle Errors
+~~~~~~~~~~~~~~~~~~~~
+
+In CLI mode ``pyinfra`` builds a single DAG to determine the order in which
+operations are executed. This usually produces the order a deploy author
+expects, but loops can make the same operation line appear multiple times with
+different per-host paths through the deploy. When those paths disagree about
+which operation must run first, the ordering graph contains a cycle and
+``pyinfra`` raises a cycle error.
+
+Use ``host.loop`` when a loop contains operations. This gives ``pyinfra`` the
+loop position as an ordering hint:
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.operations import server
+
+    for i in host.loop(range(0, 2)):
+        server.shell(
+            name=f"Do a thing {i}",
+            commands="ls",
+        )
+
+For example, this deploy can generate a cycle because the first operation only
+appears on ``@local`` during the first loop iteration:
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.operations import server
+
+    for i in range(0, 2):
+        if i > 0 or (i == 0 and host.name == "@local"):
+            server.shell(
+                name="A",
+                commands="ls",
+            )
+
+        server.shell(
+            name="B",
+            commands="ls",
+        )
+
+The resulting per-host order is inconsistent:
+
+.. code:: shell
+
+    # @local: A -> B -> A-1 -> B-1
+    # Other:       B -> A   -> B-1
+
+Combining those host orders means ``A`` must run before ``B`` and ``B`` must
+run before ``A``. Switching the loop to ``host.loop`` includes the loop position
+in the operation order and removes the ambiguity:
+
+.. code:: python
+
+    from pyinfra import host
+    from pyinfra.operations import server
+
+    for i in host.loop(range(0, 2)):
+        if i > 0 or (i == 0 and host.name == "@local"):
+            server.shell(
+                name="A",
+                commands="ls",
+            )
+
+        server.shell(
+            name="B",
+            commands="ls",
+        )
+
+The graph can then be resolved consistently:
+
+.. code:: shell
+
+    # @local: 0A -> 0B -> 1A -> 1B
+    # Other:        0B -> 1A -> 1B
