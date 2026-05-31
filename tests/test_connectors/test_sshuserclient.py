@@ -223,6 +223,32 @@ class TestSSHUserConfigMissing(TestCase):
         assert fake_ssh_connect.call_count == 1
         assert fake_ssh_connect.call_args.args[0] == "jump"
 
+    @patch("pyinfra.connectors.sshuserclient.client.path.exists", lambda path: False)
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_hop_inherits_key_search_policy(self, fake_gateway, fake_ssh_connect):
+        # The jump leg honours the connection's ssh_look_for_keys / ssh_allow_agent so
+        # a ProxyJump doesn't re-scan keys / re-prompt for passphrases. Credentials
+        # (pkey/password) are per-host and must NOT be offered to intermediate hops.
+        client = SSHClient()
+        client.parse_config(
+            "10.0.0.5",
+            {
+                "port": 22,
+                "allow_agent": True,
+                "look_for_keys": False,
+                "pkey": object(),
+                "password": "hunter2",
+            },
+            proxyjump="root@bastion",
+        )
+        _, hop_kwargs = fake_ssh_connect.call_args
+        assert hop_kwargs["look_for_keys"] is False
+        assert hop_kwargs["allow_agent"] is True
+        # The target's credentials must not leak onto the jump leg.
+        assert "pkey" not in hop_kwargs
+        assert "password" not in hop_kwargs
+
 
 @patch(
     "pyinfra.connectors.sshuserclient.client.path.exists",

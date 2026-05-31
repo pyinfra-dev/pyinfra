@@ -369,6 +369,15 @@ class SSHClient(ParamikoClient):
                 hop_connect_kwargs = dict(hop_config)
                 if "timeout" not in hop_connect_kwargs and target_timeout is not None:
                     hop_connect_kwargs["timeout"] = target_timeout
+                # Honour the connection's key-search policy (ssh_look_for_keys /
+                # ssh_allow_agent) on each jump leg rather than falling back to
+                # paramiko's defaults, which would re-scan ~/.ssh and re-prompt for key
+                # passphrases on every hop. Only the boolean policy is propagated, never
+                # credentials (pkey/password): those are per-host and must not be offered
+                # to intermediate jump hosts, and each hop's own ssh_config key applies.
+                for auth_key in ("allow_agent", "look_for_keys"):
+                    if auth_key in cfg and auth_key not in hop_connect_kwargs:
+                        hop_connect_kwargs[auth_key] = cfg[auth_key]
 
                 c = SSHClient()
                 c.connect(
