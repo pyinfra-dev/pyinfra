@@ -140,6 +140,89 @@ class TestSSHUserConfigMissing(TestCase):
         assert config.get("port") == 22
         assert identity_agent is None
 
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.path.exists",
+        lambda path: False,
+    )
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_without_ssh_config(self, fake_gateway, fake_ssh_connect):
+        client = SSHClient()
+        _, config, *_ = client.parse_config(
+            "10.0.0.5",
+            {"port": 22},
+            proxyjump="bastionuser@bastion.example.com",
+        )
+        fake_ssh_connect.assert_called_once_with(
+            "bastion.example.com",
+            _pyinfra_ssh_config_file=None,
+            port=22,
+            sock=None,
+            username="bastionuser",
+        )
+        fake_gateway.assert_called_once_with("10.0.0.5", 22, "10.0.0.5", 22, timeout=None)
+        assert config.get("sock") is fake_gateway.return_value
+
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_empty_proxyjump_is_ignored(self, fake_gateway):
+        client = SSHClient()
+        _, config, *_ = client.parse_config("10.0.0.5", {"port": 22}, proxyjump="")
+        assert "sock" not in config
+        fake_gateway.assert_not_called()
+
+    @patch("pyinfra.connectors.sshuserclient.client.path.exists", lambda path: False)
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_override_multiple_hops(self, fake_gateway, fake_ssh_connect):
+        # A spaced multi-hop override builds a hop chain, stripping each hop.
+        client = SSHClient()
+        _, config, *_ = client.parse_config(
+            "10.0.0.5",
+            {"port": 22},
+            proxyjump="alice@jump1, bob@jump2",
+        )
+        assert fake_ssh_connect.call_count == 2
+        first_hop, second_hop = fake_ssh_connect.call_args_list
+        assert first_hop.args[0] == "jump1"
+        assert first_hop.kwargs["username"] == "alice"
+        assert second_hop.args[0] == "jump2"
+        assert second_hop.kwargs["username"] == "bob"
+        assert config.get("sock") is fake_gateway.return_value
+
+    @patch("pyinfra.connectors.sshuserclient.client.path.exists", lambda path: False)
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_override_bracketed_ipv6(self, fake_gateway, fake_ssh_connect):
+        # A bracketed IPv6 hop with a port resolves the same way the rsync -J
+        # path does, so command execution and rsync agree.
+        client = SSHClient()
+        client.parse_config(
+            "10.0.0.5",
+            {"port": 22},
+            proxyjump="user@[2001:db8::1]:2222",
+        )
+        fake_ssh_connect.assert_called_once_with(
+            "2001:db8::1",
+            _pyinfra_ssh_config_file=None,
+            port=2222,
+            sock=None,
+            username="user",
+        )
+
+    @patch("pyinfra.connectors.sshuserclient.client.path.exists", lambda path: False)
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_override_ignores_empty_hops(self, fake_gateway, fake_ssh_connect):
+        # A stray trailing comma must not produce an empty hop (connect(None)).
+        client = SSHClient()
+        client.parse_config(
+            "10.0.0.5",
+            {"port": 22},
+            proxyjump="user@jump,",
+        )
+        assert fake_ssh_connect.call_count == 1
+        assert fake_ssh_connect.call_args.args[0] == "jump"
+
 
 @patch(
     "pyinfra.connectors.sshuserclient.client.path.exists",
@@ -364,6 +447,62 @@ class TestSSHUserConfig(TestCase):
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_DATA),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_OTHER_FILE_PROXYJUMP),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_override_beats_config_proxyjump(self, fake_gateway, fake_ssh_connect):
+        client = SSHClient()
+        _, config, *_ = client.parse_config(
+            "192.168.1.2",
+            {"port": 1022},
+            ssh_config_file="other_file",
+            proxyjump="overrideuser@10.0.0.99",
+        )
+        # The hop is the override target, not the ssh_config ProxyJump host.
+        fake_ssh_connect.assert_called_once_with(
+            "10.0.0.99",
+            _pyinfra_ssh_config_file="other_file",
+            port=22,
+            sock=None,
+            username="overrideuser",
+        )
+        assert config.get("sock") is fake_gateway.return_value
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_DATA),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_OTHER_FILE),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_override_beats_config_proxycommand(self, fake_gateway, fake_ssh_connect):
+        client = SSHClient()
+        _, config, *_ = client.parse_config(
+            "127.0.0.1",
+            proxyjump="overrideuser@10.0.0.99",
+        )
+        # ssh_config ProxyCommand is ignored; a ProxyJump channel is built instead.
+        assert not isinstance(config.get("sock"), ProxyCommand)
+        assert config.get("sock") is fake_gateway.return_value
+        fake_ssh_connect.assert_called_once()
+        hop_args, hop_kwargs = fake_ssh_connect.call_args
+        assert hop_args[0] == "10.0.0.99"
+        assert hop_kwargs["username"] == "overrideuser"
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
         mock_open(read_data=SSH_CONFIG_CONNECTTIMEOUT),
         create=True,
     )
@@ -417,6 +556,15 @@ class TestSSHUserConfig(TestCase):
             port=22,
             test="kwarg",
         )
+
+    @patch("pyinfra.connectors.sshuserclient.client.open", mock_open(), create=True)
+    @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
+    def test_connect_threads_proxyjump_into_parse_config(self, fake_paramiko_connect):
+        client = SSHClient()
+        stub = ("hostname", {"port": 22}, False, AskPolicy(), (), 0, None)
+        with patch.object(SSHClient, "parse_config", return_value=stub) as fake_parse_config:
+            client.connect("hostname", _pyinfra_ssh_proxyjump="user@jump")
+        assert fake_parse_config.call_args.kwargs["proxyjump"] == "user@jump"
 
     def test_missing_hostkey(self):
         client = SSHClient()

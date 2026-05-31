@@ -413,6 +413,110 @@ class TestOperationsApi(PatchSSHTestCase):
             print_prefix=inventory.get_host("somehost").print_prefix,
         )
 
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_with_proxyjump(self):
+        inventory = make_inventory(hosts=(("somehost", {"ssh_proxyjump": "user@jump"}),))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+
+        assert len(state.get_op_order()) == 1
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" -J user@jump"'
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_with_proxyjump_multiple_hops(self):
+        # A spaced multi-hop value must be normalised (same as the paramiko path)
+        # so rsync routes through both hops rather than failing validation.
+        inventory = make_inventory(hosts=(("somehost", {"ssh_proxyjump": "alice@j1, bob@j2"}),))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+
+        assert len(state.get_op_order()) == 1
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" -J alice@j1,bob@j2"'
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_with_proxyjump_trailing_comma(self):
+        # A stray trailing comma is dropped rather than producing an empty hop.
+        inventory = make_inventory(hosts=(("somehost", {"ssh_proxyjump": "user@jump,"}),))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" -J user@jump"'
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_with_proxyjump_ipv6(self):
+        # A bracketed IPv6 jump host is passed through to the local ssh -J,
+        # matching how the paramiko command path resolves it.
+        inventory = make_inventory(
+            hosts=(("somehost", {"ssh_proxyjump": "user@[2001:db8::1]:2222"}),)
+        )
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\"'
+                " -J 'user@[2001:db8::1]:2222'\""
+                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
     def test_rsync_op_failure(self):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())

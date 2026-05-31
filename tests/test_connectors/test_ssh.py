@@ -107,6 +107,7 @@ class TestSSHConnector(TestCase):
                 _pyinfra_ssh_known_hosts_file=None,
                 _pyinfra_ssh_strict_host_key_checking="accept-new",
                 _pyinfra_ssh_paramiko_connect_kwargs=None,
+                _pyinfra_ssh_proxyjump=None,
             )
 
         # Check that loading the same key again is cached in the state
@@ -117,6 +118,26 @@ class TestSSHConnector(TestCase):
         second_state.private_keys = state.private_keys
 
         connect_all(second_state)
+
+    def test_connect_with_proxyjump(self):
+        state = State(
+            make_inventory(hosts=(("somehost", {"ssh_proxyjump": "user@bastion"}),)),
+            Config(),
+        )
+        connect_all(state)
+        self.fake_connect_mock.assert_called_with(
+            "somehost",
+            allow_agent=True,
+            look_for_keys=True,
+            timeout=10,
+            username="vagrant",
+            _pyinfra_ssh_forward_agent=False,
+            _pyinfra_ssh_config_file=None,
+            _pyinfra_ssh_known_hosts_file=None,
+            _pyinfra_ssh_strict_host_key_checking="accept-new",
+            _pyinfra_ssh_paramiko_connect_kwargs=None,
+            _pyinfra_ssh_proxyjump="user@bastion",
+        )
 
     def test_retry_paramiko_agent_keys_single_key(self):
         connector = ssh.SSHConnector.__new__(ssh.SSHConnector)
@@ -1252,3 +1273,23 @@ class TestSSHConnector(TestCase):
             unresposivehost.connect(show_errors=False, raise_exceptions=True)
             fake_sleep.assert_called_once()
             assert fake_ssh_client().connect.call_count == 2
+
+    def test_validate_proxyjump_shell_safe(self):
+        # Safe jump-host specs pass through without raising.
+        ssh._validate_proxyjump_shell_safe("user@bastion")
+        ssh._validate_proxyjump_shell_safe("user@bastion:2222")
+        ssh._validate_proxyjump_shell_safe("a@j1,b@j2")
+        ssh._validate_proxyjump_shell_safe("[2001:db8::1]:22")
+
+        # Shell metacharacters are rejected.
+        for bad in (
+            "jump; touch pwned",
+            "$(touch pwned)",
+            "a`b`",
+            "jump host",
+            "a|b",
+            "goodhost\n",
+            "-D1080",
+        ):
+            with self.assertRaises(ValueError):
+                ssh._validate_proxyjump_shell_safe(bad)

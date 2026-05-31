@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from random import uniform
 from shutil import which
 from socket import gaierror
@@ -35,6 +36,24 @@ if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
 
 
+# Jump-host specs only ever need these characters (``[user@]host[:port]``,
+# comma-separated, with IPv6 brackets/zone-ids). Anything else — in particular
+# shell metacharacters — is rejected before the value can reach the rsync shell
+# command (which runs locally via ``shell=True``). ``%`` is kept for ssh token /
+# IPv6 zone-id expansion (e.g. ``%h``, ``fe80::1%eth0``), which ssh resolves
+# internally rather than in a shell.
+_PROXYJUMP_SAFE_RE = re.compile(r"\A[A-Za-z0-9._\-@:,\[\]%]+\Z")
+
+
+def _validate_proxyjump_shell_safe(proxyjump: str) -> None:
+    if proxyjump.startswith("-") or not _PROXYJUMP_SAFE_RE.match(proxyjump):
+        raise ValueError(
+            f"Invalid ssh_proxyjump value {proxyjump!r}: only letters, digits and the "
+            "characters . _ - @ : , [ ] % are allowed, and it must not start with '-'. "
+            "For anything more complex, use a ProxyJump entry in ssh_config.",
+        )
+
+
 class ConnectorData(TypedDict):
     ssh_hostname: str
     ssh_port: int
@@ -48,6 +67,7 @@ class ConnectorData(TypedDict):
     ssh_forward_agent: bool
 
     ssh_config_file: str
+    ssh_proxyjump: str
     ssh_known_hosts_file: str
     ssh_strict_host_key_checking: str
 
@@ -79,6 +99,10 @@ connector_data_meta: dict[str, DataMeta] = {
         False,
     ),
     "ssh_config_file": DataMeta("SSH config filename"),
+    "ssh_proxyjump": DataMeta(
+        "SSH ProxyJump host(s), e.g. ``user@bastion``; comma-separate for multiple "
+        "hops. IPv6 hops with explicit ports should use ssh_config Host aliases.",
+    ),
     "ssh_known_hosts_file": DataMeta("SSH known_hosts filename"),
     "ssh_strict_host_key_checking": DataMeta(
         "SSH strict host key checking",
@@ -156,6 +180,15 @@ class SSHConnector(BaseConnector):
             ("my-host-1.net", {"ssh_user": "ssh-user"}),
             ("my-host-2.net", {"ssh_user": "other-user"}),
         ]
+
+    Connecting via a jump/bastion host (also settable on the CLI with
+    ``--data ssh_proxyjump=user@bastion``):
+
+    .. code:: python
+
+        hosts = [
+            ("my-host.net", {"ssh_proxyjump": "user@bastion"}),
+        ]
     """
 
     handles_execution = True
@@ -182,6 +215,7 @@ class SSHConnector(BaseConnector):
             "_pyinfra_ssh_known_hosts_file": self.data["ssh_known_hosts_file"],
             "_pyinfra_ssh_strict_host_key_checking": self.data["ssh_strict_host_key_checking"],
             "_pyinfra_ssh_paramiko_connect_kwargs": self.data["ssh_paramiko_connect_kwargs"],
+            "_pyinfra_ssh_proxyjump": self.data["ssh_proxyjump"],
         }
 
         for key, value in (
@@ -713,6 +747,17 @@ class SSHConnector(BaseConnector):
         ssh_key = self.data["ssh_key"]
         if ssh_key:
             ssh_flags.append(f"-i {ssh_key}")
+
+        proxyjump = self.data["ssh_proxyjump"]
+        if proxyjump:
+            # Normalise hop whitespace and drop empty hops to match the paramiko path,
+            # so the same value (including a stray trailing comma) works for both
+            # command execution and rsync.
+            hops = [hop.strip() for hop in proxyjump.split(",") if hop.strip()]
+            if hops:
+                proxyjump = ",".join(hops)
+                _validate_proxyjump_shell_safe(proxyjump)
+                ssh_flags.append(StringCommand("-J", QuoteString(proxyjump)).get_raw_value())
 
         remote_rsync_command = "rsync"
         if _sudo:

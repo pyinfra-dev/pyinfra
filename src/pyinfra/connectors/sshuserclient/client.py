@@ -193,6 +193,7 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_known_hosts_file=None,
         _pyinfra_ssh_strict_host_key_checking=None,
         _pyinfra_ssh_paramiko_connect_kwargs=None,
+        _pyinfra_ssh_proxyjump=None,
         **kwargs,
     ):
         (
@@ -208,6 +209,7 @@ class SSHClient(ParamikoClient):
             kwargs,
             ssh_config_file=_pyinfra_ssh_config_file,
             strict_host_key_checking=_pyinfra_ssh_strict_host_key_checking,
+            proxyjump=_pyinfra_ssh_proxyjump,
         )
         self.set_missing_host_key_policy(missing_host_key_policy)
         config.update(kwargs)
@@ -271,6 +273,7 @@ class SSHClient(ParamikoClient):
         initial_cfg=None,
         ssh_config_file=None,
         strict_host_key_checking=None,
+        proxyjump=None,
     ):
         cfg: dict = {"port": 22}
         cfg.update(initial_cfg or {})
@@ -283,15 +286,19 @@ class SSHClient(ParamikoClient):
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
-            return (
-                hostname,
-                cfg,
-                forward_agent,
-                missing_host_key_policy,
-                host_keys_files,
-                keep_alive,
-                identity_agent,
-            )
+            if not proxyjump:
+                return (
+                    hostname,
+                    cfg,
+                    forward_agent,
+                    missing_host_key_policy,
+                    host_keys_files,
+                    keep_alive,
+                    identity_agent,
+                )
+            # Honour an explicit ssh_proxyjump even when there is no ssh_config on
+            # disk: an empty config still resolves hop defaults (port 22, etc.).
+            ssh_config = SSHConfig()
 
         host_config = ssh_config.lookup(hostname)
         forward_agent = host_config.get("forwardagent") == "yes"
@@ -335,11 +342,19 @@ class SSHClient(ParamikoClient):
             if agent_path.lower() != "none":
                 identity_agent = path.expanduser(agent_path)
 
-        if "proxycommand" in host_config:
-            cfg["sock"] = ProxyCommand(host_config["proxycommand"])
+        proxy_command = host_config.get("proxycommand")
+        proxy_jump = host_config.get("proxyjump")
+        # An explicit pyinfra ssh_proxyjump overrides any ProxyJump/ProxyCommand
+        # from ssh_config for the target host. An empty string counts as "not set".
+        if proxyjump:
+            proxy_jump = proxyjump
+            proxy_command = None
 
-        elif "proxyjump" in host_config:
-            hops = host_config["proxyjump"].split(",")
+        if proxy_command:
+            cfg["sock"] = ProxyCommand(proxy_command)
+
+        elif proxy_jump:
+            hops = [hop.strip() for hop in proxy_jump.split(",") if hop.strip()]
             sock = None
             # Propagate the target's timeout down so hop connections and the
             # direct-tcpip channel don't hang forever when the network misbehaves
@@ -397,12 +412,19 @@ class SSHClient(ParamikoClient):
         if user:
             shorthand_config["username"] = user
 
-        # IPv6: can't reliably tell where addr ends and port begins, so don't
-        # try (and don't bother adding special syntax either, user should avoid
-        # this situation by using port=).
-        if hostport.count(":") > 1:
+        # Bracketed IPv6, optionally with a port: ``[2001:db8::1]`` or
+        # ``[2001:db8::1]:2222``.
+        if hostport.startswith("[") and "]" in hostport:
+            addr, _, port = hostport[1:].partition("]")
+            hostname = addr or None
+            if port.startswith(":") and port[1:]:
+                shorthand_config["port"] = int(port[1:])
+        # Bare IPv6 (no brackets): can't reliably tell where addr ends and port
+        # begins, so treat the whole thing as the hostname (use the bracketed
+        # form to attach a port).
+        elif hostport.count(":") > 1:
             hostname = hostport
-        # IPv4: can split on ':' reliably.
+        # IPv4 / hostname: can split on ':' reliably.
         else:
             host_port = hostport.rsplit(":", 1)
             hostname = host_port.pop(0) or None
