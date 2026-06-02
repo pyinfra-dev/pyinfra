@@ -120,7 +120,7 @@ def repo(
     + depth: create a shallow clone with a history truncated to the specified number of commits
     + fetch_tags: Whether all tags should be fetched prior to attempting to check out the specified revision
 
-    **Example:**
+    **Examples:**
 
     .. code:: python
 
@@ -129,6 +129,13 @@ def repo(
             src="https://github.com/Fizzadar/pyinfra.git",
             dest="/usr/local/src/pyinfra",
         )
+
+        git.repo(
+            name="Clone repo with SSH keyscan (non-standard port)",
+            src="ssh://git@git.example.com:2222/org/repo.git",
+            dest="/usr/local/src/repo",
+            ssh_keyscan=True,
+        )
     """
 
     # Ensure our target directory exists
@@ -136,11 +143,16 @@ def repo(
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
-        # Attempt to parse the domain from the git repository
-        domain = re.match(r"^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)", src)
+        # Attempt to parse the domain and optional port from the git repository.
+        # Supports: user@host, ssh://user@host:port/path, https://host:port/path
+        m = re.match(
+            r"^(?:ssh://)?[a-zA-Z0-9]+@\[?([0-9a-zA-Z\.\-]+)\]?(?::(\d+))?", src
+        ) or re.match(r"^https?://([0-9a-zA-Z\.\-]+)(?::(\d+))?", src)
 
-        if domain:
-            yield from ssh.keyscan._inner(domain.group(1))
+        if m:
+            hostname = m.group(1)
+            port = int(m.group(2)) if m.lastindex and m.lastindex >= 2 and m.group(2) else 22
+            yield from ssh.keyscan._inner(hostname, port=port)
         else:
             raise OperationError(
                 f"Could not parse domain (to SSH keyscan) from: {src}",
