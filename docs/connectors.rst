@@ -44,6 +44,11 @@ Each connector page is listed below and contains examples as well as a list of a
 
    Connect to the local machine running pyinfra.
 
+.. admonition:: :doc:`connectors/chain`
+   :class: note flex-half
+
+   Chain multiple connectors to reach nested targets.
+
 .. raw:: html
 
    </div>

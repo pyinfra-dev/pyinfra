@@ -84,6 +84,8 @@ class DockerConnector(BaseConnector):
     data_meta = connector_data_meta
     data: ConnectorData
 
+    runtime_id_field = "docker_identifier"
+
     local: LocalConnector
 
     container_id: str
@@ -185,6 +187,36 @@ class DockerConnector(BaseConnector):
 
         logger.info(
             f"{self.host.print_prefix}{self.docker_cmd} build complete, image ID: {format_text(image_id, bold=True)}",
+        )
+
+    @override
+    def wrap_exec_command(self, command: StringCommand, container_id: str) -> StringCommand:
+        return StringCommand(
+            self.docker_cmd,
+            "exec",
+            "-i",
+            QuoteString(container_id),
+            "sh",
+            "-c",
+            QuoteString(command),
+        )
+
+    @override
+    def wrap_copy_into(self, src_on_parent: str, dest: str, container_id: str) -> StringCommand:
+        return StringCommand(
+            self.docker_cmd,
+            "cp",
+            QuoteString(src_on_parent),
+            QuoteString(f"{container_id}:{dest}"),
+        )
+
+    @override
+    def wrap_copy_out(self, src: str, dest_on_parent: str, container_id: str) -> StringCommand:
+        return StringCommand(
+            self.docker_cmd,
+            "cp",
+            QuoteString(f"{container_id}:{src}"),
+            QuoteString(dest_on_parent),
         )
 
     @override
