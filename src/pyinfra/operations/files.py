@@ -18,7 +18,6 @@ from typing import IO, Any
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
-from pyinfra.api.output import format_text
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -31,6 +30,7 @@ from pyinfra.api import (
     operation,
 )
 from pyinfra.api.command import make_formatted_string_command
+from pyinfra.api.output import format_text
 from pyinfra.api.util import (
     get_call_location,
     get_file_io,
@@ -1488,7 +1488,7 @@ def move(src: str, dest: str, overwrite=False):
     """
 
     if host.get_fact(File, src) is None:
-        raise OperationError(f"src {src} does not exist")
+        logger.warning(f"src {src} does not exist")
 
     if not host.get_fact(Directory, dest):
         raise OperationError(f"dest {dest} is not an existing directory")
@@ -1514,7 +1514,7 @@ def copy(src: str, dest: str, overwrite=False):
     """
     src_is_dir = host.get_fact(Directory, src)
     if not host.get_fact(File, src) and not src_is_dir:
-        raise OperationError(f"src {src} does not exist")
+        logger.warning(f"src {src} does not exist")
 
     if not host.get_fact(Directory, dest):
         raise OperationError(f"dest {dest} is not an existing directory")
@@ -2259,9 +2259,9 @@ def unarchive(
         yield FileUploadCommand(src, temp_archive)
         archive_path = temp_archive
     else:
-        # Validate the remote archive exists
+        # Check if the remote archive exists
         if host.get_fact(File, path=src) is None:
-            raise OperationError(f"Remote archive {src} does not exist")
+            logger.warning(f"Remote archive {src} does not exist")
         archive_path = src
 
     extras = list(extra_opts) if extra_opts else []

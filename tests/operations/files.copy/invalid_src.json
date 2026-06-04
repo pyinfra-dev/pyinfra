@@ -1,4 +1,5 @@
 {
+  "require_platform": ["Darwin", "Linux"],
     "kwargs": {
         "src": "/tmp/src_dir/file",
         "dest": "/tmp/dest_dir",
@@ -14,8 +15,5 @@
             "path=/tmp/src_dir/file": null
         }
     },
-    "exception": {
-        "name": "OperationError",
-        "message": "src /tmp/src_dir/file does not exist"
-    }
+    "commands": ["cp -r /tmp/src_dir/file /tmp/dest_dir"]
 }
