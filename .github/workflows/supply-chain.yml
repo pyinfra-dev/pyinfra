@@ -64,7 +64,7 @@ jobs:
       - run: uv sync --group test --no-default-groups
       - name: Generate CycloneDX SBOM
         run: |
-          uv tool run pip-audit \
+          uv run --with pip-audit pip-audit \
             --format=cyclonedx-json \
             --output=sbom.json \
             --skip-editable \
