@@ -34,7 +34,7 @@ def ensure_mode_int(mode: str | int | None) -> int | str | None:
 
     Symbolic modes (``"u+x"``) and ``None`` pass through unchanged.
     """
-    if mode is None:
+    if mode is None or isinstance(mode, bool):
         return mode
 
     if isinstance(mode, int):
