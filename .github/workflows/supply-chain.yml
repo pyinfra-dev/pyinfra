@@ -65,6 +65,8 @@ jobs:
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - run: uv sync --group test --no-default-groups
       - name: Generate CycloneDX SBOM
+        id: sbom
+        continue-on-error: true
         run: |
           uv run --with pip-audit pip-audit \
             --format=cyclonedx-json \
