@@ -567,28 +567,45 @@ class KernelModules(FactBase):
 
     @override
     def command(self):
-        return "! test -f /proc/modules || cat /proc/modules"
+        self._kernel = host.get_fact(Kernel)
+
+        if self._kernel.strip() == "FreeBSD":
+            return "kldstat | tail +2"
+        else:
+            return "! test -f /proc/modules || cat /proc/modules"
 
     default = dict
 
     @override
     def process(self, output):
         modules = {}
+        if self._kernel.strip() == "FreeBSD":
+            for line in output:
+                id, refs, address, size, name = line.split(None, 4)
 
-        for line in output:
-            name, size, instances, depends, state, _ = line.split(" ", 5)
-            instances = int(instances)
+                module = {
+                    "address": address,
+                    "id": id,
+                    "refs": refs,
+                    "size": size,
+                }
 
-            module = {
-                "size": size,
-                "instances": instances,
-                "state": state,
-            }
+                modules[name] = module
+        else:
+            for line in output:
+                name, size, instances, depends, state, _ = line.split(" ", 5)
+                instances = int(instances)
 
-            if depends != "-":
-                module["depends"] = [value for value in depends.split(",") if value]
+                module = {
+                    "size": size,
+                    "instances": instances,
+                    "state": state,
+                }
 
-            modules[name] = module
+                if depends != "-":
+                    module["depends"] = [value for value in depends.split(",") if value]
+
+                modules[name] = module
 
         return modules
 
