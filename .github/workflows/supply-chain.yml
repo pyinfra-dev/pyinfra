@@ -42,7 +42,7 @@ jobs:
             --output osv-results.sarif
       - name: Upload SARIF to security tab
         if: always() && steps.scan.outcome != 'skipped'
-        uses: github/codeql-action/upload-sarif@b0c4fd77f6c559021d78430ec4d0d169ae74a4eb # v3
+        uses: github/codeql-action/upload-sarif@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
         with:
           sarif_file: osv-results.sarif
           category: osv-scanner
@@ -81,23 +81,18 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: "3.14"
-      - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - name: Run Bandit security analysis
         id: bandit
         continue-on-error: true
         run: |
-          uv run --with bandit bandit \
+          pipx run bandit \
             -r src/ \
             -f sarif \
             -o bandit-results.sarif \
-            --exclude tests \
             -ll
       - name: Upload SARIF to security tab
         if: always() && steps.bandit.outcome != 'skipped'
-        uses: github/codeql-action/upload-sarif@b0c4fd77f6c559021d78430ec4d0d169ae74a4eb # v3
+        uses: github/codeql-action/upload-sarif@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
         with:
           sarif_file: bandit-results.sarif
           category: bandit
