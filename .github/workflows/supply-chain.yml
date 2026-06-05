@@ -91,18 +91,12 @@ jobs:
         continue-on-error: true
         run: |
           pip install bandit
-          bandit -r src/ -f sarif -o bandit-results.sarif -ll
-      - name: Upload SARIF to security tab
-        if: always() && steps.bandit.outcome != 'skipped'
-        uses: github/codeql-action/upload-sarif@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
-        with:
-          sarif_file: bandit-results.sarif
-          category: bandit
+          bandit -r src/ -f json -o bandit-results.json -ll
       - name: Upload scan artifact
         if: always() && steps.bandit.outcome != 'skipped'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: bandit-results
-          path: bandit-results.sarif
+          path: bandit-results.json
           if-no-files-found: warn
           retention-days: 30
