@@ -37,3 +37,4 @@ pyinfra-debug.log
 Makefile
 
 .prs/
+sbom.json
