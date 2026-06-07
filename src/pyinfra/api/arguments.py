@@ -198,7 +198,11 @@ class MetaArguments(TypedDict):
 meta_argument_meta: dict[str, ArgumentMeta] = {
     # NOTE: name is the only non-_-prefixed argument
     "name": ArgumentMeta(
-        "Name of the operation.",
+        (
+            "Human-readable label for the operation, shown in CLI output and used to identify "
+            "the operation in the execution order. Does not affect what is run. If omitted, "
+            "pyinfra generates a label from the operation's call signature."
+        ),
         default=lambda _: None,
     ),
     "_ignore_errors": ArgumentMeta(
@@ -232,7 +236,11 @@ class ExecutionArguments(TypedDict):
 
 execution_argument_meta: dict[str, ArgumentMeta] = {
     "_parallel": ArgumentMeta(
-        "Run this operation in batches of hosts.",
+        (
+            "Maximum number of hosts to execute this operation on at once. ``0`` (the default) "
+            "means use the global ``config.PARALLEL`` value, which itself defaults to *all hosts "
+            "in parallel*, capped by the system's open-file-descriptor limit."
+        ),
         default=lambda config: config.PARALLEL,
     ),
     "_run_once": ArgumentMeta(
@@ -325,7 +333,17 @@ __argument_docs__ = {
         """,
     ),
     "Operation meta & callbacks": (meta_argument_meta, "", ""),
-    "Execution strategy": (execution_argument_meta, "", ""),
+    "Execution strategy": (
+        execution_argument_meta,
+        """
+        By default, every operation runs against **all hosts in parallel** (capped by the open-file
+        limit). ``_parallel`` lowers that cap for a single operation, ``_serial`` forces host-by-host
+        execution, and ``_run_once`` executes only against the first host that reaches the operation.
+        These three are mutually exclusive on a per-operation basis and must take the same value on
+        every host.
+        """,
+        "",
+    ),
     "Retry behavior": (
         retry_argument_meta,
         """
