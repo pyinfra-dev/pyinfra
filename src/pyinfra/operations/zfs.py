@@ -14,7 +14,7 @@ def dataset(
     recursive=False,
     sparse=None,
     volume_size=None,
-    properties={},
+    properties=None,
     **extra_props,
 ):
     """
@@ -47,7 +47,7 @@ def dataset(
 
     noop_msg = f"{dataset_name} is already {'present' if present else 'absent'}"
 
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
 
     datasets = host.get_fact(ZfsDatasets)
 
@@ -85,7 +85,7 @@ def dataset(
 
 
 @operation()
-def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extra_props):
+def snapshot(snapshot_name, present=True, recursive=False, properties=None, **extra_props):
     """
     Create or destroy a ZFS snapshot, or modify its properties.
 
@@ -102,7 +102,7 @@ def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extr
         zfs.snapshot("tank/home@weekly_backup")
 
     """
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
     snapshots = host.get_fact(ZfsSnapshots)
 
     if snapshot_name in snapshots or not present:
@@ -117,7 +117,7 @@ def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extr
 
 @operation()
 def volume(
-    volume_name, size, sparse=False, present=True, recursive=False, properties={}, **extra_props
+    volume_name, size, sparse=False, present=True, recursive=False, properties=None, **extra_props
 ):
     """
     Create or destroy a ZFS volume, or modify its properties.
@@ -137,7 +137,7 @@ def volume(
         zfs.volume("tank/vm-disks/db_srv_04", "32G")
 
     """
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
     yield from dataset._inner(
         volume_name,
         volume_size=size,
@@ -149,7 +149,7 @@ def volume(
 
 
 @operation()
-def filesystem(fs_name, present=True, recursive=False, properties={}, **extra_props):
+def filesystem(fs_name, present=True, recursive=False, properties=None, **extra_props):
     """
     Create or destroy a ZFS filesystem, or modify its properties.
 
@@ -166,7 +166,7 @@ def filesystem(fs_name, present=True, recursive=False, properties={}, **extra_pr
         zfs.filesystem("tank/vm-disks/db_srv_04", "32G")
 
     """
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
     yield from dataset._inner(
         fs_name,
         present=present,
