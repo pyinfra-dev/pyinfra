@@ -2,9 +2,10 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString, StringCommand
+from pyinfra.api.command import make_formatted_string_command
 
-from .util.packaging import parse_packages
+from .util.packaging import parse_packages, pip_report_is_satisfied
 
 
 # TODO: move to an utils file
@@ -48,6 +49,35 @@ class PipxPackages(FactBase):
     @override
     def process(self, output):
         return parse_packages(PIPX_REGEX, output)
+
+
+class PipxRunpipDryRun(FactBase[bool]):
+    """
+    Whether installing ``spec`` into an already-installed pipx app's venv would change nothing.
+
+    Runs ``pipx runpip <app> install --dry-run`` so pip's resolver inspects the app's own venv.
+    Used to decide whether an extra (e.g. ``foo[bar]``) is already satisfied for an installed app.
+
+    Requires the venv's pip >= 22.2 (for ``--dry-run``/``--report``).
+    """
+
+    default = bool  # False == not satisfied == (re)install
+
+    @override
+    def requires_command(self, app, spec) -> str:
+        return "pipx"
+
+    @override
+    def command(self, app, spec) -> StringCommand:
+        return make_formatted_string_command(
+            "pipx runpip {0} install --dry-run --quiet --report - {1} 2> /dev/null",
+            QuoteString(app),
+            QuoteString(spec),
+        )
+
+    @override
+    def process(self, output: list[str]) -> bool:
+        return pip_report_is_satisfied(output)
 
 
 class PipxEnvironment(FactBase):

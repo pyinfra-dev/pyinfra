@@ -1,0 +1,7 @@
+arg:
+- pip
+command: pip --version
+requires_command: pip
+output:
+- pip 24.0 from /usr/lib/python3/dist-packages/pip (python 3.12)
+fact: "24.0"

@@ -26,13 +26,16 @@ class PkgInfo(NamedTuple):
     version: str
     operator: str
     url: str
+    extras: frozenset[str] = frozenset()
     inst_vers_format_fn: Callable = default_inst_vers_format_fn
     """
-    The key packaging information needed: version, operator and url are optional.
+    The key packaging information needed: version, operator, url and extras are optional.
     """
 
     @property
     def lkup_name(self) -> str | list[str]:
+        # NB: extras are intentionally excluded - installed-package facts are keyed by the bare
+        # name, so the lookup must match on it (extras are handled by the dry-run check instead).
         return self.name if self.version == "" else [self.name, self.version]
 
     @property
@@ -40,25 +43,52 @@ class PkgInfo(NamedTuple):
         return self.version != ""
 
     @property
-    def inst_vers(self) -> str:
-        """String that represents how a program can be installed.
+    def has_extras(self) -> bool:
+        return bool(self.extras)
 
-        - If self.url exists, then url is always returned.
-        - If self.version exists, then inst_vers_format_fn is used
-        to create the string. The default template is '{name}{operator}{version}'.
-        - Otherwise, self.name is returned.
+    @property
+    def extras_str(self) -> str:
+        """The ``[extra1,extra2]`` suffix (sorted for determinism), or ``""`` if none."""
+        return f"[{','.join(sorted(self.extras))}]" if self.extras else ""
 
-        Note, the result string will be quoted, so input is shell safe.
-        """
+    @property
+    def spec(self) -> str:
+        """Unquoted install spec (``name[extras]operator version``), for dry-run commands."""
+        return f"{self.name}{self.extras_str}{self.operator}{self.version}"
+
+    def _vers(self, *, include_extras: bool) -> str:
+        name = self.name + self.extras_str if include_extras else self.name
 
         if self.url:
             return StringCommand(QuoteString(self.url)).get_raw_value()
 
         if self.version:
             return StringCommand(
-                QuoteString(self.inst_vers_format_fn(self.name, self.operator, self.version))
+                QuoteString(self.inst_vers_format_fn(name, self.operator, self.version))
             ).get_raw_value()
-        return StringCommand(QuoteString(self.name)).get_raw_value()
+        return StringCommand(QuoteString(name)).get_raw_value()
+
+    @property
+    def inst_vers(self) -> str:
+        """String that represents how a program can be installed.
+
+        - If self.url exists, then url is always returned.
+        - If self.version exists, then inst_vers_format_fn is used
+        to create the string. The default template is '{name}[extras]{operator}{version}'.
+        - Otherwise, self.name (plus any extras) is returned.
+
+        Note, the result string will be quoted, so input is shell safe.
+        """
+        return self._vers(include_extras=True)
+
+    @property
+    def uninst_vers(self) -> str:
+        """Like :attr:`inst_vers` but without extras.
+
+        Extras (e.g. ``foo[bar]``) are not separately uninstallable - pip/pipx/uv operate on the
+        bare package - so the uninstall spec must omit them.
+        """
+        return self._vers(include_extras=False)
 
     @classmethod
     def from_possible_pair(cls, s: str, join: str | None) -> PkgInfo:
@@ -97,6 +127,7 @@ class PkgInfo(NamedTuple):
                     spec.version if spec is not None else "",
                     spec.operator if spec is not None else "",
                     reqt.url or "",
+                    frozenset(reqt.extras),
                 )
 
 
@@ -185,6 +216,8 @@ def ensure_packages(
     version_join: str | None = None,
     expand_package_fact: Callable[[str], list[str | list[str]]] | None = None,
     expand_match_any: bool = False,
+    extras_satisfied: Callable[[PkgInfo], bool] | None = None,
+    force_reinstall_command: str | StringCommand | None = None,
 ):
     """
     Handles this common scenario:
@@ -217,6 +250,13 @@ def ensure_packages(
             ``<apt_pkg>=<version>``.  Not allowed if (pkg, ver, url) tuples are provided.
         expand_package_fact: fact returning packages providing a capability \
             (ie ``yum whatprovides``)
+        extras_satisfied: callback returning whether a spec carrying extras (e.g. ``foo[bar]``) \
+            is already satisfied. Consulted only when the bare package is installed and the spec \
+            has extras (the installed-package facts are keyed by bare name and cannot answer this).
+        force_reinstall_command: command used to (re)install a package whose bare name is already \
+            installed but whose extras are not yet satisfied. Defaults to ``install_command`` \
+            (suitable for pip/uv pip, where a normal install adds the missing extra deps). pipx \
+            and uv tool pass a ``--force`` variant.
     """
 
     if packages_to_ensure is None:
@@ -241,6 +281,7 @@ def ensure_packages(
     diff_expanded_packages = {}
 
     upgrade_packages = []
+    reinstall_packages = []
 
     if present is True:
         for package in packages:
@@ -251,6 +292,14 @@ def ensure_packages(
             if not has_package:
                 diff_packages.append(package.inst_vers)
                 diff_expanded_packages[package.name] = expanded_packages
+            elif package.has_extras and extras_satisfied is not None:
+                # Bare package is installed, but it was requested with extras (e.g. foo[bar]).
+                # The installed-package facts only know the bare name, so ask the package
+                # manager's own resolver (via the callback) whether the extras are satisfied.
+                if extras_satisfied(package):
+                    host.noop(f"package {package.name} extras already satisfied")
+                else:
+                    reinstall_packages.append(package.inst_vers)
             else:
                 pkg_name = package.name
                 status = _get_package_status(current_packages, pkg_name)
@@ -286,7 +335,7 @@ def ensure_packages(
             )
 
             if has_package:
-                diff_packages.append(package.inst_vers)
+                diff_packages.append(package.uninst_vers)
                 diff_expanded_packages[package.name] = expanded_packages
             else:
                 host.noop(f"package {package.name} is not installed")
@@ -294,6 +343,12 @@ def ensure_packages(
     if diff_packages:
         command = install_command if present else uninstall_command
         yield f"{command} {' '.join([pkg for pkg in diff_packages])}"
+
+    if reinstall_packages:
+        command = (
+            force_reinstall_command if force_reinstall_command is not None else install_command
+        )
+        yield f"{command} {' '.join([pkg for pkg in reinstall_packages])}"
 
     if latest and upgrade_command and upgrade_packages:
         yield f"{upgrade_command} {' '.join([pkg for pkg in upgrade_packages])}"

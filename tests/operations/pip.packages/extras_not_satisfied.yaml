@@ -1,0 +1,12 @@
+args:
+- ["foo[bar]"]
+facts:
+  pip.PipVersion:
+    pip=pip: "24.0"
+  pip.PipPackages:
+    pip=pip:
+      foo: ["1.0"]
+  pip.PipInstallDryRun:
+    pip=pip, spec=foo[bar]: false
+commands:
+- pip install 'foo[bar]'
