@@ -348,20 +348,19 @@ def _get_fact(
     data = fact.default()
 
     if status:
-        if stdout_lines:
-            try:
-                data = fact.process(stdout_lines)
-            except FactProcessError as e:
-                log_error_or_warning(
-                    host,
-                    global_kwargs["_ignore_errors"],
-                    description=(f"could not process fact: {name} {get_kwargs_str(fact_kwargs)}"),
-                    exception=e,
-                )
+        try:
+            data = fact.process(stdout_lines)
+        except FactProcessError as e:
+            log_error_or_warning(
+                host,
+                global_kwargs["_ignore_errors"],
+                description=(f"could not process fact: {name} {get_kwargs_str(fact_kwargs)}"),
+                exception=e,
+            )
 
-                # Check we've not failed
-                if apply_failed_hosts and not global_kwargs["_ignore_errors"]:
-                    state.fail_hosts({host})
+            # Check we've not failed
+            if apply_failed_hosts and not global_kwargs["_ignore_errors"]:
+                state.fail_hosts({host})
 
     elif stderr_lines:
         # If we have error output and that error is sudo or su stating the user
