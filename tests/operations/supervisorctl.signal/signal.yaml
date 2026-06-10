@@ -1,0 +1,5 @@
+args:
+  - HUP
+  - web
+commands:
+  - supervisorctl signal HUP web

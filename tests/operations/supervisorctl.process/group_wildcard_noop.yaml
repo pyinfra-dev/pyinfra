@@ -1,0 +1,10 @@
+args:
+  - "workers:*"
+facts:
+  supervisorctl.SupervisorctlStatus:
+    "config_file=None, password=None, server_url=None, username=None":
+      "workers:worker_0": true
+      "workers:worker_1": true
+      web: false
+commands: []
+noop_description: "process workers:* is running"
