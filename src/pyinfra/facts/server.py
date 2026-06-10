@@ -21,6 +21,15 @@ from pyinfra.facts import crontab
 
 ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
+# Usernames used in shell tilde expansion (``~user``) cannot be quoted without
+# disabling the expansion, so the value must be a plain, shell-safe word.
+_SAFE_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._][a-zA-Z0-9._-]*$")
+
+
+def _check_tilde_username(user: str) -> None:
+    if user and not _SAFE_USERNAME_RE.match(user):
+        raise ValueError(f"Unsafe username for shell tilde expansion: {user!r}")
+
 
 class User(FactBase):
     """
@@ -38,8 +47,11 @@ class Home(FactBase[Optional[str]]):
     """
 
     @override
-    def command(self, user=""):
-        return f"echo ~{user}"
+    def command(self, user="") -> StringCommand:
+        # `~user` must stay an unquoted bare word for the shell to expand it, so
+        # validate the username instead of quoting it.
+        _check_tilde_username(user)
+        return StringCommand(f"echo ~{user}")
 
 
 class Path(FactBase):
@@ -199,8 +211,8 @@ class Which(FactBase[Optional[str]]):
     """
 
     @override
-    def command(self, command):
-        return f"command -v {command} || true"
+    def command(self, command) -> StringCommand:
+        return StringCommand("command -v", QuoteString(command), "|| true")
 
 
 class Date(FactBase[datetime]):
@@ -358,23 +370,27 @@ class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
     """
 
     @override
-    def command(self, port: int, protocol: str = "tcp") -> str:
+    def command(self, port: int, protocol: str = "tcp") -> StringCommand:
         self._kernel = host.get_fact(Kernel)
 
         if self._kernel.strip() == "FreeBSD":
             self._tool = "sockstat"
-            return f"sockstat -l -p {port} -P {protocol}"
+            return StringCommand(
+                "sockstat -l -p", QuoteString(str(port)), "-P", QuoteString(protocol)
+            )
 
         # Linux - prefer ss, fall back to netstat
         self._has_ss = host.get_fact(Which, "ss")
         if self._has_ss:
             self._tool = "ss"
             proto_flag = "t" if protocol == "tcp" else "u"
-            return f"ss -lp{proto_flag}n | grep ':{port} ' || true"
+            return StringCommand(f"ss -lp{proto_flag}n | grep", QuoteString(f":{port} "), "|| true")
         else:
             self._tool = "netstat"
             proto_flag = "t" if protocol == "tcp" else "u"
-            return f"netstat -{proto_flag}lnp 2>/dev/null | awk '$4 ~ /:{port}$/'"
+            return StringCommand(
+                f"netstat -{proto_flag}lnp 2>/dev/null | awk", QuoteString(f"$4 ~ /:{port}$/")
+            )
 
     @override
     def process(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
@@ -689,10 +705,10 @@ class Sysctl(FactBase):
     default = dict
 
     @override
-    def command(self, keys=None):
+    def command(self, keys=None) -> StringCommand:
         if keys is None:
-            return "sysctl -a 2>/dev/null || true"
-        return f"sysctl {' '.join(keys)} 2>/dev/null || true"
+            return StringCommand("sysctl -a 2>/dev/null || true")
+        return StringCommand("sysctl", *[QuoteString(key) for key in keys], "2>/dev/null || true")
 
     @override
     def process(self, output):
@@ -850,10 +866,13 @@ class AuthorizedKeys(FactBase[list[str]]):
     default = list
 
     @override
-    def command(self, user: str, path: str | None = None) -> str:
+    def command(self, user: str, path: str | None = None) -> StringCommand:
+        if path is not None:
+            return StringCommand("cat", QuoteString(path), "2>/dev/null || true")
         # Tilde expansion resolves the user's home without another fact round-trip.
-        target = path if path is not None else f"~{user}/.ssh/authorized_keys"
-        return f"cat {target} 2>/dev/null || true"
+        # `~user` must stay an unquoted bare word, so validate the username instead.
+        _check_tilde_username(user)
+        return StringCommand("cat", f"~{user}/.ssh/authorized_keys", "2>/dev/null || true")
 
     @override
     def process(self, output: Iterable[str]) -> list[str]:
@@ -1263,7 +1282,7 @@ class Processes(FactBase[dict[int, ProcessDict]]):
     default = dict
 
     @override
-    def command(self, pid: int | None = None) -> str:
+    def command(self, pid: int | None = None) -> str | StringCommand:
         self._kernel = host.get_fact(Kernel)
         is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
 
@@ -1282,8 +1301,10 @@ class Processes(FactBase[dict[int, ProcessDict]]):
 
         if pid is not None:
             if self._is_busybox:
-                return f"LANG=C ps -o {fields} | awk 'NR==1 || $1=={pid}'"
-            return f"LANG=C ps -p {pid} -o {fields}"
+                return StringCommand(
+                    f"LANG=C ps -o {fields} | awk", QuoteString(f"NR==1 || $1=={pid}")
+                )
+            return StringCommand("LANG=C ps -p", QuoteString(str(pid)), "-o", fields)
 
         if is_bsd:
             return f"LANG=C ps -eo {fields}"
