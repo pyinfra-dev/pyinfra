@@ -1,0 +1,18 @@
+args:
+  - vim
+kwargs:
+  latest: true
+facts:
+  pkg.PkgPackages:
+    - packageinfo:
+        name: vim
+        installed_versions: ["9.0"]
+        available_version: "9.1"
+        status: held
+  server.Which:
+    command=pkg: /usr/sbin/pkg
+  files.File:
+    path=/etc/installurl:
+      size: 0
+commands: []
+noop_description: package vim is held

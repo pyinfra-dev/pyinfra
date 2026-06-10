@@ -6,9 +6,12 @@ enum so that package facts can return rich, structured data instead of plain
 ``dict[str, set[str]]``.
 """
 
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class PackageStatus(Enum):
@@ -57,29 +60,40 @@ class PackageInfo:
     def installed_version(self) -> str | None:
         return self.installed_versions[-1] if self.installed_versions else None
 
+    def to_json(self) -> dict[str, Any]:
+        """JSON-friendly form, used by ``json_encode`` for fact output and tests."""
+        return {
+            "name": self.name,
+            "installed_versions": list(self.installed_versions),
+            "available_version": self.available_version,
+            "status": self.status.value,
+        }
+
 
 def build_package_map(
     installed: dict[str, set[str]],
     upgradeable: dict[str, str] | None = None,
     held: set[str] | None = None,
-) -> dict[str, PackageInfo]:
-    """Build a :class:`PackageInfo` map by combining sub-fact data.
+) -> list[PackageInfo]:
+    """Build a list of :class:`PackageInfo` by combining package data.
 
-    + installed: installed packages from a fact (name to set of versions).
+    + installed: installed packages (name to set of versions).
     + upgradeable: packages with available upgrades (name to available version).
     + held: names of held/locked/pinned packages.
 
-    Versions are sorted with a natural-order key (digit runs as integers) so
-    multi-version output is deterministic across runs and the highest version
-    is last.
+    The result is a flat ``list[PackageInfo]`` sorted by name (each entry
+    carries its own name, so a name-keyed dict would only duplicate it).
+    Versions within an entry are sorted with a natural-order key (digit runs
+    as integers) so multi-version output is deterministic across runs and the
+    highest version is last.
     """
 
-    result: dict[str, PackageInfo] = {}
+    result: list[PackageInfo] = []
     _upgradeable = upgradeable or {}
     _held = held or set()
 
-    for name, versions in installed.items():
-        sorted_versions = tuple(sorted(versions, key=_version_sort_key))
+    for name in sorted(installed):
+        sorted_versions = tuple(sorted(installed[name], key=_version_sort_key))
 
         if name in _held:
             status = PackageStatus.HELD
@@ -88,11 +102,13 @@ def build_package_map(
         else:
             status = PackageStatus.INSTALLED
 
-        result[name] = PackageInfo(
-            name=name,
-            installed_versions=sorted_versions,
-            available_version=_upgradeable.get(name),
-            status=status,
+        result.append(
+            PackageInfo(
+                name=name,
+                installed_versions=sorted_versions,
+                available_version=_upgradeable.get(name),
+                status=status,
+            )
         )
 
     return result
