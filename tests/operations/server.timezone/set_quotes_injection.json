@@ -1,0 +1,11 @@
+{
+    "args": ["x; reboot"],
+    "facts": {
+        "server.Timezone": "UTC",
+        "server.Which": {"command=timedatectl": null}
+    },
+    "commands": [
+        "ln -sf '/usr/share/zoneinfo/x; reboot' /etc/localtime",
+        "echo 'x; reboot' > /etc/timezone"
+    ]
+}
