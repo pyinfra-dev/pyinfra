@@ -73,8 +73,15 @@ class DebPackage(FactBase):
 
     @override
     def command(self, package):
+        # Always query installed packages first with dpkg -s.
+        # Only fall back to dpkg -I (inspect .deb file) if:
+        #   1. dpkg -s returns nothing (package not installed), AND
+        #   2. a regular file with this name exists (not a directory).
+        # This prevents CWD files/directories with the same name as a package
+        # from being incorrectly treated as .deb archives.
         return make_formatted_string_command(
-            "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}",
+            "dpkg -s {0} 2>/dev/null || "
+            "([[ -f {0} ]] && dpkg -I {0}) || true",
             QuoteString(package),
         )
 
