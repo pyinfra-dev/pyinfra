@@ -5,9 +5,10 @@ Every operation accepts the global ``supervisorctl`` options: ``config_file``
 (``-c``), ``server_url`` (``-s``), ``username`` (``-u``) and ``password``
 (``-p``).
 
-The read-only and interactive ``supervisorctl`` actions (``status``, ``pid``,
-``tail``, ``fg``, ``help``) are not operations; process state is available via
-the ``pyinfra.facts.supervisorctl.SupervisorctlStatus`` fact.
+The read-only ``supervisorctl`` actions are facts, not operations: ``status``
+maps to ``pyinfra.facts.supervisorctl.SupervisorctlStatus`` and ``pid`` to
+``SupervisorctlPid`` / ``SupervisorctlPids``. The interactive actions
+(``tail``, ``fg``, ``help``) are not covered.
 """
 
 from __future__ import annotations

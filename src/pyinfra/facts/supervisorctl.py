@@ -97,3 +97,97 @@ class SupervisorctlStatus(FactBase[dict[str, "bool | None"]]):
             # any other line (eg connection error text) is ignored
 
         return processes
+
+
+class SupervisorctlPid(FactBase["int | None"]):
+    """
+    Returns the PID of supervisord itself, or of a single supervisor managed
+    process when ``process`` is given.
+
+    A PID of ``0`` means the process exists but is not running. ``None`` means
+    no PID could be read (eg unknown process or supervisord not reachable).
+
+    + process: optional name of the process, defaults to supervisord itself
+    + config_file: configuration file to pass to ``supervisorctl`` (``-c``)
+    + server_url: URL on which supervisord listens (``-s``)
+    + username: username to authenticate with (``-u``)
+    + password: password to authenticate with (``-p``)
+    """
+
+    @override
+    def requires_command(self, *args, **kwargs) -> str:
+        return "supervisorctl"
+
+    @override
+    def command(
+        self,
+        process: str | None = None,
+        config_file: str | None = None,
+        server_url: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+    ) -> StringCommand:
+        command_bits: list[StringCommand | str | QuoteString] = [
+            _make_supervisorctl_command(
+                config_file=config_file,
+                server_url=server_url,
+                username=username,
+                password=password,
+            ),
+            "pid",
+        ]
+
+        if process is not None:
+            command_bits.append(QuoteString(process))
+
+        command_bits.extend(("||", "true"))
+        return StringCommand(*command_bits)
+
+    @override
+    def process(self, output: list[str]) -> int | None:
+        for line in output:
+            line = line.strip()
+            if line.isdigit():
+                return int(line)
+        return None
+
+
+class SupervisorctlPids(FactBase[list[int]]):
+    """
+    Returns a list of the PIDs of all supervisor managed processes
+    (``supervisorctl pid all``). A PID of ``0`` means a process is not
+    running. The output of ``pid all`` carries no process names; use
+    ``SupervisorctlStatus`` to map names to states.
+
+    + config_file: configuration file to pass to ``supervisorctl`` (``-c``)
+    + server_url: URL on which supervisord listens (``-s``)
+    + username: username to authenticate with (``-u``)
+    + password: password to authenticate with (``-p``)
+    """
+
+    default = list
+
+    @override
+    def requires_command(self, *args, **kwargs) -> str:
+        return "supervisorctl"
+
+    @override
+    def command(
+        self,
+        config_file: str | None = None,
+        server_url: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+    ) -> StringCommand:
+        supervisorctl_command = _make_supervisorctl_command(
+            config_file=config_file,
+            server_url=server_url,
+            username=username,
+            password=password,
+        )
+
+        return StringCommand(supervisorctl_command, "pid", "all", "||", "true")
+
+    @override
+    def process(self, output: list[str]) -> list[int]:
+        return [int(part) for line in output for part in line.split() if part.isdigit()]
