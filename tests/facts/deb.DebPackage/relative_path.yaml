@@ -1,0 +1,9 @@
+arg: ./local-package.deb
+command: dpkg -I ./local-package.deb
+requires_command: dpkg
+output:
+  - "Package: local-package"
+  - "Version: 1.0"
+fact:
+  name: local-package
+  version: "1.0"

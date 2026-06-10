@@ -73,8 +73,14 @@ class DebPackage(FactBase):
 
     @override
     def command(self, package):
+        if "/" in package:
+            return make_formatted_string_command(
+                "dpkg -I {0}",
+                QuoteString(package),
+            )
+
         return make_formatted_string_command(
-            "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}",
+            "dpkg -s {0} 2>/dev/null || true",
             QuoteString(package),
         )
 
