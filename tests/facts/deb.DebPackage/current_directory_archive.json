@@ -1,6 +1,6 @@
 {
-    "arg": "package-name",
-    "command": "dpkg -s package-name 2>/dev/null || true",
+    "arg": "./package-name.deb",
+    "command": "dpkg -I ./package-name.deb",
     "requires_command": "dpkg",
     "output": [
         "Package: package-name",

@@ -1,0 +1,7 @@
+{
+    "arg": "package-name.deb",
+    "command": "dpkg -s package-name.deb 2>/dev/null || true",
+    "requires_command": "dpkg",
+    "output": [],
+    "fact": {}
+}
