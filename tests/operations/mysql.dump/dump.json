@@ -7,8 +7,8 @@
     },
     "commands": [
         {
-            "raw": "mysqldump somedb -u\"root\" -p\"somepass\" > somefile",
-            "masked": "mysqldump somedb -u\"root\" *** > somefile"
+            "raw": "mysqldump somedb -u\"root\" -psomepass > somefile",
+            "masked": "mysqldump somedb -u\"root\" -p'*MASKED*' > somefile"
         }
     ],
     "idempotent": false

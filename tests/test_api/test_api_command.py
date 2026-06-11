@@ -13,7 +13,7 @@ from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
     FunctionCommand,
-    MaskString,
+    HiddenValue,
     QuoteString,
     RsyncCommand,
     StringCommand,
@@ -34,14 +34,14 @@ class TestStringCommand(TestCase):
         assert str(cmd) == cmd.get_raw_value() == "hello world"
 
     def test_masked(self):
-        cmd = StringCommand(MaskString("adsfg"))
+        cmd = StringCommand(HiddenValue("adsfg"))
         assert cmd.get_raw_value() == "adsfg"
-        assert str(cmd) == "***"
+        assert str(cmd) == "*MASKED*"
 
     def test_mixed_masked(self):
-        cmd = StringCommand("some", "stuff", MaskString("mask me"), "other", "stuff")
+        cmd = StringCommand("some", "stuff", HiddenValue("mask me"), "other", "stuff")
         assert cmd.get_raw_value() == "some stuff mask me other stuff"
-        assert str(cmd) == "some stuff *** other stuff"
+        assert str(cmd) == "some stuff *MASKED* other stuff"
 
     def test_nested(self):
         nested_cmd = StringCommand("some", "stuff")
@@ -128,9 +128,9 @@ class TestMakeFormattedStringCommand(TestCase):
         assert str(cmd) == "echo 'hello world'"
 
     def test_masked_arg(self):
-        cmd = make_formatted_string_command("echo {0}", MaskString("secret"))
+        cmd = make_formatted_string_command("echo {0}", HiddenValue("secret"))
         assert cmd.get_raw_value() == "echo secret"
-        assert str(cmd) == "echo ***"
+        assert str(cmd) == "echo *MASKED*"
 
     def test_path_with_multiple_segments(self):
         cmd = make_formatted_string_command("ls /{0}/{1}/{2}", "home", "user", "docs")

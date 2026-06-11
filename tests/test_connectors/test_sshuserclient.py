@@ -2,10 +2,13 @@ from base64 import b64decode
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
+import pytest
 from paramiko import PKey, ProxyCommand, SSHException
 
 from pyinfra.connectors.sshuserclient import SSHClient
 from pyinfra.connectors.sshuserclient.client import AskPolicy, get_ssh_config
+
+CERT_KEY_TYPE = "ssh-ed25519-cert-v01@openssh.com"
 
 SSH_CONFIG_DATA = """
 # Comment
@@ -458,3 +461,86 @@ class TestSSHUserConfig(TestCase):
             # Ensure we wrote the correct content
             correct_output = f"{example_hostname} {example_keytype} {example_key}\n"
             assert write_call_args[0][0] == correct_output
+
+
+@pytest.fixture
+def _clear_ssh_config_cache():
+    get_ssh_config.cache = {}
+    yield
+    get_ssh_config.cache = {}
+
+
+def _write_ssh_config(config_path, host, **directives):
+    body = [f"Host {host}"]
+    for key, value in directives.items():
+        body.append(f"    {key} {value}")
+    config_path.write_text("\n".join(body) + "\n")
+
+
+def test_parse_config_loads_cert_for_identityfile(
+    ssh_ca_keypair, tmp_path, _clear_ssh_config_cache
+):
+    # ssh_config IdentityFile points at a key with an adjacent -cert.pub; the
+    # cert must be attached and key_filename must be dropped so paramiko uses
+    # the pkey we built.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_ca_keypair["user_key"]),
+    )
+
+    client = SSHClient()
+    _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert "key_filename" not in cfg
+    assert isinstance(cfg["pkey"], PKey)
+    assert cfg["pkey"].public_blob is not None
+    assert cfg["pkey"].public_blob.key_type == CERT_KEY_TYPE
+
+
+def test_parse_config_honours_certificatefile_directive(
+    ssh_ca_keypair, tmp_path, _clear_ssh_config_cache
+):
+    # CertificateFile in ssh_config overrides the implicit <key>-cert.pub
+    # lookup. We copy the real cert to a different path and reference it.
+    other_cert = tmp_path / "other-cert.pub"
+    other_cert.write_bytes(ssh_ca_keypair["user_cert"].read_bytes())
+
+    # Use a bare copy of the key so the implicit lookup would NOT find a cert.
+    bare_key = tmp_path / "bare_ed25519"
+    bare_key.write_bytes(ssh_ca_keypair["user_key"].read_bytes())
+
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(bare_key),
+        CertificateFile=str(other_cert),
+    )
+
+    client = SSHClient()
+    _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert "key_filename" not in cfg
+    assert cfg["pkey"].public_blob is not None
+    assert cfg["pkey"].public_blob.key_type == CERT_KEY_TYPE
+
+
+def test_parse_config_keeps_key_filename_when_no_real_identityfile(
+    tmp_path, _clear_ssh_config_cache
+):
+    # IdentityFile that doesn't exist on disk must not crash: fall back to the
+    # legacy key_filename path and let paramiko handle it.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(tmp_path / "does-not-exist"),
+    )
+
+    client = SSHClient()
+    _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert "pkey" not in cfg
+    assert cfg["key_filename"] == [str(tmp_path / "does-not-exist")]

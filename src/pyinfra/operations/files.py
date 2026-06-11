@@ -151,7 +151,12 @@ def download(
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
-            ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
+            try:
+                ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(
+                    seconds=cache_time,
+                )
+            except OverflowError:
+                ctime = datetime.min if cache_time > 0 else datetime.max
             if info["mtime"] and info["mtime"] < ctime:
                 download = True
 
@@ -1919,7 +1924,8 @@ def block(
     + line: regex before or after which the content should be added if it doesn't exist.
     + backup: whether to backup the file (see ``files.line``). Default False.
     + escape_regex_characters: whether to escape regex characters from the matching line
-    + try_prevent_shell_expansion: tries to prevent shell expanding by values like `$`
+    + try_prevent_shell_expansion: deprecated and ignored; ``content`` is always written
+      literally (no shell expansion) and is safely shell-quoted
     + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
     + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
     + end: the value for ``{mark}`` in the marker after the content. Default is ``END``
@@ -1939,8 +1945,9 @@ def block(
 
     Removal ignores ``content`` and ``line``
 
-    Preventing shell expansion works by wrapping the content in '`' before passing to `awk`.
-    WARNING: This will break if the content contains raw single quotes.
+    ``content`` is written to the file verbatim. It is shell-quoted before being passed to
+    ``awk``, so shell metacharacters (``$(...)``, quotes, backticks) are kept literal and never
+    expanded on the remote host.
 
     **Examples:**
 
@@ -1981,11 +1988,10 @@ def block(
             marker="<!-- {mark} PYINFRA BLOCK -->",
         )
 
-        # put complex alias into .zshrc
+        # put complex alias into .zshrc (written literally, no shell expansion)
         files.block(
             path="/home/user/.zshrc",
             content="eval $(thef -a)",
-            try_prevent_shell_expansion=True,
             marker="## {mark} ALIASES ##"
         )
     """
@@ -2062,15 +2068,8 @@ def block(
             # convert string to list of lines
             content = content.split("\n")
 
-        the_block = "\n".join([mark_1, *content, mark_2])
-        if try_prevent_shell_expansion:
-            the_block = f"'{the_block}'"
-            if any("'" in line for line in content):
-                logger.warning(
-                    "content contains single quotes, shell expansion prevention may fail"
-                )
-        else:
-            the_block = f'"{the_block}"'
+        block_with_markers = "\n".join([mark_1, *content, mark_2])
+        block_content = "\n".join(content)
 
         if (current is None) or ((current == []) and (before == after)):
             # a) no file or b) file but no markers and we're adding at start or end.
@@ -2084,7 +2083,7 @@ def block(
                 original if not before else " - ",
                 original if before else " - ",
                 '> "$OUT"',
-                f"<<{here}\n{the_block[1:-1]}\n{here}\n",
+                f"<<'{here}'\n{block_with_markers}\n{here}\n",
                 ")",
                 real_out,
             )
@@ -2103,7 +2102,7 @@ def block(
                 out_prep,
                 prog,
                 q_path,
-                the_block,
+                QuoteString(block_with_markers),
                 '> "$OUT"',
                 real_out,
             )
@@ -2119,11 +2118,7 @@ def block(
                     out_prep,
                     prog,
                     q_path,
-                    (
-                        '"' + "\n".join(content) + '"'
-                        if not try_prevent_shell_expansion
-                        else "'" + "\n".join(content) + "'"
-                    ),
+                    QuoteString(block_content),
                     '> "$OUT"',
                     real_out,
                 )

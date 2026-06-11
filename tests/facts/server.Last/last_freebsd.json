@@ -1,0 +1,24 @@
+{
+    "command": "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true",
+    "requires_command": "last",
+    "output": [
+        "root       pts/1    golgoth.tosser.interna Fri Apr 17 11:56   still logged in",
+        "root       pts/1    golgoth.tosser.interna Fri Apr 17 11:52 - 11:52  (00:00:08)",
+        "",
+        "wtmp begins Sat Apr 12 10:00:00 EDT 2026"
+    ],
+    "fact": [
+        {
+            "user": "root",
+            "tty": "pts/1",
+            "host": "golgoth.tosser.interna",
+            "time": "Fri Apr 17 11:56 still logged in"
+        },
+        {
+            "user": "root",
+            "tty": "pts/1",
+            "host": "golgoth.tosser.interna",
+            "time": "Fri Apr 17 11:52 - 11:52 (00:00:08)"
+        }
+    ]
+}

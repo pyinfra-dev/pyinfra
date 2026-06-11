@@ -1,0 +1,31 @@
+{
+    "command": "lastb -Fwi 2>/dev/null || lastb 2>/dev/null || true",
+    "requires_command": "lastb",
+    "output": [
+        "root     ssh:notty    10.0.0.99        Thu Apr 17 13:59:00 2026 - Thu Apr 17 13:59:00 2026  (00:00)",
+        "admin    ssh:notty    10.0.0.99        Thu Apr 17 13:58:30 2026 - Thu Apr 17 13:58:30 2026  (00:00)",
+        "oracle   ssh:notty                     Thu Apr 17 13:58:00 2026 - Thu Apr 17 13:58:00 2026  (00:00)",
+        "",
+        "btmp begins Thu Apr 17 13:58:00 2026"
+    ],
+    "fact": [
+        {
+            "user": "root",
+            "tty": "ssh:notty",
+            "host": "10.0.0.99",
+            "time": "Thu Apr 17 13:59:00 2026 - Thu Apr 17 13:59:00 2026 (00:00)"
+        },
+        {
+            "user": "admin",
+            "tty": "ssh:notty",
+            "host": "10.0.0.99",
+            "time": "Thu Apr 17 13:58:30 2026 - Thu Apr 17 13:58:30 2026 (00:00)"
+        },
+        {
+            "user": "oracle",
+            "tty": "ssh:notty",
+            "host": "",
+            "time": "Thu Apr 17 13:58:00 2026 - Thu Apr 17 13:58:00 2026 (00:00)"
+        }
+    ]
+}

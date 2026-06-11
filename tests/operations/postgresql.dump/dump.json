@@ -9,8 +9,8 @@
     },
     "commands": [
         {
-            "raw": "PGPASSWORD=\"somepass\" pg_dump -d somedb -U root -h localhost -p 3306 > somefile",
-            "masked": "*** pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
+            "raw": "PGPASSWORD=somepass pg_dump -d somedb -U root -h localhost -p 3306 > somefile",
+            "masked": "PGPASSWORD='*MASKED*' pg_dump -d somedb -U root -h localhost -p 3306 > somefile"
         }
     ],
     "idempotent": false

@@ -10,7 +10,7 @@
     "commands": [
         {
             "raw": "printf '%s' s3cret | docker login --username ci --password-stdin myregistry.io:5000",
-            "masked": "printf '%s' *** | docker login --username ci --password-stdin myregistry.io:5000"
+            "masked": "printf '%s' '*MASKED*' | docker login --username ci --password-stdin myregistry.io:5000"
         }
     ]
 }
