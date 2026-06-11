@@ -1,10 +1,9 @@
 args:
-  - tank/myzvol
+  - "tank/x; reboot"
 kwargs:
   present: true
   compression: lz4
-  volume_size: 5G
 facts:
   zfs.ZfsDatasets: {}
 commands:
-  - zfs create -o compression=lz4 -V 5G tank/myzvol
+  - "zfs create -o compression=lz4 'tank/x; reboot'"
