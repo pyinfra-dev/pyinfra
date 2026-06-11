@@ -125,14 +125,14 @@ def set(ctid: str, save=True, **settings):
     if save:
         command.append("--save")
 
-    # `key` comes from **settings so it is a Python identifier and safe; only the
-    # user-controlled values need quoting.
+    # Both keys and values come from **settings and are user-controlled, so quote
+    # both. shlex.quote leaves normal flags like --hostname untouched.
     for key, value in settings.items():
         # Handle list values (e.g. --nameserver X --nameserver X)
         if isinstance(value, list):
             for v in value:
-                command += [f"--{key}", QuoteString(str(v))]
+                command += [QuoteString(f"--{key}"), QuoteString(str(v))]
         else:
-            command += [f"--{key}", QuoteString(str(value))]
+            command += [QuoteString(f"--{key}"), QuoteString(str(value))]
 
     yield StringCommand(*command)
