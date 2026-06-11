@@ -28,21 +28,34 @@ jobs:
       - name: Build
         run: uv build
 
+      - name: Check built artifacts match tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ls "dist/pyinfra-${VERSION}-py3-none-any.whl" "dist/pyinfra-${VERSION}.tar.gz"
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # release/v1
 
       - name: Extract changelog
         id: changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          python scripts/generate_changelog.py > /tmp/changelog.txt 2>/dev/null || true
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          if [ -f /tmp/changelog.txt ]; then
-            cat /tmp/changelog.txt >> $GITHUB_OUTPUT
-          else
-            echo "Release $VERSION" >> $GITHUB_OUTPUT
+          VERSION="${GITHUB_REF_NAME}"
+          # HEAD is the tagged commit itself, so look for the previous tag from
+          # its parent - the script's own tag detection would find this tag and
+          # produce an empty range.
+          PREV_TAG="$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || true)"
+          if [ -n "$PREV_TAG" ]; then
+            python scripts/generate_changelog.py "$PREV_TAG" > /tmp/changelog.txt || true
           fi
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "body<<CHANGELOG_EOF" >> "$GITHUB_OUTPUT"
+          if [ -s /tmp/changelog.txt ]; then
+            cat /tmp/changelog.txt >> "$GITHUB_OUTPUT"
+          else
+            echo "Release $VERSION" >> "$GITHUB_OUTPUT"
+          fi
+          echo "CHANGELOG_EOF" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2
