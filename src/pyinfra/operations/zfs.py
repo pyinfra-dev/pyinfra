@@ -54,31 +54,24 @@ def dataset(
     existing_dataset = datasets.get(dataset_name)
 
     if present and not existing_dataset:
-        # (sort_key, command bits) so we keep the deterministic ordering of the old
-        # joined-and-sorted string while quoting the user-supplied values.
-        arg_specs: list[tuple[str, list[str | QuoteString]]] = [
-            (f"-o {prop}={value}", ["-o", QuoteString(f"{prop}={value}")])
-            for prop, value in properties.items()
-        ]
-        if recursive:
-            arg_specs.append(("-p", ["-p"]))
-        if sparse:
-            arg_specs.append(("-s", ["-s"]))
-        if volume_size:
-            arg_specs.append((f"-V {volume_size}", ["-V", QuoteString(str(volume_size))]))
-
-        arg_specs.sort(key=lambda spec: spec[0])
-
         bits: list[str | QuoteString] = ["zfs create"]
-        for _, spec_bits in arg_specs:
-            bits += spec_bits
+        for prop, value in properties.items():
+            bits += ["-o", QuoteString(f"{prop}={value}")]
+        if recursive:
+            bits.append("-p")
+        if sparse:
+            bits.append("-s")
+        if volume_size:
+            bits += ["-V", QuoteString(str(volume_size))]
         bits.append(QuoteString(dataset_name))
         yield StringCommand(*bits)
 
     elif present and existing_dataset:
-        prop_args = sorted(
-            f"{prop}={value}" for prop, value in properties.items() - existing_dataset.items()
-        )
+        prop_args = [
+            f"{prop}={value}"
+            for prop, value in properties.items()
+            if existing_dataset.get(prop) != value
+        ]
         if prop_args:
             yield StringCommand(
                 "zfs set",
