@@ -109,14 +109,20 @@ not be changed, it contains build artifacts.
 
 ### Generate Documentation
 
-To generate:
+To generate the per-module operation, fact and connector pages:
+
+```sh
+scripts/generate-docs.sh
+```
+
+To preview the documentation site locally ([localhost:8000](http://localhost:8000)):
+
+```sh
+uv run zensical serve
+```
+
+To produce a full static build:
 
 ```sh
 scripts/build-public-docs.sh
-```
-
-To view ([localhost:8000](http://localhost:8000)):
-
-```sh
-uv run -m http.server -d docs/public/en/latest/
 ```

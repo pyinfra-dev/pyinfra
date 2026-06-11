@@ -5,7 +5,7 @@ import pytest
 
 from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
-from pyinfra.operations.util.files import unix_path_join
+from pyinfra.operations.util.files import ensure_mode_int, unix_path_join
 from pyinfra.operations.util.packaging import ensure_packages
 
 
@@ -21,6 +21,40 @@ class TestUnixPathJoin(TestCase):
 
     def test_end_slash_path(self):
         assert unix_path_join("/", "home", "pyinfra/") == "/home/pyinfra/"
+
+
+class TestEnsureModeInt(TestCase):
+    def test_int_passes_through(self):
+        assert ensure_mode_int(644) == 644
+
+    def test_plain_string(self):
+        assert ensure_mode_int("644") == 644
+
+    def test_zero_prefixed_string(self):
+        assert ensure_mode_int("0644") == 644
+
+    def test_octal_prefixed_string(self):
+        assert ensure_mode_int("0o644") == 644
+
+    def test_uppercase_octal_prefixed_string(self):
+        assert ensure_mode_int("0O644") == 644
+
+    def test_none_passes_through(self):
+        assert ensure_mode_int(None) is None
+
+    def test_symbolic_mode_passes_through(self):
+        assert ensure_mode_int("u+x") == "u+x"
+
+    def test_setuid_mode(self):
+        assert ensure_mode_int("4755") == 4755
+
+    def test_non_octal_int_raises(self):
+        with pytest.raises(ValueError, match="non-octal digits"):
+            ensure_mode_int(899)
+
+    def test_non_octal_string_raises(self):
+        with pytest.raises(ValueError, match="non-octal digits"):
+            ensure_mode_int("0o899")
 
 
 class TestParseRegistry(TestCase):

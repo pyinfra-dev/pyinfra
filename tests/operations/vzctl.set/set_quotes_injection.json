@@ -1,0 +1,10 @@
+{
+    "args": [123],
+    "kwargs": {
+        "hostname": "x; rm -rf /"
+    },
+    "commands": [
+        "vzctl set 123 --save --hostname 'x; rm -rf /'"
+    ],
+    "idempotent": false
+}

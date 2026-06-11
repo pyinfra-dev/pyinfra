@@ -1,0 +1,143 @@
+[project]
+site_name = "pyinfra"
+site_url = "https://docs.pyinfra.com/"
+site_description = "pyinfra automates infrastructure using idempotent Python operations."
+site_author = "Nick Barrett"
+copyright = "© 2015–2026 · pyinfra and contributors"
+repo_url = "https://github.com/pyinfra-dev/pyinfra"
+repo_name = "pyinfra-dev/pyinfra"
+docs_dir = "docs"
+site_dir = "build/docs"
+use_directory_urls = false
+
+extra_css = ["assets/pyinfra.css"]
+extra_javascript = []
+
+nav = [
+    { "Home" = "index.md" },
+    { "Using pyinfra" = [
+        { "Getting Started" = "getting-started.md" },
+        { "Using Operations" = "using-operations.md" },
+        { "Inventory & Data" = "inventory-data.md" },
+        { "Using the CLI" = "cli.md" },
+        { "FAQ" = "faq.md" },
+    ] },
+    { "Deploy Reference" = [
+        { "Operations" =  "operations.html" },
+        { "Facts" = "facts.md" },
+        { "Connectors" = "connectors.md" },
+        { "Arguments" = "arguments.md" },
+    ] },
+    { "How pyinfra Works" = [
+        { "Deploy Process" = "deploy-process.md" },
+        { "Packaging Deploys" = "api/deploys.md" },
+        { "Writing Connectors" = "api/connectors.md" },
+        { "Writing Operations" = "api/operations.md" },
+        { "Writing Facts" = "api/facts.md" },
+        { "Using the API" = "api/index.md" },
+    ] },
+    { "Meta" = [
+        { "Support" = "support.md" },
+        { "Contributing" = "contributing.md" },
+        { "Compatibility" = "compatibility.md" },
+        { "Performance" = "performance.md" },
+        { "Changelog" = "changes.md" },
+        { "API Reference" = "api/reference.md" },
+    ] },
+]
+
+[project.theme]
+name = "zensical"
+variant = "modern"
+custom_dir = "overrides"
+logo = "static/logo_small.png"
+favicon = "static/logo_small.png"
+features = [
+    "navigation.sections",
+    # "navigation.indexes",
+    "navigation.top",
+    "navigation.tracking",
+    # "navigation.expand",
+    "toc.follow",
+    "content.code.copy",
+    "content.code.annotate",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "pyinfra"
+accent = "pyinfra"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "pyinfra"
+accent = "pyinfra"
+
+[project.extra]
+generator = false
+docs_version = "latest"
+primary_doc_version = "3.x"
+doc_versions = ["3.x", "2.x", "1.x", "0.x", "latest"]
+docs_language = "en"
+plausible_domain = "docs.pyinfra.com"
+plausible_stats_domain = "stats.oxygem.com"
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+
+[project.markdown_extensions.toc]
+permalink = true
+toc_depth = 3
+
+[project.markdown_extensions."pymdownx.details"]
+[project.markdown_extensions."pymdownx.highlight"]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+[project.markdown_extensions."pymdownx.inlinehilite"]
+[project.markdown_extensions."pymdownx.keys"]
+[project.markdown_extensions."pymdownx.magiclink"]
+[project.markdown_extensions."pymdownx.mark"]
+[project.markdown_extensions."pymdownx.smartsymbols"]
+[project.markdown_extensions."pymdownx.snippets"]
+base_path = [".", "snippets"]
+check_paths = true
+[project.markdown_extensions."pymdownx.superfences"]
+[project.markdown_extensions."pymdownx.tabbed"]
+alternate_style = true
+[project.markdown_extensions."pymdownx.tasklist"]
+custom_checkbox = true
+[project.markdown_extensions."pymdownx.tilde"]
+
+[project.plugins.search]
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["src"]
+inventories = ["https://docs.python.org/3/objects.inv"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+docstring_section_style = "table"
+inherited_members = true
+members_order = "source"
+show_root_heading = true
+show_source = false
+show_signature_annotations = true
+separate_signature = true
+merge_init_into_class = true
+show_symbol_type_heading = true
+show_symbol_type_toc = true

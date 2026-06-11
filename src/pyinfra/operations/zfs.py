@@ -3,7 +3,7 @@ Manage ZFS filesystems.
 """
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.zfs import ZfsDatasets, ZfsSnapshots
 
 
@@ -54,31 +54,39 @@ def dataset(
     existing_dataset = datasets.get(dataset_name)
 
     if present and not existing_dataset:
-        args = [f"-o {prop}={value}" for prop, value in properties.items()]
+        bits: list[str | QuoteString] = ["zfs create"]
+        for prop, value in properties.items():
+            bits += ["-o", QuoteString(f"{prop}={value}")]
         if recursive:
-            args.append("-p")
+            bits.append("-p")
         if sparse:
-            args.append("-s")
+            bits.append("-s")
         if volume_size:
-            args.append(f"-V {volume_size}")
-
-        args.sort()  # dicts are unordered, so make sure the test results are deterministic
-
-        yield f"zfs create {' '.join(args)} {dataset_name}"
+            bits += ["-V", QuoteString(str(volume_size))]
+        bits.append(QuoteString(dataset_name))
+        yield StringCommand(*bits)
 
     elif present and existing_dataset:
         prop_args = [
-            f"{prop}={value}" for prop, value in properties.items() - existing_dataset.items()
+            f"{prop}={value}"
+            for prop, value in properties.items()
+            if existing_dataset.get(prop) != value
         ]
-        prop_args.sort()
         if prop_args:
-            yield f"zfs set {' '.join(prop_args)} {dataset_name}"
+            yield StringCommand(
+                "zfs set",
+                *[QuoteString(prop_arg) for prop_arg in prop_args],
+                QuoteString(dataset_name),
+            )
         else:
             host.noop(noop_msg)
 
     elif existing_dataset and not present:
-        recursive_arg = "-r" if recursive else ""
-        yield f"zfs destroy {recursive_arg} {dataset_name}"
+        destroy_bits: list[str | QuoteString] = ["zfs destroy"]
+        if recursive:
+            destroy_bits.append("-r")
+        destroy_bits.append(QuoteString(dataset_name))
+        yield StringCommand(*destroy_bits)
 
     else:
         host.noop(noop_msg)
@@ -109,10 +117,13 @@ def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extr
         yield from dataset._inner(snapshot_name, present=present, properties=properties)
 
     else:
-        args = [f"-o {prop}={value}" for prop, value in properties.items()]
+        bits: list[str | QuoteString] = ["zfs snap"]
+        for prop, value in properties.items():
+            bits += ["-o", QuoteString(f"{prop}={value}")]
         if recursive:
-            args.append("-r")
-        yield f"zfs snap {' '.join(args)} {snapshot_name}"
+            bits.append("-r")
+        bits.append(QuoteString(snapshot_name))
+        yield StringCommand(*bits)
 
 
 @operation()
