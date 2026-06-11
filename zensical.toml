@@ -41,6 +41,7 @@ nav = [
         { "Contributing" = "contributing.md" },
         { "Compatibility" = "compatibility.md" },
         { "Performance" = "performance.md" },
+        { "LLM-friendly docs" = "llms.md" },
         { "Changelog" = "changes.md" },
         { "API Reference" = "api/reference.md" },
     ] },

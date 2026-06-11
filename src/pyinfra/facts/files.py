@@ -489,6 +489,7 @@ class FindFilesBase(FactBase):
         fname: str | None = None,
         iname: str | None = None,
         regex: str | None = None,
+        path_match: str | None = None,
         args: list[str] | None = None,
         quote_path=True,
     ):
@@ -507,6 +508,9 @@ class FindFilesBase(FactBase):
 
         @param iname: Like -name, but the match is case insensitive.
         @param regex: True if the whole path of the file matches pattern using regular expression.
+        @param path_match: glob matched against the whole path via ``-path``. The pattern is
+                           always shell-quoted so the shell passes it literally and find itself
+                           does the globbing, which keeps glob matching without an unquoted path.
         @param args: additional arguments to pass to find
         @param quote_path: if the path should be quoted
         @return:
@@ -559,6 +563,10 @@ class FindFilesBase(FactBase):
         if regex is not None and "-regex" not in args:
             command.append("-regex")
             command.append(maybe_quote(regex))
+
+        if path_match is not None and "-path" not in args:
+            command.append("-path")
+            command.append(QuoteString(path_match))
 
         command.extend(args)
 
