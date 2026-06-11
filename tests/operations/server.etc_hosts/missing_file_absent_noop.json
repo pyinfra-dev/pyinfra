@@ -1,0 +1,13 @@
+{
+    "args": ["192.168.1.10"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "server.EtcHosts": {
+            "path=/etc/hosts": {}
+        }
+    },
+    "commands": [],
+    "noop_description": "192.168.1.10 already absent from /etc/hosts"
+}

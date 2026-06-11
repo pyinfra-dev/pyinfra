@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, MaskString, QuoteString, StringCommand
+from pyinfra.api import FactBase, HiddenValue, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
 from .util.databases import parse_columns_and_rows
@@ -30,7 +30,7 @@ def make_mysql_command(
 
     if password:
         # Quote the password as it may contain special characters
-        target_bits.append(MaskString(f'-p"{password}"'))
+        target_bits.append(StringCommand("-p", QuoteString(HiddenValue(password)), _separator=""))
 
     if host:
         target_bits.append(f"-h{host}")

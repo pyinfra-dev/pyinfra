@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, MaskString, QuoteString, StringCommand
+from pyinfra.api import FactBase, HiddenValue, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
 from .util.databases import parse_columns_and_rows
@@ -16,10 +16,16 @@ def make_psql_command(
     port: str | int | None = None,
     executable="psql",
 ) -> StringCommand:
-    target_bits: list[str] = []
+    target_bits: list[str | StringCommand] = []
 
     if password:
-        target_bits.append(MaskString(f'PGPASSWORD="{password}"'))
+        target_bits.append(
+            StringCommand(
+                "PGPASSWORD",
+                QuoteString(HiddenValue(password)),
+                _separator="=",
+            )
+        )
 
     target_bits.append(executable)
 

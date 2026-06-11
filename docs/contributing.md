@@ -33,6 +33,19 @@ cd pyinfra
 uv sync
 ```
 
+If you will use pyinfra as a module, and want to be able to edit its code as you go, make sure you add it as an editable dependency to your project instead:
+
+```
+# There is no need to create a virtualenv, uv will do that for you
+
+# Clone the repo
+git clone git@github.com:pyinfra-dev/pyinfra.git
+
+# Add as an editable dependency
+# Note that the path should be relative from you project to where you cloned pyinfra
+uv add --editable ./pyinfra
+```
+
 ### Code Style & Type Checking
 
 Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
@@ -96,14 +109,20 @@ not be changed, it contains build artifacts.
 
 ### Generate Documentation
 
-To generate:
+To generate the per-module operation, fact and connector pages:
+
+```sh
+scripts/generate-docs.sh
+```
+
+To preview the documentation site locally ([localhost:8000](http://localhost:8000)):
+
+```sh
+uv run zensical serve
+```
+
+To produce a full static build:
 
 ```sh
 scripts/build-public-docs.sh
-```
-
-To view ([localhost:8000](http://localhost:8000)):
-
-```sh
-uv run -m http.server -d docs/public/en/latest/
 ```
