@@ -13,7 +13,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Only cancel superseded runs for PRs - branch and tag pushes should always
+  # produce a full result (release tags especially).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Linting
