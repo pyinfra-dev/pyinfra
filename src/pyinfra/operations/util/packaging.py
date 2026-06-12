@@ -407,4 +407,4 @@ def ensure_yum_repo(
     repo_file = StringIO(repo)
 
     # Ensure this is the file on the server
-    yield from files.put._inner(src=repo_file, dest=filename)
+    yield from files.put._inner(src=repo_file, dest=filename, mode="0644")

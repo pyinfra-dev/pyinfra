@@ -17,6 +17,6 @@
     "commands": [[
         "upload",
         "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ntype=rpm-md\ngpgkey=https://test/key\n",
-            "/etc/zypp/repos.d/somerepo.repo"
-    ]]
+        "/etc/zypp/repos.d/somerepo.repo"
+    ], "chmod 644 /etc/zypp/repos.d/somerepo.repo"]
 }
