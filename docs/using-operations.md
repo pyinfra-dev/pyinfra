@@ -77,6 +77,20 @@ apt.update(
 )
 ```
 
+Command operations, including `server.shell`, run through the configured shell.
+The default shell is `sh`, so raw shell commands should either use POSIX `sh`
+syntax or choose a shell explicitly with `_shell_executable`:
+
+```python
+from pyinfra.operations import server
+
+server.shell(
+    name="Run a Bash login shell command",
+    commands=["my-command"],
+    _shell_executable="bash -l",
+)
+```
+
 ## The `host` Object
 
 pyinfra provides a global `host` object that can be used to retrieve information and metadata about the current host target. At all times the `host` variable represents the current host context, so you can think about the deploy code executing on individual hosts at a time.
