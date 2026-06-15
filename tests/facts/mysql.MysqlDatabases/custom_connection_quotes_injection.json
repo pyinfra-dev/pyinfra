@@ -1,8 +1,8 @@
 {
-    "arg": ["myuser", "mypassword", "myhost", "myport"],
+    "arg": ["x$(reboot)", "p", "h; rm -rf /", "3306"],
     "command": {
-        "raw": "mysql -umyuser -pmypassword -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'",
-        "masked": "mysql -umyuser -p'*MASKED*' -hmyhost -Pmyport -Be 'SELECT * FROM information_schema.SCHEMATA'"
+        "raw": "mysql -u'x$(reboot)' -pp -h'h; rm -rf /' -P3306 -Be 'SELECT * FROM information_schema.SCHEMATA'",
+        "masked": "mysql -u'x$(reboot)' -p'*MASKED*' -h'h; rm -rf /' -P3306 -Be 'SELECT * FROM information_schema.SCHEMATA'"
     },
     "requires_command": "mysql",
     "output": [

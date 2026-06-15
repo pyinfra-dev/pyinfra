@@ -3,7 +3,9 @@ The files facts provide information about the filesystem and it's contents on th
 
 Facts need to be imported before use, eg
 
-from pyinfra.facts.files import File
+.. code:: python
+
+    from pyinfra.facts.files import File
 """
 
 from __future__ import annotations
