@@ -7,4 +7,4 @@ facts:
     tank/home/james:
       mountpoint: /home/james
 commands:
-  - zfs destroy  tank/home/james
+  - zfs destroy tank/home/james

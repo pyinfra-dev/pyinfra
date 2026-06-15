@@ -98,6 +98,24 @@ pyinfra inventory.py deploy.py --limit "db*"
 pyinfra inventory.py deploy.py --limit app_servers --limit db-1.net
 ```
 
+### Exclude
+
+It is possible to exclude hosts from the inventory at execution time using the `--exclude` argument. Multiple `--exclude`s can be provided. The value must either match a specific host by name or via glob style pattern, or match a group name:
+
+```sh
+# Execute against all hosts except db-1.net
+pyinfra inventory.py deploy.py --exclude db-1.net
+
+# Execute against all hosts except hosts in the `db_servers` group
+pyinfra inventory.py deploy.py --exclude db_servers
+
+# Execute against all hosts except names matching db*
+pyinfra inventory.py deploy.py --exclude "db*"
+
+# Apply exclusions after limits
+pyinfra inventory.py deploy.py --limit app_servers --exclude app-2.net
+```
+
 
 ## Ad-hoc command execution
 

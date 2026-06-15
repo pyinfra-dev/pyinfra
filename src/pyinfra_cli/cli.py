@@ -9,7 +9,7 @@ from os import chdir as os_chdir, environ, getcwd, path
 import click
 
 from pyinfra import __version__, logger, state
-from pyinfra.api import Config, State
+from pyinfra.api import Config, Host, Inventory, State
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts
@@ -90,6 +90,11 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 @click.option(
     "--limit",
     help="Restrict the target hosts by name and group name.",
+    multiple=True,
+)
+@click.option(
+    "--exclude",
+    help="Exclude target hosts by name and group name.",
     multiple=True,
 )
 @click.option("--fail-percent", type=int, help="% of hosts that need to fail before exiting early.")
@@ -333,6 +338,7 @@ def _main(
     diff: bool,
     yes: bool,
     limit: Iterable,
+    exclude: Iterable,
     no_wait: bool,
     serial: bool,
     retry: int,
@@ -419,8 +425,9 @@ def _main(
     )
     ctx_inventory.set(inventory)
 
-    # Now that we have inventory, apply --limit config override
+    # Now that we have inventory, apply --limit/--exclude config override
     initial_limit = _apply_inventory_limit(inventory, limit)
+    initial_limit = _apply_inventory_exclude(inventory, initial_limit, exclude)
 
     # Initialise the state
     state.init(inventory, config, initial_limit=initial_limit)
@@ -750,24 +757,49 @@ def _set_fail_prompts(state: State, config: Config) -> None:
     state.should_raise_failed_hosts = should_raise_failed_hosts
 
 
-def _apply_inventory_limit(inventory, limit):
-    initial_limit = None
+def _get_inventory_pattern_matches(
+    inventory: Inventory,
+    patterns: Iterable[str],
+    option_name: str,
+) -> list[Host]:
+    all_hosts: list[Host] = []
+
+    for pattern in patterns:
+        try:
+            hosts = inventory.get_group(pattern)
+        except NoGroupError:
+            hosts = [host for host in inventory if fnmatch(host.name, pattern)]
+
+        if not hosts:
+            logger.warning(f"No host matches found for {option_name} pattern: {pattern}")
+
+        all_hosts.extend(hosts)
+
+    return list(set(all_hosts))
+
+
+def _apply_inventory_limit(
+    inventory: Inventory,
+    limit: Iterable[str] | None,
+) -> list[Host] | None:
     if limit:
-        all_limit_hosts = []
+        return _get_inventory_pattern_matches(inventory, limit, "--limit")
 
-        for limiter in limit:
-            try:
-                limit_hosts = inventory.get_group(limiter)
-            except NoGroupError:
-                limit_hosts = [host for host in inventory if fnmatch(host.name, limiter)]
+    return None
 
-            if not limit_hosts:
-                logger.warning(f"No host matches found for --limit pattern: {limiter}")
 
-            all_limit_hosts.extend(limit_hosts)
-        initial_limit = list(set(all_limit_hosts))
+def _apply_inventory_exclude(
+    inventory: Inventory,
+    initial_limit: list[Host] | None,
+    exclude: Iterable[str] | None,
+) -> list[Host] | None:
+    if not exclude:
+        return initial_limit
 
-    return initial_limit
+    excluded_hosts = set(_get_inventory_pattern_matches(inventory, exclude, "--exclude"))
+    limit_hosts = initial_limit if initial_limit is not None else list(inventory)
+
+    return [host for host in limit_hosts if host not in excluded_hosts]
 
 
 # Operations Execution
