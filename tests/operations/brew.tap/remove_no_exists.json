@@ -1,0 +1,11 @@
+{
+    "args": ["homebrew/cask"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "brew.BrewTaps": []
+    },
+    "commands": [],
+    "noop_description": "tap homebrew/cask does not exist"
+}

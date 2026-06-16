@@ -1,0 +1,10 @@
+{
+    "args": ["homebrew/cask"],
+    "kwargs": {"trusted": true},
+    "facts": {
+        "brew.BrewTaps": ["homebrew/cask"],
+        "brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": []},
+    },
+    "commands": ["brew trust --tap homebrew/cask"],
+    "noop_description": "tap homebrew/cask already exists",
+}

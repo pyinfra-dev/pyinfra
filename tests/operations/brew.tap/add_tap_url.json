@@ -1,0 +1,14 @@
+{
+    "args": [
+        "homebrew/cask"
+    ],
+    "kwargs": {
+        "url": "https://github.com/homebrew/cask"
+    },
+    "facts": {
+        "brew.BrewTaps": []
+    },
+    "commands": [
+        "brew tap homebrew/cask https://github.com/homebrew/cask"
+    ]
+}

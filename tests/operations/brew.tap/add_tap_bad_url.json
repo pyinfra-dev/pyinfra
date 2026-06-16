@@ -1,0 +1,11 @@
+{
+    "args": [],
+    "kwargs": {
+        "url": "https://github.com/foo"
+    },
+    "facts": {
+        "brew.BrewTaps": []
+    },
+    "commands": [],
+    "noop_description": "src 'foo' doesn't have two components."
+}

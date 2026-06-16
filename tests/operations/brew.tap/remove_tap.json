@@ -1,0 +1,14 @@
+{
+    "args": ["homebrew/cask"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "brew.BrewTaps": [
+            "homebrew/cask"
+        ]
+    },
+    "commands": [
+        "brew untap homebrew/cask"
+    ]
+}

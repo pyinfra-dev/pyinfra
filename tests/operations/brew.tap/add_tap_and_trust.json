@@ -1,0 +1,9 @@
+{
+    "args": ["homebrew/cask"],
+    "kwargs": {"trusted": true},
+    "facts": {
+        "brew.BrewTaps": [],
+        "brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": []},
+    },
+    "commands": ["brew tap homebrew/cask", "brew trust --tap homebrew/cask"],
+}
