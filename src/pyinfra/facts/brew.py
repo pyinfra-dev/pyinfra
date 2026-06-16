@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterable, Mapping, Sequence
-from enum import StrEnum, unique
+from enum import Enum, unique
 from typing import cast
 
 from typing_extensions import override
@@ -17,7 +17,7 @@ BREW_REGEX = r"^([^\s]+)\s([0-9\._+a-z\-]+)"
 
 
 @unique
-class BrewTrustKind(StrEnum):
+class BrewItemKind(Enum):
     CASK = "casks"
     COMMAND = "commands"
     FORMULA = "formulae"
@@ -189,7 +189,7 @@ class BrewTrusted(FactBase[BrewTrustMapping]):
     @override
     @staticmethod
     def default() -> BrewTrustMapping:
-        return {kind: [] for kind in BrewTrustKind.__members__.values()}
+        return {kind.value: [] for kind in BrewItemKind.__members__.values()}
 
     @override
     def process(self, output: Iterable[str]) -> BrewTrustMapping:
@@ -200,7 +200,7 @@ class BrewTrusted(FactBase[BrewTrustMapping]):
         except (json.JSONDecodeError, TypeError, RecursionError):
             error = True
 
-        if error or not all(kind in result for kind in BrewTrustKind.__members__.values()):
+        if error or not all(kind.value in result for kind in BrewItemKind.__members__.values()):
             logger.warning(f"unexpected output from brew trust: '{body}'")
             result = self.default()
 

@@ -15,7 +15,7 @@ from pyinfra.facts.brew import (
     BrewPackages,
     BrewTaps,
     BrewTrusted,
-    BrewTrustKind,
+    BrewItemKind,
     BrewVersion,
     _new_cask_cli,
 )
@@ -264,20 +264,20 @@ def tap(
 
 
 TRUST_SRC_AND_OPTION = {
-    BrewTrustKind.CASK.value: "--cask",
-    BrewTrustKind.COMMAND.value: "--command",
-    BrewTrustKind.FORMULA.value: "--formula",
-    BrewTrustKind.TAP.value: "--tap",
+    BrewItemKind.CASK: "--cask",
+    BrewItemKind.COMMAND: "--command",
+    BrewItemKind.FORMULA: "--formula",
+    BrewItemKind.TAP: "--tap",
 }
 
 
 @operation()
-def trust(items: str | list[str], kind: BrewTrustKind, trusted: bool):
+def trust(items: str | list[str], kind: BrewItemKind, trusted: bool):
     """
     Trust/untrust brew casks, commands, formulae and/or taps (see https://docs.brew.sh/Tap-Trust)
 
     + item: the cask, command, formula or tap to be trusted or untrusted
-    + kind: whether the item is a CASK, COMMAND, FORMULA or TAP (using BrewTrustKind enum)
+    + kind: whether the item is a CASK, COMMAND, FORMULA or TAP (using BrewItemKind enum)
     + trusted: whether this item should be trusted or not.  no default, must be specified
 
     **Examples:**
@@ -287,7 +287,7 @@ def trust(items: str | list[str], kind: BrewTrustKind, trusted: bool):
         brew.trust(
             name="Mark magic tap as trusted",
             item="includeos/includeos",
-            kind=BrewTrustKind.TAP,
+            kind=BrewItemKind.TAP,
             trust=True
         )
     """
@@ -297,7 +297,7 @@ def trust(items: str | list[str], kind: BrewTrustKind, trusted: bool):
     # TODO: remove this once the test infrastructure supports enums
     if isinstance(kind, str):
         try:
-            kind = BrewTrustKind(kind)
+            kind = BrewItemKind(kind)
         except (TypeError, ValueError):
             raise OperationValueError from None
     desired_state = "trust" if trusted else "untrust"
