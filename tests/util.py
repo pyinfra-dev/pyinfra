@@ -2,10 +2,13 @@ import copy
 import json
 import os
 import re
+from collections.abc import Callable
 from datetime import datetime, timezone
-from inspect import getcallargs, getfullargspec
+from enum import Enum
+from inspect import _empty, getcallargs, getfullargspec, signature  # noqa: PLC2701
 from os import path
 from pathlib import Path
+from types import ModuleType
 from unittest.mock import patch
 
 from pyinfra.api import Config, Inventory
@@ -58,7 +61,16 @@ class FakeState:
         return "_tempfile_"
 
 
-def parse_value(value):
+def get_enum_map(module: ModuleType, op: Callable) -> dict[str, type[Enum]]:
+    return {  # mapping of enum type name to enum type for use by parse_value
+        v.annotation: enum_type
+        for k, v in signature(op).parameters.items()  # noqa: SLF001
+        if (v.annotation != _empty)  # noqa: SLF001
+        and issubclass(enum_type := getattr(module, str(v.annotation), type(None)), Enum)
+    }
+
+
+def parse_value(value, enum_map: dict[str, type] | None = None):
     """
     Convert JSON types to more complex Python types because JSON is lacking.
     """
@@ -68,15 +80,27 @@ def parse_value(value):
             return datetime.fromisoformat(value[9:])
         if value.startswith("path:"):
             return Path(value[5:])
+        if value.startswith("enum:") and (len(enum_map or {}) > 0):
+            if len(pieces := value.split(":")) != 3:  # enum:<enum_type>:<value>
+                raise ValueError(f"invalid enum specifier: {value}")
+            try:
+                result = (enum_map or {})[pieces[1]](pieces[2])
+            except KeyError:
+                raise ValueError(f"enum '{pieces[1]}' not defined for '{value}'") from None
+            except ValueError:
+                raise ValueError(f"value '{pieces[2]}' not valid in '{value}'") from None
+            else:
+                return result
+
         return value
 
     if isinstance(value, list):
         if value and value[0] == "set:":
-            return set(parse_value(value) for value in value[1:])
-        return [parse_value(value) for value in value]
+            return set(parse_value(value, enum_map) for value in value[1:])
+        return [parse_value(value, enum_map) for value in value]
 
     if isinstance(value, dict):
-        return {key: parse_value(value) for key, value in value.items()}
+        return {key: parse_value(value, enum_map) for key, value in value.items()}
 
     return value
 
