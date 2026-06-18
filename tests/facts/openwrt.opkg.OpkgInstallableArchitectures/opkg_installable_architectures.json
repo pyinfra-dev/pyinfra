@@ -10,12 +10,7 @@
         "arch",
         "arch thisarch",
         "arch xray zulu",
-        "arch i386_pentium 10 # some sort of comment"
+        "arch i386_pentium 10 # some sort of comment",
     ],
-    "fact":
-        {
-            "all": 1,
-            "noarch": 1,
-            "i386_pentium": 10
-        }
+    "fact": {"all": 1, "noarch": 1, "i386_pentium": 10},
 }

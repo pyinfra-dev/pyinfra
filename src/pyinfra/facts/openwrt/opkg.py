@@ -21,7 +21,7 @@ from pyinfra import logger
 from pyinfra.api import FactBase
 from pyinfra.facts.util.packaging import parse_packages
 
-# TODO - change NamedTuple to dataclass Opkgbut need to figure out how to get json serialization
+# TODO - change NamedTuple to dataclass Opkg but need to figure out how to get json serialization
 #        to work without changing core code
 
 
@@ -83,7 +83,7 @@ class OpkgConf(FactBase):
                        (?:\s*\#.*)?
                        $
                        """,
-        re.X,
+        re.VERBOSE,
     )
 
     @override
@@ -125,9 +125,9 @@ class OpkgFeeds(FactBase):
         {
          'openwrt_base': FeedInfo(url='http://downloads ... /i386_pentium/base', fmt='src/gz', kind='distribution'), # noqa: E501
          'openwrt_core': FeedInfo(url='http://downloads ... /x86/geode/packages', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_luci': FeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'),# noqa: E501
-         'openwrt_packages': FeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'),# noqa: E501
-         'openwrt_routing': FeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'),# noqa: E501
+         'openwrt_luci': FeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_packages': FeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_routing': FeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'), # noqa: E501
          'openwrt_telephony': FeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution') # noqa: E501
         }
     """

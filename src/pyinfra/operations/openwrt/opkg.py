@@ -14,7 +14,7 @@ OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgra
 
 from pyinfra import host
 from pyinfra.api import StringCommand, operation
-from pyinfra.facts.opkg import OpkgPackages
+from pyinfra.facts.openwrt.opkg import OpkgPackages
 from pyinfra.operations.util.packaging import ensure_packages
 
 EQUALS = "="
@@ -57,10 +57,10 @@ def packages(
 
         from pyinfra.operations import opkg
         # Ensure packages are installed (will not force package upgrade)
-        opkg.packages(['asterisk', 'vim'], name="Install Asterisk and Vim")
+        openwrt.opkg.packages(['asterisk', 'vim'], name="Install Asterisk and Vim")
 
         # Install the latest versions of packages (always check)
-        opkg.packages(
+        openwrt.opkg.packages(
             'vim',
             latest=True,
             name="Ensure we have the latest version of Vim"
@@ -69,7 +69,7 @@ def packages(
     if str(packages) == "" or (
         isinstance(packages, list) and (len(packages) < 1 or all(len(p) < 1 for p in packages))
     ):
-        host.noop("empty or invalid package list provided to opkg.packages")
+        host.noop("empty or invalid package list provided to openwrt.opkg.packages")
         return
 
     pkg_list = packages if isinstance(packages, list) else [packages]
@@ -78,7 +78,7 @@ def packages(
         raise ValueError(f"opkg does not support version pinning but found for: '{have_equals}'")
 
     if update:
-        yield from _update._inner()
+        yield from _update._inner()  # noqa: SLF001
 
     yield from ensure_packages(
         host,
