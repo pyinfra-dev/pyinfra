@@ -42,6 +42,14 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
+[project.optional-dependencies]
+# Experimental asyncssh-backed connector (@asyncssh/...). Bridges asyncio into
+# the gevent engine via asyncio-gevent; see pyinfra.connectors.ssh_async.
+asyncssh = [
+    "asyncssh>=2.14,<3",
+    "asyncio-gevent>=0.2.3",
+]
+
 [project.urls]
 homepage = "https://pyinfra.com"
 documentation = "https://docs.pyinfra.com"
@@ -92,6 +100,7 @@ docker = "pyinfra.connectors.docker:DockerConnector"
 podman = "pyinfra.connectors.docker:PodmanConnector"
 local = "pyinfra.connectors.local:LocalConnector"
 ssh = "pyinfra.connectors.ssh:SSHConnector"
+asyncssh = "pyinfra.connectors.ssh_async:AsyncSSHConnector"  # experimental, needs pyinfra[asyncssh]
 dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
 podmanssh = "pyinfra.connectors.dockerssh:PodmanSSHConnector"
 # Inventory only connectors
