@@ -1,12 +1,9 @@
 {
-    "args": ["myrepo", "/home/myrepo"],
-    "kwargs": {
-        "update_submodules": true
-    },
+    "args": ["mynewremote", "/home/myrepo"],
     "facts": {
         "git.GitConfig": {
             "repo=/home/myrepo, system=False": {
-                "remote.origin.url": ["myrepo"]
+                "remote.origin.url": ["myoldremote"]
             }
         },
         "files.Directory": {
@@ -22,13 +19,13 @@
             "ref=master, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
         "git.GitRemoteBranchCommit": {
-            "branch=master, remote=origin, repo=/home/myrepo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            "branch=master, remote=origin, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         }
     },
     "commands": [
-        "cd /home/myrepo && git pull",
-        "cd /home/myrepo && git submodule update --init"
+        "cd /home/myrepo && git remote set-url origin mynewremote",
+        "cd /home/myrepo && git pull"
     ],
     "idempotent": false,
-    "disable_idempotent_warning_reason": "git branch pull / submodule update always executed"
+    "disable_idempotent_warning_reason": "git remote set-url + pull run whenever src differs from the configured origin"
 }
