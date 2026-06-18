@@ -31,7 +31,7 @@ def _make_command(command_attribute, args):
 
 
 def make_fact_tests(folder_name):
-    module_name, fact_name = folder_name.split(".")
+    module_name, fact_name = folder_name.rsplit(".", maxsplit=1)
     module = import_module(f"pyinfra.facts.{module_name}")
     fact = getattr(module, fact_name)()
 
