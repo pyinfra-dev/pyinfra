@@ -2,6 +2,8 @@ import importlib
 
 ALL = {
     "opkg": "opkg",
+    "packages": "packages.packages",
+    "update": "packages.update",
 }
 
 __all__ = list(ALL.keys())

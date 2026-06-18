@@ -1,6 +1,8 @@
 import importlib
 
 ALL = {
+    "OpenWrtFeature": "features.OpenWrtFeature",
+    "OpenWrtHasFeature": "features.OpenWrtHasFeature",
     "opkg": "opkg",
 }
 

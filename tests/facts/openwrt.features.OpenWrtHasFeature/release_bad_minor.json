@@ -1,0 +1,15 @@
+{
+    "arg": ["uses_apk"],
+    "command": "echo uses_apk && cat /etc/openwrt_release",
+    "output": [
+        "uses_apk",
+        "DISTRIB_ID='OpenWrt'",
+        "DISTRIB_RELEASE='25.B.4'",
+        "DISTRIB_REVISION='r32933-4ccb782af7'",
+        "DISTRIB_TARGET='rockchip/armv8'",
+        "DISTRIB_ARCH='aarch64_generic'",
+        "DISTRIB_DESCRIPTION='OpenWrt 25.12.4 r32933-4ccb782af7'",
+        "DISTRIB_TAINTS=''"
+    ],
+    "fact": false
+}
