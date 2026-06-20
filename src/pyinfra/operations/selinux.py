@@ -126,7 +126,7 @@ def file_context_mapping(target: str, se_type: str | None = None, present=True):
     current = host.get_fact(FileContextMapping, target=target)
     if present:
         option = "-a" if len(current) == 0 else ("-m" if current.get("type") != se_type else "")
-        if option != "":
+        if option != "" and se_type:
             yield StringCommand(
                 "semanage", "fcontext", option, "-t", QuoteString(se_type), QuoteString(target)
             )
@@ -181,7 +181,7 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
 
     if present:
         option = "-a" if current == "" else ("-m" if current != se_type else "")
-        if option != "":
+        if option != "" and se_type:
             yield StringCommand(
                 "semanage",
                 "port",
@@ -189,15 +189,20 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
                 "-t",
                 QuoteString(se_type),
                 "-p",
-                QuoteString(protocol),
-                QuoteString(port_num),
+                QuoteString(str(protocol)),
+                QuoteString(str(port_num)),
             )
         else:
             host.noop(f"setype for '{protocol}/{port_num}' is already '{se_type}'")
     else:
         if current != "":
             yield StringCommand(
-                "semanage", "port", "-d", "-p", QuoteString(protocol), QuoteString(port_num)
+                "semanage",
+                "port",
+                "-d",
+                "-p",
+                QuoteString(str(protocol)),
+                QuoteString(str(port_num)),
             )
         else:
             host.noop(f"setype for '{protocol}/{port_num}' is already unset")
