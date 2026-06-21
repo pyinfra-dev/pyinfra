@@ -1,10 +1,10 @@
 """
-This module is deprecated and will be removed in future version of pyinfra.
-Use ``openwrt.opkg`` or ``openwrt.packages`` instead.
+.. warning::
+    This module is deprecated and will be removed in future version of pyinfra.
+    Use [openwrt.opkg](../operations/openwrt.md) or
+    [openwrt.packages](../operations/openwrt.md) instead.
 
-Manage packages on OpenWrt using opkg
-    + ``update`` - update local copy of package information
-    + ``packages`` -  install and remove packages
+Manage packages on OpenWrt using ``opkg``.
 """
 
 from pyinfra.api import operation
@@ -20,6 +20,7 @@ def packages(
 ):
     """
     Install, update or remove the specified packages.
+    See [openwrt.opkg.packages](../operations/openwrt.md) for details.
     """
     yield from openwrt_packages._inner(  # noqa: SLF001
         packages=packages, present=present, latest=latest, update=update
@@ -30,6 +31,7 @@ def packages(
 def update():
     """
     Update the local package information.
+    See [openwrt.opkg.update](../operations/openwrt.md) for details.
     """
 
     yield from openwrt_update._inner()  # noqa: SLF001

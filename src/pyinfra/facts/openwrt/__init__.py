@@ -1,3 +1,7 @@
+"""
+Facts specific to the [OpenWrt](https://www.openwrt.org) distribution.
+"""
+
 import importlib
 import sys
 

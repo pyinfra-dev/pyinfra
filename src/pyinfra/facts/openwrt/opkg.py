@@ -7,9 +7,12 @@ Gather the information provided by ``opkg`` on OpenWrt systems:
 
 See https://openwrt.org/docs/guide-user/additional-software/opkg
 
-**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
+.. note::
+    as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+    OpenWrt uses [apk](../facts/apk.md)
 
-.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
+note: this does _not_ show up in the online documentation; the file header in __init__.py does
+and thus the note above is repeated in each fact.
 """
 
 import re
@@ -20,9 +23,6 @@ from typing_extensions import override
 from pyinfra import logger
 from pyinfra.api import FactBase
 from pyinfra.facts.util.packaging import parse_packages
-
-# TODO - change NamedTuple to dataclass Opkg but need to figure out how to get json serialization
-#        to work without changing core code
 
 
 class OpkgPkgUpgradeInfo(NamedTuple):
@@ -45,7 +45,7 @@ class OpkgFeedInfo(NamedTuple):
 
 class OpkgConf(FactBase):
     """
-    Returns a NamedTuple with the current configuration:
+    Returns a ``NamedTuple`` with the current ``opkg`` configuration:
 
     .. code:: python
 
@@ -65,6 +65,9 @@ class OpkgConf(FactBase):
             }
         )
 
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
     """
 
     @override
@@ -118,7 +121,7 @@ class OpkgConf(FactBase):
 class OpkgFeeds(FactBase):
     """
     Returns a dictionary containing the information for the distribution-provided and
-    custom opkg feeds:
+    custom `opkg` feeds:
 
     .. code:: python
 
@@ -130,6 +133,10 @@ class OpkgFeeds(FactBase):
          'openwrt_routing': FeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'), # noqa: E501
          'openwrt_telephony': FeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution') # noqa: E501
         }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
     """
 
     regex = re.compile(
@@ -175,6 +182,10 @@ class OpkgInstallableArchitectures(FactBase):
          'i386_pentium': 10,
          'noarch': 1
         }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
     """
 
     regex = re.compile(r"^(?:\s*arch\s+(?P<arch>[\w]+)\s+(?P<prio>\d+))?(\s*#.*)?$")
@@ -204,7 +215,7 @@ class OpkgInstallableArchitectures(FactBase):
 
 class OpkgPackages(FactBase):
     """
-    Returns a dict of installed opkg packages:
+    Returns a dictionary of installed `opkg` packages:
 
     .. code:: python
 
@@ -212,6 +223,10 @@ class OpkgPackages(FactBase):
          'package_name': ['version'],
          ...
        }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
     """
 
     regex = r"^([a-zA-Z0-9][\w\-\.]*)\s-\s([\w\-\.]+)"
@@ -232,7 +247,7 @@ class OpkgPackages(FactBase):
 
 class OpkgUpgradeablePackages(FactBase):
     """
-    Returns a dict of installed and upgradable opkg packages:
+    Returns a dict of installed and upgradable `opkg` packages:
 
     .. code:: python
 
@@ -240,6 +255,10 @@ class OpkgUpgradeablePackages(FactBase):
           'package_name': (installed='1.2.3', available='1.2.8')
           ...
         }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
     """
 
     regex = re.compile(r"^([a-zA-Z0-9][\w\-.]*)\s-\s([\w\-.]+)\s-\s([\w\-.]+)")

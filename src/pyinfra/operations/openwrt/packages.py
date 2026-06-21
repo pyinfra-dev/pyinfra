@@ -1,14 +1,17 @@
 """
-Manage packages on OpenWrt using opkg or apk depending on the `version`_ of OpenWrt.
-    + ``update`` - update local copy of package information
-    + ``packages`` -  install and remove packages
+Manage packages on OpenWrt using ``apk` or `opkg`` depending on the release of OpenWrt.
+    + `packages` -  install and remove packages
+    + `update` - update local copy of package information
 
 See https://openwrt.org/docs/guide-user/additional-software/apk and
     https://openwrt.org/docs/guide-user/additional-software/opkg
 
-TBD - OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgrade`` function
+TBD - OpenWrt recommends against upgrading all packages  thus there is no `opkg.upgrade` function
 
-.. _version: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
+  .. note: As of [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+OpenWrt uses [apk](../operations/apk.md)
+
+note: this does _not_ show up in the online documentation; the file header in __init__.py does.
 """
 
 from pyinfra import host
@@ -23,6 +26,17 @@ from . import opkg
 def update():
     """
     Update the local package information.
+    See [apk](../operations/apk.md) and [opkg](../operations/openwrt.md) for more details.
+
+        **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import openwrt
+
+        # Ensure local package information is up to date
+        openwrt.update(name="Update the local package information")
+
     """
     if host.get_fact(OpenWrtHasFeature, OpenWrtFeature.USES_APK):
         yield from apk.update._inner()  # noqa: SLF001
@@ -38,18 +52,14 @@ def packages(
     update: bool = False,
 ):
     """
-    Add/remove/update packages using `opkg` or `apk` depending on the OpenWrt version.
+    Add/remove/update packages using ``apk`` or ``opkg``  depending on the OpenWrt release.
 
-    + packages: package or list of packages to that must/must not be present
-    + present: whether the package(s) should be installed (default True) or removed
-    + latest: whether to attempt to upgrade the specified package(s) (default False)
-    + update: run ``apk|opkg update`` before installing packages (default False)
+    + packages: package or list of packages to that must/must not be present (default ``True``).
+    + present: whether the package(s) should be installed or removed (default ``True``).
+    + latest: whether to attempt to upgrade the specified package(s) (default ``False``).
+    + update: run ``apk|opkg update`` before installing packages (default ``False``).
 
-    See TBD and TBD for more details.
-
-    TBD - Not Supported:
-        Opkg does not support version pinning, i.e. ``<pkg>=<version>`` is not allowed
-        and will cause an exception.
+    See [apk](../operations/apk.md) and [opkg](../operations/openwrt.md) for more details.
 
     **Examples:**
 

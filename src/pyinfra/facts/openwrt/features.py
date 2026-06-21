@@ -1,8 +1,11 @@
 """
-Provides the OpenWrt version and feature support information
+Provides a fact that tells whether a host supports an OpenWrt feature or not.
 
-    + whether the system uses ``apk`` ?
+    + whether the host uses ``apk`` (vs. ``opkg``)
+    + whether the host has ``DSA`` (vs. ``swconfig``)
+    + whether the host has ``FW4`` (and ``nftables`` vs. ``FW3/iptables``)
 
+note: this does _not_ show up in the online documentation; the file header in __init__.py does
 """
 
 from __future__ import annotations
@@ -28,9 +31,9 @@ class Release:
     """
     A release with major and minor components
     """
+
     major: int
     minor: int
-
 
 
 @dataclass(frozen=True)
@@ -39,6 +42,7 @@ class ReleaseRange:
     A range of releases, usually used for validity.
     Any release is newer than a start of None and older than an end of None
     """
+
     start: Release | None
     end: Release | None
 
@@ -78,13 +82,16 @@ SUFFIX = "'"
 
 class OpenWrtHasFeature(FactBase[bool]):
     """
-    Returns true if the running version of OpenWrt supports the specified feature.
-        .. code:: python
+    Returns `true` if the running version of OpenWrt supports a specific feature and `false`
+    otherwise.
 
-        if host.get_fact(OpenWrtHasFeature, Feature.HAS_DSA):
-            # setup configuration using the Distribution Switching Architecture
+    .. code:: python
+        from pyinfra.facts.openwrt import OpenWrtFeature
+
+        if host.get_fact(OpenWrtHasFeature, OpenWrtFeature.HAS_DSA):
+            # setup configuration using the Distributed Switching Architecture
         else:
-            # setup configuration using switch
+            # setup configuration using swconfig
     """
 
     # this isn't a ShortFact using LinuxDistribution because short facts can't have parameters

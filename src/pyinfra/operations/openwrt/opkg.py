@@ -1,15 +1,18 @@
 """
 Manage packages on OpenWrt using opkg
-    + ``update`` - update local copy of package information
-    + ``packages`` -  install and remove packages
+    + `packages` -  install and remove packages
+    + `update` - update local copy of package information
 
 See https://openwrt.org/docs/guide-user/additional-software/opkg
 
-OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgrade`` function
+OpenWrt recommends against upgrading all packages  thus there is no `opkg.upgrade` function
 
-**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
+.. note::
+    as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+    OpenWrt uses [apk](../operations/apk.md)
 
-.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
+    note: this does _not_ show up in the online documentation; the file header in __init__.py does
+and thus the note above is repeated in each operation.
 """
 
 from pyinfra import host
@@ -43,12 +46,12 @@ def packages(
     Add/remove/update opkg packages.
 
     + packages: package or list of packages to that must/must not be present
-    + present: whether the package(s) should be installed (default True) or removed
-    + latest: whether to attempt to upgrade the specified package(s) (default False)
-    + update: run ``opkg update`` before installing packages (default True)
+    + present: whether the package(s) should be installed or removed (default ``True``).
+    + latest: whether to attempt to upgrade the specified package(s) (default ``False``).
+    + update: run ``opkg update`` before installing packages (default ``True``).
 
-    Not Supported:
-        Opkg does not support version pinning, i.e. ``<pkg>=<version>`` is not allowed
+    **Not Supported:**
+        ``opkg`` does not support version pinning, i.e. ``<pkg>=<version>`` is _not_ allowed
         and will cause an exception.
 
     **Examples:**
@@ -56,6 +59,7 @@ def packages(
     .. code:: python
 
         from pyinfra.operations import opkg
+
         # Ensure packages are installed (will not force package upgrade)
         openwrt.opkg.packages(['asterisk', 'vim'], name="Install Asterisk and Vim")
 
@@ -65,6 +69,10 @@ def packages(
             latest=True,
             name="Ensure we have the latest version of Vim"
         )
+
+    .. note::
+      as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+      OpenWrt uses [apk](../operations/apk.md)
     """
     if str(packages) == "" or (
         isinstance(packages, list) and (len(packages) < 1 or all(len(p) < 1 for p in packages))

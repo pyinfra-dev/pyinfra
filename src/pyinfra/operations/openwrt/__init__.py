@@ -1,3 +1,7 @@
+"""
+Operations specific to the [OpenWrt](https://openwrt.org) distribution.
+"""
+
 import importlib
 import sys
 
