@@ -105,7 +105,8 @@ class OpenWrtHasFeature(FactBase[bool]):
         return f"echo {feature.value} && cat {THE_FILE}"
 
     @override
-    def default(self) -> bool:
+    @staticmethod
+    def default() -> bool:
         return False
 
     @override
