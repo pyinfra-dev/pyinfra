@@ -131,7 +131,7 @@ def build_operations_docs():
 
         operation_functions = get_objects_from_module(module, isfunction, function_of_interest)
 
-        for name, func in sorted(operation_functions, key=lambda x : (x[0].count('.'), x[0])):
+        for name, func in sorted(operation_functions, key=lambda x: (x[0].count("."), x[0])):
             decorated_func = getattr(func, "_inner", None)
             while decorated_func:
                 func = decorated_func
