@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
 import re
+from collections.abc import Sequence
+from typing import cast, Literal
 
-from typing_extensions import override
+from typing_extensions import NotRequired, TypedDict, override
 
+from pyinfra import logger
 from pyinfra.api import FactBase, ShortFactBase
 
 
@@ -246,7 +250,29 @@ class BlockDevices(FactBase):
         return devices
 
 
-class NetworkDevices(FactBase):
+AddressFamilyType = Literal["ipv4", "ipv6"]
+
+
+class AddrInfoType(TypedDict):
+    address: str
+    broadcast: NotRequired[str]
+    mask_bits: NotRequired[int]
+    netmask: NotRequired[str]
+    additional_ips: NotRequired[list[AddrInfoType]]
+
+
+class DevInfoType(TypedDict):
+    ether: str
+    mtu: int
+    state: str
+    ipv4: NotRequired[AddrInfoType]
+    ipv6: NotRequired[AddrInfoType]
+
+
+NtwkDevMapType = dict[str, DevInfoType]
+
+
+class NetworkDevices(FactBase[NtwkDevMapType]):
     """
     Gets & returns a dict of network devices. See the ``ipv4_addresses`` and
     ``ipv6_addresses`` facts for easier-to-use shortcuts to get device addresses.
@@ -322,26 +348,133 @@ class NetworkDevices(FactBase):
 
     @override
     def command(self) -> str:
-        return "ip addr show 2> /dev/null || ifconfig -a"
+        return "ip -j addr show 2> /dev/null || ip addr show 2> /dev/null || ifconfig -a"
+
+    @staticmethod
+    def mask(value: str) -> tuple[int, str]:
+        try:
+            if value.startswith("0x"):
+                mask_bits = bin(int(value, 16)).count("1")
+            else:
+                mask_bits = int(value)
+            netmask = ".".join(
+                str((0xFFFFFFFF << (32 - b) >> mask_bits) & 0xFF) for b in (24, 16, 8, 0)
+            )
+        except ValueError:
+            mask_bits = sum(bin(int(x)).count("1") for x in value.split("."))
+            netmask = value
+
+        return mask_bits, netmask
+
+    def ntwk_info_from_json(self, json_data: Sequence[str]) -> NtwkDevMapType:
+        """
+        Example JSON output from ip -j addr show:
+        {
+            "ifindex": 2,
+            "ifname": "enp3s0",
+            "flags": [
+              "BROADCAST",
+              "MULTICAST",
+              "UP",
+              "LOWER_UP"
+            ],
+            "mtu": 1500,
+            "qdisc": "fq_codel",
+            "operstate": "UP",
+            "group": "default",
+            "txqlen": 1000,
+            "link_type": "ether",
+            "address": "58:11:22:af:50:41",
+            "broadcast": "ff:ff:ff:ff:ff:ff",
+            "altnames": [
+              "enx581122af5041"
+            ],
+            "addr_info": [
+              {
+                "family": "inet",
+                "local": "192.168.21.73",
+                "prefixlen": 24,
+                "broadcast": "192.168.21.255",
+                "scope": "global",
+                "dynamic": true,
+                "noprefixroute": true,
+                "label": "enp3s0",
+                "valid_life_time": 34647,
+                "preferred_life_time": 34647
+              },
+              {
+                "family": "inet6",
+                "local": "2607:4357:bd44:7901::18d2",
+                "prefixlen": 128,
+                "scope": "global",
+                "dynamic": true,
+                "noprefixroute": true,
+                "valid_life_time": 31669,
+                "preferred_life_time": 31669
+              },
+            ]
+          },
+        """
+
+        result, error = {}, False
+        try:
+            decoded = json.loads("\n".join(json_data))
+        except (json.JSONDecodeError, TypeError, UnicodeDecodeError, RecursionError):
+            error = True
+
+        for info in decoded if not error else {}:
+            if not all(field in info for field in ("address", "mtu", "operstate")):
+                error = True
+            else:
+                device: DevInfoType = {
+                    "ether": info["address"],
+                    "mtu": info["mtu"],
+                    "state": info["operstate"],
+                }
+
+            for addr_info in info.get("addr_info", []):
+                if "local" not in addr_info:
+                    error = True
+                else:
+                    addr_blk: AddrInfoType = {"address": addr_info["local"]}
+                if (
+                    which := {"inet": "ipv4", "inet6": "ipv6"}.get(addr_info.get("family"))
+                ) is None:
+                    error = True
+                elif which == "ipv4":
+                    if "broadcast" in addr_info:
+                        addr_blk["broadcast"] = addr_info["broadcast"]
+                    if "prefixlen" in addr_info:
+                        addr_blk["mask_bits"] = addr_info["prefixlen"]
+                        addr_blk["netmask"] = self.mask(str(addr_info["prefixlen"]))[1]
+                elif which == "ipv6":
+                    if "prefixlen" not in addr_info:
+                        error = True
+                    else:
+                        addr_blk["mask_bits"] = addr_info["prefixlen"]
+                if not error:
+                    which = cast("AddressFamilyType", which)  # None sets error
+                    if which not in device:
+                        device[which] = addr_blk
+                    else:
+                        if "additional_ips" not in device[which]:
+                            device[which]["additional_ips"] = []
+                        device[which]["additional_ips"].append(addr_blk)
+
+            if not (error := error or ("ifname" not in info)):
+                result[info["ifname"]] = device
+
+        if error:
+            logger.error(f"Error parsing ip address output: {json_data}")
+
+        return result
 
     # Definition of valid interface names for Linux:
     # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/net/core/dev.c?h=v5.1.3#n1020
     @override
-    def process(self, output):
-        def mask(value):
-            try:
-                if value.startswith("0x"):
-                    mask_bits = bin(int(value, 16)).count("1")
-                else:
-                    mask_bits = int(value)
-                netmask = ".".join(
-                    str((0xFFFFFFFF << (32 - b) >> mask_bits) & 0xFF) for b in (24, 16, 8, 0)
-                )
-            except ValueError:
-                mask_bits = sum(bin(int(x)).count("1") for x in value.split("."))
-                netmask = value
-
-            return mask_bits, netmask
+    def process(self, output: Sequence[str]) -> NtwkDevMapType:
+        if "".join(map(str.strip, output[:2])).startswith("[{"):
+            return self.ntwk_info_from_json(output)
 
         # Strip lines and merge them as a block of text
         output = "\n".join(map(str.strip, output))
@@ -350,7 +483,7 @@ class NetworkDevices(FactBase):
         device_sections = re.split(r"\n(?=\d+: [^\s/:]|[^\s/:]+:.*mtu )", output)
 
         # Dictionary to hold all device information
-        all_devices = {}
+        all_devices: NtwkDevMapType = {}
 
         for section in device_sections:
             # Extracting the device name
@@ -406,7 +539,7 @@ class NetworkDevices(FactBase):
                 for ipv4 in ipv4_matches:
                     address = ipv4.group("address")
                     mask_value = ipv4.group("mask")
-                    mask_bits, netmask = mask(mask_value)
+                    mask_bits, netmask = self.mask(mask_value)
                     try:
                         broadcast = ipv4.group("broadcast")
                     except IndexError:
@@ -435,13 +568,13 @@ class NetworkDevices(FactBase):
                 ipv6_info = []
                 for ipv6 in ipv6_matches:
                     address = ipv6.group("address")
-                    mask_bits = ipv6.group("mask")
-                    ipv6_info.append({"address": address, "mask_bits": int(mask_bits)})
+                    mask_bits_str = ipv6.group("mask")
+                    ipv6_info.append({"address": address, "mask_bits": int(mask_bits_str)})
                 device_info["ipv6"] = ipv6_info[0]
                 if len(ipv6_matches) > 1:
                     device_info["ipv6"]["additional_ips"] = ipv6_info[1:]  # type: ignore[index]
 
-            all_devices[device_name] = device_info
+            all_devices[device_name] = cast("DevInfoType", cast(object, device_info))
 
         return all_devices
 

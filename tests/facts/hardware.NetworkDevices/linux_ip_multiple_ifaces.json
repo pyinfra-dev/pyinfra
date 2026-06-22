@@ -1,5 +1,5 @@
 {
-    "command": "ip addr show 2> /dev/null || ifconfig -a",
+    "command": "ip -j addr show 2> /dev/null || ip addr show 2> /dev/null || ifconfig -a",
     "output": [
         "1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000",
         "    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00",
@@ -45,7 +45,7 @@
         "    inet 10.66.7.3/24 scope global my-vpn",
         "       valid_lft forever preferred_lft forever",
         "    inet6 fe80::c9fc:e8d5:12d8:cfb2/64 scope link stable-privacy proto kernel_ll ",
-        "       valid_lft forever preferred_lft forever"
+        "       valid_lft forever preferred_lft forever",
     ],
     "fact": {
         "lo": {
@@ -55,12 +55,9 @@
                 "address": "127.0.0.1",
                 "mask_bits": 8,
                 "netmask": "255.0.0.0",
-                "broadcast": null
+                "broadcast": null,
             },
-            "ipv6": {
-                "address": "::1",
-                "mask_bits": 128
-            }
+            "ipv6": {"address": "::1", "mask_bits": 128},
         },
         "eno1": {
             "ether": "3e:d2:56:4d:1a:f1",
@@ -70,18 +67,11 @@
                 "address": "10.42.6.142",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": "10.42.6.255"
+                "broadcast": "10.42.6.255",
             },
-            "ipv6": {
-                "address": "fe80::3cd2:56ff:fe4d:1af1",
-                "mask_bits": 64
-            }
+            "ipv6": {"address": "fe80::3cd2:56ff:fe4d:1af1", "mask_bits": 64},
         },
-        "wlp6s0": {
-            "ether": "b8:4c:68:59:45:7d",
-            "mtu": 1500,
-            "state": "DOWN"
-        },
+        "wlp6s0": {"ether": "b8:4c:68:59:45:7d", "mtu": 1500, "state": "DOWN"},
         "myvlan@eno1": {
             "ether": "3e:d2:56:4d:1a:f2",
             "mtu": 1500,
@@ -90,12 +80,9 @@
                 "address": "10.42.13.147",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": "10.42.13.255"
+                "broadcast": "10.42.13.255",
             },
-            "ipv6": {
-                "address": "fe80::3cd2:56ff:fe4d:1af2",
-                "mask_bits": 64
-            }
+            "ipv6": {"address": "fe80::3cd2:56ff:fe4d:1af2", "mask_bits": 64},
         },
         "vmbr0": {
             "ether": "7a:c8:eb:21:98:98",
@@ -105,27 +92,16 @@
                 "address": "172.20.0.2",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": "172.20.0.255"
-            }
+                "broadcast": "172.20.0.255",
+            },
         },
-        "vmbr0-veth-end@vmbr0-veth": {
-            "ether": "96:1d:5c:3b:20:9e",
-            "mtu": 1500,
-            "state": "DOWN"
-        },
-        "vmbr0-veth@vmbr0-veth-end": {
-            "ether": "52:a5:03:cb:ee:31",
-            "mtu": 1500,
-            "state": "UP"
-        },
+        "vmbr0-veth-end@vmbr0-veth": {"ether": "96:1d:5c:3b:20:9e", "mtu": 1500, "state": "DOWN"},
+        "vmbr0-veth@vmbr0-veth-end": {"ether": "52:a5:03:cb:ee:31", "mtu": 1500, "state": "UP"},
         "some-tap": {
             "ether": "fa:84:69:0a:a0:73",
             "mtu": 1500,
             "state": "UP",
-            "ipv6": {
-                "address": "fe80::f884:69ff:fe0a:a073",
-                "mask_bits": 64
-            }
+            "ipv6": {"address": "fe80::f884:69ff:fe0a:a073", "mask_bits": 64},
         },
         "some-br": {
             "ether": "8e:15:02:8a:7f:ee",
@@ -135,12 +111,9 @@
                 "address": "192.168.101.1",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": null
+                "broadcast": null,
             },
-            "ipv6": {
-                "address": "fe80::f884:69ff:fe0a:a073",
-                "mask_bits": 64
-            }
+            "ipv6": {"address": "fe80::f884:69ff:fe0a:a073", "mask_bits": 64},
         },
         "my-vpn": {
             "mtu": 1300,
@@ -149,12 +122,9 @@
                 "address": "10.66.7.3",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": null
+                "broadcast": null,
             },
-            "ipv6": {
-                "address": "fe80::c9fc:e8d5:12d8:cfb2",
-                "mask_bits": 64
-            }
-        }
-    }
+            "ipv6": {"address": "fe80::c9fc:e8d5:12d8:cfb2", "mask_bits": 64},
+        },
+    },
 }
