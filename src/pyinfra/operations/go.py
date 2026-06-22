@@ -100,10 +100,13 @@ def packages(
     if to_upgrade:
         yield StringCommand("go install", *(QuoteString(p) for p in to_upgrade))
 
-    for name in to_remove:
+    if to_remove:
         yield StringCommand(
             "BINDIR=$(go env GOBIN);",
             '[ -z "$BINDIR" ] && BINDIR="$(go env GOPATH)/bin";',
             "rm -f",
-            StringCommand('"$BINDIR"/', QuoteString(_binary_name(name)), _separator=""),
+            *(
+                StringCommand('"$BINDIR"/', QuoteString(_binary_name(name)), _separator="")
+                for name in to_remove
+            ),
         )
