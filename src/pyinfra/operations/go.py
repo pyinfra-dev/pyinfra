@@ -38,6 +38,11 @@ def packages(
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
 
+    Note:
+        ``latest=True`` is not idempotent offline: without a version to compare
+        against, an installed unversioned package always re-runs ``go install``
+        and reports as changed every run (same as ``pip.packages`` with latest).
+
     Versions:
         Package versions can be pinned like go: ``<pkg>@<version>``. Packages
         without a pinned version (or with the special ``@latest`` suffix) are
