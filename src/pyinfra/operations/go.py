@@ -18,6 +18,11 @@ def _binary_name(pkg_path: str) -> str:
     Under Go's Semantic Import Versioning, modules at major version v2+ carry
     a ``/v<N>`` suffix on their import path that is not part of the binary
     name — e.g. ``github.com/foo/bar/v2`` installs a binary named ``bar``.
+
+    Note: two distinct import paths can map to the same binary name (e.g.
+    ``a/b/cmd/tool`` and ``x/y/cmd/tool``), mirroring how ``go install`` itself
+    would clobber one binary with the other; on removal this means ``rm -f``
+    cannot tell them apart.
     """
     parts = pkg_path.split("/")
     if len(parts) >= 2 and re.fullmatch(r"v\d+", parts[-1]):
