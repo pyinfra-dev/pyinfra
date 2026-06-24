@@ -1,18 +1,17 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from pyinfra.api import Config, State
+from pyinfra.api import Config, State, HiddenValue
 from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
     _ensure_askpass_set_for_host,
-    make_unix_command,
+    make_unix_command,  
     make_unix_command_for_host,
     remove_any_sudo_askpass_file,
 )
 
 from ..util import make_inventory
-
 
 class TestMakeUnixCommandConnectorUtil(TestCase):
     def test_command(self):
@@ -146,6 +145,40 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             command.get_raw_value()
             == "sh -c 'export '\"'\"'KEY=value\"; id; echo \"'\"'\"' && uptime'"
         )
+
+    def test_command_env_hidden_value(self):
+        command = make_unix_command(
+            "uptime",
+            _env={
+                "KEY": HiddenValue("super-secret"),
+            },
+        )
+        
+        raw = command.get_raw_value()
+        masked = command.get_masked_value()
+        assert "super-secret" in raw
+        assert "super-secret" not in masked
+        assert "*MASKED*" in masked 
+        assert "KEY=*MASKED*" in masked
+
+    def test_command_env_hidden_value_with_shell_chars(self):
+        command = make_unix_command(
+            "uptime",
+            _env={
+                "KEY": HiddenValue("abc; id; echo bad"),
+            },
+        )
+
+        raw = command.get_raw_value()
+        masked = command.get_masked_value()
+
+        assert "abc; id; echo bad" in raw
+        assert "abc; id; echo bad" not in masked
+        assert "*MASKED*" in masked
+        assert "KEY=*MASKED*" in masked
+
+        # The raw command should still quote the assignment as one shell token.
+        assert "'\"'\"'KEY=abc; id; echo bad'\"'\"'" in raw
 
     def test_command_chdir(self):
         command = make_unix_command("uptime", _chdir="/opt/somedir")

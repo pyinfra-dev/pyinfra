@@ -428,7 +428,7 @@ def make_unix_command(
             # Quote the whole `key=value` pair so arbitrary values cannot break
             # out into additional shell tokens. Invalid identifiers in `key` will
             # fail safely when the shell rejects the resulting `export` statement.
-            env_bits.append(QuoteString(f"{key}={value}"))
+            env_bits.append(QuoteString(StringCommand(key, value, _separator="=")))
         env_bits.append("&&")
         env_bits.append(command)
         command = StringCommand(*env_bits)
