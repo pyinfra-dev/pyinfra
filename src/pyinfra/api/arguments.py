@@ -26,6 +26,7 @@ default_sentinel = object()
 
 EnvValue = str | HiddenValue
 
+
 class ArgumentMeta(Generic[T]):
     description: str
     default: Callable[[Config], T]
@@ -83,14 +84,13 @@ class ConnectorArguments(TypedDict, total=False):
 
 def generate_env(config: Config, value: Mapping[str, EnvValue] | None) -> dict[str, EnvValue]:
     env: dict[str, EnvValue] = {
-        key: os.environ[key]
-        for key in config.INHERIT_ENV
-        if key in os .environ
+        key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ
     }
     env.update(config.ENV)
     if value:
         env.update(value)
     return env
+
 
 auth_argument_meta: dict[str, ArgumentMeta] = {
     "_sudo": ArgumentMeta(

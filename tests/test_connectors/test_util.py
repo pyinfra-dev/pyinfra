@@ -6,12 +6,13 @@ from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
     _ensure_askpass_set_for_host,
-    make_unix_command,  
+    make_unix_command,
     make_unix_command_for_host,
     remove_any_sudo_askpass_file,
 )
 
 from ..util import make_inventory
+
 
 class TestMakeUnixCommandConnectorUtil(TestCase):
     def test_command(self):
@@ -153,12 +154,12 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
                 "KEY": HiddenValue("super-secret"),
             },
         )
-        
+
         raw = command.get_raw_value()
         masked = command.get_masked_value()
         assert "super-secret" in raw
         assert "super-secret" not in masked
-        assert "*MASKED*" in masked 
+        assert "*MASKED*" in masked
         assert "KEY=*MASKED*" in masked
 
     def test_command_env_hidden_value_with_shell_chars(self):
