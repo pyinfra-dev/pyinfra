@@ -1,0 +1,8 @@
+command: "s6-rc-repo-list"
+requires_command: "s6-rc-repo-list"
+output: |
+  default
+  current
+  normal
+fact:
+  [ "default", "current", "normal" ]

@@ -1,0 +1,11 @@
+arg: 
+  - "/etc/s6/repo"
+command: "s6-rc-repo-list -r /etc/s6/repo"
+requires_command: "s6-rc-repo-list"
+output: |
+  default
+  current
+  normal
+fact:
+  [ "default", "current", "normal" ]
+

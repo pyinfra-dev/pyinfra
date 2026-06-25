@@ -1,0 +1,40 @@
+command: "{ s6-rc -a list && echo -e 'GROUP SEPARATOR' && s6-rc -da list ; } || exit 1"
+requires_command: "s6-rc"
+output: |
+  NetworkManager-log
+  NetworkManager-srv
+  bluetoothd-log
+  bluetoothd-srv
+  dbus-log
+  dbus-srv
+  seatd-log
+  seatd-srv
+  tty1
+  tty2
+  tty3
+  mount-net
+  network-detection
+  modules
+  net-lo
+  swap
+  udevadm
+  GROUP SEPARATOR
+fact:
+  NetworkManager-log: true
+  NetworkManager-srv: true
+  bluetoothd-log: true
+  bluetoothd-srv: true
+  dbus-log: true
+  dbus-srv: true
+  seatd-log: true
+  seatd-srv: true
+  tty1: true
+  tty2: true
+  tty3: true
+  mount-net: true
+  network-detection: true
+  modules: true
+  net-lo: true
+  swap: true
+  udevadm: true
+
