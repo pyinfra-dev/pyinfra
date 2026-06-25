@@ -24,7 +24,7 @@ from .exceptions import (
     OperationTypeError,
     OperationValueError,
 )
-from .facts import FactBase, FactCore, ShortFactBase
+from .facts import fact, FactBase, FactCore, ShortFactBase
 from .host import Host
 from .inventory import Inventory
 from .operation import operation

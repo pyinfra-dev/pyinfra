@@ -12,13 +12,13 @@ from __future__ import annotations
 
 import inspect
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from inspect import getcallargs
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 import gevent
 from paramiko import SSHException
-from typing_extensions import override
+from typing_extensions import ParamSpec, override
 
 from pyinfra import logger
 from pyinfra.api.output import format_text
@@ -91,7 +91,111 @@ class FactCore(Generic[T]):
         cls.name = f"{module_name}.{cls.__name__}"
 
 
+P = ParamSpec("P")
+
+
+class DefaultMarker:
+    pass
+
+
+_DEFAULT_MARKER = DefaultMarker()
+
+
+def fact(
+    default_value: T | DefaultMarker = _DEFAULT_MARKER,
+) -> Callable[[Callable[P, T]], type[FactCore[T]]]:
+    """
+    Decorator that takes a simple module function and turn it into the internal
+    fact representation that consists of an object implementing FactCore interface.
+    """
+
+    def decorator(fact_func: Callable[P, T]) -> type[FactCore[T]]:
+        class DecoratedFact(FactCore[T]):
+            abstract = False
+
+            @override
+            @staticmethod
+            def default() -> T:
+                if isinstance(default_value, DefaultMarker):
+                    return FactCore[T].default()
+                else:
+                    return default_value
+
+            @override
+            @classmethod
+            def get(
+                cls,
+                state: State,
+                host: Host,
+                args: Sequence | None = None,
+                kwargs: dict | None = None,
+                apply_failed_hosts: bool = True,
+            ) -> T:
+                sig = inspect.signature(fact_func)
+                parameters = sig.parameters
+
+                if args is None:
+                    call_args = []
+                else:
+                    call_args = list(args)
+
+                if kwargs is None:
+                    call_kwargs = {}
+                else:
+                    call_kwargs = kwargs.copy()
+
+                    if "state" in call_kwargs:
+                        raise TypeError("state cannot be provided as a keyword argument")
+                    if "host" in call_kwargs:
+                        raise TypeError("host cannot be provided as a keyword argument")
+
+                positional_parameters = [
+                    name
+                    for name, candidate in parameters.items()
+                    if candidate.kind
+                    in (
+                        inspect.Parameter.POSITIONAL_ONLY,
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    )
+                ]
+
+                to_insert: list[tuple[int, str, object]] = []
+                for name, obj in [
+                    ("state", state),
+                    ("host", host),
+                ]:
+                    if name in parameters:
+                        if name in positional_parameters:
+                            position = positional_parameters.index(name)
+                            to_insert.append((position, name, obj))
+                        else:
+                            call_kwargs[name] = obj
+
+                no_skip = True
+                for index, name, obj in sorted(to_insert):
+                    if no_skip and index <= len(call_args):
+                        call_args.insert(index, obj)
+                    else:
+                        no_skip = False
+                        call_kwargs[name] = obj
+
+                bound_arguments = sig.bind(*call_args, **call_kwargs)
+                return fact_func(*bound_arguments.args, **bound_arguments.kwargs)
+
+        module_name = fact_func.__module__.replace("pyinfra.facts.", "")
+        DecoratedFact.name = f"{module_name}.{fact_func.__name__}"
+        DecoratedFact.__doc__ = fact_func.__doc__
+
+        return DecoratedFact
+
+    return decorator
+
+
 class FactBase(FactCore[T]):
+    """
+    Base class for all shell-commands-based facts.
+    """
+
     shell_executable: str | None = None
 
     def command(self, *args, **kwargs) -> str | StringCommand:
