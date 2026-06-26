@@ -21,7 +21,7 @@ class S6RCSets(FactBase[list[str]]):
 class S6RCEnabled(FactBase[dict[str, str]]):
     """Returns a dict of name -> rx (prescription) for each service in a given set."""
 
-    def requires_command(self):
+    def requires_command(self, set, repository=None):
         return "s6-rc-set-status"
 
     def command(self, set, repository=None):
@@ -31,7 +31,7 @@ class S6RCEnabled(FactBase[dict[str, str]]):
             return f"s6-rc-set-status {set}"
 
     def process(self, output):
-        return {triplet[0]: triplet[-1] for triplet in map(lambda line: line.partition("/"))}
+        return {triplet[0]: triplet[-1] for triplet in map(lambda line: line.partition("/"), output)}
 
 
 class S6RCStatus(FactBase[dict[str, bool]]):
