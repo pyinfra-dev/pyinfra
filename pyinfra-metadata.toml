@@ -275,6 +275,12 @@ path = "src/pyinfra/facts/launchd.py"
 type = "fact"
 tags = ["service-management", "system"]
 
+[pyinfra.plugins."s6-ops"]
+name = "s6"
+path = "src/pyinfra/operations/s6.py"
+type = "operation"
+tags = ["service-management"]
+
 [pyinfra.plugins."s6-facts"]
 name = "s6"
 path = "src/pyinfra/facts/s6.py"

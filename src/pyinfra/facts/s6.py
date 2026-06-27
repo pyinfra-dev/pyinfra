@@ -1,4 +1,5 @@
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString
+from pyinfra.api.command import make_formatted_string_command
 
 
 class S6RepositoryList(FactBase[list[str]]):
@@ -6,8 +7,10 @@ class S6RepositoryList(FactBase[list[str]]):
 
     def check_preconditions(self, state, host):
         from pyinfra.facts.files import File
+
+        # TODO allow passing S6_FRONTEND_CONF envvar
         if not host.get_fact(File("/etc/s6/frontend.conf")):
-            return "/etc/s6/frontend.conf doesn't exist"
+            return "couldn't read /etc/s6/frontend.conf or it doesn't exist"
 
     def requires_command(self, repository=None):
         # "s6" only sees the repository configured in /etc/s6-frontend.conf
@@ -21,7 +24,7 @@ class S6RepositoryList(FactBase[list[str]]):
         + repository: path of the repository to inspect, default the one configured in `/etc/s6-frontend.conf`.
         """
         if repository:
-            return f"s6-rc-repo-list -r {repository}"
+            return make_formatted_string_command("s6-rc-repo-list -r {0}", QuoteString(repository))
 
         return "s6 repository list"
 
@@ -41,8 +44,10 @@ class S6SetStatus(FactBase[dict[str, str]]):
 
     def check_preconditions(self, state, host):
         from pyinfra.facts.files import File
+
+        # TODO allow passing S6_FRONTEND_CONF envvar
         if not host.get_fact(File("/etc/s6/frontend.conf")):
-            return "/etc/s6/frontend.conf doesn't exist"
+            return "couldn't read /etc/s6/frontend.conf or it doesn't exist"
 
     def requires_command(self, repository=None, set=None):
         if repository or set:
@@ -57,16 +62,18 @@ class S6SetStatus(FactBase[dict[str, str]]):
         """
         if set:
             if repository:
-                return f"s6-rc-set-status -r {repository} {set}"
+                return make_formatted_string_command(
+                    "s6-rc-set-status -r {0} {1}", QuoteString(repository), QuoteString(set)
+                )
 
-            return f"s6-rc-set-status {set}"
+            return make_formatted_string_command("s6-rc-set-status {0}", QuoteString(set))
 
         if repository:
-            if set:
-                return f"s6-rc-set-status -r {repository} {set}"
+            return make_formatted_string_command(
+                "s6-rc-set-status -r {0} current", QuoteString(repository)
+            )
 
-            return f"s6-rc-set-status -r {repository} current"
-
+        # TODO consider case where util-linux triggers column pretty printing
         return "s6 set status"
 
     def process(self, output):
@@ -89,8 +96,10 @@ class S6LiveStatus(FactBase[dict[str, bool]]):
 
     def check_preconditions(self, state, host):
         from pyinfra.facts.files import File
+
+        # TODO allow passing S6_FRONTEND_CONF envvar
         if not host.get_fact(File("/etc/s6/frontend.conf")):
-            return "/etc/s6/frontend.conf doesn't exist"
+            return "couldn't read /etc/s6/frontend.conf or it doesn't exist"
 
     def command(self):
         return "s6 live status"

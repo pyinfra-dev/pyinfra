@@ -1,0 +1,8 @@
+args:
+  - tipidee
+kwargs:
+  restarted: true
+facts:
+  s6.S6LiveStatus:
+    tipidee: false
+commands: null
