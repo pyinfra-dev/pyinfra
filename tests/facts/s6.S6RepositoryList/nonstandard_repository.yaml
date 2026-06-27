@@ -1,11 +1,11 @@
-arg: 
+arg:
   - "/etc/s6/repo"
 command: "s6-rc-repo-list -r /etc/s6/repo"
 requires_command: "s6-rc-repo-list"
 output: |
   default
-  current
-  normal
+  minimal
+  recovery
+  kiosk
 fact:
-  [ "default", "current", "normal" ]
-
+  [ "default", "minimal", "recovery", "kiosk" ]

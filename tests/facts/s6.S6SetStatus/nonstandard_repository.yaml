@@ -1,0 +1,16 @@
+arg:
+  repository: "/etc/s6/repo"
+command: "s6-rc-set-status -r /etc/s6/repo current"
+requires_command: "s6-rc-set-status"
+output: |
+  swap/always
+  NetworkManager-srv/active
+  NetworkManager-log/active
+  avahi-daemon-srv/usable
+  avahi-daemon-log/usable
+fact:
+  swap: always
+  NetworkManager-srv: active
+  NetworkManager-log: active
+  avahi-daemon-srv: usable
+  avahi-daemon-log: usable

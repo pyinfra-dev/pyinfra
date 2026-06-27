@@ -1,0 +1,14 @@
+command: "s6 set status"
+requires_command: "s6"
+output: |
+  swap/always
+  NetworkManager-srv/active
+  NetworkManager-log/active
+  avahi-daemon-srv/usable
+  avahi-daemon-log/usable
+fact:
+  swap: always
+  NetworkManager-srv: active
+  NetworkManager-log: active
+  avahi-daemon-srv: usable
+  avahi-daemon-log: usable

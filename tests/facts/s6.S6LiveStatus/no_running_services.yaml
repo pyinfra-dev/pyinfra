@@ -1,0 +1,13 @@
+command: "s6 live status"
+requires_command: "s6"
+output: |
+  NetworkManager-srv/down
+  NetworkManager-log/down
+  avahi-daemon-log/down
+  avahi-daemon-srv/down
+fact:
+  NetworkManager-srv: false
+  NetworkManager-log: false
+  avahi-daemon-log: false
+  avahi-daemon-srv: false
+

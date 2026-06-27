@@ -1,0 +1,9 @@
+command: "s6 repository list"
+requires_command: "s6"
+output: |
+  default
+  minimal
+  recovery
+  kiosk
+fact:
+  [ "default", "minimal", "recovery", "kiosk" ]
