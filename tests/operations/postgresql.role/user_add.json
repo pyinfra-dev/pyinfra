@@ -12,7 +12,7 @@
     "commands": [
         {
             "raw": "psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 PASSWORD '\"'\"'abc'\"'\"''",
-            "masked":"psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 ***'"
+            "masked":"psql -Ac 'CREATE ROLE \"testuser\" LOGIN CONNECTION LIMIT 15 PASSWORD '\"'\"'*MASKED*'\"'\"''"
         }
     ]
 }

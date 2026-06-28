@@ -16,7 +16,7 @@
     "commands": [
         {
             "raw": "psql -Ac 'ALTER ROLE \"testuser\" CONNECTION LIMIT 15 PASSWORD '\"'\"'abc'\"'\"''",
-            "masked":"psql -Ac 'ALTER ROLE \"testuser\" CONNECTION LIMIT 15 ***'"
+            "masked":"psql -Ac 'ALTER ROLE \"testuser\" CONNECTION LIMIT 15 PASSWORD '\"'\"'*MASKED*'\"'\"''"
         }
     ]
 

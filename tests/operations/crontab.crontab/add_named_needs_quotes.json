@@ -11,6 +11,6 @@
     "commands": [
         "echo '# pyinfra-name=evil job; $(whoami)' >> _tempfile_",
         "echo '* * * * * backup /etc; rm -rf /' >> _tempfile_",
-        "crontab  _tempfile_"
+        "crontab _tempfile_"
     ]
 }

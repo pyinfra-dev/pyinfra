@@ -187,19 +187,19 @@ def crontab(
             )
 
     if edit_commands:
-        crontab_args = []
+        crontab_args: list[str | QuoteString] = []
         if user:
-            crontab_args.append(f"-u {user}")
+            crontab_args += ["-u", QuoteString(user)]
 
         # List the crontab into a temporary file if it exists
         if ctb:
-            yield f"crontab -l {' '.join(crontab_args)} > {temp_filename}"
+            yield StringCommand("crontab -l", *crontab_args, ">", QuoteString(temp_filename))
 
         # Now yield any edits
         yield from edit_commands
 
         # Finally, use the tempfile to write a new crontab
-        yield f"crontab {' '.join(crontab_args)} {temp_filename}"
+        yield StringCommand("crontab", *crontab_args, QuoteString(temp_filename))
     else:
         host.noop(
             f"crontab {command} {'exists' if present else 'does not exist'}",

@@ -22,19 +22,39 @@ def unix_path_join(*parts) -> str:
 
 
 def ensure_mode_int(mode: str | int | None) -> int | str | None:
-    # Already an int (/None)?
-    if isinstance(mode, int) or mode is None:
+    """
+    Normalise the accepted mode spellings to the canonical octal-digit
+    integer pyinfra passes to ``chmod`` (and that facts emit), so ``644``,
+    ``"644"``, ``"0644"`` and ``"0o644"`` all mean ``rw-r--r--``.
+
+    Integers are read as their octal digit representation (``644`` means
+    ``rw-r--r--``), matching the existing operations/facts contract. A true
+    octal literal (``0o644``) is indistinguishable from its decimal value
+    (``420``) at runtime - use the ``"0o644"`` string form instead.
+
+    Symbolic modes (``"u+x"``) and ``None`` pass through unchanged.
+    """
+    if mode is None or isinstance(mode, bool):
         return mode
 
-    try:
-        # Try making an int ('700' -> 700)
-        return int(mode)
+    if isinstance(mode, int):
+        digits = str(mode)
+    else:
+        digits = mode.strip().lower()
+        if digits.startswith("0o"):
+            digits = digits[2:]
+        if not digits.isdigit():
+            # Return as-is (ie +x which we don't need to normalise, it always gets run)
+            return mode
 
-    except (TypeError, ValueError):
-        pass
+    if any(c not in "01234567" for c in digits):
+        raise ValueError(
+            f"Invalid file mode: {mode!r} contains non-octal digits "
+            "(expected octal digits 0-7, eg 644, '0644' or '0o644')",
+        )
 
-    # Return as-is (ie +x which we don't need to normalise, it always gets run)
-    return mode
+    # Drop any leading zeros ('0644' -> 644) for the canonical digit int
+    return int(digits)
 
 
 def get_timestamp() -> str:
@@ -223,6 +243,22 @@ def adjust_regex(line: str, escape_regex_characters: bool) -> str:
         match_line = f"{match_line}.*$"
 
     return match_line
+
+
+def strip_regex_anchors(line: str) -> str:
+    """
+    Strip a leading ``^`` and trailing ``$`` regex anchor from a line.
+
+    Used when appending a missing line to a file: the user-supplied ``line`` is a
+    regex used to find existing matches, but the text written to the file must be
+    literal. Anchors that only have meaning while matching must not leak into the
+    file. An escaped trailing anchor (``\\$``) is left untouched.
+    """
+    if line.startswith("^"):
+        line = line[1:]
+    if line.endswith("$") and not line.endswith("\\$"):
+        line = line[:-1]
+    return line
 
 
 def generate_color_diff(

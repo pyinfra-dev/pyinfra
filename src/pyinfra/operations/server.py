@@ -606,10 +606,12 @@ def timezone(timezone: str):
         return
 
     if host.get_fact(Which, command="timedatectl"):
-        yield f"timedatectl set-timezone {timezone}"
+        yield StringCommand("timedatectl set-timezone", QuoteString(timezone))
     else:
-        yield f"ln -sf /usr/share/zoneinfo/{timezone} /etc/localtime"
-        yield f"echo {timezone} > /etc/timezone"
+        yield StringCommand(
+            "ln -sf", QuoteString(f"/usr/share/zoneinfo/{timezone}"), "/etc/localtime"
+        )
+        yield StringCommand("echo", QuoteString(timezone), "> /etc/timezone")
 
 
 @operation()
@@ -1346,7 +1348,7 @@ def kill(pid: int, signal: str = "TERM"):
         )
     """
 
-    yield f"kill -{signal} {pid}"
+    yield StringCommand("kill", QuoteString(f"-{signal}"), QuoteString(str(pid)))
 
 
 @operation()
