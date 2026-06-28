@@ -65,7 +65,7 @@ class LogFormatter(logging.Formatter):
 
             if self.log_timestamps:
                 ts = time.strftime("%H:%M:%S", time.localtime())
-                message = "[{0}] {1}".format(ts, message)
+                message = f"[{ts}] {message}"
 
             self.previous_was_header = "-->" in message
             return message

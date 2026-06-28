@@ -4,7 +4,7 @@ import json
 import platform
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Iterator
 
 import click
@@ -464,22 +464,22 @@ def print_results(state: State):
 def _format_seconds(seconds: float) -> str:
     if seconds >= 60:
         minutes, secs = divmod(seconds, 60)
-        return "{0:d}m {1:.2f}s".format(int(minutes), secs)
+        return f"{int(minutes):d}m {secs:.2f}s"
     if seconds >= 1:
-        return "{0:.2f}s".format(seconds)
-    return "{0:.0f}ms".format(seconds * 1000)
+        return f"{seconds:.2f}s"
+    return f"{seconds * 1000:.0f}ms"
 
 
-def print_run_elapsed(state: "State"):
+def print_run_elapsed(state: State):
     elapsed = state.timings.elapsed
     if elapsed is None:
         return
     click.echo(err=True)
-    click.echo("--> Finished, took {0}".format(_format_seconds(elapsed)), err=True)
+    click.echo(f"--> Finished, took {_format_seconds(elapsed)}", err=True)
 
 
-def _collect_op_timings(state: "State", top_n: int = 10) -> List[Dict[str, Any]]:
-    rows: List[Dict[str, Any]] = []
+def _collect_op_timings(state: State, top_n: int = 10) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     for op_hash in state.get_op_order():
         prepare = state.timings.op_prepare.get(op_hash, {})
         execute = state.timings.op_execute.get(op_hash, {})
@@ -502,8 +502,8 @@ def _collect_op_timings(state: "State", top_n: int = 10) -> List[Dict[str, Any]]
     return rows[:top_n]
 
 
-def _collect_fact_timings(state: "State", top_n: int = 10) -> List[Dict[str, Any]]:
-    aggregated: Dict[str, Dict[str, float]] = {}
+def _collect_fact_timings(state: State, top_n: int = 10) -> list[dict[str, Any]]:
+    aggregated: dict[str, dict[str, float]] = {}
     for host_facts in state.timings.facts.values():
         for fact_key, samples in host_facts.items():
             entry = aggregated.setdefault(
@@ -515,7 +515,7 @@ def _collect_fact_timings(state: "State", top_n: int = 10) -> List[Dict[str, Any
             entry["samples"] += len(samples)
             entry["hosts"] += 1
 
-    rows: List[Dict[str, Any]] = [
+    rows: list[dict[str, Any]] = [
         {
             "fact": fact_key,
             "total_seconds": data["total"],
@@ -529,7 +529,7 @@ def _collect_fact_timings(state: "State", top_n: int = 10) -> List[Dict[str, Any
     return rows[:top_n]
 
 
-def print_timings(state: "State", top_n: int = 10):
+def print_timings(state: State, top_n: int = 10):
     """
     Print a human-readable summary of the slowest operations and facts.
     """
@@ -540,7 +540,7 @@ def print_timings(state: "State", top_n: int = 10):
     click.echo("--> Timings:", err=True)
 
     if op_rows:
-        rows: List[Tuple[Callable, Union[List[str], str]]] = [
+        rows: list[tuple[Callable, list[str] | str]] = [
             (
                 logger.info,
                 ["Operation", "Hosts", "Prepare (sum)", "Execute (sum)", "Slowest host"],
@@ -587,7 +587,7 @@ def print_timings(state: "State", top_n: int = 10):
         click.echo("    No fact timings recorded.", err=True)
 
 
-def print_timings_json(state: "State"):
+def print_timings_json(state: State):
     """
     Print a JSON document with structured timing data to stdout. Designed for
     consumption by external tooling.

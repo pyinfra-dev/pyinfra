@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 from collections.abc import Callable, Iterator
 
 from gevent.pool import Pool
@@ -141,7 +141,7 @@ class StateHostResults:
     partial_ops = 0
 
 
-def _resolve_host(host: "Host") -> "Host":
+def _resolve_host(host: Host) -> Host:
     """
     Normalise a (possibly gevent-context-proxy) host to its underlying concrete
     Host. Storing the proxy as a dict key works for the duration of the greenlet
@@ -166,36 +166,36 @@ class StateTimings:
     """
 
     # Wall clock timestamps for the overall run
-    wall_start: Optional[float] = None
-    wall_end: Optional[float] = None
+    wall_start: float | None = None
+    wall_end: float | None = None
     # Monotonic timestamps, used for the elapsed delta
-    run_start: Optional[float] = None
-    run_end: Optional[float] = None
+    run_start: float | None = None
+    run_end: float | None = None
 
     # op_hash -> {host: seconds spent generating commands during change detection}
-    op_prepare: dict[str, dict["Host", float]] = field(
+    op_prepare: dict[str, dict[Host, float]] = field(
         default_factory=lambda: defaultdict(dict),
     )
     # op_hash -> {host: seconds spent executing commands on the remote host}
-    op_execute: dict[str, dict["Host", float]] = field(
+    op_execute: dict[str, dict[Host, float]] = field(
         default_factory=lambda: defaultdict(dict),
     )
     # host -> {fact_key: [seconds, ...]}; a list because some facts may be re-fetched
-    facts: dict["Host", dict[str, list[float]]] = field(
+    facts: dict[Host, dict[str, list[float]]] = field(
         default_factory=lambda: defaultdict(lambda: defaultdict(list)),
     )
 
-    def record_op_prepare(self, op_hash: str, host: "Host", seconds: float) -> None:
+    def record_op_prepare(self, op_hash: str, host: Host, seconds: float) -> None:
         self.op_prepare[op_hash][_resolve_host(host)] = seconds
 
-    def record_op_execute(self, op_hash: str, host: "Host", seconds: float) -> None:
+    def record_op_execute(self, op_hash: str, host: Host, seconds: float) -> None:
         self.op_execute[op_hash][_resolve_host(host)] = seconds
 
-    def record_fact(self, host: "Host", fact_key: str, seconds: float) -> None:
+    def record_fact(self, host: Host, fact_key: str, seconds: float) -> None:
         self.facts[_resolve_host(host)][fact_key].append(seconds)
 
     @property
-    def elapsed(self) -> Optional[float]:
+    def elapsed(self) -> float | None:
         if self.run_start is None or self.run_end is None:
             return None
         return self.run_end - self.run_start
@@ -218,7 +218,7 @@ class State:
     pool: Pool
 
     # Per-run timing data
-    timings: "StateTimings"
+    timings: StateTimings
 
     # Current stage this state is in
     current_stage: StateStage = StateStage.Setup
