@@ -70,6 +70,7 @@ from .util.files import (
     get_timestamp,
     sed_delete,
     sed_replace,
+    strip_regex_anchors,
     unix_path_join,
 )
 
@@ -337,6 +338,11 @@ def line(
         it does, like: ``^.*LINE.*$``. This means we don't swap parts of lines out. To
         change bits of lines, see ``files.replace``.
 
+        Because of this wrapping, ``line="foo"`` also matches a commented-out ``#foo`` or
+        any line that merely contains ``foo``. To match a whole line exactly, anchor it
+        yourself with ``^`` and/or ``$`` (eg ``line="^foo$"``); the anchors are used only
+        for matching and are stripped before the line is appended to the file.
+
     Regex line escaping:
         If matching special characters (eg a crontab line containing ``*``), remember to escape
         it first using Python's ``re.escape``.
@@ -429,6 +435,11 @@ def line(
     # We must provide some kind of replace to sed_replace_command below
     else:
         replace = ""
+        # `line` is the regex used to match; when appending it as a literal we must
+        # drop the anchors a user added to match a whole line (eg `^foo$`), otherwise
+        # they leak into the file. Skip when escaping, where the line is taken literally.
+        if not escape_regex_characters:
+            line = strip_regex_anchors(line)
 
     # Save commands for re-use in dynamic script when file not present at fact stage
     if ensure_newline:
