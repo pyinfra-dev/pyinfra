@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 
 
 @operation(is_idempotent=False)
@@ -31,11 +31,11 @@ def agent(server: str | None = None, port: int | None = None):
 
     """
 
-    args = []
+    command: list[str | QuoteString] = ["puppet agent -t"]
 
     if server:
-        args.append(f"--server={server}")
+        command.append(QuoteString(f"--server={server}"))
     if port:
-        args.append(f"--masterport={port}")
+        command.append(QuoteString(f"--masterport={port}"))
 
-    yield f"puppet agent -t {' '.join(args)}"
+    yield StringCommand(*command)
