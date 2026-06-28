@@ -1,0 +1,25 @@
+args:
+  - [ nftables, mysqld, php-fpm, tipidee ]
+kwargs:
+  running: true
+  restarted: true
+  reloaded: true
+  enabled: true
+facts:
+  s6.S6SetStatus:
+    nftables: "always"
+    mysqld: "active"
+    php-fpm: "masked"
+    tipidee: "usable"
+  s6.S6LiveStatus:
+    nftables: true
+    mysqld: false
+    php-fpm: false
+    tipidee: false
+commands:
+  - s6 live start mysqld php-fpm tipidee
+  - s6 live restart nftables
+  - s6 process kill -s SIGHUP nftables
+  - s6 set enable php-fpm tipidee
+  - s6 set check -F
+  - s6 set commit

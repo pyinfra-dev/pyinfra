@@ -1,0 +1,14 @@
+args:
+  - [ nftables, mysqld, tipidee ]
+kwargs:
+  running: null
+  enabled: true
+facts:
+  s6.S6SetStatus:
+    nftables: "usable"
+    mysqld: "usable"
+    tipidee: "usable"
+commands:
+  - s6 set enable nftables mysqld tipidee
+  - s6 set check -F
+  - s6 set commit
