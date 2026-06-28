@@ -5,7 +5,7 @@ Manage yum packages and repositories. Note that yum package names are case-sensi
 from __future__ import annotations
 
 from pyinfra import host, state
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.rpm import RpmPackageProvides, RpmPackages
 
 from .util.packaging import ensure_packages, ensure_rpm, ensure_yum_repo
@@ -36,7 +36,7 @@ def key(src: str):
 
     """
 
-    yield f"rpm --import {src}"
+    yield StringCommand("rpm --import", QuoteString(src))
 
 
 @operation()

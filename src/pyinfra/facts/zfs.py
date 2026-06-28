@@ -45,7 +45,7 @@ class ZfsDatasets(FactBase):
         from pyinfra.facts.server import KernelModules
 
         modules = host.get_fact(KernelModules) or {}
-        if "zfs" not in modules:
+        if "zfs" not in modules and "zfs.ko" not in modules:
             return "kernel module 'zfs' is not loaded"
 
     @override
