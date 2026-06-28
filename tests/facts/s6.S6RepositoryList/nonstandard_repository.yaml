@@ -1,11 +1,11 @@
 arg:
-  repository: "/etc/s6/repo"
-command: "s6-rc-repo-list -r /etc/s6/repo"
-requires_command: "s6-rc-repo-list"
+  repository: /etc/s6/repo
+command: s6-rc-repo-list -r /etc/s6/repo
+requires_command: s6-rc-repo-list
 output: |
   default
   minimal
   recovery
   kiosk
 fact:
-  [ "default", "minimal", "recovery", "kiosk" ]
+  [ default, minimal, recovery, kiosk ]

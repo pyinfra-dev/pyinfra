@@ -4,4 +4,4 @@ facts:
   s6.S6LiveStatus:
     tipidee: false
 commands:
-  - "s6 live start tipidee"
+  - s6 live start tipidee

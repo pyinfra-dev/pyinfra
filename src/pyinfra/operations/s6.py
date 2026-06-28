@@ -2,6 +2,7 @@
 
 from operator import itemgetter
 from collections.abc import Iterable
+from itertools import chain
 
 from pyinfra import host
 from pyinfra.api import QuoteString, operation
@@ -87,46 +88,99 @@ def service(
     if isinstance(services, str):
         services = (services,)
 
-    all_status = host.get_fact(S6LiveStatus).data
     # Tuple[bool] of status of each service in services arg
-    specified_status = (
-        itemgetter(*services)(all_status) if len(all_status) != 1 else (all_status[services[0]]),
-    )
-    all_running = True if all(specified_status) else False
+    # specified_status = (
+    #    itemgetter(*services)(all_status) if len(all_status) != 1 else (all_status[services[0]]),
+    # )
+    # dict[str, bool] of status of each service in services arg
     # all_running = True if all(itemgetter(*services)(all_status)) else False
 
-    services_concat_string = QuoteString(" ".join(services))
+    # dict[str, bool] whether the services given in the services arg are running.
+    statuses = {srv: host.get_fact(S6LiveStatus).data[srv] for srv in services}
+    all_up = all(statuses.values())
+    some_up = any(statuses.values())
 
-    # breakpoint()
+    services_concat_string = QuoteString(" ".join(services))
+    running_services_concat_string = QuoteString(
+        " ".join([srv for srv, status in statuses.items() if status])
+    )
 
     # ===
     # idempotency logic
     # ===
 
-    if not running:
-        if all_running:
-            yield make_formatted_string_command("s6 live stop {0}", services_concat_string)
-        elif len(services) == 1:
-            host.noop(f"service {' '.join(services)} is stopped")
-        else:
-            host.noop(f"services {' '.join(services)} are stopped")
+    all_down_services = [srv for srv, stat in statuses.items() if not stat]
+    all_up_services = [srv for srv, stat in statuses.items() if stat]
 
+    # requested to bring up given services
+    # bring up all specified services that are down
     if running:
-        if not all_running:
-            yield make_formatted_string_command("s6 live start {0}", services_concat_string)
-        elif len(services) == 1:
-            host.noop(f"service {' '.join(services)} is running")
+        if not all_up:
+            yield make_formatted_string_command(
+                # e.g. "s6 live start {0} {1} {2} {3}" if there are 4 down services
+                "s6 live start " + " ".join([f"{{{i}}}" for i in range(len(all_down_services))]),
+                *map(QuoteString, all_down_services),
+            )
         else:
-            host.noop(f"service {' '.join(services)} are running")
+            host.noop(f"all specified services are already up: {services}")
 
-    # TODO if restart requested, only restart the already running services
-    if restarted and all_running:
-        yield make_formatted_string_command("s6 live restart {0}", services_concat_string)
+    # requested to bring down given services
+    # bring down all specified services that are up
+    else:
+        if some_up:
+            yield make_formatted_string_command(
+                "s6 live stop " + " ".join([f"{{{i}}}" for i in range(len(all_up_services))]),
+                *map(QuoteString, all_up_services),
+            )
+        else:
+            host.noop(f"all specified services are already down: {services}")
 
-    if reloaded and all_running:
-        yield make_formatted_string_command(
-            "s6 process kill -s {0} {1}", reload_signal, services_concat_string
-        )
+    # only restart services that are up
+    if restarted:
+        if some_up:
+            yield make_formatted_string_command(
+                "s6 live restart " + " ".join([f"{{{i}}}" for i in range(len(all_up_services))]),
+                *map(QuoteString, all_up_services),
+            )
+        else:
+            host.noop(f"all specified services are down: {services}")
+
+    # only reload services that are up
+    if reloaded:
+        if some_up:
+            yield make_formatted_string_command(
+                "s6 process kill -s {0} "
+                + " ".join([f"{{{i+1}}}" for i in range(len(all_up_services))]),
+                QuoteString(reload_signal),
+                *map(QuoteString, all_up_services),
+            )
+        else:
+            host.noop(f"all specified services are down: {services}")
+
+    # if not running:
+    #    if all_up:
+    #        yield make_formatted_string_command("s6 live stop {0}", services_concat_string)
+    #    elif len(services) == 1:
+    #        host.noop(f"service {' '.join(services)} is stopped")
+    #    else:
+    #        host.noop(f"services {' '.join(services)} are stopped")
+
+    # if running:
+    #    if not all_up:
+    #        yield make_formatted_string_command("s6 live start {0}", services_concat_string)
+    #    elif len(services) == 1:
+    #        host.noop(f"service {' '.join(services)} is running")
+    #    else:
+    #        host.noop(f"service {' '.join(services)} are running")
+
+    # if restarted and some_up:
+    #    # restarts only the running services
+    #    yield make_formatted_string_command("s6 live restart {0}", running_services_concat_string)
+
+    # if reloaded and all_up:
+    #    yield make_formatted_string_command(
+    #        "s6 process kill -s {0} {1}", reload_signal, services_concat_string
+    #    )
 
     # ===
     # enable/disable services

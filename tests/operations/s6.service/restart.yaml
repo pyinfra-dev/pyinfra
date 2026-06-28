@@ -6,4 +6,4 @@ facts:
   s6.S6LiveStatus:
     tipidee: true
 commands:
-  - "s6 live restart tipidee"
+  - s6 live restart tipidee

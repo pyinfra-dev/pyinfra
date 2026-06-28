@@ -1,7 +1,9 @@
 args:
   - tipidee
+kwargs:
+  running: false
 facts:
   s6.S6LiveStatus:
     tipidee: true
 commands:
-  - "s6 live stop tipidee"
+  - s6 live stop tipidee

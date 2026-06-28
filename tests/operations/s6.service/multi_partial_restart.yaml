@@ -1,11 +1,12 @@
 args:
   - [ nftables, mysqld, tipidee ]
 kwargs:
-  reloaded: true
+  restarted: true
 facts:
   s6.S6LiveStatus:
     nftables: true
-    mysqld: true
+    mysqld: false
     tipidee: true
 commands:
-  - s6 process kill -s SIGHUP nftables mysqld tipidee
+  - s6 live start mysqld
+  - s6 live restart nftables tipidee

@@ -5,4 +5,6 @@ kwargs:
 facts:
   s6.S6LiveStatus:
     tipidee: false
-commands: null
+commands:
+  # restarted implies bring up if stopped
+  - s6 live start tipidee

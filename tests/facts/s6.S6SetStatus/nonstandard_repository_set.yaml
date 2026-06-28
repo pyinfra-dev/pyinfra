@@ -1,8 +1,8 @@
 arg:
-  set: "recovery"
-  repository: "/etc/s6/repo"
-command: "s6-rc-set-status -r /etc/s6/repo recovery"
-requires_command: "s6-rc-set-status"
+  set: recovery
+  repository: /etc/s6/repo
+command: s6-rc-set-status -r /etc/s6/repo recovery
+requires_command: s6-rc-set-status
 output: |
   swap/always
   tty1/active

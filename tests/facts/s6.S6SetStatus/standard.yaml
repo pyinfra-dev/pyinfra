@@ -1,5 +1,5 @@
-command: "s6 set status"
-requires_command: "s6"
+command: s6 set status
+requires_command: s6
 output: |
   swap/always
   NetworkManager-srv/active
