@@ -117,7 +117,7 @@ class SCPClient:
         # Quote them as the control sequence \^J for now,
         # which is how openssh handles it.
         self.channel.sendall(
-            ("C%s %d " % (mode, size)).encode("ascii") + basename.replace(b"\n", b"\\^J") + b"\n"
+            f"C{mode} {size} ".encode("ascii") + basename.replace(b"\n", b"\\^J") + b"\n"
         )
         self._recv_confirm()
         file_pos = 0

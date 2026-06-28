@@ -2,7 +2,7 @@ import ast
 import socket
 from collections import defaultdict
 from os import listdir, path
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 from collections.abc import Callable
 
 from pyinfra import logger
@@ -13,7 +13,7 @@ from pyinfra.context import ctx_inventory
 from .exceptions import CliError
 from .util import exec_file, try_import_module_attribute
 
-HostType = Union[str, tuple[str, dict]]
+HostType = str | tuple[str, dict]
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = (str, tuple)

@@ -68,7 +68,7 @@ def init_virtualenv() -> None:
         virtual_env = os.path.join(
             os.environ["VIRTUAL_ENV"],
             "lib",
-            "python%d.%d" % sys.version_info[:2],
+            f"python{sys.version_info[0]}.{sys.version_info[1]}",
             "site-packages",
         )
 

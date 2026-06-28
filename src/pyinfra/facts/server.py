@@ -6,7 +6,6 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from typing import Optional, Union
 from collections.abc import Iterable
 
 from dateutil.parser import parse as parse_date
@@ -41,7 +40,7 @@ class User(FactBase):
         return "echo $USER"
 
 
-class Home(FactBase[Optional[str]]):
+class Home(FactBase[str | None]):
     """
     Returns the home directory of the given user, or the current user if no user is given.
     """
@@ -205,7 +204,7 @@ class Timezone(FactBase[str]):
         return output[0]
 
 
-class Which(FactBase[Optional[str]]):
+class Which(FactBase[str | None]):
     """
     Returns the path of a given command according to `command -v`, if available.
     """
@@ -354,7 +353,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
+class Port(FactBase[tuple[str, int] | tuple[None, None]]):
     """
     Returns the process occupying a port and its PID.
 

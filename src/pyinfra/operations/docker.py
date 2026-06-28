@@ -17,9 +17,9 @@ from pyinfra.facts.docker import (
     DockerVolume,
 )
 
-DOCKER_HUB_SERVER = "https://index.docker.io/v1/"
-
 from .util.docker import ContainerSpec, handle_docker, parse_image_reference
+
+DOCKER_HUB_SERVER = "https://index.docker.io/v1/"
 
 
 @operation()

@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 import stat
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from typing_extensions import NotRequired, TypedDict, override
 from typing import Literal
@@ -220,7 +220,7 @@ class FileDict(TypedDict):
     link_target: NotRequired[str]
 
 
-class File(FactBase[Union[FileDict, Literal[False], None]]):
+class File(FactBase[FileDict | Literal[False] | None]):
     """
     Returns information about a file on the remote system:
 
@@ -370,7 +370,7 @@ class Socket(File):
 
 
 if TYPE_CHECKING:
-    FactBaseOptionalStr = FactBase[Optional[str]]
+    FactBaseOptionalStr = FactBase[str | None]
 else:
     FactBaseOptionalStr = FactBase
 
@@ -390,10 +390,10 @@ class HashFileFactBase(FactBaseOptionalStr):
         assert cls.__name__.endswith("File")
         hash_name = cls.__name__[:-4].upper()
         cls._regexes = (
-            # GNU coreutils style:
-            r"^([a-fA-F0-9]{%d})\s+%%s$" % digits,
+            # GNU coreutils style (two-stage template: %%s stays a literal %s placeholder):
+            r"^([a-fA-F0-9]{%d})\s+%%s$" % digits,  # noqa: UP031
             # BSD style:
-            r"^%s\s+\(%%s\)\s+=\s+([a-fA-F0-9]{%d})$" % (hash_name, digits),
+            r"^%s\s+\(%%s\)\s+=\s+([a-fA-F0-9]{%d})$" % (hash_name, digits),  # noqa: UP031
         )
 
     @override
