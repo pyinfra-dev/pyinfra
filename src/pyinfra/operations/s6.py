@@ -30,11 +30,13 @@ def _make_set_rx_command(op: str, services: Iterable):
 # TODO server.service compatibility (must use a string for services in that implementation)
 @operation()
 def service(
-    services: str | Iterable[str],
+    service: str | Iterable[str],
     # optional, to separate live management vs set management
     running: bool | None = True,
     restarted: bool = False,
     reloaded: bool = False,
+    # TODO command
+    command: str | None = None,
     enabled: bool | None = None,
     reload_signal: str = "SIGHUP",
     # TODO repo
@@ -49,8 +51,9 @@ def service(
 
     + services: name(s) of the service(s) to manage.
     + running: whether the service(s) should be under an s6-supervise.
-    + restarted: whether the service(s) should be restarted (with `s6-rc -d change service && s6-rc -u change service`)
+    + restarted: whether the service(s) should be restarted
     + reloaded: whether the service(s) should be reloaded by sending a SIGHUP. Whether the service is reloaded depends on how it handles SIGHUP.
+    + command: custom command to run after the auto-computed commands.
     + enabled: whether the service should be given an "active" or "usable" prescription
     + reload_signal: the signal to send to the service(s) when a reload is desired.
     + repo: name of the repository to use when managing enabled status, using the one configured in s6-frontend.conf by default.
@@ -67,8 +70,8 @@ def service(
         raise ValueError('disabled_rx must be either "usable" or "masked"')
 
     # because iterable unpacking is used
-    if isinstance(services, str):
-        services = (services,)
+    if isinstance(service, str):
+        service = (service,)
 
     # Tuple[bool] of status of each service in services arg
     # specified_status = (
@@ -81,7 +84,7 @@ def service(
     if running is not None:
 
         # dict[str, bool] whether the services given in the services arg are running.
-        live_statuses = {srv: host.get_fact(S6LiveStatus).data[srv] for srv in services}
+        live_statuses = {srv: host.get_fact(S6LiveStatus).data[srv] for srv in service}
         all_up = all(live_statuses.values())
         some_up = any(live_statuses.values())
         all_down_services = [srv for srv, stat in live_statuses.items() if not stat]
@@ -91,19 +94,19 @@ def service(
             if not all_up:
                 yield from _make_live_command("start", all_down_services)
             else:
-                host.noop(f"all specified services are already up: {services}")
+                host.noop(f"all specified services are already up: {service}")
 
         else:
             if some_up:
                 yield from _make_live_command("stop", all_up_services)
             else:
-                host.noop(f"all specified services are already down: {services}")
+                host.noop(f"all specified services are already down: {service}")
 
         if restarted:
             if some_up:
                 yield from _make_live_command("restart", all_up_services)
             else:
-                host.noop(f"all specified services are down: {services}")
+                host.noop(f"all specified services are down: {service}")
 
         if reloaded:
             if some_up:
@@ -114,7 +117,7 @@ def service(
                     *map(QuoteString, all_up_services),
                 )
             else:
-                host.noop(f"all specified services are down: {services}")
+                host.noop(f"all specified services are down: {service}")
 
     # TODO: if a service is masked, s6 live will always fail to do anything to that service;
     # potential solution is to split enabled into another operation
@@ -123,7 +126,7 @@ def service(
     # offline set management
     if enabled is not None:
 
-        set_statuses = {srv: host.get_fact(S6SetStatus).data[srv] for srv in services}
+        set_statuses = {srv: host.get_fact(S6SetStatus).data[srv] for srv in service}
         all_enabled_services = [
             srv for srv, stat in set_statuses.items() if stat in {"active", "always"}
         ]
@@ -137,7 +140,7 @@ def service(
                 yield StringCommand("s6 set check -F")
                 yield StringCommand("s6 set commit")
             else:
-                host.noop(f"all services are already enabled: {services}")
+                host.noop(f"all services are already enabled: {service}")
 
         else:
             if len(all_enabled_services) != 0:
@@ -145,7 +148,10 @@ def service(
                 yield StringCommand("s6 set check -F")
                 yield StringCommand("s6 set commit")
             else:
-                host.noop(f"all services are already disabled: {services}")
+                host.noop(f"all services are already disabled: {service}")
+
+        if command:
+            yield StringCommand(command)
 
 
 # TODO s6 live install is analagous to systemd daemon-reload
