@@ -1,11 +1,15 @@
 """Manage s6-rc services (https://www.skarnet.org/software/s6-rc/)."""
 
+import builtins
+import re
 from collections.abc import Iterable
 
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus
+from pyinfra.facts.files import FindInFile
+from pyinfra.operations import files
 
 
 def _make_live_command(op: str, services: Iterable):
@@ -43,6 +47,7 @@ def service(
     repo: str | None = None,
     # TODO set
     set: str | None = None,
+    # TODO implement this
     enabled_rx: str = "active",
     disabled_rx: str = "usable",
 ):
@@ -69,20 +74,13 @@ def service(
     if disabled_rx not in {"usable", "masked"}:
         raise ValueError('disabled_rx must be either "usable" or "masked"')
 
-    # because iterable unpacking is used
+    # `service` is treated as an iterable of strings; if it is a string itself (i.e. one service
+    # specified), undesired iteration over characters will occur.
     if isinstance(service, str):
         service = (service,)
 
-    # Tuple[bool] of status of each service in services arg
-    # specified_status = (
-    #    itemgetter(*services)(all_status) if len(all_status) != 1 else (all_status[services[0]]),
-    # )
-    # dict[str, bool] of status of each service in services arg
-    # all_running = True if all(itemgetter(*services)(all_status)) else False
-
     # live state management
     if running is not None:
-
         # dict[str, bool] whether the services given in the services arg are running.
         live_statuses = {srv: host.get_fact(S6LiveStatus).data[srv] for srv in service}
         all_up = all(live_statuses.values())
@@ -123,10 +121,11 @@ def service(
     # potential solution is to split enabled into another operation
     # ERROR CONDITION: a masked service is present in `services` arg.
 
+    # TODO call s6.set operation, don't implement set-based logic here
+
     # offline set management
     if enabled is not None:
-
-        set_statuses = {srv: host.get_fact(S6SetStatus).data[srv] for srv in service}
+        set_statuses = {srv: host.get_fact(S6SetStatus, set).data[srv] for srv in service}
         all_enabled_services = [
             srv for srv, stat in set_statuses.items() if stat in {"active", "always"}
         ]
@@ -154,38 +153,152 @@ def service(
             yield StringCommand(command)
 
 
-# TODO s6 live install is analagous to systemd daemon-reload
 # for now, no support for custom repository; only the s6-frontend one.
 # but should get this at some point, as it allows for user-managed (i.e. non-root) services
-@operation()
+# TODO multiple sets at once
+@operation(
+    is_idempotent=False,
+    idempotent_notice="If `commit=True`, the operation is stateless due to an unconditional `s6 set check -F` and `s6 set commit`. Otherwise it is idempotent.",
+)
 def set(
-    set: str = "current",
+    set: str,
+    prescriptions: dict[str] | None = None,
+    enforce_prescriptions: bool = False,
     present: bool = True,
+    save: bool = False,
+    save_name: str = set,
     force_save: bool = False,
     backup: bool = True,
+    commit: bool = True,
+    # TODO configurable s6-frontend.conf location
 ):
     """
     Manage sets in a repository.
 
     + set: name of the set to manage.
+    + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only.
+    + enforce_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be removed)
     + present: whether the set should be present in the repository.
+    + save: whether to save the set to the repository.
+    + save_name: name for the saved set.
     + force_save: whether to overwrite existing sets.
-    + backup: whether to backup overwritten sets by appending the date to the directory name.
+    + backup: whether to backup overwritten sets by appending the timestamp to the directory name.
+    + commit: whether to commit the current(ly loaded) set. Delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
+
     """
 
-    if not present:
+    if set == "current":
+        raise ValueError('set name cannot be "current"')
+
+    if prescriptions:
+        if not (builtins.set(prescriptions.values()) <= {"always", "active", "usable", "masked"}):
+            raise ValueError(
+                'prescriptions can only take values "always", "active", "usable", or "masked"'
+            )
+
+        wanted_always = [srv for srv, rx in prescriptions.items() if rx == "always"]
+        wanted_active = [srv for srv, rx in prescriptions.items() if rx == "active"]
+        wanted_usable = [srv for srv, rx in prescriptions.items() if rx == "usable"]
+        wanted_masked = [srv for srv, rx in prescriptions.items() if rx == "masked"]
+
+    if present:
+        # prescription of every service in the set
+        curr_rxs = host.get_fact(S6SetStatus, set)
+        if enforce_prescriptions:
+            # mask all services not present in `prescriptions` arg
+            wanted_masked.extend([srv for srv in curr_rxs if srv not in prescriptions])
+        # TODO there has to be a way to reduce boilerplate
+        if prescriptions and prescriptions != curr_rxs:
+            yield make_formatted_string_command("s6 set load {0}", QuoteString(set))
+
+            if wanted_always:
+                service_subset = []
+                for srv in wanted_always:
+                    try:
+                        if curr_rxs[srv] != "always":
+                            service_subset.append(srv)
+                    except KeyError:
+                        service_subset.append(srv)
+                if service_subset:
+                    yield from _make_set_rx_command("make-essential", service_subset)
+            if wanted_active:
+                service_subset = []
+                for srv in wanted_active:
+                    try:
+                        if curr_rxs[srv] != "active":
+                            service_subset.append(srv)
+                    except KeyError:
+                        service_subset.append(srv)
+                if service_subset:
+                    yield from _make_set_rx_command("enable", service_subset)
+            if wanted_usable:
+                service_subset = []
+                for srv in wanted_usable:
+                    try:
+                        if curr_rxs[srv] != "usable":
+                            service_subset.append(srv)
+                    except KeyError:
+                        service_subset.append(srv)
+                if service_subset:
+                    yield from _make_set_rx_command("disable", service_subset)
+            if wanted_masked:
+                service_subset = []
+                for srv in wanted_masked:
+                    try:
+                        if curr_rxs[srv] != "masked":
+                            service_subset.append(srv)
+                    except KeyError:
+                        service_subset.append(srv)
+                if service_subset:
+                    yield from _make_set_rx_command("mask", service_subset)
+
+            if save:
+                if save_name:
+                    yield make_formatted_string_command("s6 set save {0}", QuoteString(save_name))
+                else:
+                    yield StringCommand("s6 set save")
+
+
+        elif prescriptions and not commit:
+            host.noop("all services specified match the desired prescriptions and commit not requested")
+
+        if force_save:
+            if backup:
+                # will break if repodir key pair in /etc/s6-frontend.conf spans several lines
+                lines = host.get_fact(
+                    FindInFile,
+                    "/etc/s6-frontend.conf",
+                    r"repodir\s*=",
+                    interpolate_variables=False,
+                    extended_regex=True,
+                ).data
+                if lines is None:
+                    raise RuntimeError(
+                        "no repodir found in /etc/s6-frontend.conf, or file doesn't exist"
+                    )
+                if len(lines) != 1:
+                    raise RuntimeWarning(
+                        "multiple repodir definitions found in /etc/s6-frontend.conf, using the first one"
+                    )
+
+                # https://skarnet.org/software/execline/envfile.html#syntax
+                repodir = re.fullmatch(r'^\s*repodir\s*=\s*(/[^\s]*|"/.*")\s*$', lines[0])[1]
+
+                yield from files.directory._inner(
+                    path=repodir, present=False, force=True, force_backup=True
+                )
+
+            yield make_formatted_string_command("s6 set save -f {0}", QuoteString(set))
+
+        # TODO mark stateless
+        if commit:
+            yield StringCommand("s6 set check -F")
+            yield StringCommand("s6 set commit")
+
+    # present=False
+    else:
         yield make_formatted_string_command("s6 set delete {0}", QuoteString(set))
 
-    if force_save:
-        yield make_formatted_string_command("s6 set save -f {0}", QuoteString(set))
-    else:
-        yield make_formatted_string_command("s6 set save {0}", QuoteString(set))
 
-    "s6-rc-set-new"
-    "s6-rc-set-copy"
-    "s6-rc-set-delete"
-    # run after each update to check consistency, but don't autofix
-    "s6-rc-set-fix"
-
-
-# TODO operation for set commit?
+# TODO s6 set commit op
+# TODO s6 live install is analagous to systemd daemon-reload

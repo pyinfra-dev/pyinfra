@@ -1,0 +1,23 @@
+args:
+  - default
+kwargs:
+  prescriptions:
+    nftables: "always"
+    mysqld: "active"
+    php-fpm: "masked"
+    tipidee: "usable"
+facts:
+  s6.S6SetStatus:
+    repository=None, set=default:
+      nftables: "active"
+      mysqld: "usable"
+      php-fpm: "usable"
+      tipidee: "active"
+commands:
+  - s6 set load default
+  - s6 set make-essential nftables
+  - s6 set enable mysqld
+  - s6 set disable tipidee
+  - s6 set mask php-fpm
+  - s6 set check -F
+  - s6 set commit

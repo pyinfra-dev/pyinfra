@@ -1,0 +1,18 @@
+args:
+  - default
+kwargs:
+  prescriptions:
+    nftables: "active"
+    mysqld: "active"
+    tipidee: "active"
+facts:
+  s6.S6SetStatus:
+    repository=None, set=default:
+      nftables: "usable"
+      mysqld: "usable"
+      tipidee: "usable"
+commands:
+  - s6 set load default
+  - s6 set enable nftables mysqld tipidee
+  - s6 set check -F
+  - s6 set commit

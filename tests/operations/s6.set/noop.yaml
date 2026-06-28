@@ -1,0 +1,17 @@
+args:
+  - default
+kwargs:
+  prescriptions:
+    nftables: "active"
+    mysqld: "masked"
+    tipidee: "usable"
+  commit: false
+facts:
+  s6.S6SetStatus:
+    repository=None, set=default:
+      nftables: "active"
+      mysqld: "masked"
+      tipidee: "usable"
+commands: []
+noop_description: all services specified match the desired prescriptions and commit not requested
+
