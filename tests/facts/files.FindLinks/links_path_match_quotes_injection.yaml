@@ -1,0 +1,8 @@
+arg:
+  path: /etc
+  path_match: "/etc/rc*.d/S*x; reboot"
+command: "find /etc -type l -path '/etc/rc*.d/S*x; reboot' || true"
+output:
+  - /etc/rc2.d/S20x; reboot
+fact:
+  - /etc/rc2.d/S20x; reboot

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from pyinfra import host
-from pyinfra.api import OperationError, operation
+from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.apt import (
     AptSourcesFile,
     AptSources,
@@ -381,10 +381,10 @@ def ppa(src: str, present=True):
     """
 
     if present:
-        yield f'apt-add-repository -y "{src}"'
+        yield StringCommand("apt-add-repository -y", QuoteString(src))
 
     if not present:
-        yield f'apt-add-repository -y --remove "{src}"'
+        yield StringCommand("apt-add-repository -y --remove", QuoteString(src))
 
 
 @operation()
@@ -442,19 +442,25 @@ def deb(src: str, present=True, force=False):
     if present:
         if not exists:
             # Install .deb file - ignoring failure (on unmet dependencies)
-            yield f"dpkg --force-confdef --force-confold -i {src} 2> /dev/null || true"
+            yield StringCommand(
+                "dpkg --force-confdef --force-confold -i",
+                QuoteString(src),
+                "2> /dev/null || true",
+            )
             # Attempt to install any missing dependencies
             yield f"{noninteractive_apt('install', force=force)} -f"
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
-            yield f"dpkg --force-confdef --force-confold -i {src}"
+            yield StringCommand("dpkg --force-confdef --force-confold -i", QuoteString(src))
         else:
             host.noop(f"deb {original_src} is installed")
 
     # Package exists but we don't want?
     if not present:
         if exists:
-            yield f"{noninteractive_apt('remove', force=force)} {info['name']}"
+            yield StringCommand(
+                noninteractive_apt("remove", force=force), QuoteString(info["name"])
+            )
         else:
             host.noop(f"deb {original_src} is not installed")
 
