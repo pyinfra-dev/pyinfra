@@ -11,7 +11,7 @@ import gevent
 
 from pyinfra import logger
 from pyinfra.api.output import echo, format_text
-from pyinfra.api import MaskString, QuoteString, StringCommand
+from pyinfra.api import HiddenValue, QuoteString, StringCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
@@ -23,6 +23,15 @@ if TYPE_CHECKING:
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SU_ASKPASS_ENV_VAR = "PYINFRA_SU_PASSWORD"
+
+# Output lines that indicate sudo could not prompt for a password and we should retry with one.
+# - sudo (Todd C. Miller's): "sudo: a password is required"
+# - sudo-rs (Trifecta Tech): "sudo-rs: interactive authentication is required"
+#   https://github.com/trifectatechfoundation/sudo-rs (default sudo on Ubuntu 25.10+)
+SUDO_PASSWORD_REQUIRED_LINES = (
+    "sudo: a password is required",
+    "sudo-rs: interactive authentication is required",
+)
 
 
 ASKPASS_COMMAND = r"""
@@ -204,7 +213,7 @@ def execute_command_with_sudo_retry(
     # https://github.com/pyinfra-dev/pyinfra/issues/1292
     if return_code != 0 and output and output.combined_lines:
         for line in reversed(output.combined_lines):
-            if line.line.strip() == "sudo: a password is required":
+            if line.line.strip() in SUDO_PASSWORD_REQUIRED_LINES:
                 # If we need a password, ask the user for it and attach to the host
                 # internal connector data for use when executing future commands.
                 sudo_password = getpass(f"{host.print_prefix}sudo password: ")
@@ -446,8 +455,10 @@ def make_unix_command(
             [
                 "env",
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
-                MaskString(
-                    f"{SUDO_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_sudo_password)).get_raw_value()}"
+                StringCommand(
+                    SUDO_ASKPASS_ENV_VAR,
+                    QuoteString(HiddenValue(_sudo_password)),
+                    _separator="=",
                 ),
             ],
         )
@@ -474,8 +485,10 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
-                    MaskString(
-                        f"{SU_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_su_password)).get_raw_value()}"
+                    StringCommand(
+                        SU_ASKPASS_ENV_VAR,
+                        QuoteString(HiddenValue(_su_password)),
+                        _separator="=",
                     ),
                     QuoteString(_su_askpass_path),
                     "|",

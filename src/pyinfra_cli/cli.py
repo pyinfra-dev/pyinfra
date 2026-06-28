@@ -3,13 +3,13 @@ import sys
 import warnings
 from fnmatch import fnmatch
 from getpass import getpass
-from os import chdir as os_chdir, getcwd, path
 from collections.abc import Iterable
+from os import chdir as os_chdir, environ, getcwd, path
 
 import click
 
 from pyinfra import __version__, logger, state
-from pyinfra.api import Config, State
+from pyinfra.api import Config, Host, Inventory, State
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts
@@ -25,10 +25,14 @@ from .inventory import make_inventory
 from .log import setup_logging
 from .prints import (
     print_facts,
+    print_facts_json,
     print_inventory,
+    print_inventory_json,
     print_meta,
     print_results,
+    print_run_json,
     print_state_operations,
+    print_state_operations_json,
     print_support_info,
 )
 from .util import exec_file, load_deploy_file, load_func, parse_cli_arg
@@ -86,6 +90,11 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 @click.option(
     "--limit",
     help="Restrict the target hosts by name and group name.",
+    multiple=True,
+)
+@click.option(
+    "--exclude",
+    help="Exclude target hosts by name and group name.",
     multiple=True,
 )
 @click.option("--fail-percent", type=int, help="% of hosts that need to fail before exiting early.")
@@ -221,6 +230,16 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     default=False,
     help="Print operations after generating and exit.",
 )
+@click.option(
+    "--json",
+    "json_output",
+    is_flag=True,
+    default=False,
+    help=(
+        "Emit pure JSON output on stdout (for facts, debug-inventory, "
+        "debug-operations, dry runs and deploy results)."
+    ),
+)
 @click.version_option(
     version=__version__,
     prog_name="pyinfra",
@@ -319,6 +338,7 @@ def _main(
     diff: bool,
     yes: bool,
     limit: Iterable,
+    exclude: Iterable,
     no_wait: bool,
     serial: bool,
     retry: int,
@@ -327,8 +347,15 @@ def _main(
     debug_all: bool,
     debug_facts: bool,
     debug_operations: bool,
+    json_output: bool = False,
     support: bool = False,
 ):
+    # In JSON mode keep the spinner quiet so stdout stays pure JSON. Do not
+    # force --yes: a JSON run must be able to diff a host without mutating
+    # it. Applying still requires an explicit --yes; without it the proposed
+    # changes are emitted as JSON instead of blocking on a confirm prompt.
+    if json_output:
+        environ.setdefault("PYINFRA_PROGRESS", "off")
     # Setup working directory
     #
     if chdir:
@@ -382,7 +409,9 @@ def _main(
         ssh_password,
     )
 
-    if yes is False:
+    # JSON mode is non-interactive: a failure prompt would block the
+    # pure-JSON stdout pipe, so never install the confirm callbacks there.
+    if yes is False and not json_output:
         _set_fail_prompts(state, config)
 
     # Load up the inventory from the filesystem
@@ -396,14 +425,18 @@ def _main(
     )
     ctx_inventory.set(inventory)
 
-    # Now that we have inventory, apply --limit config override
+    # Now that we have inventory, apply --limit/--exclude config override
     initial_limit = _apply_inventory_limit(inventory, limit)
+    initial_limit = _apply_inventory_exclude(inventory, initial_limit, exclude)
 
     # Initialise the state
     state.init(inventory, config, initial_limit=initial_limit)
 
     if command == CliCommands.DEBUG_INVENTORY:
-        print_inventory(state)
+        if json_output:
+            print_inventory_json(state)
+        else:
+            print_inventory(state)
         _exit()
 
     # Connect to the hosts & start handling the user commands
@@ -414,12 +447,12 @@ def _main(
 
     state.set_stage(StateStage.Prepare)
     can_diff, state, config = _handle_commands(
-        state, config, command, original_operations, operations
+        state, config, command, original_operations, operations, json_output=json_output
     )
 
     # Print proposed changes, execute unless --dry, and exit
     #
-    if can_diff:
+    if can_diff and not json_output:
         if yes:
             logger.info("--> Skipping change detection")
         else:
@@ -437,19 +470,26 @@ def _main(
     # If --debug-facts or --debug-operations, print and exit
     if debug_facts or debug_operations:
         if debug_operations:
-            print_state_operations(state)
+            if json_output:
+                print_state_operations_json(state)
+            else:
+                print_state_operations(state)
 
         _exit()
 
     if dry:
+        if json_output:
+            print_run_json(state, dry=True)
         _exit()
 
-    if (
-        can_diff
-        and not yes
-        and not _do_confirm("Detected changes displayed above, skip this step with -y")
-    ):
-        _exit()
+    if can_diff and not yes:
+        if json_output:
+            # Non-interactive JSON run without --yes: emit the proposed
+            # changes (like --dry) and exit without touching the host.
+            print_run_json(state, dry=True)
+            _exit()
+        if not _do_confirm("Detected changes displayed above, skip this step with -y"):
+            _exit()
 
     logger.info("--> Beginning operation run...")
     state.set_stage(StateStage.Execute)
@@ -457,7 +497,10 @@ def _main(
 
     logger.info("--> Results:")
     state.set_stage(StateStage.Disconnect)
-    print_results(state)
+    if json_output:
+        print_run_json(state, dry=False)
+    else:
+        print_results(state)
     _exit()
 
 
@@ -714,33 +757,61 @@ def _set_fail_prompts(state: State, config: Config) -> None:
     state.should_raise_failed_hosts = should_raise_failed_hosts
 
 
-def _apply_inventory_limit(inventory, limit):
-    initial_limit = None
+def _get_inventory_pattern_matches(
+    inventory: Inventory,
+    patterns: Iterable[str],
+    option_name: str,
+) -> list[Host]:
+    all_hosts: list[Host] = []
+
+    for pattern in patterns:
+        try:
+            hosts = inventory.get_group(pattern)
+        except NoGroupError:
+            hosts = [host for host in inventory if fnmatch(host.name, pattern)]
+
+        if not hosts:
+            logger.warning(f"No host matches found for {option_name} pattern: {pattern}")
+
+        all_hosts.extend(hosts)
+
+    return list(set(all_hosts))
+
+
+def _apply_inventory_limit(
+    inventory: Inventory,
+    limit: Iterable[str] | None,
+) -> list[Host] | None:
     if limit:
-        all_limit_hosts = []
+        return _get_inventory_pattern_matches(inventory, limit, "--limit")
 
-        for limiter in limit:
-            try:
-                limit_hosts = inventory.get_group(limiter)
-            except NoGroupError:
-                limit_hosts = [host for host in inventory if fnmatch(host.name, limiter)]
+    return None
 
-            if not limit_hosts:
-                logger.warning(f"No host matches found for --limit pattern: {limiter}")
 
-            all_limit_hosts.extend(limit_hosts)
-        initial_limit = list(set(all_limit_hosts))
+def _apply_inventory_exclude(
+    inventory: Inventory,
+    initial_limit: list[Host] | None,
+    exclude: Iterable[str] | None,
+) -> list[Host] | None:
+    if not exclude:
+        return initial_limit
 
-    return initial_limit
+    excluded_hosts = set(_get_inventory_pattern_matches(inventory, exclude, "--exclude"))
+    limit_hosts = initial_limit if initial_limit is not None else list(inventory)
+
+    return [host for host in limit_hosts if host not in excluded_hosts]
 
 
 # Operations Execution
 #
-def _handle_commands(state, config, command, original_operations, operations):
+def _handle_commands(state, config, command, original_operations, operations, json_output=False):
     if command is CliCommands.FACT:
         logger.info("--> Gathering facts...")
         state, fact_data = _run_fact_operations(state, config, operations)
-        print_facts(fact_data)
+        if json_output:
+            print_facts_json(fact_data)
+        else:
+            print_facts(fact_data)
         _exit()
 
     can_diff = True

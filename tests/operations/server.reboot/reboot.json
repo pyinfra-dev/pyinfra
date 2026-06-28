@@ -2,6 +2,7 @@
     "args": [],
     "commands": [
         ["remove_any_askpass_file", [], {}],
+        ["capture_uptime", [], {}],
         "( sleep 1 && reboot ) </dev/null >/dev/null 2>&1 &",
         ["wait_and_reconnect", [], {}],
         ["clean_sudo_info", [], {}]

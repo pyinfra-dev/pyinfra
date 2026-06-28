@@ -15,9 +15,10 @@ from pyinfra import host, logger, state
 from pyinfra.api import FunctionCommand, OperationError, QuoteString, StringCommand, operation
 from pyinfra.api.util import try_int
 from pyinfra.connectors.util import clear_askpass_cache, remove_any_sudo_askpass_file
-from pyinfra.facts.files import Directory, FindInFile, Link
+from pyinfra.facts.files import Directory, FileContents, FindInFile, Link
 from pyinfra.facts.server import (
     AuthorizedKeys,
+    EtcHosts,
     Groups,
     Home,
     Hostname,
@@ -29,6 +30,7 @@ from pyinfra.facts.server import (
     Os,
     Sysctl,
     Timezone,
+    Uptime,
     Users,
     Which,
 )
@@ -78,6 +80,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
             reboot_timeout=600,
         )
     """
+    pre_reboot_uptime: list[int] = []
 
     # Remove this now, before we reboot the server - if the reboot fails (expected or
     # not) we'll error if we don't clean this up now. Will simply be re-uploaded if
@@ -86,6 +89,11 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         remove_any_sudo_askpass_file(host)
 
     yield FunctionCommand(remove_any_askpass_file, (), {})
+
+    def capture_uptime(state, host):
+        pre_reboot_uptime.append(host.get_fact(Uptime))
+
+    yield FunctionCommand(capture_uptime, (), {})
 
     # Detach the reboot from the SSH session so the channel closes immediately.
     # When the reboot is run inline, paramiko blocks on `recv_exit_status` for
@@ -108,10 +116,26 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
         host.disconnect()  # make sure we are properly disconnected
         retries = 0
 
+        pre_uptime = pre_reboot_uptime[0]
+
         while True:
             host.connect(show_errors=False)
+
             if host.connected:
-                break
+                post_uptime = host.get_fact(Uptime)
+                logger.debug(
+                    "Connected (current_uptime=%ss, pre_reboot_uptime=%ss)",
+                    post_uptime,
+                    pre_uptime,
+                )
+
+                if post_uptime < pre_uptime + delay:
+                    logger.debug("Reboot confirmed.")
+                    break
+
+                logger.debug("Host reachable but uptime unchanged; reboot still in progress")
+            else:
+                logger.debug("Waiting for host to become reachable...")
 
             if retries > max_retries:
                 raise Exception(
@@ -440,6 +464,128 @@ def hostname(hostname: str, hostname_file: str | None = None):
 
 
 @operation()
+def etc_hosts(
+    ip: str,
+    hostnames: str | list[str] | None = None,
+    present: bool = True,
+    path: str = "/etc/hosts",
+):
+    """
+    Add, update or remove an entry in ``/etc/hosts`` (or another hosts-file path)
+    keyed by IP address.
+
+    + ip: the IP address the entry is keyed by
+    + hostnames: hostname (``str``) or list of hostnames to associate with ``ip``
+    + present: whether the entry should be present (``True``) or absent (``False``)
+    + path: path to the hosts file (defaults to ``/etc/hosts``)
+
+    Behavior:
+        When ``present=True`` the line for ``ip`` is ensured to be exactly
+        ``<ip> <hostnames...>``, adding it if missing or replacing it if the
+        stored hostnames differ. Other lines are left untouched.
+
+        When ``present=False`` and ``hostnames`` is omitted, every line for ``ip``
+        is removed. When ``hostnames`` is given, only those names are dropped
+        from the IP's line; the line is removed entirely if no hostnames remain.
+
+    Comments on the edited line are not preserved.
+
+    **Examples:**
+
+    .. code:: python
+
+        server.etc_hosts(
+            name="Register db.internal in /etc/hosts",
+            ip="192.168.1.10",
+            hostnames=["db.internal", "db"],
+        )
+
+        server.etc_hosts(
+            name="Drop the legacy hostname",
+            ip="192.168.1.10",
+            hostnames="db",
+            present=False,
+        )
+
+        server.etc_hosts(
+            name="Remove 10.0.0.1 entirely",
+            ip="10.0.0.1",
+            present=False,
+        )
+    """
+
+    if isinstance(hostnames, str):
+        hostnames_list = hostnames.split()
+    elif hostnames is None:
+        hostnames_list = []
+    else:
+        hostnames_list = list(hostnames)
+
+    if present and not hostnames_list:
+        raise OperationError("hostnames must be provided when present=True")
+
+    # Use the parsed EtcHosts fact to decide whether any change is needed before
+    # touching the file; this keeps the happy path a single fact lookup and avoids
+    # rewriting the file when it already matches the desired state.
+    current_entries = host.get_fact(EtcHosts, path=path)
+    current_names = current_entries.get(ip)
+
+    if present:
+        if current_names == hostnames_list:
+            host.noop("{} -> {} already present in {}".format(ip, " ".join(hostnames_list), path))
+            return
+    else:
+        if current_names is None:
+            host.noop(f"{ip} already absent from {path}")
+            return
+        if hostnames_list and not any(name in current_names for name in hostnames_list):
+            host.noop(
+                "{} in {} does not reference any of: {}".format(ip, path, " ".join(hostnames_list))
+            )
+            return
+
+    # Mutation needed: rewrite the file so that comments and other entries survive.
+    existing = host.get_fact(FileContents, path=path)
+    existing_lines: list[str] = [line.rstrip("\r\n") for line in existing] if existing else []
+
+    new_lines: list[str] = []
+    found = False
+
+    for line in existing_lines:
+        stripped = line.split("#", 1)[0].strip()
+        if not stripped:
+            new_lines.append(line)
+            continue
+
+        tokens = stripped.split()
+        if tokens[0] != ip:
+            new_lines.append(line)
+            continue
+
+        found = True
+        line_names = tokens[1:]
+
+        if present:
+            new_lines.append("{} {}".format(ip, " ".join(hostnames_list)))
+        else:
+            if hostnames_list:
+                remaining = [name for name in line_names if name not in hostnames_list]
+                if remaining:
+                    new_lines.append("{} {}".format(ip, " ".join(remaining)))
+                # else: drop the line entirely
+            # else: full removal, drop the line
+
+    if present and not found:
+        new_lines.append("{} {}".format(ip, " ".join(hostnames_list)))
+
+    new_content = "\n".join(new_lines)
+    if new_content:
+        new_content += "\n"
+
+    yield from files.put._inner(src=StringIO(new_content), dest=path)
+
+
+@operation()
 def timezone(timezone: str):
     """
     Set the system timezone.
@@ -466,10 +612,12 @@ def timezone(timezone: str):
         return
 
     if host.get_fact(Which, command="timedatectl"):
-        yield f"timedatectl set-timezone {timezone}"
+        yield StringCommand("timedatectl set-timezone", QuoteString(timezone))
     else:
-        yield f"ln -sf /usr/share/zoneinfo/{timezone} /etc/localtime"
-        yield f"echo {timezone} > /etc/timezone"
+        yield StringCommand(
+            "ln -sf", QuoteString(f"/usr/share/zoneinfo/{timezone}"), "/etc/localtime"
+        )
+        yield StringCommand("echo", QuoteString(timezone), "> /etc/timezone")
 
 
 @operation()
@@ -757,7 +905,7 @@ def user_authorized_keys(
 
     + user: name of the user to ensure
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
-    + group: the users primary group
+    + group: the user's primary group
     + delete_keys: whether to remove any keys not specified in ``public_keys``
 
     Public keys:
@@ -880,10 +1028,10 @@ def user(
 
     + user: name of the user to ensure
     + present: whether this user should exist
-    + home: the users home directory
-    + shell: the users shell
-    + group: the users primary group
-    + groups: the users secondary groups
+    + home: the user's home directory
+    + shell: the user's shell
+    + group: the user's primary group
+    + groups: the user's secondary groups
     + append: whether to add `user` to `groups`, w/o losing membership of other groups
     + public_keys: list of public keys to attach to this user, ``home`` must be specified
     + delete_keys: whether to remove any keys not specified in ``public_keys``
@@ -899,7 +1047,7 @@ def user(
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
         ``/home/{name}``. When ``create_home`` is ``True`` any newly created users
         will be created with the ``-m`` flag to build a new home directory from the
-        systems skeleton directory.
+        system's skeleton directory.
 
     Public keys:
         These can be provided as strings containing the public key or as a path to
@@ -1206,7 +1354,7 @@ def kill(pid: int, signal: str = "TERM"):
         )
     """
 
-    yield f"kill -{signal} {pid}"
+    yield StringCommand("kill", QuoteString(f"-{signal}"), QuoteString(str(pid)))
 
 
 @operation()
