@@ -74,7 +74,7 @@ class DebPackage(FactBase):
     @override
     def command(self, package):
         return make_formatted_string_command(
-            "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}",
+            "test -f {0} && case {0} in *.deb) dpkg -I {0} ;; *) dpkg -s {0} 2>/dev/null || true ;; esac || dpkg -s {0} 2>/dev/null || true",
             QuoteString(package),
         )
 
