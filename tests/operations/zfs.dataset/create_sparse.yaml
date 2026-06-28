@@ -8,4 +8,4 @@ kwargs:
 facts:
   zfs.ZfsDatasets: {}
 commands:
-  - zfs create -V 5G -o compression=lz4 -s tank/myzvol
+  - zfs create -o compression=lz4 -s -V 5G tank/myzvol

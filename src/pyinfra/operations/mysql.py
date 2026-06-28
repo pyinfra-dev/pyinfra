@@ -16,7 +16,7 @@ See the example/mysql.py
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.mysql import (
     MysqlDatabases,
     MysqlUserGrants,
@@ -171,9 +171,13 @@ def user(
         return
 
     if present and not is_present:
-        sql_bits = [f'CREATE USER "{user}"@"{user_hostname}"']
+        sql_bits: list[str | StringCommand] = [f'CREATE USER "{user}"@"{user_hostname}"']
         if password:
-            sql_bits.append(MaskString(f'IDENTIFIED BY "{password}"'))
+            sql_bits.append(
+                StringCommand(
+                    "IDENTIFIED BY", StringCommand('"', HiddenValue(password), '"', _separator="")
+                )
+            )
 
         if require == "SSL":
             sql_bits.append("REQUIRE SSL")

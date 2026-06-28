@@ -5,7 +5,7 @@ Manage OpenRC init services.
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.openrc import OpenrcEnabled, OpenrcStatus
 
 from .util.service import handle_service_control
@@ -50,14 +50,14 @@ def service(
 
         if enabled is True:
             if not is_enabled:
-                yield f"rc-update add {service} {runlevel}"
+                yield StringCommand("rc-update add", QuoteString(service), QuoteString(runlevel))
                 openrc_enabled[service] = True
             else:
                 host.noop(f"service {service} is enabled")
 
         if enabled is False:
             if is_enabled:
-                yield f"rc-update del {service} {runlevel}"
+                yield StringCommand("rc-update del", QuoteString(service), QuoteString(runlevel))
                 openrc_enabled[service] = False
             else:
                 host.noop(f"service {service} is disabled")

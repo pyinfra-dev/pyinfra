@@ -1,0 +1,6 @@
+{
+    "arg": "py; reboot",
+    "command": "command -v 'py; reboot' || true",
+    "output": [],
+    "fact": ""
+}

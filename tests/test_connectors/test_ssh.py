@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
 
 import pyinfra
-from pyinfra.api import Config, Host, MaskString, State, StringCommand
+from pyinfra.api import Config, Host, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.context import ctx_state
@@ -92,7 +92,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
             # And check the Paramiko SSH call was correct
             self.fake_connect_mock.assert_called_with(
@@ -239,7 +239,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_password_from_prompt(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
@@ -270,7 +270,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_missing_password(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
@@ -403,7 +403,7 @@ class TestSSHConnector(TestCase):
         host = inventory.get_host("somehost")
         host.connect()
 
-        command = StringCommand("echo", MaskString("top-secret-stuff"))
+        command = StringCommand("echo", HiddenValue("top-secret-stuff"))
         fake_stdout.channel.recv_exit_status.return_value = 0
 
         out = host.run_shell_command(command, print_output=True, print_input=True)
@@ -418,7 +418,7 @@ class TestSSHConnector(TestCase):
         )
 
         fake_echo.assert_called_with(
-            f"{host.print_prefix}>>> sh -c 'echo ***'",
+            f"{host.print_prefix}>>> sh -c 'echo *MASKED*'",
             err=True,
         )
 

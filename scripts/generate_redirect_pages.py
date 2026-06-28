@@ -21,8 +21,8 @@ TEMPLATE = """
 
 def generate_redirect_pages():
     this_dir = path.dirname(path.realpath(__file__))
-    docs_dir = path.abspath(path.join(this_dir, "..", "docs"))
-    public_dir = path.join(docs_dir, "public")
+    repo_dir = path.abspath(path.join(this_dir, ".."))
+    public_dir = path.join(repo_dir, "docs-public")
 
     target_docs = path.join(public_dir, DOCS_LANGUAGE, DOCS_VERSION)
     files = glob(path.join(target_docs, "*.html"))
