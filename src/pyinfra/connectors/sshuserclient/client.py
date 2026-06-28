@@ -19,7 +19,9 @@ from paramiko.hostkeys import HostKeyEntry
 from typing_extensions import override
 
 from pyinfra import logger
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
+from pyinfra.connectors.ssh_util import load_key_with_certificate
 
 from .config import SSHConfig
 
@@ -47,9 +49,7 @@ def append_hostkey(client, hostname, key):
         host_key_entry = HostKeyEntry([hostname], key)
         if host_key_entry is None:
             raise SSHException(
-                "Append Hostkey: Failed to parse host {0}, could not append to hostfile".format(
-                    hostname
-                ),
+                f"Append Hostkey: Failed to parse host {hostname}, could not append to hostfile",
             )
         with open(client._host_keys_filename, "a") as host_keys_file:
             hk_entry = host_key_entry.to_line()
@@ -92,6 +92,41 @@ class WarningPolicy(MissingHostKeyPolicy):
     @override
     def missing_host_key(self, client, hostname, key):
         logger.warning("No host key for %s found in known_hosts", hostname)
+
+
+def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
+    """
+    Replace ``cfg["key_filename"]`` with a pre-built ``pkey`` when an ssh_config
+    ``IdentityFile`` exists on disk. Honours ``CertificateFile`` directives and
+    falls back to the implicit ``<key>-cert.pub`` lookup so OpenSSH-style CA
+    auth works without explicit pyinfra ``ssh_key`` configuration (issue #1569).
+    Silent fall-through when no identity exists keeps the legacy paramiko
+    ``key_filename`` flow for missing or otherwise unloadable files.
+    """
+
+    identity_files = host_config.get("identityfile") or []
+    if isinstance(identity_files, str):
+        identity_files = [identity_files]
+
+    certificate_files = host_config.get("certificatefile") or []
+    if isinstance(certificate_files, str):
+        certificate_files = [certificate_files]
+    certificate_filename = certificate_files[0] if certificate_files else None
+
+    for identity_file in identity_files:
+        expanded = path.expanduser(identity_file)
+        if not path.isfile(expanded):
+            continue
+        try:
+            cfg["pkey"] = load_key_with_certificate(
+                key_filename=identity_file,
+                certificate_filename=certificate_filename,
+            )
+        except (PyinfraError, SSHException, OSError) as e:
+            logger.debug("Could not load identity %s with certificate: %s", identity_file, e)
+            continue
+        cfg.pop("key_filename", None)
+        return
 
 
 def get_missing_host_key_policy(policy):
@@ -281,6 +316,7 @@ class SSHClient(ParamikoClient):
 
         if "identityfile" in host_config:
             cfg["key_filename"] = host_config["identityfile"]
+            _attach_identity_with_certificate(cfg, host_config)
 
         if "port" in host_config:
             cfg["port"] = int(host_config["port"])

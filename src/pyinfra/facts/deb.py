@@ -48,9 +48,8 @@ class DebPackages(FactBase):
 
     default = dict
 
-    regex = r"^[i|h]i\s+({0}):?[a-zA-Z0-9]*\s+({1}).+$".format(
-        DEB_PACKAGE_NAME_REGEX,
-        DEB_PACKAGE_VERSION_REGEX,
+    regex = (
+        rf"^[i|h]i\s+({DEB_PACKAGE_NAME_REGEX}):?[a-zA-Z0-9]*\s+({DEB_PACKAGE_VERSION_REGEX}).+$"
     )
 
     @override
@@ -64,8 +63,8 @@ class DebPackage(FactBase):
     """
 
     _regexes = {
-        "name": r"^Package:\s+({0})$".format(DEB_PACKAGE_NAME_REGEX),
-        "version": r"^Version:\s+({0})$".format(DEB_PACKAGE_VERSION_REGEX),
+        "name": rf"^Package:\s+({DEB_PACKAGE_NAME_REGEX})$",
+        "version": rf"^Version:\s+({DEB_PACKAGE_VERSION_REGEX})$",
     }
 
     @override
@@ -75,7 +74,7 @@ class DebPackage(FactBase):
     @override
     def command(self, package):
         return make_formatted_string_command(
-            "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}",
+            "test -f {0} && case {0} in *.deb) dpkg -I {0} ;; *) dpkg -s {0} 2>/dev/null || true ;; esac || dpkg -s {0} 2>/dev/null || true",
             QuoteString(package),
         )
 

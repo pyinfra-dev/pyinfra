@@ -6,10 +6,8 @@ as inventory directly.
 
 from __future__ import annotations
 
-from shlex import quote as shlex_quote
-
 from pyinfra import host
-from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.docker import (
     DockerAuths,
     DockerContainer,
@@ -281,7 +279,7 @@ def image(image: str, present: bool = True, force: bool = False):
                 image=image,
             )
         else:
-            host.noop("There is no {0} image!".format(image))
+            host.noop(f"There is no {image} image!")
 
 
 @operation()
@@ -381,7 +379,7 @@ def build(
     if tag_list and not force:
         missing = [tag for tag in tag_list if not host.get_fact(DockerImage, object_id=tag)]
         if not missing:
-            host.noop("Image(s) {0} already exist!".format(", ".join(tag_list)))
+            host.noop(f"Image(s) {', '.join(tag_list)} already exist!")
             return
 
     command_bits: list[str | QuoteString] = [build_cmd]
@@ -392,9 +390,9 @@ def build(
     if dockerfile:
         command_bits.extend(["-f", QuoteString(dockerfile)])
     for key, value in (build_args or {}).items():
-        command_bits.extend(["--build-arg", QuoteString("{0}={1}".format(key, value))])
+        command_bits.extend(["--build-arg", QuoteString(f"{key}={value}")])
     for key, value in (labels or {}).items():
-        command_bits.extend(["--label", QuoteString("{0}={1}".format(key, value))])
+        command_bits.extend(["--label", QuoteString(f"{key}={value}")])
     if target:
         command_bits.extend(["--target", QuoteString(target)])
     if platform:
@@ -456,7 +454,7 @@ def volume(volume: str, driver: str = "", labels: list[str] | None = None, prese
 
     else:
         if existent_volume is None:
-            host.noop("There is no {0} volume!".format(volume))
+            host.noop(f"There is no {volume} volume!")
             return
 
         yield handle_docker(
@@ -516,7 +514,7 @@ def network(
 
     if present:
         if existent_network:
-            host.noop("Network {0} already exists!".format(network))
+            host.noop(f"Network {network} already exists!")
             return
 
         yield handle_docker(
@@ -540,7 +538,7 @@ def network(
 
     else:
         if existent_network is None:
-            host.noop("Network {0} does not exist!".format(network))
+            host.noop(f"Network {network} does not exist!")
             return
 
         yield handle_docker(
@@ -752,7 +750,7 @@ def login(
 
     command_bits: list = [
         "printf '%s'",
-        MaskString(shlex_quote(password)),
+        QuoteString(HiddenValue(password)),
         "| docker login --username",
         QuoteString(username),
         "--password-stdin",

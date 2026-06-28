@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Any
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.lxd import LxdContainers
 
 
@@ -53,17 +53,17 @@ def container(
     if not present:
         if container:
             if container["status"] == "Running":
-                yield "lxc stop {0}".format(id)
+                yield StringCommand("lxc stop", QuoteString(id))
 
             # Command to remove the container:
-            yield "lxc delete {0}".format(id)
+            yield StringCommand("lxc delete", QuoteString(id))
         else:
-            host.noop("container {0} does not exist".format(id))
+            host.noop(f"container {id} does not exist")
 
     # Container doesn't exist and we want it
     if present:
         if not container:
             # Command to create the container:
-            yield "lxc launch {image} {id} < /dev/null".format(id=id, image=image)
+            yield StringCommand("lxc launch", QuoteString(image), QuoteString(id), "< /dev/null")
         else:
-            host.noop("container {0} exists".format(id))
+            host.noop(f"container {id} exists")

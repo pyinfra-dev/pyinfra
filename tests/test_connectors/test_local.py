@@ -1,11 +1,9 @@
-# encoding: utf-8
-
 from io import StringIO
 from subprocess import PIPE
 from unittest import TestCase
 from unittest.mock import MagicMock, call, mock_open, patch
 
-from pyinfra.api import Config, MaskString, State, StringCommand
+from pyinfra.api import Config, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.connectors.util import make_unix_command
 
@@ -74,7 +72,7 @@ class TestLocalConnector(TestCase):
         State(inventory, Config())
         host = inventory.get_host("@local")
 
-        command = StringCommand("echo", MaskString("top-secret-stuff"))
+        command = StringCommand("echo", HiddenValue("top-secret-stuff"))
         self.fake_popen_mock().returncode = 0
 
         out = host.run_shell_command(command, print_output=True, print_input=True)
@@ -92,7 +90,7 @@ class TestLocalConnector(TestCase):
         )
 
         fake_echo.assert_called_with(
-            "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
+            f"{host.print_prefix}>>> sh -c 'echo *MASKED*'",
             err=True,
         )
 

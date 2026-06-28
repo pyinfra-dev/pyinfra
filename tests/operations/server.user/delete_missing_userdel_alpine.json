@@ -1,0 +1,24 @@
+{
+    "args": ["pyinfra"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "server.Os": "Linux",
+        "server.LinuxName": "Alpine",
+        "server.Users": {
+            "pyinfra": {
+                "home": "/home/pyinfra",
+                "shell": "/bin/sh"
+            }
+        },
+        "server.Groups": {},
+        "server.Which": {
+            "command=userdel": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "userdel is not installed (install the shadow package)"
+    }
+}

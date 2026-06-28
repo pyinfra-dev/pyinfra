@@ -5,7 +5,7 @@
         "mysql_user": "root"
     },
     "commands": [
-        "mysql somedb -u\"root\" < 'some file'"
+        "mysql somedb -uroot < 'some file'"
     ],
     "idempotent": false
 }

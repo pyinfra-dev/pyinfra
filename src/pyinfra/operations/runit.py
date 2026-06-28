@@ -4,7 +4,6 @@ Manage runit services.
 
 from __future__ import annotations
 
-from typing import Optional
 
 from pyinfra import host
 from pyinfra.api import operation
@@ -21,8 +20,8 @@ def service(
     running: bool = True,
     restarted: bool = False,
     reloaded: bool = False,
-    command: Optional[str] = None,
-    enabled: Optional[bool] = None,
+    command: str | None = None,
+    enabled: bool | None = None,
     managed: bool = True,
     svdir: str = "/var/service",
     sourcedir: str = "/etc/sv",
@@ -56,7 +55,7 @@ def service(
     """
 
     was_managed = service in host.get_fact(RunitManaged, service=service, svdir=svdir)
-    was_auto = not host.get_fact(File, path="{0}/{1}/down".format(sourcedir, service))
+    was_auto = not host.get_fact(File, path=f"{sourcedir}/{service}/down")
 
     # Disable autostart for previously unmanaged services.
     #
@@ -107,7 +106,7 @@ def service(
         host,
         service,
         host.get_fact(RunitStatus, service=service, svdir=svdir),
-        "SVDIR={0} sv {{1}} {{0}}".format(svdir),
+        f"SVDIR={svdir} sv {{1}} {{0}}",
         running,
         restarted,
         reloaded,
@@ -132,8 +131,8 @@ def manage(
     """
 
     yield from link._inner(
-        path="{0}/{1}".format(svdir, service),
-        target="{0}/{1}".format(sourcedir, service),
+        path=f"{svdir}/{service}",
+        target=f"{sourcedir}/{service}",
         present=managed,
         create_remote_dir=False,
     )
@@ -154,13 +153,13 @@ def wait_runsv(
     """
 
     yield (
-        "export SVDIR={0}\n"
-        "for i in $(seq {1}); do\n"
-        "    sv status {2} > /dev/null && exit 0\n"
+        f"export SVDIR={svdir}\n"
+        f"for i in $(seq {timeout}); do\n"
+        f"    sv status {service} > /dev/null && exit 0\n"
         "    sleep 1;\n"
         "done\n"
         "exit 1"
-    ).format(svdir, timeout, service)
+    )
 
 
 @operation()
@@ -178,7 +177,7 @@ def auto(
     """
 
     yield from file._inner(
-        path="{0}/{1}/down".format(sourcedir, service),
+        path=f"{sourcedir}/{service}/down",
         present=not auto,
         create_remote_dir=False,
     )

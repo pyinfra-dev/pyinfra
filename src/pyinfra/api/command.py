@@ -3,12 +3,14 @@ from __future__ import annotations
 import shlex
 from inspect import getfullargspec
 from string import Formatter
-from typing import IO, TYPE_CHECKING, Callable, Union
-
+from typing import IO, TYPE_CHECKING
+from collections.abc import Callable
 import gevent
 from typing_extensions import Unpack, override
 
 from pyinfra.context import LocalContextObject, ctx_config, ctx_host
+from pyinfra import logger
+from .hiddenvalue import HiddenValue
 
 from .arguments import ConnectorArguments
 
@@ -17,7 +19,7 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-def make_formatted_string_command(string: str, *args, **kwargs) -> "StringCommand":
+def make_formatted_string_command(string: str, *args, **kwargs) -> StringCommand:
     """
     Helper function that takes a shell command or script as a string, splits it
     using ``shlex.split`` and then formats each bit, returning a ``StringCommand``
@@ -54,13 +56,15 @@ def make_formatted_string_command(string: str, *args, **kwargs) -> "StringComman
 
 
 class MaskString(str):
-    pass
+    def __new__(cls, s):
+        logger.warning("MaskString is deprecated please switch to HiddenValue")
+        return super().__new__(cls, s)
 
 
 class QuoteString:
-    obj: Union[str, "StringCommand"]
+    obj: str | StringCommand | HiddenValue
 
-    def __init__(self, obj: Union[str, "StringCommand"]):
+    def __init__(self, obj: str | StringCommand | HiddenValue):
         self.obj = obj
 
     @override
@@ -80,7 +84,7 @@ class PyinfraCommand:
             return True
         return False
 
-    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+    def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):
         raise NotImplementedError
 
 
@@ -103,7 +107,7 @@ class StringCommand(PyinfraCommand):
     def __repr__(self) -> str:
         return f"StringCommand({self.get_masked_value()})"
 
-    def _get_all_bits(self, bit_accessor):
+    def _get_all_bits(self, bit_accessor, *, unmask=False):
         all_bits = []
 
         for bit in self.bits:
@@ -115,8 +119,15 @@ class StringCommand(PyinfraCommand):
             if isinstance(bit, StringCommand):
                 bit = bit_accessor(bit)
 
+            if unmask:
+                if isinstance(bit, HiddenValue):
+                    bit = bit.unmask()
+            else:
+                if isinstance(bit, MaskString):
+                    bit = "*MASKED*"
+
             if not isinstance(bit, str):
-                bit = "{0}".format(bit)
+                bit = f"{bit}"
 
             if quote:
                 bit = shlex.quote(bit)
@@ -127,21 +138,14 @@ class StringCommand(PyinfraCommand):
 
     def get_raw_value(self) -> str:
         return self.separator.join(
-            self._get_all_bits(
-                lambda bit: bit.get_raw_value(),
-            ),
+            self._get_all_bits(lambda bit: bit.get_raw_value(), unmask=True),
         )
 
     def get_masked_value(self) -> str:
-        return self.separator.join(
-            [
-                "***" if isinstance(bit, MaskString) else bit
-                for bit in self._get_all_bits(lambda bit: bit.get_masked_value())
-            ],
-        )
+        return self.separator.join(self._get_all_bits(lambda bit: bit.get_masked_value()))
 
     @override
-    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+    def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):
         connector_arguments.update(self.connector_arguments)
 
         return host.run_shell_command(
@@ -167,10 +171,10 @@ class FileUploadCommand(PyinfraCommand):
 
     @override
     def __repr__(self):
-        return "FileUploadCommand({0}, {1})".format(self.src, self.dest)
+        return f"FileUploadCommand({self.src}, {self.dest})"
 
     @override
-    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+    def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):
         connector_arguments.update(self.connector_arguments)
 
         return host.put_file(
@@ -198,10 +202,10 @@ class FileDownloadCommand(PyinfraCommand):
 
     @override
     def __repr__(self):
-        return "FileDownloadCommand({0}, {1})".format(self.src, self.dest)
+        return f"FileDownloadCommand({self.src}, {self.dest})"
 
     @override
-    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+    def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):
         connector_arguments.update(self.connector_arguments)
 
         return host.get_file(
@@ -229,14 +233,10 @@ class FunctionCommand(PyinfraCommand):
 
     @override
     def __repr__(self):
-        return "FunctionCommand({0}, {1}, {2})".format(
-            self.function.__name__,
-            self.args,
-            self.kwargs,
-        )
+        return f"FunctionCommand({self.function.__name__}, {self.args}, {self.kwargs})"
 
     @override
-    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+    def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):
         argspec = getfullargspec(self.function)
         if "state" in argspec.args and "host" in argspec.args:
             return self.function(state, host, *self.args, **self.kwargs)
@@ -271,10 +271,10 @@ class RsyncCommand(PyinfraCommand):
 
     @override
     def __repr__(self):
-        return "RsyncCommand({0}, {1}, {2})".format(self.src, self.dest, self.flags)
+        return f"RsyncCommand({self.src}, {self.dest}, {self.flags})"
 
     @override
-    def execute(self, state: "State", host: "Host", connector_arguments: ConnectorArguments):
+    def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):
         return host.rsync(
             self.src,
             self.dest,

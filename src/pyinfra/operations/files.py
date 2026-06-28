@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from fnmatch import fnmatch
 from io import StringIO
 from pathlib import Path
-from typing import IO, Any, Union
+from typing import IO, Any
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
@@ -70,6 +70,7 @@ from .util.files import (
     get_timestamp,
     sed_delete,
     sed_replace,
+    strip_regex_anchors,
     unix_path_join,
 )
 
@@ -135,7 +136,7 @@ def download(
     # Destination is a directory?
     if info is False:
         raise OperationError(
-            "Destination {0} already exists and is not a file".format(dest),
+            f"Destination {dest} already exists and is not a file",
         )
 
     # Do we download the file? Force by default
@@ -151,7 +152,12 @@ def download(
         if cache_time:
             # Time on files is not tz-aware, and will be the same tz as the server's time,
             # so we can safely remove the tzinfo from the Date fact before comparison.
-            ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(seconds=cache_time)
+            try:
+                ctime = host.get_fact(Date).replace(tzinfo=None) - timedelta(
+                    seconds=cache_time,
+                )
+            except OverflowError:
+                ctime = datetime.min if cache_time > 0 else datetime.max
             if info["mtime"] and info["mtime"] < ctime:
                 download = True
 
@@ -181,8 +187,8 @@ def download(
             dest, temp_directory=str(effective_temp_dir) if effective_temp_dir is not None else None
         )
 
-        curl_args: list[Union[str, StringCommand]] = ["-sSLf"]
-        wget_args: list[Union[str, StringCommand]] = ["-q"]
+        curl_args: list[str | StringCommand] = ["-sSLf"]
+        wget_args: list[str | StringCommand] = ["-q"]
 
         if extra_curl_args:
             for key, value in extra_curl_args.items():
@@ -229,7 +235,7 @@ def download(
         elif host.get_fact(Which, command="wget"):
             yield wget_command
         else:
-            yield "( {0} ) || ( {1} )".format(curl_command, wget_command)
+            yield f"( {curl_command} ) || ( {wget_command} )"
 
         yield StringCommand("mv", QuoteString(temp_file), QuoteString(dest))
 
@@ -295,7 +301,7 @@ def download(
             changed = True
 
         if not changed:
-            host.noop("file {0} has already been downloaded".format(dest))
+            host.noop(f"file {dest} has already been downloaded")
 
 
 @operation()
@@ -309,6 +315,7 @@ def line(
     interpolate_variables=False,
     escape_regex_characters=False,
     ensure_newline=False,
+    extended_regex=False,
 ):
     """
     Ensure lines in files using grep to locate and sed to replace.
@@ -322,11 +329,19 @@ def line(
     + interpolate_variables: whether to interpolate variables in ``replace``
     + escape_regex_characters: whether to escape regex characters from the matching line
     + ensure_newline: ensures that the appended line is on a new line
+    + extended_regex: pass ``-E`` to ``grep`` and ``sed`` so quantifiers like ``+`` and
+      ``?`` and groups like ``(a|b)`` work without backslash escaping. Defaults to ``False``
+      (basic regular expressions) for backward compatibility.
 
     Regex line matching:
         Unless line matches a line (starts with ^, ends $), pyinfra will wrap it such that
         it does, like: ``^.*LINE.*$``. This means we don't swap parts of lines out. To
         change bits of lines, see ``files.replace``.
+
+        Because of this wrapping, ``line="foo"`` also matches a commented-out ``#foo`` or
+        any line that merely contains ``foo``. To match a whole line exactly, anchor it
+        yourself with ``^`` and/or ``$`` (eg ``line="^foo$"``); the anchors are used only
+        for matching and are stripped before the line is appended to the file.
 
     Regex line escaping:
         If matching special characters (eg a crontab line containing ``*``), remember to escape
@@ -411,6 +426,7 @@ def line(
         path=path,
         pattern=match_line,
         interpolate_variables=interpolate_variables,
+        extended_regex=extended_regex,
     )
 
     # If replace present, use that over the matching line
@@ -419,23 +435,28 @@ def line(
     # We must provide some kind of replace to sed_replace_command below
     else:
         replace = ""
+        # `line` is the regex used to match; when appending it as a literal we must
+        # drop the anchors a user added to match a whole line (eg `^foo$`), otherwise
+        # they leak into the file. Skip when escaping, where the line is taken literally.
+        if not escape_regex_characters:
+            line = strip_regex_anchors(line)
 
     # Save commands for re-use in dynamic script when file not present at fact stage
     if ensure_newline:
         echo_command = make_formatted_string_command(
             "( [ $(tail -c1 {1} | wc -l) -eq 0 ] && echo ; echo {0} ) >> {1}",
-            '"{0}"'.format(line) if interpolate_variables else QuoteString(line),
+            f'"{line}"' if interpolate_variables else QuoteString(line),
             QuoteString(path),
         )
     else:
         echo_command = make_formatted_string_command(
             "echo {0} >> {1}",
-            '"{0}"'.format(line) if interpolate_variables else QuoteString(line),
+            f'"{line}"' if interpolate_variables else QuoteString(line),
             QuoteString(path),
         )
 
     if backup:
-        backup_filename = "{0}.{1}".format(path, get_timestamp())
+        backup_filename = f"{path}.{get_timestamp()}"
         echo_command = StringCommand(
             make_formatted_string_command(
                 "cp {0} {1} && ",
@@ -452,6 +473,7 @@ def line(
         flags=flags,
         backup=backup,
         interpolate_variables=interpolate_variables,
+        extended_regex=extended_regex,
     )
 
     # No line and we want it, append it
@@ -471,12 +493,13 @@ def line(
                 path=path,
                 pattern=replace_line,
                 interpolate_variables=interpolate_variables,
+                extended_regex=extended_regex,
             )
 
         if not present_lines:
             yield echo_command
         else:
-            host.noop('line "{0}" exists in {1}'.format(replace or line, path))
+            host.noop(f'line "{replace or line}" exists in {path}')
 
     # Line(s) exists and we want to remove them
     elif present_lines and not present:
@@ -492,6 +515,7 @@ def line(
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
+            extended_regex=extended_regex,
         )
 
     # Line(s) exists and we have want to ensure they're correct
@@ -505,7 +529,7 @@ def line(
                     logger.info("  %s", line)
             yield sed_replace_command
         else:
-            host.noop('line "{0}" exists in {1}'.format(replace or line, path))
+            host.noop(f'line "{replace or line}" exists in {path}')
 
 
 @operation()
@@ -516,6 +540,7 @@ def replace(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
     match=None,  # deprecated
 ):
     """
@@ -527,6 +552,9 @@ def replace(
     + flags: list of flags to pass to sed
     + backup: whether to backup the file (see below)
     + interpolate_variables: whether to interpolate variables in ``replace``
+    + extended_regex: pass ``-E`` to ``grep`` and ``sed`` so quantifiers like ``+`` and
+      ``?`` and groups like ``(a|b)`` work without backslash escaping. Defaults to ``False``
+      (basic regular expressions) for backward compatibility.
 
     Backup:
         If set to ``True``, any editing of the file will place an old copy with the ISO
@@ -550,8 +578,8 @@ def replace(
         logger.warning(
             (
                 "The `match` argument has been replaced by "
-                "`text` in the `files.replace` operation ({0})"
-            ).format(get_call_location()),
+                f"`text` in the `files.replace` operation ({get_call_location()})"
+            ),
         )
 
     if text is None:
@@ -565,6 +593,7 @@ def replace(
         path=path,
         pattern=text,
         interpolate_variables=interpolate_variables,
+        extended_regex=extended_regex,
     )
 
     # Only do the replacement if the file does not exist (it may be created earlier)
@@ -577,9 +606,10 @@ def replace(
             flags=flags,
             backup=backup,
             interpolate_variables=interpolate_variables,
+            extended_regex=extended_regex,
         )
     else:
-        host.noop('string "{0}" does not exist in {1}'.format(text, path))
+        host.noop(f'string "{text}" does not exist in {path}')
 
 
 @operation()
@@ -645,7 +675,7 @@ def sync(
 
     # Ensure the source directory exists
     if not os.path.isdir(src):
-        raise IOError("No such directory: {0}".format(original_src))
+        raise OSError(f"No such directory: {original_src}")
 
     # Ensure exclude is a list/tuple
     if exclude is not None:
@@ -925,7 +955,7 @@ def get(
                 remote_temp_filename=host.get_temp_filename(dest, temp_directory=temp_dir),
             )
         else:
-            host.noop("file {0} has already been downloaded".format(dest))
+            host.noop(f"file {dest} has already been downloaded")
 
 
 def _canonicalize_timespec(field: MetadataTimeField, local_file, timespec):
@@ -965,7 +995,7 @@ def _canonicalize_timespec(field: MetadataTimeField, local_file, timespec):
                         assert ref_file["mtime"] is not None
                         return ref_file["mtime"].replace(tzinfo=timezone.utc)
                 else:
-                    ValueError("Bad argument for `timesspec`: {0}".format(timespec))
+                    ValueError(f"Bad argument for `timesspec`: {timespec}")
 
 
 # returns True for a visible difference in the second field between the datetime values
@@ -1088,15 +1118,15 @@ def put(
         elif assume_exists:
             local_sum_path = None
         else:
-            raise IOError("No such file: {0}".format(local_file))
+            raise OSError(f"No such file: {local_file}")
 
     if mode is True:
         if isinstance(local_file, str) and os.path.isfile(local_file):
             mode = get_path_permissions_mode(local_file)
         else:
             logger.warning(
-                ("No local file exists to get permissions from with `mode=True` ({0})").format(
-                    get_call_location(),
+                (
+                    f"No local file exists to get permissions from with `mode=True` ({get_call_location()})"
                 ),
             )
     else:
@@ -1263,7 +1293,7 @@ def put(
                     changed = True
 
             if not changed:
-                host.noop("file {0} is already uploaded".format(dest))
+                host.noop(f"file {dest} is already uploaded")
 
 
 @operation()
@@ -1416,7 +1446,7 @@ def template(
         relevant_lines = template_lines[max(line_number - 2, 0) : line_number + 1]
 
         raise OperationError(
-            "Error in template: {0} (L{1}): {2}\n...\n{3}\n...".format(
+            "Error in template: {} (L{}): {}\n...\n{}\n...".format(
                 src,
                 line_number,
                 e,
@@ -1451,19 +1481,17 @@ def move(src: str, dest: str, overwrite=False):
     """
 
     if host.get_fact(File, src) is None:
-        raise OperationError("src {0} does not exist".format(src))
+        raise OperationError(f"src {src} does not exist")
 
     if not host.get_fact(Directory, dest):
-        raise OperationError("dest {0} is not an existing directory".format(dest))
+        raise OperationError(f"dest {dest} is not an existing directory")
 
     full_dest_path = os.path.join(dest, os.path.basename(src))
     if host.get_fact(File, full_dest_path) is not None:
         if overwrite:
             yield StringCommand("rm", "-rf", QuoteString(full_dest_path))
         else:
-            raise OperationError(
-                "dest {0} already exists and `overwrite` is unset".format(full_dest_path)
-            )
+            raise OperationError(f"dest {full_dest_path} already exists and `overwrite` is unset")
 
     yield StringCommand("mv", QuoteString(src), QuoteString(dest))
 
@@ -1511,15 +1539,15 @@ def _validate_path(path):
 def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_backup_dir):
     if force:
         if force_backup:
-            backup_path = "{0}.{1}".format(path, get_timestamp())
+            backup_path = f"{path}.{get_timestamp()}"
             if force_backup_dir:
                 backup_path = os.path.basename(backup_path)
-                backup_path = "{0}/{1}".format(force_backup_dir, backup_path)
+                backup_path = f"{force_backup_dir}/{backup_path}"
             yield StringCommand("mv", QuoteString(path), QuoteString(backup_path))
         else:
             yield StringCommand("rm", "-rf", QuoteString(path))
     else:
-        raise OperationError("{0} exists and is not a {1}".format(path, fs_type))
+        raise OperationError(f"{path} exists and is not a {fs_type}")
 
 
 @operation()
@@ -1626,7 +1654,7 @@ def link(
             changed = True
 
         if not changed:
-            host.noop("link {0} already exists".format(path))
+            host.noop(f"link {path} already exists")
 
 
 @operation()
@@ -1728,7 +1756,7 @@ def file(
             changed = True
 
         if not changed:
-            host.noop("file {0} already exists".format(path))
+            host.noop(f"file {path} already exists")
 
 
 @operation()
@@ -1796,7 +1824,7 @@ def directory(
 
     if info is False:  # not a directory
         if _no_fail_on_link and host.get_fact(Link, path=path):
-            host.noop("directory {0} already exists (as a link)".format(path))
+            host.noop(f"directory {path} already exists (as a link)")
             return
         yield from _raise_or_remove_invalid_path(
             "directory",
@@ -1836,7 +1864,7 @@ def directory(
             changed = True
 
         if not changed:
-            host.noop("directory {0} already exists".format(path))
+            host.noop(f"directory {path} already exists")
 
 
 @operation()
@@ -1913,7 +1941,8 @@ def block(
     + line: regex before or after which the content should be added if it doesn't exist.
     + backup: whether to backup the file (see ``files.line``). Default False.
     + escape_regex_characters: whether to escape regex characters from the matching line
-    + try_prevent_shell_expansion: tries to prevent shell expanding by values like `$`
+    + try_prevent_shell_expansion: deprecated and ignored; ``content`` is always written
+      literally (no shell expansion) and is safely shell-quoted
     + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
     + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
     + end: the value for ``{mark}`` in the marker after the content. Default is ``END``
@@ -1933,8 +1962,9 @@ def block(
 
     Removal ignores ``content`` and ``line``
 
-    Preventing shell expansion works by wrapping the content in '`' before passing to `awk`.
-    WARNING: This will break if the content contains raw single quotes.
+    ``content`` is written to the file verbatim. It is shell-quoted before being passed to
+    ``awk``, so shell metacharacters (``$(...)``, quotes, backticks) are kept literal and never
+    expanded on the remote host.
 
     **Examples:**
 
@@ -1975,11 +2005,10 @@ def block(
             marker="<!-- {mark} PYINFRA BLOCK -->",
         )
 
-        # put complex alias into .zshrc
+        # put complex alias into .zshrc (written literally, no shell expansion)
         files.block(
             path="/home/user/.zshrc",
             content="eval $(thef -a)",
-            try_prevent_shell_expansion=True,
             marker="## {mark} ALIASES ##"
         )
     """
@@ -2056,15 +2085,8 @@ def block(
             # convert string to list of lines
             content = content.split("\n")
 
-        the_block = "\n".join([mark_1, *content, mark_2])
-        if try_prevent_shell_expansion:
-            the_block = f"'{the_block}'"
-            if any("'" in line for line in content):
-                logger.warning(
-                    "content contains single quotes, shell expansion prevention may fail"
-                )
-        else:
-            the_block = f'"{the_block}"'
+        block_with_markers = "\n".join([mark_1, *content, mark_2])
+        block_content = "\n".join(content)
 
         if (current is None) or ((current == []) and (before == after)):
             # a) no file or b) file but no markers and we're adding at start or end.
@@ -2078,7 +2100,7 @@ def block(
                 original if not before else " - ",
                 original if before else " - ",
                 '> "$OUT"',
-                f"<<{here}\n{the_block[1:-1]}\n{here}\n",
+                f"<<'{here}'\n{block_with_markers}\n{here}\n",
                 ")",
                 real_out,
             )
@@ -2097,7 +2119,7 @@ def block(
                 out_prep,
                 prog,
                 q_path,
-                the_block,
+                QuoteString(block_with_markers),
                 '> "$OUT"',
                 real_out,
             )
@@ -2113,11 +2135,7 @@ def block(
                     out_prep,
                     prog,
                     q_path,
-                    (
-                        '"' + "\n".join(content) + '"'
-                        if not try_prevent_shell_expansion
-                        else "'" + "\n".join(content) + "'"
-                    ),
+                    QuoteString(block_content),
                     '> "$OUT"',
                     real_out,
                 )
@@ -2212,20 +2230,18 @@ def unarchive(
     # Idempotency: skip if creates path already exists
     if creates:
         if host.get_fact(File, path=creates) is not None:
-            host.noop("archive already extracted ({0} exists)".format(creates))
+            host.noop(f"archive already extracted ({creates} exists)")
             return
 
     # Validate destination exists and is a directory
     dest_info = host.get_fact(Directory, path=dest)
     if not dest_info:
-        raise OperationError("Destination {0} is not an existing directory".format(dest))
+        raise OperationError(f"Destination {dest} is not an existing directory")
 
     archive_format = _get_archive_format(src)
     if archive_format is None:
         raise OperationValueError(
-            "Unsupported archive format for {0}. Supported: {1}".format(
-                src, ", ".join(_ARCHIVE_EXTENSIONS)
-            )
+            f"Unsupported archive format for {src}. Supported: {', '.join(_ARCHIVE_EXTENSIONS)}"
         )
 
     tool, flags = archive_format
@@ -2238,7 +2254,7 @@ def unarchive(
     else:
         # Validate the remote archive exists
         if host.get_fact(File, path=src) is None:
-            raise OperationError("Remote archive {0} does not exist".format(src))
+            raise OperationError(f"Remote archive {src} does not exist")
         archive_path = src
 
     extras = list(extra_opts) if extra_opts else []

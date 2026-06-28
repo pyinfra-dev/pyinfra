@@ -17,7 +17,7 @@ See example/postgresql.py for detailed example
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import MaskString, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, QuoteString, StringCommand, operation
 from pyinfra.facts.postgres import (
     PostgresDatabases,
     PostgresRoles,
@@ -128,7 +128,7 @@ def role(
     if not present:
         if is_present:
             yield make_execute_psql_command(
-                'DROP ROLE "{0}"'.format(role),
+                f'DROP ROLE "{role}"',
                 user=psql_user,
                 password=psql_password,
                 host=psql_host,
@@ -136,12 +136,12 @@ def role(
                 database=psql_database,
             )
         else:
-            host.noop("postgresql role {0} does not exist".format(role))
+            host.noop(f"postgresql role {role} does not exist")
         return
 
     # If we want the user and they don't exist
     if not is_present:
-        sql_bits = ['CREATE ROLE "{0}"'.format(role)]
+        sql_bits: list[str | StringCommand] = [f'CREATE ROLE "{role}"']
 
         for key, value in (
             ("LOGIN", login),
@@ -155,10 +155,14 @@ def role(
                 sql_bits.append(key)
 
         if connection_limit:
-            sql_bits.append("CONNECTION LIMIT {0}".format(connection_limit))
+            sql_bits.append(f"CONNECTION LIMIT {connection_limit}")
 
         if password:
-            sql_bits.append(MaskString("PASSWORD '{0}'".format(password)))
+            sql_bits.append(
+                StringCommand(
+                    "PASSWORD", StringCommand("'", HiddenValue(password), "'", _separator="")
+                )
+            )
 
         yield make_execute_psql_command(
             StringCommand(*sql_bits),
@@ -172,7 +176,7 @@ def role(
         # Check if any attributes need updating
         current_role = roles[role]
         should_execute = False
-        sql_bits = ['ALTER ROLE "{0}"'.format(role)]
+        sql_bits = [f'ALTER ROLE "{role}"']
         if login and "login" in current_role and current_role["login"] != login:
             sql_bits.append("LOGIN")
             should_execute = True
@@ -193,10 +197,14 @@ def role(
             and "connection_limit" in current_role
             and roles[role]["connection_limit"] != connection_limit
         ):
-            sql_bits.append("CONNECTION LIMIT {0}".format(connection_limit))
+            sql_bits.append(f"CONNECTION LIMIT {connection_limit}")
             should_execute = True
         if password:
-            sql_bits.append(MaskString("PASSWORD '{0}'".format(password)))
+            sql_bits.append(
+                StringCommand(
+                    "PASSWORD", StringCommand("'", HiddenValue(password), "'", _separator="")
+                )
+            )
             should_execute = True
 
         if should_execute:
@@ -209,7 +217,7 @@ def role(
                 database=psql_database,
             )
         else:
-            host.noop("postgresql role {0} exists and does not need updates".format(role))
+            host.noop(f"postgresql role {role} exists and does not need updates")
 
 
 @operation()
@@ -276,7 +284,7 @@ def database(
     if not present:
         if is_present:
             yield make_execute_psql_command(
-                'DROP DATABASE "{0}"'.format(database),
+                f'DROP DATABASE "{database}"',
                 user=psql_user,
                 password=psql_password,
                 host=psql_host,
@@ -284,24 +292,24 @@ def database(
                 database=psql_database,
             )
         else:
-            host.noop("postgresql database {0} does not exist".format(database))
+            host.noop(f"postgresql database {database} does not exist")
         return
 
     # We want the database but it doesn't exist
     if present and not is_present:
-        sql_bits = ['CREATE DATABASE "{0}"'.format(database)]
+        sql_bits = [f'CREATE DATABASE "{database}"']
 
         for key, value in (
-            ("OWNER", '"{0}"'.format(owner) if owner else owner),
+            ("OWNER", f'"{owner}"' if owner else owner),
             ("TEMPLATE", template),
             ("ENCODING", encoding),
-            ("LC_COLLATE", "'{0}'".format(lc_collate) if lc_collate else lc_collate),
-            ("LC_CTYPE", "'{0}'".format(lc_ctype) if lc_ctype else lc_ctype),
+            ("LC_COLLATE", f"'{lc_collate}'" if lc_collate else lc_collate),
+            ("LC_CTYPE", f"'{lc_ctype}'" if lc_ctype else lc_ctype),
             ("TABLESPACE", tablespace),
             ("CONNECTION LIMIT", connection_limit),
         ):
             if value:
-                sql_bits.append("{0} {1}".format(key, value))
+                sql_bits.append(f"{key} {value}")
 
         yield make_execute_psql_command(
             StringCommand(*sql_bits),
@@ -321,28 +329,22 @@ def database(
             ("LC_CTYPE", lc_ctype, None),
         ):
             if value and (current_value is None or current_value != value):
-                host.noop(
-                    "postgresql database {0} already exists, skipping {1}".format(database, key)
-                )
+                host.noop(f"postgresql database {database} already exists, skipping {key}")
 
         sql_bits = []
 
         if owner and "owner" in current_db and current_db["owner"] != owner:
-            sql_bits.append('ALTER DATABASE "{0}" OWNER TO "{1}";'.format(database, owner))
+            sql_bits.append(f'ALTER DATABASE "{database}" OWNER TO "{owner}";')
 
         if tablespace and "tablespace" in current_db and current_db["tablespace"] != tablespace:
-            sql_bits.append(
-                'ALTER DATABASE "{0}" SET TABLESPACE "{1}";'.format(database, tablespace)
-            )
+            sql_bits.append(f'ALTER DATABASE "{database}" SET TABLESPACE "{tablespace}";')
 
         if (
             connection_limit
             and "connlimit" in current_db
             and current_db["connlimit"] != connection_limit
         ):
-            sql_bits.append(
-                'ALTER DATABASE "{0}" CONNECTION LIMIT {1};'.format(database, connection_limit)
-            )
+            sql_bits.append(f'ALTER DATABASE "{database}" CONNECTION LIMIT {connection_limit};')
 
         if len(sql_bits) > 0:
             yield make_execute_psql_command(
@@ -354,9 +356,7 @@ def database(
                 database=psql_database,
             )
         else:
-            host.noop(
-                "postgresql database {0} already exists with the same parameters".format(database)
-            )
+            host.noop(f"postgresql database {database} already exists with the same parameters")
 
 
 @operation(is_idempotent=False)

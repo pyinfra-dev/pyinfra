@@ -1,0 +1,11 @@
+{
+    "command": "dnf module list --disabled",
+    "requires_command": "dnf",
+    "output": [
+        "Name         Stream        Profiles              Summary",
+        "ruby         3.1 [x]       common [d]            An interpreter of object-oriented scripting language",
+        "",
+        "Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled"
+    ],
+    "fact": ["ruby"]
+}

@@ -89,7 +89,7 @@ class DockerConnector(BaseConnector):
     container_id: str
     no_stop: bool = False
 
-    def __init__(self, state: "State", host: "Host"):
+    def __init__(self, state: State, host: Host):
         super().__init__(state, host)
         self.local = LocalConnector(state, host)
 
@@ -167,11 +167,7 @@ class DockerConnector(BaseConnector):
 
         if self.no_stop:
             logger.info(
-                "{0}{1} build complete, container left running: {2}".format(
-                    self.host.print_prefix,
-                    self.docker_cmd,
-                    format_text(container_id, bold=True),
-                ),
+                f"{self.host.print_prefix}{self.docker_cmd} build complete, container left running: {format_text(container_id, bold=True)}",
             )
             return
 
@@ -188,11 +184,7 @@ class DockerConnector(BaseConnector):
             )
 
         logger.info(
-            "{0}{1} build complete, image ID: {2}".format(
-                self.host.print_prefix,
-                self.docker_cmd,
-                format_text(image_id, bold=True),
-            ),
+            f"{self.host.print_prefix}{self.docker_cmd} build complete, image ID: {format_text(image_id, bold=True)}",
         )
 
     @override
@@ -201,7 +193,7 @@ class DockerConnector(BaseConnector):
         command: StringCommand,
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ) -> tuple[bool, CommandOutput]:
         local_arguments = extract_control_arguments(arguments)
 
@@ -273,14 +265,11 @@ class DockerConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
             echo(
-                "{0}file uploaded to container: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+                f"{self.host.print_prefix}file uploaded to container: {remote_filename}",
                 err=True,
             )
 
@@ -327,14 +316,11 @@ class DockerConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
             echo(
-                "{0}file downloaded from container: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+                f"{self.host.print_prefix}file downloaded from container: {remote_filename}",
                 err=True,
             )
 

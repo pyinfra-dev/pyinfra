@@ -85,7 +85,7 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
         yield StringCommand(base_command, "--add", QuoteString(key), quoted_value)
 
     else:
-        host.noop("git config {0} is set to {1}".format(key, value))
+        host.noop(f"git config {key} is set to {value}")
 
 
 @operation()
@@ -93,14 +93,16 @@ def repo(
     src: str,
     dest: str,
     branch: str | None = None,
-    pull=True,
-    rebase=False,
+    pull: bool = True,
+    rebase: bool = False,
     user: str | None = None,
     group: str | None = None,
-    ssh_keyscan=False,
-    update_submodules=False,
-    recursive_submodules=False,
+    ssh_keyscan: bool = False,
+    update_submodules: bool = False,
+    recursive_submodules: bool = False,
     depth: int | None = None,
+    *,
+    fetch_tags: bool = False,
 ):
     """
     Clone/pull git repositories.
@@ -116,6 +118,7 @@ def repo(
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
     + depth: create a shallow clone with a history truncated to the specified number of commits
+    + fetch_tags: Whether all tags should be fetched prior to attempting to check out the specified revision
 
     **Example:**
 
@@ -140,7 +143,7 @@ def repo(
             yield from ssh.keyscan._inner(domain.group(1))
         else:
             raise OperationError(
-                "Could not parse domain (to SSH keyscan) from: {0}".format(src),
+                f"Could not parse domain (to SSH keyscan) from: {src}",
             )
 
     # Store git commands for directory prefix
@@ -163,7 +166,12 @@ def repo(
         is_tag = False
         current_branch = host.get_fact(GitBranch, repo=dest)
         if branch is not None and current_branch != branch:
-            git_commands.append("fetch")  # fetch to ensure we have the branch locally
+            # fetch to ensure we have the branch/tag locally
+            if fetch_tags:
+                git_commands.append(StringCommand("fetch", "--tags"))
+            else:
+                git_commands.append(StringCommand("fetch"))
+
             git_commands.append(StringCommand("checkout", QuoteString(branch)))
         if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
             git_commands.append(StringCommand("checkout", QuoteString(branch)))
@@ -187,7 +195,7 @@ def repo(
                     skip_pull = True
             if skip_pull:
                 host.noop(
-                    "git repository {0} is already up to date".format(dest),
+                    f"git repository {dest} is already up to date",
                 )
             elif rebase:
                 git_commands.append("pull --rebase")
@@ -358,7 +366,7 @@ def worktree(
             path=unix_path_join(repo, ".git"),
         ):
             raise OperationError(
-                "The following folder is not a valid GIT repository : {0}".format(repo),
+                f"The following folder is not a valid GIT repository : {repo}",
             )
 
         if repo is None:
@@ -391,6 +399,33 @@ def worktree(
         # Apply any user or group
         if user or group:
             yield chown(worktree, user, group, recursive=True)
+            # `git worktree add` writes per-worktree metadata under the source
+            # repo's `.git/worktrees/<name>/`, plus refs/logs for any new
+            # branch it creates. When the command runs as root (e.g. via
+            # `_sudo`), those files end up root-owned and break later git
+            # commands run as the worktree owner.
+            worktree_name = worktree.rstrip("/").rsplit("/", 1)[-1]
+            yield chown(
+                unix_path_join(repo, ".git", "worktrees", worktree_name),
+                user,
+                group,
+                recursive=True,
+            )
+            branch_for_chown = new_branch
+            if not branch_for_chown and not detached and not commitish:
+                branch_for_chown = worktree_name
+            if branch_for_chown:
+                yield chown(
+                    unix_path_join(repo, ".git", "refs", "heads", branch_for_chown),
+                    user,
+                    group,
+                )
+                yield chown(
+                    unix_path_join(repo, ".git", "logs", "refs", "heads", branch_for_chown),
+                    user,
+                    group,
+                    recursive=True,
+                )
 
     # It exists and we don't want it
     elif host.get_fact(Directory, path=worktree) and not present:
@@ -450,7 +485,7 @@ def worktree(
 
             if skip_pull:
                 host.noop(
-                    "git worktree {0} is already up to date".format(worktree),
+                    f"git worktree {worktree} is already up to date",
                 )
             else:
                 pull_args: list[str | QuoteString] = [

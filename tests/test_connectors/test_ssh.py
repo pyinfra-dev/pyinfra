@@ -1,12 +1,10 @@
-# encoding: utf-8
-
 from socket import error as socket_error, gaierror
 from unittest import TestCase, mock
 
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
 
 import pyinfra
-from pyinfra.api import Config, Host, MaskString, State, StringCommand
+from pyinfra.api import Config, Host, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.context import ctx_state
@@ -94,7 +92,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
             # And check the Paramiko SSH call was correct
             self.fake_connect_mock.assert_called_with(
@@ -241,7 +239,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_password_from_prompt(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
@@ -272,7 +270,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_missing_password(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
@@ -405,7 +403,7 @@ class TestSSHConnector(TestCase):
         host = inventory.get_host("somehost")
         host.connect()
 
-        command = StringCommand("echo", MaskString("top-secret-stuff"))
+        command = StringCommand("echo", HiddenValue("top-secret-stuff"))
         fake_stdout.channel.recv_exit_status.return_value = 0
 
         out = host.run_shell_command(command, print_output=True, print_input=True)
@@ -420,7 +418,7 @@ class TestSSHConnector(TestCase):
         )
 
         fake_echo.assert_called_with(
-            "{0}>>> sh -c 'echo ***'".format(host.print_prefix),
+            f"{host.print_prefix}>>> sh -c 'echo *MASKED*'",
             err=True,
         )
 
@@ -622,7 +620,46 @@ class TestSSHConnector(TestCase):
         state = State(inventory, Config())
         host = inventory.get_host("somehost")
         host.connect(state)
-        host.connector_data["sudo_askpass_path"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
+
+        command = "echo hi"
+        return_values = [1, 0]  # return 0 on the second call
+        fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
+
+        out = host.run_shell_command(command, _sudo=True)
+        assert len(out) == 2
+        assert out[0] is True
+        assert fake_getpass.called
+        fake_ssh.exec_command.assert_called_with(
+            "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
+            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
+            get_pty=False,
+        )
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    @mock.patch("pyinfra.connectors.util.getpass")
+    def test_run_shell_command_retry_for_sudo_rs_password(
+        self,
+        fake_getpass,
+        fake_ssh_client,
+    ):
+        # sudo-rs (the Rust replacement, default in Ubuntu 25.10+) prints a different message
+        # when it cannot prompt non-interactively; the retry path should recognize it too.
+        fake_getpass.return_value = "PASSWORD"
+
+        fake_ssh = mock.MagicMock()
+        fake_stdin = mock.MagicMock()
+        fake_stdout = mock.MagicMock()
+        fake_stderr = ["sudo-rs: interactive authentication is required"]
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, fake_stderr
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect(state)
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
 
         command = "echo hi"
         return_values = [1, 0]  # return 0 on the second call

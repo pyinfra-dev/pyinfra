@@ -3,15 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
-from socket import timeout as timeout_error
 from gevent.subprocess import PIPE, Popen
-from typing import TYPE_CHECKING, Callable, Iterable, Optional, Union
+from typing import TYPE_CHECKING
+from collections.abc import Callable, Iterable
 
 import gevent
 
 from pyinfra import logger
 from pyinfra.api.output import echo, format_text
-from pyinfra.api import MaskString, QuoteString, StringCommand
+from pyinfra.api import HiddenValue, QuoteString, StringCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
@@ -23,6 +23,15 @@ if TYPE_CHECKING:
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SU_ASKPASS_ENV_VAR = "PYINFRA_SU_PASSWORD"
+
+# Output lines that indicate sudo could not prompt for a password and we should retry with one.
+# - sudo (Todd C. Miller's): "sudo: a password is required"
+# - sudo-rs (Trifecta Tech): "sudo-rs: interactive authentication is required"
+#   https://github.com/trifectatechfoundation/sudo-rs (default sudo on Ubuntu 25.10+)
+SUDO_PASSWORD_REQUIRED_LINES = (
+    "sudo: a password is required",
+    "sudo-rs: interactive authentication is required",
+)
 
 
 ASKPASS_COMMAND = r"""
@@ -39,10 +48,10 @@ echo "$temp"
 def run_local_process(
     command: str,
     stdin=None,
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
     print_output: bool = False,
     print_prefix: str = "",
-) -> tuple[int, "CommandOutput"]:
+) -> tuple[int, CommandOutput]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
     assert process.stdout is not None
@@ -147,7 +156,7 @@ def read_buffer(
 def read_output_buffers(
     stdout_buffer: Iterable,
     stderr_buffer: Iterable,
-    timeout: Optional[int],
+    timeout: int | None,
     print_output: bool,
     print_prefix: str,
 ) -> CommandOutput:
@@ -162,7 +171,7 @@ def read_output_buffers(
         stdout_buffer,
         output_queue,
         print_output=print_output,
-        print_func=lambda line: "{0}{1}".format(print_prefix, line),
+        print_func=lambda line: f"{print_prefix}{line}",
     )
     stderr_reader = gevent.spawn(
         read_buffer,
@@ -170,10 +179,7 @@ def read_output_buffers(
         stderr_buffer,
         output_queue,
         print_output=print_output,
-        print_func=lambda line: "{0}{1}".format(
-            print_prefix,
-            format_text(line, "red"),
-        ),
+        print_func=lambda line: f"{print_prefix}{format_text(line, 'red')}",
     )
 
     # Wait on output, with our timeout (or None)
@@ -186,7 +192,7 @@ def read_output_buffers(
         stdout_reader.kill()
         stderr_reader.kill()
 
-        raise timeout_error()
+        raise TimeoutError()
 
     return CommandOutput(list(output_queue.queue))
 
@@ -196,8 +202,8 @@ def read_output_buffers(
 
 
 def execute_command_with_sudo_retry(
-    host: "Host",
-    command_arguments: "ConnectorArguments",
+    host: Host,
+    command_arguments: ConnectorArguments,
     execute_command: Callable[..., tuple[int, CommandOutput]],
 ) -> tuple[int, CommandOutput]:
     return_code, output = execute_command()
@@ -207,10 +213,10 @@ def execute_command_with_sudo_retry(
     # https://github.com/pyinfra-dev/pyinfra/issues/1292
     if return_code != 0 and output and output.combined_lines:
         for line in reversed(output.combined_lines):
-            if line.line.strip() == "sudo: a password is required":
+            if line.line.strip() in SUDO_PASSWORD_REQUIRED_LINES:
                 # If we need a password, ask the user for it and attach to the host
                 # internal connector data for use when executing future commands.
-                sudo_password = getpass("{0}sudo password: ".format(host.print_prefix))
+                sudo_password = getpass(f"{host.print_prefix}sudo password: ")
                 host.connector_data["prompted_sudo_password"] = sudo_password
                 return_code, output = execute_command()
                 break
@@ -226,10 +232,25 @@ def write_stdin(stdin, buffer):
 
     for line in stdin:
         if not line.endswith("\n"):
-            line = "{0}\n".format(line)
+            line = f"{line}\n"
         line = line.encode()
         buffer.write(line)
     buffer.close()
+
+
+ASKPASS_PATH_KEYS = ("sudo_askpass_path", "su_askpass_path")
+
+
+def _iter_askpass_cache_keys(host) -> list[str]:
+    # Cache keys are either the bare base ("sudo_askpass_path") or the base
+    # joined with the resolved temp_dir ("sudo_askpass_path__/tmp"). Match
+    # both so cleanup covers every askpass file ever generated for the host.
+    return [
+        cache_key
+        for cache_key in list(host.connector_data.keys())
+        for base in ASKPASS_PATH_KEYS
+        if cache_key == base or cache_key.startswith(base + "__")
+    ]
 
 
 def remove_any_sudo_askpass_file(host) -> None:
@@ -237,21 +258,23 @@ def remove_any_sudo_askpass_file(host) -> None:
     # connection may already be broken (e.g. after `server.reboot`). Swallow
     # any errors from the remote ``rm`` and still clear the local state so a
     # reconnect will regenerate a fresh askpass file.
-    sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
-    if sudo_askpass_path:
+    for cache_key in _iter_askpass_cache_keys(host):
+        path = host.connector_data.get(cache_key)
+        if not path:
+            continue
         try:
-            host.run_shell_command(StringCommand("rm", "-f", QuoteString(sudo_askpass_path)))
+            host.run_shell_command(StringCommand("rm", "-f", QuoteString(path)))
         except Exception as e:
-            logger.debug("Could not remove sudo askpass file %s: %s", sudo_askpass_path, e)
-        host.connector_data["sudo_askpass_path"] = None
+            logger.debug("Could not remove askpass file %s: %s", path, e)
+        host.connector_data[cache_key] = None
 
-    su_askpass_path = host.connector_data.get("su_askpass_path")
-    if su_askpass_path:
-        try:
-            host.run_shell_command(StringCommand("rm", "-f", QuoteString(su_askpass_path)))
-        except Exception as e:
-            logger.debug("Could not remove su askpass file %s: %s", su_askpass_path, e)
-        host.connector_data["su_askpass_path"] = None
+
+def clear_askpass_cache(host) -> None:
+    # Drop every cached askpass path without touching the remote, used after
+    # ``server.reboot`` where the previous connection (and therefore any
+    # askpass scripts under its temp dir) is gone.
+    for cache_key in _iter_askpass_cache_keys(host):
+        host.connector_data[cache_key] = None
 
 
 @memoize
@@ -265,8 +288,8 @@ def _show_use_su_login_warning() -> None:
     )
 
 
-def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArguments":
-    control_arguments: "ConnectorArguments" = {}
+def extract_control_arguments(arguments: ConnectorArguments) -> ConnectorArguments:
+    control_arguments: ConnectorArguments = {}
 
     if "_success_exit_codes" in arguments:
         control_arguments["_success_exit_codes"] = arguments.pop("_success_exit_codes")
@@ -280,38 +303,60 @@ def extract_control_arguments(arguments: "ConnectorArguments") -> "ConnectorArgu
     return control_arguments
 
 
-def _ensure_sudo_askpass_set_for_host(host: "Host"):
-    return _ensure_askpass_set_for_host(host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR)
+def _ensure_sudo_askpass_set_for_host(host: Host, temp_dir: str | None = None) -> str:
+    return _ensure_askpass_set_for_host(
+        host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR, temp_dir=temp_dir
+    )
 
 
-def _ensure_su_askpass_set_for_host(host: "Host"):
-    return _ensure_askpass_set_for_host(host, "su_askpass_path", SU_ASKPASS_ENV_VAR)
+def _ensure_su_askpass_set_for_host(host: Host, temp_dir: str | None = None) -> str:
+    return _ensure_askpass_set_for_host(
+        host, "su_askpass_path", SU_ASKPASS_ENV_VAR, temp_dir=temp_dir
+    )
 
 
-def _ensure_askpass_set_for_host(host: "Host", key: str, env_var: str):
-    if host.connector_data.get(key):
-        return
-    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
+def _ensure_askpass_set_for_host(
+    host: Host, key: str, env_var: str, temp_dir: str | None = None
+) -> str:
+    # Operation-level _temp_dir (if any) overrides the host-level/global
+    # temp directory resolution so `server.shell(..., _temp_dir=X)` places
+    # the askpass script under X rather than /tmp. Encoding the resolved
+    # temp_dir in the cache key gives every (host, temp_dir) pair its own
+    # entry, so switching dirs across calls just misses the cache instead
+    # of needing an explicit invalidation step.
+    effective_temp_dir = temp_dir or host.get_temp_dir_config()
+    cache_key = f"{key}__{effective_temp_dir}"
+
+    cached = host.connector_data.get(cache_key)
+    if cached:
+        return cached
+
+    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(effective_temp_dir, env_var))
 
     if not ok:
-        raise PyinfraError("Failed to create sudo_askpass command: {0}".format(output.output))
+        raise PyinfraError(f"Failed to create sudo_askpass command: {output.output}")
 
     if not output.stdout_lines:
         raise PyinfraError(
-            "Failed to create sudo_askpass command: no output produced by command: {0}".format(
-                output.output,
-            )
+            f"Failed to create sudo_askpass command: no output produced by command: {output.output}"
         )
 
-    host.connector_data[key] = output.stdout_lines[0]
+    path = output.stdout_lines[0]
+    host.connector_data[cache_key] = path
+    return path
 
 
 def make_unix_command_for_host(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     command: StringCommand,
     **command_arguments,
 ) -> StringCommand:
+    # Operation-level temp directory override, if any. Passed through to the
+    # askpass helpers so the generated SUDO_ASKPASS / SU_ASKPASS script lands
+    # under the same directory the operation asked for.
+    op_temp_dir = command_arguments.get("_temp_dir")
+
     # Handle sudo password
     if command_arguments.get("_sudo"):
         # If the sudo password is not set in the direct arguments,
@@ -320,15 +365,16 @@ def make_unix_command_for_host(
             command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
 
         if command_arguments.get("_sudo_password"):
-            # Ensure the askpass path is correctly set and passed through
-            _ensure_sudo_askpass_set_for_host(host)
-            command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
+            command_arguments["_sudo_askpass_path"] = _ensure_sudo_askpass_set_for_host(
+                host, temp_dir=op_temp_dir
+            )
 
     # Handle su password
     if command_arguments.get("_su_user"):
         if command_arguments.get("_su_password"):
-            _ensure_su_askpass_set_for_host(host)
-            command_arguments["_su_askpass_path"] = host.connector_data["su_askpass_path"]
+            command_arguments["_su_askpass_path"] = _ensure_su_askpass_set_for_host(
+                host, temp_dir=op_temp_dir
+            )
 
     return make_unix_command(command, **command_arguments)
 
@@ -377,12 +423,12 @@ def make_unix_command(
         _shell_executable = "sh"
 
     if _env:
-        env_bits: list[Union[str, StringCommand, QuoteString]] = ["export"]
+        env_bits: list[str | StringCommand | QuoteString] = ["export"]
         for key, value in _env.items():
             # Quote the whole `key=value` pair so arbitrary values cannot break
             # out into additional shell tokens. Invalid identifiers in `key` will
             # fail safely when the shell rejects the resulting `export` statement.
-            env_bits.append(QuoteString("{0}={1}".format(key, value)))
+            env_bits.append(QuoteString(f"{key}={value}"))
         env_bits.append("&&")
         env_bits.append(command)
         command = StringCommand(*env_bits)
@@ -390,7 +436,7 @@ def make_unix_command(
     if _chdir:
         command = StringCommand("cd", QuoteString(_chdir), "&&", command)
 
-    command_bits: list[Union[str, StringCommand, QuoteString]] = []
+    command_bits: list[str | StringCommand | QuoteString] = []
 
     if _doas:
         command_bits.extend(["doas", "-n"])
@@ -409,11 +455,10 @@ def make_unix_command(
             [
                 "env",
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
-                MaskString(
-                    "{0}={1}".format(
-                        SUDO_ASKPASS_ENV_VAR,
-                        StringCommand(QuoteString(_sudo_password)).get_raw_value(),
-                    )
+                StringCommand(
+                    SUDO_ASKPASS_ENV_VAR,
+                    QuoteString(HiddenValue(_sudo_password)),
+                    _separator="=",
                 ),
             ],
         )
@@ -440,11 +485,10 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
-                    MaskString(
-                        "{0}={1}".format(
-                            SU_ASKPASS_ENV_VAR,
-                            StringCommand(QuoteString(_su_password)).get_raw_value(),
-                        )
+                    StringCommand(
+                        SU_ASKPASS_ENV_VAR,
+                        QuoteString(HiddenValue(_su_password)),
+                        _separator="=",
                     ),
                     QuoteString(_su_askpass_path),
                     "|",

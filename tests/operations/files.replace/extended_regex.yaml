@@ -1,0 +1,12 @@
+args:
+  - filename
+  - match.+
+  - replace
+kwargs:
+  extended_regex: true
+facts:
+  files.FindInFile:
+    "extended_regex=True, interpolate_variables=False, path=filename, pattern=match.+":
+      - match some value
+commands:
+  - "sed -E -i.a-timestamp 's/match.+/replace/' filename && rm -f filename.a-timestamp"

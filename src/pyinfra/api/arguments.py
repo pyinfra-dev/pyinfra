@@ -4,18 +4,12 @@ import os
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Generic,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Type,
     TypeVar,
-    Union,
     cast,
     get_type_hints,
 )
+from collections.abc import Callable, Iterable, Mapping
 
 from typing_extensions import TypedDict
 
@@ -32,8 +26,8 @@ default_sentinel = object()
 
 class ArgumentMeta(Generic[T]):
     description: str
-    default: Callable[["Config"], T]
-    handler: Optional[Callable[["Config", T], T]]
+    default: Callable[[Config], T]
+    handler: Callable[[Config, T], T] | None
 
     def __init__(self, description, default, handler=None) -> None:
         self.description = description
@@ -74,18 +68,18 @@ class ConnectorArguments(TypedDict, total=False):
     _success_exit_codes: Iterable[int]
     _timeout: int
     _get_pty: bool
-    _stdin: Union[str, list[str], Iterable[str]]
+    _stdin: str | list[str] | Iterable[str]
 
     # Retry arguments
     _retries: int
-    _retry_delay: Union[int, float]
+    _retry_delay: int | float
     _retry_until: Callable[[dict], bool]
 
     # Temp directory argument
     _temp_dir: str
 
 
-def generate_env(config: "Config", value: dict) -> dict:
+def generate_env(config: Config, value: dict) -> dict:
     env = {key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ}
     env.update(config.ENV)
     env.update(value)
@@ -198,13 +192,17 @@ class MetaArguments(TypedDict):
     name: str
     _ignore_errors: bool
     _continue_on_error: bool
-    _if: Union[List[Callable[[], bool]], Callable[[], bool], None]
+    _if: list[Callable[[], bool]] | Callable[[], bool] | None
 
 
 meta_argument_meta: dict[str, ArgumentMeta] = {
     # NOTE: name is the only non-_-prefixed argument
     "name": ArgumentMeta(
-        "Name of the operation.",
+        (
+            "Human-readable label for the operation, shown in CLI output and used to identify "
+            "the operation in the execution order. Does not affect what is run. If omitted, "
+            "pyinfra generates a label from the operation's call signature."
+        ),
         default=lambda _: None,
     ),
     "_ignore_errors": ArgumentMeta(
@@ -238,7 +236,11 @@ class ExecutionArguments(TypedDict):
 
 execution_argument_meta: dict[str, ArgumentMeta] = {
     "_parallel": ArgumentMeta(
-        "Run this operation in batches of hosts.",
+        (
+            "Maximum number of hosts to execute this operation on at once. ``0`` (the default) "
+            "means use the global ``config.PARALLEL`` value, which itself defaults to *all hosts "
+            "in parallel*, capped by the system's open-file-descriptor limit."
+        ),
         default=lambda config: config.PARALLEL,
     ),
     "_run_once": ArgumentMeta(
@@ -256,7 +258,7 @@ class AllArguments(ConnectorArguments, MetaArguments, ExecutionArguments):
     pass
 
 
-def all_global_arguments() -> List[tuple[str, Type]]:
+def all_global_arguments() -> list[tuple[str, type]]:
     """Return all global arguments and their types."""
     return list(get_type_hints(AllArguments).items())
 
@@ -331,7 +333,17 @@ __argument_docs__ = {
         """,
     ),
     "Operation meta & callbacks": (meta_argument_meta, "", ""),
-    "Execution strategy": (execution_argument_meta, "", ""),
+    "Execution strategy": (
+        execution_argument_meta,
+        """
+        By default, every operation runs against **all hosts in parallel** (capped by the open-file
+        limit). ``_parallel`` lowers that cap for a single operation, ``_serial`` forces host-by-host
+        execution, and ``_run_once`` executes only against the first host that reaches the operation.
+        These three are mutually exclusive on a per-operation basis and must take the same value on
+        every host.
+        """,
+        "",
+    ),
     "Retry behavior": (
         retry_argument_meta,
         """
@@ -375,8 +387,8 @@ __argument_docs__ = {
 
 
 def pop_global_arguments(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     kwargs: dict[str, Any],
 ) -> tuple[AllArguments, list[str]]:
     """

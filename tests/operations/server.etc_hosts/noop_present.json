@@ -1,0 +1,16 @@
+{
+    "args": ["192.168.1.10"],
+    "kwargs": {
+        "hostnames": ["db.internal", "db"]
+    },
+    "facts": {
+        "server.EtcHosts": {
+            "path=/etc/hosts": {
+                "127.0.0.1": ["localhost"],
+                "192.168.1.10": ["db.internal", "db"]
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "192.168.1.10 -> db.internal db already present in /etc/hosts"
+}

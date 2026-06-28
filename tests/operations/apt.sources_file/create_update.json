@@ -1,0 +1,28 @@
+{
+    "kwargs": {
+        "filename": "docker",
+        "types": ["deb"],
+        "uris": ["https://download.docker.com/linux/debian"],
+        "suites": ["bookworm"],
+        "components": ["stable"],
+        "architectures": ["amd64"],
+        "signed_by": "/etc/apt/keyrings/docker.gpg"
+    },
+    "facts": {
+        "apt.AptSources": [],
+        "files.File": {
+            "path=/etc/apt/sources.list.d/docker.sources": {"mode": 644}
+        },
+        "files.Directory": {
+            "path=/etc/apt/sources.list.d": {"mode": "755"},
+            "path=/etc/apt/sources.list.d/docker.sources": null
+        },
+        "files.Sha1File": {
+            "path=/etc/apt/sources.list.d/docker.sources": "0000000000000000000000000000000000000000"
+        }
+    },
+    "commands": [
+        ["upload", "Types: deb\nURIs: https://download.docker.com/linux/debian\nSuites: bookworm\nComponents: stable\nArchitectures: amd64\nSigned-By: /etc/apt/keyrings/docker.gpg\n", "/etc/apt/sources.list.d/docker.sources"],
+        "chmod 644 /etc/apt/sources.list.d/docker.sources"
+    ]
+}

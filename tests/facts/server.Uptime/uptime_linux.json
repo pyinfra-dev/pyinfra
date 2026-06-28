@@ -1,0 +1,8 @@
+{
+    "command": "cut -d. -f1 /proc/uptime",
+    "facts": {
+        "server.Kernel": "Linux"
+    },
+    "output": ["86400"],
+    "fact": 86400
+}

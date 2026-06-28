@@ -1,3 +1,85 @@
+# v3.9.2
+
+- Fix documentation recursive copy mess
+
+# v3.9.1
+
+- Fix documentation redirect pages generation
+
+# v3.9.0
+
+Another big release with a lot of fixes and improvements across the board - thank you to all contributors! This release also comes alongside completely refreshed documentation site, with a huge number of UX and copy improvements and a shiny new marketing site.
+
+Core:
+
+- api.host: restore deploy state when body raises (#1724) (@wowi42)
+- api: honour ctx_config TEMP_DIR override in get_temp_dir_config (#1751) (@wowi42)
+- api: New MaskString (#1709) (@gwelch-contegix)
+
+Operations/facts:
+
+- operations.dnf: add support for DNF modules (#1660) (@yagarea)
+- operations.git: chown worktree metadata in source repo (#1710) (@wowi42)
+- operations.files: add extended_regex option to line and replace (#1714) (@case)
+- operations.server: pre-check shadow tools in user op (#1707) (@wowi42)
+- operations.docker.volume: use docker volume rm to delete volumes (#1741) (@wowi42)
+- operations.apt: add sources_file operation (#1597) (@maisim)
+- operations.crontab: detect change of crontab entry with only special time (#1722) (@sebastiaanhoogeveen)
+- operations: handle output from the 'uutils' version of stat (eg. recent Ubuntu) (#1733) (@egnor)
+- operations.server: handle OpenBSD useradd properly (#1739) (@epicrazzmatazz)
+- facts.server: add EtcHosts, Last, Lastb, LoadAverage facts + server.etc_hosts op (#1669) (@wowi42)
+- facts.iptables: requires_command() error in when table specified (#1730) (@doug-fitzmaurice-rowden)
+- operations: handle password prompt from sudo-rs (eg. recent Ubuntu) (#1734) (@egnor)
+- facts: add AptPackages fact (#1740) (@mvanhorn)
+- operations.files: handle large download cache time (#1774) (@puneetdixit200)
+- facts.openrc: make OpenrcStatus match service names containing a dot (#1777) (@chimekkoo)
+- operations.python: correct type on exception argument
+- facts.util.packages: add PackageInfo model (phase 1 of #1725) (#1726) (@wowi42)
+- operations.files: shell-quote files.block content (#1759) (@wowi42)
+- operations.util.files: normalize octal mode spellings in ensure_mode_int (#1786) (@mvanhorn)
+- operations.gpg.key: use _matches_keyid for full-fingerprint idempotency check (#1718) (@maisim)
+
+Connectors:
+
+- connectors.util: honour _temp_dir in askpass helpers (#1666) (@wowi42)
+- connectors.ssh: auto-load OpenSSH user certificates from ssh_config (#1750) (@wowi42)
+
+CLI:
+
+- cli: add --use-sudo-login option (#1728) (@wucm667)
+- cli: keep trying module candidates when attribute is missing (#1748) (@wowi42)
+- cli: add --json flag for pure JSON stdout output (#1662) (@wowi42)
+
+Docs/meta:
+
+- AGENTS: codify recurring PR review feedback as rules (#1700) (@wowi42)
+- style: extend linting with modern Python syntax checks (#1721) (@DonDebonair)
+- test: fix apt.packages update_cached fixture for non-UTC contributors (#1716) (@case)
+- docs: add contributing setup for editable module (#1755) (@evilham)
+- docs: Add missing apostrophes (#1761) (@blinskey)
+- docs: remove stray 'LINK' in chmod/chown FAQ entry (#1762) (#1765) (@mvanhorn)
+- docs: warn that _if must be a callable (#1771) (@wowi42)
+- docs: restore loop cycle error guidance (#1767) (@puneetdixit200)
+- docs: clarify fact-failure semantics for requires_command and check_preconditions (#1770) (@wowi42)
+- docs: correct python.raise_exception example (#1772) (@puneetdixit200)
+- docs: add BSD platform-specific instructions (#1754) (@evilham)
+- docs: convert docs to use zensical (#1713)
+- docs: add darkreader-lock
+- docs: remove redundant css and drop google fonts dependency
+- ci: update changelog generation
+
+Other:
+
+- feat: enforce conventional commits standard for commit messages and PR titles (#1719) (@DonDebonair)
+- PR template: typo fix (#1715) (@case)
+- fix: extra linting rules (#1721) broke the build (#1732) (@DonDebonair)
+- fix: make dnf.packages work with dnf5 and handle multiple installation candidates (#1655) (@yacoob)
+- feat: Add server.Uptime fact (#1735) (@Tbruno25)
+- fix: Use Uptime fact in server.reboot (#1737) (@Tbruno25)
+- feat: Add `fetch_tags` flag to `git.repo` (#1745) (@inducer)
+- fix: update askpass test with new tmp path keys
+- fix: parse flat apt repos with empty component list (#1775) (#1779) (@mvanhorn)
+
 # v3.8.0
 
 Big release with a lot of fixes and improvements across the board! We're also switching to full semver (so .0 on the 3.8.0) for this release and others going forward. Thank you to all contributors!
@@ -81,6 +163,11 @@ Other:
 - fix(facts): add semicolons to TmpDir shell script for sh -c compatibility (#1703) (@wucm667)
 - fix(operations.server): normalize sysctl value for comparison (#1706) (@wowi42)
 - feat: add PR review skill (#1683)
+
+Operations/facts:
+
+- operations.files.line, operations.files.replace: add `extended_regex` parameter (default `False`) to opt in to extended regular expressions (`grep -E` / `sed -E`) so quantifiers like `+` and `?` and groups like `(a|b)` work without backslash escaping (#1019, #1400).
+- facts.files.FindInFile: add `extended_regex` parameter (default `False`) to use `grep -E`.
 
 # v3.7
 

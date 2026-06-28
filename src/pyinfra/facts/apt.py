@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Union
 
 from typing_extensions import TypedDict, override
 
 from pyinfra.api import FactBase
 
 from .gpg import GpgKeyrings
+from .util.packaging import parse_packages
+
+APT_PACKAGE_NAME_REGEX = r"[a-zA-Z0-9\+\-\.]+(?::[a-zA-Z0-9]+)?"
+APT_PACKAGE_VERSION_REGEX = r"[a-zA-Z0-9:~\.\-\+]+"
 
 
 @dataclass(frozen=True)
@@ -26,7 +29,7 @@ class AptRepo:
     url: str  # Repository URL
     distribution: str  # Suite/distribution name
     components: list[str]  # List of components (e.g., ["main", "contrib"])
-    options: dict[str, Union[str, list[str]]]  # Repository options
+    options: dict[str, str | list[str]]  # Repository options
 
     # Dict-like interface for backward compatibility
     def __getitem__(self, key: str):
@@ -100,7 +103,7 @@ class AptSourcesFile:
     trusted: str | None = None  # "yes"/"no"
 
     @classmethod
-    def from_deb822_lines(cls, lines: list[str]) -> "AptSourcesFile | None":
+    def from_deb822_lines(cls, lines: list[str]) -> AptSourcesFile | None:
         """Parse deb822 stanza lines into AptSourcesFile.
 
         Handles multi-line field values (continuation lines starting with a space
@@ -199,7 +202,7 @@ class AptSourcesFile:
     def expand_to_repos(self) -> list[AptRepo]:
         """Expand this sources file entry into individual AptRepo instances."""
         # Build options dict in the same format as legacy parsing
-        options: dict[str, Union[str, list[str]]] = {}
+        options: dict[str, str | list[str]] = {}
 
         if self.architectures:
             options["arch"] = (
@@ -258,7 +261,15 @@ def parse_apt_repo(name: str) -> AptRepo | None:
     Returns:
         AptRepo instance or None if parsing failed
     """
-    regex = r"^(deb(?:-src)?)(?:\s+\[([^\]]+)\])?\s+([^\s]+)\s+([^\s]+)\s+([a-z-\s\d]*)$"
+    # Components are optional: "flat" repositories (#1775) use a suite ending in "/"
+    # and supply no components, e.g.
+    #   deb [signed-by=/etc/.../key.gpg] https://example.com/path /
+    # The components group is also kept optional for non-flat lines that omit
+    # the trailing whitespace, matching apt's tolerance.
+    regex = (
+        r"^(deb(?:-src)?)(?:\s+\[([^\]]+)\])?\s+([^\s]+)\s+([^\s]+)"
+        r"(?:\s+([a-z-\s\d]+))?\s*$"
+    )
 
     matches = re.match(regex, name)
 
@@ -276,11 +287,14 @@ def parse_apt_repo(name: str) -> AptRepo | None:
 
             options[key] = value
 
+    components_match = matches.group(5)
+    components = list(components_match.split()) if components_match else []
+
     return AptRepo(
         type=matches.group(1),
         url=matches.group(3),
         distribution=matches.group(4),
-        components=list(matches.group(5).split()),
+        components=components,
         options=options,
     )
 
@@ -368,6 +382,47 @@ class AptSources(FactBase):
 
         flush()  # flush the final buffer
         return repos
+
+
+class AptPackages(FactBase):
+    """
+    Returns a dict of installed apt packages, keyed by name with a list of
+    versions as the value:
+
+    .. code:: python
+
+        {
+            "package_name": ["version"],
+        }
+
+    The list-of-versions shape mirrors :class:`pyinfra.facts.deb.DebPackages`
+    so callers can swap between the two without reshaping their code. The
+    main reason to reach for ``AptPackages`` is to surface packages whose
+    presence is more reliably visible from ``apt`` than from ``dpkg`` (for
+    example, packages with an architecture suffix like ``foo:i386``).
+    """
+
+    @override
+    def command(self) -> str:
+        # ``apt list --installed`` writes a "Listing..." progress notice on
+        # stderr in modern apt. Suppress it so the parser only sees the
+        # actual package lines on stdout.
+        return "apt list --installed 2>/dev/null"
+
+    @override
+    def requires_command(self) -> str:
+        return "apt"
+
+    default = dict
+
+    # Lines look like: ``name/source-info,now version arch [installed,flags]``
+    # The leading anchor and ``[installed`` tail filter out the optional
+    # "Listing..." header and any other noise.
+    regex = rf"^({APT_PACKAGE_NAME_REGEX})/\S+\s+({APT_PACKAGE_VERSION_REGEX})\s+\S+\s+\[installed"
+
+    @override
+    def process(self, output):
+        return parse_packages(self.regex, output)
 
 
 class AptKeys(GpgKeyrings):

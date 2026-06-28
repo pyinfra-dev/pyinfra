@@ -5,15 +5,11 @@ from copy import copy
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Generator,
-    Optional,
-    Type,
     TypeVar,
-    Union,
     cast,
     overload,
 )
+from collections.abc import Callable, Generator
 from uuid import uuid4
 
 from typing_extensions import Unpack, override
@@ -22,6 +18,7 @@ from pyinfra import logger
 from pyinfra.api.output import format_text
 from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
+from pyinfra.context import ctx_config
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
@@ -35,7 +32,7 @@ if TYPE_CHECKING:
 
 
 def extract_callable_datas(
-    datas: list[Union[Callable[..., Any], Any]],
+    datas: list[Callable[..., Any] | Any],
 ) -> Generator[Any, Any, Any]:
     for data in datas:
         # Support for dynamic data, ie @deploy wrapped data defaults where
@@ -52,7 +49,7 @@ class HostData:
 
     override_datas: dict[str, Any]
 
-    def __init__(self, host: "Host", *datas):
+    def __init__(self, host: Host, *datas):
         self.__dict__["host"] = host
 
         parsed_datas = list(datas)
@@ -106,7 +103,7 @@ class Host:
     data.
     """
 
-    state: "State"
+    state: State
     connector_cls: type[BaseConnector]
     connector: BaseConnector
     connected: bool = False
@@ -114,23 +111,23 @@ class Host:
     # Current context inside an @operation function (op gen stage)
     in_op: bool = False
     in_callback_op: bool = False
-    current_op_hash: Optional[str] = None
-    current_op_global_arguments: Optional["AllArguments"] = None
+    current_op_hash: str | None = None
+    current_op_global_arguments: AllArguments | None = None
 
     # Current context inside a @deploy function which become part of the op data
     in_deploy: bool = False
-    current_deploy_name: Optional[str] = None
+    current_deploy_name: str | None = None
     current_deploy_kwargs = None
 
     # @deploy decorator data is a bit different - we need to handle the case
     # where we're evaluating an operation at runtime (current_op_) but also
     # when ordering operations (current_) outside of an operation context.
-    current_op_deploy_data: Optional[dict[str, Any]] = None
-    current_deploy_data: Optional[dict[str, Any]] = None
+    current_op_deploy_data: dict[str, Any] | None = None
+    current_deploy_data: dict[str, Any] | None = None
 
     # Current context during operation execution
-    executing_op_hash: Optional[str] = None
-    nested_executing_op_hash: Optional[str] = None
+    executing_op_hash: str | None = None
+    nested_executing_op_hash: str | None = None
 
     loop_position: list[int]
 
@@ -147,7 +144,7 @@ class Host:
     def __init__(
         self,
         name: str,
-        inventory: "Inventory",
+        inventory: Inventory,
         groups,
         connector_cls=None,
     ):
@@ -177,7 +174,7 @@ class Host:
             self.get_deploy_data,
         )
 
-    def init(self, state: "State") -> None:
+    def init(self, state: State) -> None:
         self.state = state
         self.connector = self.connector_cls(state, self)
 
@@ -187,11 +184,11 @@ class Host:
 
     @override
     def __str__(self):
-        return "{0}".format(self.name)
+        return f"{self.name}"
 
     @override
     def __repr__(self):
-        return "Host({0})".format(self.name)
+        return f"Host({self.name})"
 
     @property
     def host_data(self):
@@ -204,25 +201,12 @@ class Host:
     @property
     def print_prefix(self) -> str:
         if self.nested_executing_op_hash:
-            return "{0}[{1}] {2}{3} ".format(
-                format_text(""),  # reset
-                format_text(self.name, bold=True),
-                format_text("nested", "blue"),
-                self.print_prefix_padding,
-            )
+            return f"{format_text('')}[{format_text(self.name, bold=True)}] {format_text('nested', 'blue')}{self.print_prefix_padding} "
 
-        return "{0}[{1}]{2} ".format(
-            format_text(""),  # reset
-            format_text(self.name, bold=True),
-            self.print_prefix_padding,
-        )
+        return f"{format_text('')}[{format_text(self.name, bold=True)}]{self.print_prefix_padding} "
 
     def style_print_prefix(self, *args, **kwargs) -> str:
-        return "{0}[{1}]{2} ".format(
-            format_text(""),  # reset
-            format_text(self.name, *args, **kwargs),
-            self.print_prefix_padding,
-        )
+        return f"{format_text('')}[{format_text(self.name, *args, **kwargs)}]{self.print_prefix_padding} "
 
     def log(self, message: str, log_func: Callable[[str], Any] = logger.info) -> None:
         log_func(f"{self.print_prefix}{message}")
@@ -242,7 +226,7 @@ class Host:
         """
 
         handler = logger.info if self.state.print_noop_info else logger.debug
-        handler("{0}noop: {1}".format(self.print_prefix, description))
+        handler(f"{self.print_prefix}noop: {description}")
 
     def when(self, condition: Callable[[], bool]):
         return self.deploy(
@@ -252,15 +236,15 @@ class Host:
             in_deploy=False,
         )
 
-    def arguments(self, **arguments: Unpack["AllArguments"]):
+    def arguments(self, **arguments: Unpack[AllArguments]):
         return self.deploy("", arguments, {}, in_deploy=False)
 
     @contextmanager
     def deploy(
         self,
         name: str,
-        kwargs: Optional["AllArguments"],
-        data: Optional[dict],
+        kwargs: AllArguments | None,
+        data: dict | None,
         in_deploy: bool = True,
     ):
         """
@@ -270,7 +254,7 @@ class Host:
 
         # Handle nested deploy names
         if self.current_deploy_name:
-            name = "{0} | {1}".format(self.current_deploy_name, name)
+            name = f"{self.current_deploy_name} | {name}"
 
         # Store the previous values
         old_in_deploy = self.in_deploy
@@ -297,20 +281,22 @@ class Host:
             data,
         )
 
-        yield
+        try:
+            yield
+        finally:
+            # Restore the previous values even if the deploy body raised, so a
+            # caught exception does not leak the deploy name into later ops.
+            self.in_deploy = old_in_deploy
+            self.current_deploy_name = old_deploy_name
+            self.current_deploy_kwargs = old_deploy_kwargs
+            self.current_deploy_data = old_deploy_data
 
-        # Restore the previous values
-        self.in_deploy = old_in_deploy
-        self.current_deploy_name = old_deploy_name
-        self.current_deploy_kwargs = old_deploy_kwargs
-        self.current_deploy_data = old_deploy_data
-
-        logger.debug(
-            "Reset deploy to %s (args=%r, data=%r)",
-            old_deploy_name,
-            old_deploy_kwargs,
-            old_deploy_data,
-        )
+            logger.debug(
+                "Reset deploy to %s (args=%r, data=%r)",
+                old_deploy_name,
+                old_deploy_kwargs,
+                old_deploy_data,
+            )
 
     @memoize
     def _get_temp_directory(self):
@@ -329,14 +315,29 @@ class Host:
         return temp_directory
 
     def get_temp_dir_config(self):
-        return self.state.config.TEMP_DIR or self.state.config.DEFAULT_TEMP_DIR
+        # Deploy files mutate the per-deploy `ctx_config` copy, not
+        # `state.config` (see pyinfra.context), so prefer an explicit
+        # override there: `config.TEMP_DIR = ...` inside a deploy must
+        # land the askpass script under the requested directory (issue
+        # #1729). A `ctx_config` carrying no explicit TEMP_DIR (the copy
+        # of a default config, or a context leaked from elsewhere) must
+        # not shadow a TEMP_DIR set on `state.config` via an
+        # inventory/config file, so fall through to it rather than
+        # swapping the config wholesale.
+        ctx = ctx_config.get() if ctx_config.isset() else None
+        config = self.state.config
+        return (
+            (ctx.TEMP_DIR if ctx is not None else None)
+            or config.TEMP_DIR
+            or config.DEFAULT_TEMP_DIR
+        )
 
     def get_temp_filename(
         self,
-        hash_key: Optional[str] = None,
+        hash_key: str | None = None,
         hash_filename: bool = True,
         *,
-        temp_directory: Optional[str] = None,
+        temp_directory: str | None = None,
     ):
         """
         Generate a temporary filename for this deploy.
@@ -350,7 +351,7 @@ class Host:
         if hash_filename:
             hash_key = sha1_hash(hash_key)
 
-        return "{0}/pyinfra-{1}".format(temp_directory, hash_key)
+        return f"{temp_directory}/pyinfra-{hash_key}"
 
     # Host facts
     #
@@ -358,10 +359,10 @@ class Host:
     T = TypeVar("T")
 
     @overload
-    def get_fact(self, name_or_cls: Type[FactBase[T]], *args, **kwargs) -> T: ...
+    def get_fact(self, name_or_cls: type[FactBase[T]], *args, **kwargs) -> T: ...
 
     @overload
-    def get_fact(self, name_or_cls: Type[ShortFactBase[T]], *args, **kwargs) -> T: ...
+    def get_fact(self, name_or_cls: type[ShortFactBase[T]], *args, **kwargs) -> T: ...
 
     def get_fact(self, name_or_cls, *args, **kwargs):
         """
@@ -389,10 +390,7 @@ class Host:
                 self.connector.connect()
             except ConnectError as e:
                 if show_errors:
-                    log_message = "{0}{1}".format(
-                        self.print_prefix,
-                        format_text(e.args[0], "red"),
-                    )
+                    log_message = f"{self.print_prefix}{format_text(e.args[0], 'red')}"
                     logger.error(log_message)
 
                 self.state.trigger_callbacks("host_connect_error", self, e)
@@ -400,15 +398,9 @@ class Host:
                 if raise_exceptions:
                     raise
             else:
-                log_message = "{0}{1}".format(
-                    self.print_prefix,
-                    format_text("Connected", "green"),
-                )
+                log_message = f"{self.print_prefix}{format_text('Connected', 'green')}"
                 if reason:
-                    log_message = "{0}{1}".format(
-                        log_message,
-                        " ({0})".format(reason),
-                    )
+                    log_message = f"{log_message}{f' ({reason})'}"
 
                 logger.info(log_message)
                 self.state.trigger_callbacks("host_connect", self)

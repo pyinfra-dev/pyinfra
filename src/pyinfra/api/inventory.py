@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any
+from collections.abc import Iterator
 
 from .connectors import get_all_connectors, get_execution_connectors
 from .exceptions import NoConnectorError, NoGroupError, NoHostError
@@ -35,7 +36,7 @@ class Inventory:
         **groups: map of group name -> ``(names, data)``
     """
 
-    state: "State"
+    state: State
     groups: dict[str, list[Host]]
 
     @staticmethod
@@ -98,7 +99,7 @@ class Inventory:
 
                 if connector_name not in get_all_connectors():
                     raise NoConnectorError(
-                        "Invalid connector: {0}".format(connector_name),
+                        f"Invalid connector: {connector_name}",
                     )
 
                 # Execution connector? Simple, just set it for their host
@@ -129,7 +130,7 @@ class Inventory:
                     )
 
         # Now we can actually make Host instances
-        hosts: dict[str, "Host"] = {}
+        hosts: dict[str, Host] = {}
 
         for name, connector_cls in names_connectors:
             host_groups = name_to_group_names[name]
@@ -151,14 +152,14 @@ class Inventory:
 
         return len(self.hosts)
 
-    def __iter__(self) -> Iterator["Host"]:
+    def __iter__(self) -> Iterator[Host]:
         """
         Iterates over all inventory hosts.
         """
 
         return iter(self.hosts.values())
 
-    def get_active_hosts(self) -> list["Host"]:
+    def get_active_hosts(self) -> list[Host]:
         """
         Iterates over active inventory hosts.
         """
@@ -170,7 +171,7 @@ class Inventory:
         """
         return len(self.state.active_hosts)
 
-    def iter_activated_hosts(self) -> Iterator["Host"]:
+    def iter_activated_hosts(self) -> Iterator[Host]:
         """
         Iterates over activated inventory hosts.
         """
@@ -191,7 +192,7 @@ class Inventory:
             return self.hosts[name]
 
         if default is NoHostError:
-            raise NoHostError("No such host: {0}".format(name))
+            raise NoHostError(f"No such host: {name}")
 
         # TODO: remove default here?
         return default
@@ -205,7 +206,7 @@ class Inventory:
             return self.groups[name]
 
         if default is NoGroupError:
-            raise NoGroupError("No such group: {0}".format(name))
+            raise NoGroupError(f"No such group: {name}")
 
         # TODO: remove default here?
         return default

@@ -8,7 +8,10 @@
         "files.Directory": {
             "path=/home/someuser": null
         },
-        "server.Os": "Linux"
+        "server.Os": "Linux",
+        "server.Which": {
+            "command=useradd": "/usr/sbin/useradd"
+        }
     },
     "commands": [
         "useradd -d /home/someuser -g someuser -M someuser",

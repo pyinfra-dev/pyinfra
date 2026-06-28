@@ -3,7 +3,9 @@ The files facts provide information about the filesystem and it's contents on th
 
 Facts need to be imported before use, eg
 
-from pyinfra.facts.files import File
+.. code:: python
+
+    from pyinfra.facts.files import File
 """
 
 from __future__ import annotations
@@ -11,9 +13,10 @@ from __future__ import annotations
 import re
 import stat
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
 
-from typing_extensions import Literal, NotRequired, TypedDict, override
+from typing_extensions import NotRequired, TypedDict, override
+from typing import Literal
 
 from pyinfra.api import StringCommand
 from pyinfra.api.command import QuoteString, make_formatted_string_command
@@ -66,6 +69,21 @@ CHAR_TO_PERMISSION = (
 )
 
 
+def _unquote_stat_name(name: str) -> str:
+    """
+    Strip the quoting `stat %N` (or `ls -ld`) wraps a path in:
+    'name' (GNU coreutils), `name' (older GNU/RHEL 6), or "name" (uutils-coreutils).
+    """
+    for opener, closer in (("'", "'"), ("`", "'"), ('"', '"')):
+        if (
+            len(name) >= len(opener) + len(closer)
+            and name.startswith(opener)
+            and name.endswith(closer)
+        ):
+            return name[len(opener) : -len(closer)]
+    return name
+
+
 def _parse_mode(mode: str) -> int:
     """
     Converts ls mode output (rwxrwxrwx) -> octal permission integer (755).
@@ -82,14 +100,14 @@ def _parse_mode(mode: str) -> int:
     return int(oct(out)[2:])
 
 
-def _parse_datetime(value: str) -> Optional[datetime]:
+def _parse_datetime(value: str) -> datetime | None:
     value = try_int(value)
     if isinstance(value, int):
         return datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
     return None
 
 
-def _parse_ls_timestamp(month: str, day: str, year_or_time: str) -> Optional[datetime]:
+def _parse_ls_timestamp(month: str, day: str, year_or_time: str) -> datetime | None:
     """
     Parse ls timestamp format.
     Examples: "Jan  1  1970", "Apr  2  2025", "Dec 31 12:34"
@@ -134,7 +152,7 @@ def _parse_ls_timestamp(month: str, day: str, year_or_time: str) -> Optional[dat
         return None
 
 
-def _parse_ls_output(output: str) -> Optional[tuple[FileDict, str]]:
+def _parse_ls_output(output: str) -> tuple[FileDict, str] | None:
     """
     Parse ls -ld output and extract file information.
     Example: drwxr-xr-x    1 root     root           416 Jan  1  1970 /
@@ -186,17 +204,17 @@ def _parse_ls_output(output: str) -> Optional[tuple[FileDict, str]]:
     # Handle symbolic links
     if path_type == "link" and " -> " in path:
         filename, target = path.split(" -> ", 1)
-        data["link_target"] = target.strip("'").lstrip("`")
+        data["link_target"] = _unquote_stat_name(target)
 
     return data, path_type
 
 
 class FileDict(TypedDict):
     mode: int
-    size: Union[int, str]
-    atime: Optional[datetime]
-    mtime: Optional[datetime]
-    ctime: Optional[datetime]
+    size: int | str
+    atime: datetime | None
+    mtime: datetime | None
+    ctime: datetime | None
     user: str
     group: str
     link_target: NotRequired[str]
@@ -246,7 +264,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
         )
 
     @override
-    def process(self, output) -> Union[FileDict, Literal[False], None]:
+    def process(self, output) -> FileDict | Literal[False] | None:
         # Try to parse as stat output first
         match = re.match(STAT_REGEX, output[0])
         if match:
@@ -269,7 +287,7 @@ class File(FactBase[Union[FileDict, Literal[False], None]]):
             if path_type == "link":
                 filename = match.group(8)
                 filename, target = filename.split(" -> ")
-                data["link_target"] = target.strip("'").lstrip("`")
+                data["link_target"] = _unquote_stat_name(target)
 
             return data
 
@@ -359,15 +377,15 @@ else:
 
 class HashFileFactBase(FactBaseOptionalStr):
     _raw_cmd: str
-    _regexes: Tuple[str, str]
+    _regexes: tuple[str, str]
 
     @override
-    def __init_subclass__(cls, digits: int, cmds: List[str], **kwargs) -> None:
+    def __init_subclass__(cls, digits: int, cmds: list[str], **kwargs) -> None:
         super().__init_subclass__(**kwargs)
 
-        raw_hash_cmds = ["%s {0} 2> /dev/null" % cmd for cmd in cmds]
+        raw_hash_cmds = [f"{cmd} {{0}} 2> /dev/null" for cmd in cmds]
         raw_hash_cmd = " || ".join(raw_hash_cmds)
-        cls._raw_cmd = "test -e {0} && ( %s ) || true" % raw_hash_cmd
+        cls._raw_cmd = f"test -e {{0}} && ( {raw_hash_cmd} ) || true"
 
         assert cls.__name__.endswith("File")
         hash_name = cls.__name__[:-4].upper()
@@ -384,7 +402,7 @@ class HashFileFactBase(FactBaseOptionalStr):
         return make_formatted_string_command(self._raw_cmd, QuoteString(path))
 
     @override
-    def process(self, output) -> Optional[str]:
+    def process(self, output) -> str | None:
         output = output[0]
         escaped_path = re.escape(self.path)
         for regex in self._regexes:
@@ -426,22 +444,20 @@ class FindInFile(FactBase):
     """
 
     @override
-    def command(self, path, pattern, interpolate_variables=False):
-        self.exists_flag = "__pyinfra_exists_{0}".format(path)
+    def command(self, path, pattern, interpolate_variables=False, extended_regex=False):
+        self.exists_flag = f"__pyinfra_exists_{path}"
 
         if interpolate_variables:
-            pattern = '"{0}"'.format(pattern.replace('"', '\\"'))
+            pattern = '"{}"'.format(pattern.replace('"', '\\"'))
         else:
             pattern = QuoteString(pattern)
 
         return make_formatted_string_command(
-            (
-                "grep -e {0} {1} 2> /dev/null || "
-                "( find {1} -type f > /dev/null && echo {2} || true )"
-            ),
+            ("{3} -e {0} {1} 2> /dev/null || ( find {1} -type f > /dev/null && echo {2} || true )"),
             pattern,
             QuoteString(path),
             QuoteString(self.exists_flag),
+            "grep -E" if extended_regex else "grep",
         )
 
     @override
@@ -468,14 +484,15 @@ class FindFilesBase(FactBase):
     def command(
         self,
         path: str,
-        size: Optional[str | int] = None,
-        min_size: Optional[str | int] = None,
-        max_size: Optional[str | int] = None,
-        maxdepth: Optional[int] = None,
-        fname: Optional[str] = None,
-        iname: Optional[str] = None,
-        regex: Optional[str] = None,
-        args: Optional[List[str]] = None,
+        size: str | int | None = None,
+        min_size: str | int | None = None,
+        max_size: str | int | None = None,
+        maxdepth: int | None = None,
+        fname: str | None = None,
+        iname: str | None = None,
+        regex: str | None = None,
+        path_match: str | None = None,
+        args: list[str] | None = None,
         quote_path=True,
     ):
         """
@@ -493,6 +510,9 @@ class FindFilesBase(FactBase):
 
         @param iname: Like -name, but the match is case insensitive.
         @param regex: True if the whole path of the file matches pattern using regular expression.
+        @param path_match: glob matched against the whole path via ``-path``. The pattern is
+                           always shell-quoted so the shell passes it literally and find itself
+                           does the globbing, which keeps glob matching without an unquoted path.
         @param args: additional arguments to pass to find
         @param quote_path: if the path should be quoted
         @return:
@@ -520,19 +540,19 @@ class FindFilesBase(FactBase):
         if "-size" not in args:
             if min_size is not None:
                 command.append("-size")
-                command.append("+{0}c".format(parse_size(min_size)))
+                command.append(f"+{parse_size(min_size)}c")
 
             if max_size is not None:
                 command.append("-size")
-                command.append("-{0}c".format(parse_size(max_size)))
+                command.append(f"-{parse_size(max_size)}c")
 
             if size is not None:
                 command.append("-size")
-                command.append("{0}c".format(size))
+                command.append(f"{size}c")
 
         if maxdepth is not None and "-maxdepth" not in args:
             command.append("-maxdepth")
-            command.append("{0}".format(maxdepth))
+            command.append(f"{maxdepth}")
 
         if fname is not None and "-fname" not in args:
             command.append("-name")
@@ -545,6 +565,10 @@ class FindFilesBase(FactBase):
         if regex is not None and "-regex" not in args:
             command.append("-regex")
             command.append(maybe_quote(regex))
+
+        if path_match is not None and "-path" not in args:
+            command.append("-path")
+            command.append(QuoteString(path_match))
 
         command.extend(args)
 
@@ -670,7 +694,7 @@ class FileContents(FactBase):
 
     @override
     def command(self, path):
-        self.missing_flag = "{0}{1}".format(MISSING, path)
+        self.missing_flag = f"{MISSING}{path}"
         return make_formatted_string_command(
             "( test -e {0} && cat {0} ) || echo {1}",
             QuoteString(path),

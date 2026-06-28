@@ -5,7 +5,7 @@ Manage OpenVZ containers with ``vzctl``.
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import OperationError, operation
+from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.vzctl import OpenvzContainers
 
 
@@ -18,12 +18,12 @@ def start(ctid: str, force=False):
     + force: whether to force container start
     """
 
-    args = ["{0}".format(ctid)]
+    command: list[str | QuoteString] = ["vzctl start", QuoteString(str(ctid))]
 
     if force:
-        args.append("--force")
+        command.append("--force")
 
-    yield "vzctl start {0}".format(" ".join(args))
+    yield StringCommand(*command)
 
 
 @operation(is_idempotent=False)
@@ -34,9 +34,7 @@ def stop(ctid: str):
     + ctid: CTID of the container to stop
     """
 
-    args = ["{0}".format(ctid)]
-
-    yield "vzctl stop {0}".format(" ".join(args))
+    yield StringCommand("vzctl stop", QuoteString(str(ctid)))
 
 
 @operation(is_idempotent=False)
@@ -60,7 +58,7 @@ def mount(ctid: str):
     + ctid: CTID of the container to mount
     """
 
-    yield "vzctl mount {0}".format(ctid)
+    yield StringCommand("vzctl mount", QuoteString(str(ctid)))
 
 
 @operation(is_idempotent=False)
@@ -71,7 +69,7 @@ def unmount(ctid: str):
     + ctid: CTID of the container to unmount
     """
 
-    yield "vzctl umount {0}".format(ctid)
+    yield StringCommand("vzctl umount", QuoteString(str(ctid)))
 
 
 @operation(is_idempotent=False)
@@ -82,7 +80,7 @@ def delete(ctid: str):
     + ctid: CTID of the container to delete
     """
 
-    yield "vzctl delete {0}".format(ctid)
+    yield StringCommand("vzctl delete", QuoteString(str(ctid)))
 
 
 @operation(is_idempotent=False)
@@ -97,15 +95,15 @@ def create(ctid: str, template: str | None = None):
     current_containers = host.get_fact(OpenvzContainers)
     if ctid in current_containers:
         raise OperationError(
-            "An OpenVZ container with CTID {0} already exists".format(ctid),
+            f"An OpenVZ container with CTID {ctid} already exists",
         )
 
-    args = ["{0}".format(ctid)]
+    command: list[str | QuoteString] = ["vzctl create", QuoteString(str(ctid))]
 
     if template:
-        args.append("--ostemplate {0}".format(template))
+        command += ["--ostemplate", QuoteString(template)]
 
-    yield "vzctl create {0}".format(" ".join(args))
+    yield StringCommand(*command)
 
 
 @operation(is_idempotent=False)
@@ -122,16 +120,19 @@ def set(ctid: str, save=True, **settings):
         ``hostname='my-host.net'`` becomes ``--hostname my-host.net``.
     """
 
-    args = ["{0}".format(ctid)]
+    command: list[str | QuoteString] = ["vzctl set", QuoteString(str(ctid))]
 
     if save:
-        args.append("--save")
+        command.append("--save")
 
+    # Both keys and values come from **settings and are user-controlled, so quote
+    # both. shlex.quote leaves normal flags like --hostname untouched.
     for key, value in settings.items():
         # Handle list values (e.g. --nameserver X --nameserver X)
         if isinstance(value, list):
-            args.extend("--{0} {1}".format(key, v) for v in value)
+            for v in value:
+                command += [QuoteString(f"--{key}"), QuoteString(str(v))]
         else:
-            args.append("--{0} {1}".format(key, value))
+            command += [QuoteString(f"--{key}"), QuoteString(str(value))]
 
-    yield "vzctl set {0}".format(" ".join(args))
+    yield StringCommand(*command)
