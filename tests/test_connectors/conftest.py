@@ -52,3 +52,21 @@ def ssh_ca_keypair(tmp_path_factory) -> dict[str, Path]:
         "user_cert": user_cert,
         "ssh_dir": ssh_dir,
     }
+
+
+@pytest.fixture(scope="session")
+def ssh_encrypted_key(tmp_path_factory) -> dict[str, object]:
+    if shutil.which("ssh-keygen") is None:
+        pytest.skip("ssh-keygen not available on PATH")
+
+    ssh_dir = tmp_path_factory.mktemp("ssh_encrypted")
+    key = ssh_dir / "encrypted_ed25519"
+    passphrase = "correct horse battery staple"
+
+    subprocess.run(
+        ["ssh-keygen", "-t", "ed25519", "-N", passphrase, "-f", str(key), "-C", "encrypted-test"],
+        check=True,
+        capture_output=True,
+    )
+
+    return {"key": key, "passphrase": passphrase}
