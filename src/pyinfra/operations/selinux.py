@@ -65,7 +65,7 @@ def boolean(bool_name: str, value: Boolean, persistent=False):
         if persistent:
             command_bits.append("-P")
         command_bits.append(QuoteString(bool_name))
-        command_bits.append(QuoteString(value_str))
+        command_bits.append(value_str)
         yield StringCommand(*command_bits)
     else:
         host.noop(f"boolean '{bool_name}' already had the value '{value_str}'")
@@ -126,7 +126,7 @@ def file_context_mapping(target: str, se_type: str | None = None, present=True):
     current = host.get_fact(FileContextMapping, target=target)
     if present:
         option = "-a" if len(current) == 0 else ("-m" if current.get("type") != se_type else "")
-        if option != "" and se_type:
+        if option != "" and se_type is not None:
             yield StringCommand(
                 "semanage", "fcontext", option, "-t", QuoteString(se_type), QuoteString(target)
             )
@@ -163,9 +163,7 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
         )
     """
 
-    if protocol is Protocol:
-        if not isinstance(protocol, Protocol):
-            raise TypeError("protocol must be a Protocol instance")
+    if isinstance(protocol, Protocol):
         protocol = protocol.value
 
     if present and (se_type is None):
@@ -181,7 +179,7 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
 
     if present:
         option = "-a" if current == "" else ("-m" if current != se_type else "")
-        if option != "" and se_type:
+        if option != "" and se_type is not None:
             yield StringCommand(
                 "semanage",
                 "port",
