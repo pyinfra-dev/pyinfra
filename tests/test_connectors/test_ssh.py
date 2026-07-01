@@ -1,14 +1,17 @@
+import importlib
 from socket import error as socket_error, gaierror
 from unittest import TestCase, mock
 
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
+from paramiko.auth_handler import AuthHandler
 
 import pyinfra
 from pyinfra.api import Config, Host, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
-from pyinfra.context import ctx_state
 from pyinfra.connectors import ssh
+from pyinfra.connectors.ssh_util import _patch_paramiko_sk_key_support
+from pyinfra.context import ctx_state
 
 from ..util import make_inventory
 
@@ -18,6 +21,97 @@ def make_raise_exception_function(cls, *args, **kwargs):
         raise cls(*args, **kwargs)
 
     return handler
+
+
+def buggy_get_key_type_and_bits(self, key):
+    if key.public_blob:
+        return key.public_blob.key_type, key.public_blob.key_blob
+    return key.get_name(), key
+
+
+class FakeSkKey:
+    @property
+    def public_blob(self):
+        raise AttributeError("public_blob")
+
+    def get_name(self):
+        return "sk-ssh-ed25519@openssh.com"
+
+
+class FakePublicBlob:
+    key_type = "ssh-ed25519-cert-v01@openssh.com"
+    key_blob = b"public-key-blob"
+
+
+class FakeBlobKey:
+    def __init__(self, public_blob):
+        self.public_blob = public_blob
+
+    def get_name(self):
+        return "ssh-ed25519"
+
+
+class TestParamikoSkKeyPatch(TestCase):
+    def test_patch_paramiko_sk_key_support_handles_missing_public_blob(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+
+            key = FakeSkKey()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, key),
+                (key.get_name(), key),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_patch_paramiko_sk_key_support_preserves_public_blob(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+
+            public_blob = FakePublicBlob()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, FakeBlobKey(public_blob)),
+                (public_blob.key_type, public_blob.key_blob),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_patch_paramiko_sk_key_support_is_idempotent(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+            patched_method = AuthHandler._get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+
+            self.assertIs(AuthHandler._get_key_type_and_bits, patched_method)
+            self.assertTrue(getattr(patched_method, "_pyinfra_sk_patch", False))
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_importing_ssh_patches_paramiko_sk_key_support(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            importlib.reload(ssh)
+
+            key = FakeSkKey()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, key),
+                (key.get_name(), key),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+            importlib.reload(ssh)
 
 
 class TestSSHConnector(TestCase):

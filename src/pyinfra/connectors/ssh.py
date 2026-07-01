@@ -20,7 +20,7 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .base import BaseConnector, DataMeta
 from .scp import SCPClient
-from .ssh_util import get_private_key, raise_connect_error
+from .ssh_util import _patch_paramiko_sk_key_support, get_private_key, raise_connect_error
 from .sshuserclient import SSHClient
 from .util import (
     CommandOutput,
@@ -30,6 +30,9 @@ from .util import (
     run_local_process,
     write_stdin,
 )
+
+# Workaround for ED25519-SK agent keys until issue #1242 / paramiko#2462 is fixed.
+_patch_paramiko_sk_key_support()
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
