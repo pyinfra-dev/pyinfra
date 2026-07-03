@@ -1,5 +1,5 @@
 {
-    "args": ["httpd`id`", "enum:Boolean:on"],
+    "args": ["httpd`id`", "on"],
     "kwargs": {"persistent": true},
     "facts": {"selinux.SEBoolean": {"boolean=httpd`id`": "off"}},
     "commands": ["setsebool -P 'httpd`id`' on"]

@@ -88,6 +88,12 @@ uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 uv run pytest tests/test_operations.py -k "selinux."
 ```
 
+Tests for facts and operations are written in a declarative manner and use the 
+[pyinfra-testing harness](https://github.com/pyinfra-dev/pyinfra-testing). Review the harness README 
+to understand how tests for facts and operations are written, and how to add new tests.
+
+The test harness can also be used for writing tests for 3rd party facts and operations.
+
 #### End-to-End Tests
 
 The end-to-end tests are also executed via `pytest` but not selected by default, options/usage:

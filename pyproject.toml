@@ -62,7 +62,7 @@ test = [
     "types-python-dateutil>2,<3",
     "types-PyYAML>6,<7",
     "ruff>=0.13.1",
-    "pyinfra-testgen==0.1.1",
+    "pyinfra-testing>=0.2.1",
 ]
 
 docs = [

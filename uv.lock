@@ -113,7 +113,7 @@ name = "cffi"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "(python_full_version < '3.13' and implementation_name != 'PyPy') or (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy')" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/eb/56/b1ba7935a17738ae8453301356628e8147c79dbb825bcbc73dc7401f9846/cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529", size = 523588, upload-time = "2025-09-08T23:24:04.541Z" }
 wheels = [
@@ -517,7 +517,7 @@ name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
@@ -731,17 +731,17 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "colorama", marker = "python_full_version < '3.11' and sys_platform == 'win32'" },
-    { name = "decorator", marker = "python_full_version < '3.11'" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
-    { name = "jedi", marker = "python_full_version < '3.11'" },
-    { name = "matplotlib-inline", marker = "python_full_version < '3.11'" },
-    { name = "pexpect", marker = "python_full_version < '3.11' and sys_platform != 'emscripten' and sys_platform != 'win32'" },
-    { name = "prompt-toolkit", marker = "python_full_version < '3.11'" },
-    { name = "pygments", marker = "python_full_version < '3.11'" },
-    { name = "stack-data", marker = "python_full_version < '3.11'" },
-    { name = "traitlets", marker = "python_full_version < '3.11'" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "decorator" },
+    { name = "exceptiongroup" },
+    { name = "jedi" },
+    { name = "matplotlib-inline" },
+    { name = "pexpect", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "prompt-toolkit" },
+    { name = "pygments" },
+    { name = "stack-data" },
+    { name = "traitlets" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/85/31/10ac88f3357fc276dc8a64e8880c82e80e7459326ae1d0a211b40abf6665/ipython-8.37.0.tar.gz", hash = "sha256:ca815841e1a41a1e6b73a0b08f3038af9b2252564d01fc405356d34033012216", size = 5606088, upload-time = "2025-05-31T16:39:09.613Z" }
 wheels = [
@@ -761,17 +761,17 @@ resolution-markers = [
     "python_full_version >= '3.11' and python_full_version < '3.13'",
 ]
 dependencies = [
-    { name = "colorama", marker = "python_full_version >= '3.11' and sys_platform == 'win32'" },
-    { name = "decorator", marker = "python_full_version >= '3.11'" },
-    { name = "ipython-pygments-lexers", marker = "python_full_version >= '3.11'" },
-    { name = "jedi", marker = "python_full_version >= '3.11'" },
-    { name = "matplotlib-inline", marker = "python_full_version >= '3.11'" },
-    { name = "pexpect", marker = "python_full_version >= '3.11' and sys_platform != 'emscripten' and sys_platform != 'win32'" },
-    { name = "prompt-toolkit", marker = "python_full_version >= '3.11'" },
-    { name = "pygments", marker = "python_full_version >= '3.11'" },
-    { name = "stack-data", marker = "python_full_version >= '3.11'" },
-    { name = "traitlets", marker = "python_full_version >= '3.11'" },
-    { name = "typing-extensions", marker = "python_full_version == '3.11.*'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "decorator" },
+    { name = "ipython-pygments-lexers" },
+    { name = "jedi" },
+    { name = "matplotlib-inline" },
+    { name = "pexpect", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "prompt-toolkit" },
+    { name = "pygments" },
+    { name = "stack-data" },
+    { name = "traitlets" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2a/34/29b18c62e39ee2f7a6a3bba7efd952729d8aadd45ca17efc34453b717665/ipython-9.6.0.tar.gz", hash = "sha256:5603d6d5d356378be5043e69441a072b50a5b33b4503428c77b04cb8ce7bc731", size = 4396932, upload-time = "2025-09-29T10:55:53.948Z" }
 wheels = [
@@ -783,7 +783,7 @@ name = "ipython-pygments-lexers"
 version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pygments", marker = "python_full_version >= '3.11'" },
+    { name = "pygments" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ef/4c/5dd1d8af08107f88c7f741ead7a40854b8ac24ddf9ae850afbcf698aa552/ipython_pygments_lexers-1.1.1.tar.gz", hash = "sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81", size = 8393, upload-time = "2025-01-17T11:24:34.505Z" }
 wheels = [
@@ -1357,7 +1357,7 @@ dev = [
     { name = "ipython", version = "9.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "mypy" },
-    { name = "pyinfra-testgen" },
+    { name = "pyinfra-testing" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-testinfra" },
@@ -1378,8 +1378,9 @@ docs = [
 test = [
     { name = "click" },
     { name = "coverage" },
+    { name = "freezegun" },
     { name = "mypy" },
-    { name = "pyinfra-testgen" },
+    { name = "pyinfra-testing" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-testinfra" },
@@ -1416,7 +1417,7 @@ dev = [
     { name = "ipython" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.26.1" },
     { name = "mypy", specifier = "==1.17.1" },
-    { name = "pyinfra-testgen", specifier = "==0.1.1" },
+    { name = "pyinfra-testing", specifier = ">=0.2.1" },
     { name = "pytest", specifier = ">=8.3.5,<9" },
     { name = "pytest-cov", specifier = ">=7.0.0,<8" },
     { name = "pytest-testinfra", specifier = ">=10.2.2,<11" },
@@ -1437,8 +1438,9 @@ docs = [
 test = [
     { name = "click", specifier = ">=8.2" },
     { name = "coverage", specifier = ">=7.7.1,<8" },
+    { name = "freezegun", specifier = ">=1.5.5" },
     { name = "mypy", specifier = "==1.17.1" },
-    { name = "pyinfra-testgen", specifier = "==0.1.1" },
+    { name = "pyinfra-testing", specifier = ">=0.2.1" },
     { name = "pytest", specifier = ">=8.3.5,<9" },
     { name = "pytest-cov", specifier = ">=7.0.0,<8" },
     { name = "pytest-testinfra", specifier = ">=10.2.2,<11" },
@@ -1451,15 +1453,16 @@ test = [
 ]
 
 [[package]]
-name = "pyinfra-testgen"
-version = "0.1.1"
+name = "pyinfra-testing"
+version = "0.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "freezegun" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/36/ad/4d7ae773502ceae3ac3a7f4ea6232f865e28a9766931db2af25ab369449c/pyinfra_testgen-0.1.1.tar.gz", hash = "sha256:739a59d127d15c2e74bc965f9e77f41d080899fee18b6a10e7f5ca3153739697", size = 1065, upload-time = "2025-09-01T20:57:39.844Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/8d/177c2c08a054dfad8aeb04177d021985722353c7bea1918fb9b306dec40d/pyinfra_testing-0.2.1.tar.gz", hash = "sha256:239ad1f84c38a45604c685a65d263f92a503ca2b8427c8d30124b82fc1a4971d", size = 13757, upload-time = "2026-07-11T08:55:18.803Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/9a/edea57e31074b1a504b1b5b20180410971b393669e5388e773a4e49f4563/pyinfra_testgen-0.1.1-py3-none-any.whl", hash = "sha256:23d71cbe666df7a0b12a000a5cbdaade932620faced2c89bffc8a066153c9303", size = 1820, upload-time = "2025-09-01T20:57:38.749Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/65/c23a40d7212298b00e3eb91b5c9d09f032950116f067e1ff0e4164b5c507/pyinfra_testing-0.2.1-py3-none-any.whl", hash = "sha256:e8ced1f0211b3ac71c7dff1b11ab85969587c3b0451bf83255fb5e4fb486fa79", size = 16337, upload-time = "2026-07-11T08:55:17.772Z" },
 ]
 
 [[package]]

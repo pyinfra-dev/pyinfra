@@ -1,5 +1,5 @@
 {
-    "args": ["some_boolean", "enum:Boolean:off"],
+    "args": ["some_boolean", "off"],
     "kwargs": {},
     "facts": {"selinux.SEBoolean": {"boolean=some_boolean": "on"}},
     "commands": ["setsebool some_boolean off"]
