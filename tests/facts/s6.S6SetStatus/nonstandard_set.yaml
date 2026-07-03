@@ -1,11 +1,12 @@
 arg:
   set: recovery
-command: s6-rc-set-status recovery
+command: "s6-rc-set-status recovery; echo EXIT CODE: $?"
 requires_command: s6-rc-set-status
 output: |
   swap/always
   tty1/active
   ttyS/active
+  EXIT CODE: 0
 fact:
   swap: always
   tty1: active

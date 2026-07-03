@@ -1,6 +1,6 @@
 arg:
   repository: /etc/s6/repo
-command: s6-rc-set-status -r /etc/s6/repo current
+command: "s6-rc-set-status -r /etc/s6/repo current; echo EXIT CODE: $?"
 requires_command: s6-rc-set-status
 output: |
   swap/always
@@ -8,6 +8,7 @@ output: |
   NetworkManager-log/active
   avahi-daemon-srv/usable
   avahi-daemon-log/usable
+  EXIT CODE: 0
 fact:
   swap: always
   NetworkManager-srv: active

@@ -1,0 +1,5 @@
+command: "s6 set status; echo EXIT CODE: $?"
+requires_command: s6
+output: |
+  EXIT CODE: 3
+fact: null

@@ -1,4 +1,4 @@
-command: s6 set status
+command: "s6 set status; echo EXIT CODE: $?"
 requires_command: s6
 output: |
   swap/always
@@ -6,6 +6,7 @@ output: |
   NetworkManager-log/active
   avahi-daemon-srv/usable
   avahi-daemon-log/usable
+  EXIT CODE: 0
 fact:
   swap: always
   NetworkManager-srv: active

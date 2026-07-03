@@ -40,7 +40,10 @@ class S6RepositoryList(FactBase[list[str]]):
 
 
 class S6SetStatus(FactBase[dict[str, str]]):
-    """Returns a dict of name -> rx (prescription) for each service in a given set."""
+    """Returns a dict of name -> rx (prescription) for each service in a given set.
+
+    If the set does not exist, nothing is returned.
+    """
 
     def check_preconditions(self, state, host):
         from pyinfra.facts.files import File
@@ -63,22 +66,26 @@ class S6SetStatus(FactBase[dict[str, str]]):
         if set != "current":
             if repository:
                 return make_formatted_string_command(
-                    "s6-rc-set-status -r {0} {1}", QuoteString(repository), QuoteString(set)
+                        "s6-rc-set-status -r {0} {1}; echo EXIT CODE: $?", QuoteString(repository), QuoteString(set)
                 )
 
-            return make_formatted_string_command("s6-rc-set-status {0}", QuoteString(set))
+            return make_formatted_string_command("s6-rc-set-status {0}; echo EXIT CODE: $?", QuoteString(set))
 
         if repository:
             return make_formatted_string_command(
-                "s6-rc-set-status -r {0} current", QuoteString(repository)
+                    "s6-rc-set-status -r {0} current; echo EXIT CODE: $?", QuoteString(repository)
             )
 
         # TODO consider case where util-linux triggers column pretty printing
-        return "s6 set status"
+        return "s6 set status; echo EXIT CODE: $?"
 
     def process(self, output):
+        # exit code 3: nonexistent set
+        if output[-1] == "EXIT CODE: 3":
+            return
+
         return {
-            triplet[0]: triplet[-1] for triplet in map(lambda line: line.partition("/"), output)
+                triplet[0]: triplet[-1] for triplet in map(lambda line: line.partition("/"), output[:-1])
         }
 
 
