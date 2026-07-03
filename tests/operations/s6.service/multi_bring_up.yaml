@@ -1,5 +1,7 @@
 args:
   - [ nftables, mysqld, tipidee ]
+kwargs:
+  running: true
 facts:
   s6.S6LiveStatus:
     nftables: false

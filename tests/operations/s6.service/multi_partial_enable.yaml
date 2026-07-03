@@ -5,9 +5,10 @@ kwargs:
   enabled: true
 facts:
   s6.S6SetStatus:
-    nftables: "usable"
-    mysqld: "active"
-    tipidee: "usable"
+    repository=None, set=current:
+      nftables: "usable"
+      mysqld: "active"
+      tipidee: "usable"
 commands:
   - s6 set enable nftables tipidee
   - s6 set check -F

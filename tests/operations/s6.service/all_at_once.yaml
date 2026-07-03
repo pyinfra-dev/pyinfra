@@ -5,21 +5,27 @@ kwargs:
   restarted: true
   reloaded: true
   enabled: true
+  the_set: webserver
+  enabled_rx: active
 facts:
-  s6.S6SetStatus:
-    nftables: "always"
-    mysqld: "active"
-    php-fpm: "masked"
-    tipidee: "usable"
   s6.S6LiveStatus:
     nftables: true
     mysqld: false
     php-fpm: false
     tipidee: false
+  s6.S6SetStatus:
+    repository=None, set=webserver:
+      nftables: always
+      mysqld: active
+      php-fpm: masked
+      tipidee: usable
 commands:
   - s6 live start mysqld php-fpm tipidee
   - s6 live restart nftables
   - s6 process kill -s SIGHUP nftables
-  - s6 set enable php-fpm tipidee
+  - s6 set load webserver
+  # enabled argument applies enabled_rx to all services, hence why nftables is here, despite having
+  # "always" rx
+  - s6 set enable nftables php-fpm tipidee
   - s6 set check -F
   - s6 set commit

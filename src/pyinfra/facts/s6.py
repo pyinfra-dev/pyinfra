@@ -49,18 +49,18 @@ class S6SetStatus(FactBase[dict[str, str]]):
         if not host.get_fact(File("/etc/s6/frontend.conf")):
             return "couldn't read /etc/s6/frontend.conf or it doesn't exist"
 
-    def requires_command(self, repository=None, set=None):
-        if repository or set:
+    def requires_command(self, set="current", repository=None):
+        if repository or set != "current":
             return "s6-rc-set-status"
 
         return "s6"
 
-    def command(self, set=None, repository=None):
+    def command(self, set="current", repository=None):
         """
-        + set: the set to inspect, default `None` which resolves to the current working set "current".
+        + set: the set to inspect.
         + repository: path of the repository to inspect, default `None` which resolves the following way: If `set` is unspecified, the repository in `/etc/s6-frontend.conf` will be used. If `set` is specified, the compiled-in default `/var/lib/s6-rc/repository` will be used.
         """
-        if set:
+        if set != "current":
             if repository:
                 return make_formatted_string_command(
                     "s6-rc-set-status -r {0} {1}", QuoteString(repository), QuoteString(set)
