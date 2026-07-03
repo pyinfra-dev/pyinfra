@@ -1,0 +1,14 @@
+args:
+  - tipidee
+kwargs:
+  enabled: true
+  enabled_rx: always
+facts:
+  s6.S6SetStatus:
+    repository=None, set=current:
+      tipidee: usable
+commands:
+  - s6 set make-essential tipidee
+  - s6 set check -F
+  - s6 set commit
+

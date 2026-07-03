@@ -5,7 +5,7 @@ kwargs:
     nftables: "active"
     mysqld: "masked"
     tipidee: "usable"
-  commit: false
+  do_commit: false
 facts:
   s6.S6SetStatus:
     repository=None, set=default:

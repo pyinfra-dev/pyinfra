@@ -11,14 +11,6 @@ from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus
 from pyinfra.facts.files import FindInFile
 from pyinfra.operations import files
 
-_rx_to_subcommand = {
-    "always": "make-essential",
-    "active": "enable",
-    "usable": "disable",
-    "masked": "mask",
-}
-
-
 def _make_live_command(op: str, services: Iterable):
     """
     + op: the operation, e.g. "start", "stop", "restart".
@@ -47,13 +39,33 @@ def _make_set_command(services: list, curr_rxs: dict, wanted_rx: str):
             service_subset.append(srv)
 
     if service_subset:
+        _rx_to_subcommand = {
+            "always": "make-essential",
+            "active": "enable",
+            "usable": "disable",
+            "masked": "mask",
+        }
+
         op = _rx_to_subcommand[wanted_rx]
         s = " ".join([f"{{{i}}}" for i in range(len(service_subset))])
         yield make_formatted_string_command(f"s6 set {op} " + s, *map(QuoteString, service_subset))
 
 
-# for now, no support for custom repository; only the s6-frontend one.
-# but should get this at some point, as it allows for user-managed (i.e. non-root) services
+@operation(is_idempotent=False)
+def commit():
+    """Check the current working set and commit it."""
+    yield StringCommand("s6 set check -F")
+    yield StringCommand("s6 set commit")
+
+
+@operation(is_idempotent=False)
+def install():
+    """Install the compiled (committed) service database into the live state."""
+    yield StringCommand("s6 live install")
+
+
+# TODO for now, no support for custom repository; only the s6-frontend one. but should get this at
+# some point, as it allows for user-managed (i.e. non-root) services
 @operation(
     is_idempotent=False,
     idempotent_notice="If `commit=True`, the operation is stateless due to an unconditional `s6 set check -F` and `s6 set commit`. Otherwise it is idempotent.",
@@ -67,7 +79,7 @@ def set(
     save_name: str = set,
     force_save: bool = False,
     backup: bool = True,
-    commit: bool = True,
+    do_commit: bool = True,
     # TODO configurable s6-frontend.conf location
 ):
     """
@@ -98,72 +110,67 @@ def set(
 
     if present:
         # prescription of every service in the set
-        curr_rxs = host.get_fact(S6SetStatus, the_set)
+        curr_rxs = host.get_fact(S6SetStatus, set=the_set)
         if enforce_prescriptions:
             # mask all services not present in `prescriptions` arg
             wanted_masked.extend([srv for srv in curr_rxs if srv not in prescriptions])
 
-        # TODO there has to be a way to reduce boilerplate
         if prescriptions and prescriptions != curr_rxs:
             if the_set != "current":
                 yield make_formatted_string_command("s6 set load {0}", QuoteString(the_set))
 
             if wanted_always:
                 yield from _make_set_command(wanted_always, curr_rxs, "always")
-                # yield from _s6_set_helper(wanted_always, curr_rxs, "always")
-                # service_subset = []
-                # for srv in wanted_always:
-                #    try:
-                #        if curr_rxs[srv] != "always":
-                #            service_subset.append(srv)
-                #    except KeyError:
-                #        service_subset.append(srv)
-                # if service_subset:
-                #    yield from _make_set_rx_command("make-essential", service_subset)
             if wanted_active:
                 yield from _make_set_command(wanted_active, curr_rxs, "active")
-                # yield from _s6_set_helper(wanted_active, curr_rxs, "active")
-                # service_subset = []
-                # for srv in wanted_active:
-                #    try:
-                #        if curr_rxs[srv] != "active":
-                #            service_subset.append(srv)
-                #    except KeyError:
-                #        service_subset.append(srv)
-                # if service_subset:
-                #    yield from _make_set_rx_command("enable", service_subset)
             if wanted_usable:
                 yield from _make_set_command(wanted_usable, curr_rxs, "usable")
-                # yield from _s6_set_helper(wanted_usable, curr_rxs, "usable")
-                # service_subset = []
-                # for srv in wanted_usable:
-                #    try:
-                #        if curr_rxs[srv] != "usable":
-                #            service_subset.append(srv)
-                #    except KeyError:
-                #        service_subset.append(srv)
-                # if service_subset:
-                #    yield from _make_set_rx_command("disable", service_subset)
             if wanted_masked:
                 yield from _make_set_command(wanted_masked, curr_rxs, "masked")
-                # yield from _s6_set_helper(wanted_masked, curr_rxs, "masked")
-                # service_subset = []
-                # for srv in wanted_masked:
-                #    try:
-                #        if curr_rxs[srv] != "masked":
-                #            service_subset.append(srv)
-                #    except KeyError:
-                #        service_subset.append(srv)
-                # if service_subset:
-                #    yield from _make_set_rx_command("mask", service_subset)
 
+            # TODO
             if save:
+                if force_save:
+                    if backup:
+                        # will break if repodir key pair in /etc/s6-frontend.conf spans several lines
+                        lines = host.get_fact(
+                            FindInFile,
+                            "/etc/s6-frontend.conf",
+                            r"repodir\s*=",
+                            interpolate_variables=False,
+                            extended_regex=True,
+                        )
+                        if lines is None:
+                            raise RuntimeError(
+                                "no repodir found in /etc/s6-frontend.conf, or file doesn't exist"
+                            )
+                        if len(lines) != 1:
+                            raise RuntimeWarning(
+                                "multiple repodir definitions found in /etc/s6-frontend.conf, using the first one"
+                            )
+
+                        # https://skarnet.org/software/execline/envfile.html#syntax
+                        repodir = re.fullmatch(r'^\s*repodir\s*=\s*(/[^\s]*|"/.*")\s*$', lines[0])[1]
+
+                        if save_name:
+                            yield from files.directory._inner(
+                                path=repodir, present=False, force=True, force_backup=True
+                            )
+                        else:
+                            pass
+
+
+                    yield make_formatted_string_command("s6 set save -f {0}", QuoteString(the_set))
+                    pass
+                else:
+                    pass
+
                 if save_name:
                     yield make_formatted_string_command("s6 set save {0}", QuoteString(save_name))
                 else:
                     yield StringCommand("s6 set save")
 
-        elif prescriptions and not commit:
+        elif prescriptions and not do_commit:
             host.noop(
                 "all services specified match the desired prescriptions and commit not requested"
             )
@@ -196,18 +203,22 @@ def set(
 
             yield make_formatted_string_command("s6 set save -f {0}", QuoteString(the_set))
 
-        # TODO make this not do anything if not needed? how? separate operation?
-        if commit:
-            yield StringCommand("s6 set check -F")
-            yield StringCommand("s6 set commit")
+        if do_commit:
+            yield from commit._inner()
 
     # present=False
     else:
-        yield make_formatted_string_command("s6 set delete {0}", QuoteString(the_set))
+        # only yield if the set exists
+        if host.get_fact(S6SetStatus, the_set):
+            yield make_formatted_string_command("s6 set delete {0}", QuoteString(the_set))
+        else:
+            host.noop(f"the set \"{the_set}\" doesn't exist")
 
 
-# TODO server.service compatibility (must use a string for services in that implementation)
-@operation()
+@operation(
+    is_idempotent=False,
+    idempotent_notice="It is not idempotent only when at least one of `commit_set` or `install_set` are `True`.",
+)
 def service(
     service: str | Iterable[str],
     running: bool | None = None,
@@ -230,7 +241,7 @@ def service(
     + running: whether the service(s) should be under an s6-supervise.
     + restarted: whether the service(s) should be restarted
     + reloaded: whether the service(s) should be reloaded by sending a SIGHUP. Whether the service is reloaded depends on how it handles SIGHUP.
-    + command: custom command to run after the auto-computed commands.
+    + command: custom command to run after the auto-computed commands. This must be an s6 subcommand, e.g. "system reboot" gives the command "s6 system reboot".
     + enabled: whether the service should be given an "active" or "usable" prescription
     + reload_signal: the signal to send to the service(s) when a reload is desired.
     + repo: name of the repository to use when managing enabled status, using the one configured in s6-frontend.conf by default.
@@ -256,7 +267,6 @@ def service(
     if isinstance(service, str):
         service = (service,)
 
-    # live state management
     if (running, restarted, reloaded) != (None,) * 3:
         # dict[str, bool] whether the services given in the services arg are running.
         live_statuses = {srv: host.get_fact(S6LiveStatus)[srv] for srv in service}
@@ -295,23 +305,22 @@ def service(
                 host.noop(f"all specified services are down: {service}")
 
     # TODO: test masked services present in `services` arg on a real system
-    # offline set management
     if enabled is not None:
         if enabled is True:
-            yield from set._inner(the_set=the_set, prescriptions={srv: enabled_rx for srv in service})
+            yield from set._inner(
+                the_set=the_set, prescriptions={srv: enabled_rx for srv in service}
+            )
 
         if enabled is False:
-            yield from set._inner(the_set=the_set, prescriptions={srv: disabled_rx for srv in service})
+            yield from set._inner(
+                the_set=the_set, prescriptions={srv: disabled_rx for srv in service}
+            )
 
         # s6.set operation already handles s6 set load
-        # TODO look at how systemd daemon-reload handles this, or maybe a daemon-reload like
-        # operation not necessary
         if commit_set:
-            yield StringCommand("s6 set check -F")
-            yield StringCommand("s6 set commit")
+            yield from commit._inner()
             if install_set:
-                yield StringCommand("s6 live install")
+                yield from install._inner()
 
-        # TODO
-        if command:
-            yield StringCommand(command)
+    if command:
+        yield make_formatted_string_command("s6 {0}", command)

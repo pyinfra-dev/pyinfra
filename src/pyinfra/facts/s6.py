@@ -43,6 +43,11 @@ class S6SetStatus(FactBase[dict[str, str]]):
     """Returns a dict of name -> rx (prescription) for each service in a given set.
 
     If the set does not exist, nothing is returned.
+
+    > [!IMPORTANT]
+    > The fact only returns `None` when the set doesn't exist if `3` is in the `_success_exit_codes`
+    > parameter for the fact. It will throw an exception otherwise due to a limitation in pyinfra.
+
     """
 
     def check_preconditions(self, state, host):
@@ -81,6 +86,7 @@ class S6SetStatus(FactBase[dict[str, str]]):
 
     def process(self, output):
         # exit code 3: nonexistent set
+        # NOTE: will have to always specify 3 as success exit code when using this fact
         if output[-1] == "EXIT CODE: 3":
             return
 

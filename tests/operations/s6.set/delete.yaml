@@ -1,0 +1,11 @@
+args:
+  - default
+kwargs:
+  present: false
+facts:
+  # shows that "default" set exists
+  s6.S6SetStatus:
+    repository=None, set=default:
+      tipidee: active
+commands:
+  - s6 set delete default
