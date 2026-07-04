@@ -198,15 +198,26 @@ class Host:
     def group_data(self):
         return self.inventory.get_groups_data(self.groups)
 
+    def _styled_name(self, *args, **kwargs) -> str:
+        # Dim any "@connector/" prefix so the host name stands out.
+        name = self.name
+        if name.startswith("@") and "/" in name:
+            connector, _, rest = name.partition("/")
+            return (
+                f"{format_text(f'{connector}/', 'bright_black')}"
+                f"{format_text(rest, *args, **kwargs)}"
+            )
+        return format_text(name, *args, **kwargs)
+
     @property
     def print_prefix(self) -> str:
         if self.nested_executing_op_hash:
-            return f"{format_text('')}[{format_text(self.name, bold=True)}] {format_text('nested', 'blue')}{self.print_prefix_padding} "
+            return f"{self._styled_name('cyan', bold=True)} {format_text('nested', 'blue')}{self.print_prefix_padding} "
 
-        return f"{format_text('')}[{format_text(self.name, bold=True)}]{self.print_prefix_padding} "
+        return f"{self._styled_name('cyan', bold=True)}{self.print_prefix_padding} "
 
     def style_print_prefix(self, *args, **kwargs) -> str:
-        return f"{format_text('')}[{format_text(self.name, *args, **kwargs)}]{self.print_prefix_padding} "
+        return f"{self._styled_name(*args, **kwargs)}{self.print_prefix_padding} "
 
     def log(self, message: str, log_func: Callable[[str], Any] = logger.info) -> None:
         log_func(f"{self.print_prefix}{message}")

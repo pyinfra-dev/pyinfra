@@ -214,6 +214,14 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
 
 
 def _parallel_load_hosts(state: State, callback: Callable, name: str):
+    from .routing import get_tree
+
+    tree = get_tree()
+    hosts = list(state.inventory.get_active_hosts())
+
+    if tree is not None:
+        tree.prepare_start(name, hosts)
+
     def load_file(local_host):
         try:
             with ctx_config.use(state.config.copy()):
@@ -225,17 +233,29 @@ def _parallel_load_hosts(state: State, callback: Callable, name: str):
         except Exception as e:
             return e
 
-    greenlet_to_host = {
-        state.pool.spawn(load_file, host): host for host in state.inventory.get_active_hosts()
-    }
+    greenlet_to_host = {state.pool.spawn(load_file, host): host for host in hosts}
+
+    # Wait for *all* hosts to finish evaluating before raising any error, so
+    # host status/output isn't interleaved with error handling or prompts.
+    errors: list[Exception] = []
 
     with progress_spinner(greenlet_to_host.values()) as progress:
         for greenlet in gevent.iwait(greenlet_to_host.keys()):
             host = greenlet_to_host[greenlet]
             result = greenlet.get()
             if isinstance(result, Exception):
-                raise result
+                errors.append(result)
+                if tree is not None:
+                    tree.prepare_host_error(host, result)
+            elif tree is not None:
+                tree.prepare_host_done(host)
             progress(host)
+
+    if tree is not None:
+        tree.prepare_end()
+
+    if errors:
+        raise errors[0]
 
 
 def load_deploy_file(state: State, filename):
