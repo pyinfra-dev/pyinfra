@@ -7,11 +7,11 @@ import sys
 from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterator
 
-import click
-
 from pyinfra import __version__, logger
 from pyinfra.api.host import Host
+from pyinfra.api.output import format_text
 
+from .console import console
 from .util import json_encode
 
 if TYPE_CHECKING:
@@ -54,7 +54,8 @@ def jsonify(data, *args, **kwargs):
 
 
 def print_json(payload) -> None:
-    click.echo(jsonify(payload, default=json_encode))
+    # Pure JSON on stdout — bypass Rich to guarantee byte-for-byte output.
+    print(jsonify(payload, default=json_encode))
 
 
 def _host_to_dict(host: Host) -> dict:
@@ -192,23 +193,22 @@ def print_run_json(state: State, dry: bool) -> None:
 def print_state_operations(state: State):
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
 
-    click.echo(err=True)
-    click.echo("--> Operations:", err=True)
-    click.echo(jsonify(state_ops, indent=4, default=json_encode), err=True)
-    click.echo(err=True)
-    click.echo("--> Operation meta:", err=True)
-    click.echo(jsonify(state.op_meta, indent=4, default=json_encode), err=True)
+    console.print()
+    console.print("--> Operations:")
+    console.print(jsonify(state_ops, indent=4, default=json_encode))
+    console.print()
+    console.print("--> Operation meta:")
+    console.print(jsonify(state.op_meta, indent=4, default=json_encode))
 
-    click.echo(err=True)
-    click.echo("--> Operation order:", err=True)
-    click.echo(err=True)
+    console.print()
+    console.print("--> Operation order:")
+    console.print()
     for op_hash in state.get_op_order():
         meta = state.op_meta[op_hash]
         hosts = set(host for host, operations in state.ops.items() if op_hash in operations)
 
-        click.echo(
+        console.print(
             f"    {op_hash} (names={meta.names}, hosts={hosts})",
-            err=True,
         )
 
 
@@ -222,9 +222,8 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
             items.append(name)
 
         else:
-            click.echo(
-                f"    {', '.join(click.style(name, bold=True) for name in items)}",
-                err=True,
+            console.print(
+                f"    {', '.join(format_text(name, bold=True) for name in items)}",
             )
 
             items = [name]
@@ -232,31 +231,29 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
         last_name = name
 
     if items:
-        click.echo(
-            f"    {', '.join(click.style(name, bold=True) for name in items)}",
-            err=True,
+        console.print(
+            f"    {', '.join(format_text(name, bold=True) for name in items)}",
         )
 
 
 def print_fact(fact_data):
-    click.echo(jsonify(fact_data, indent=4, default=json_encode), err=True)
+    console.print(jsonify(fact_data, indent=4, default=json_encode))
 
 
 def print_inventory(state: State):
     for host in state.inventory:
-        click.echo(err=True)
-        click.echo(host.print_prefix, err=True)
-        click.echo(f"--> Groups: {', '.join(host.groups)}", err=True)
-        click.echo("--> Data:", err=True)
-        click.echo(jsonify(host.data, indent=4, default=json_encode), err=True)
+        console.print()
+        console.print(host.print_prefix)
+        console.print(f"--> Groups: {', '.join(host.groups)}")
+        console.print("--> Data:")
+        console.print(jsonify(host.data, indent=4, default=json_encode))
 
 
 def print_facts(facts):
     for name, data in facts.items():
-        click.echo(err=True)
-        click.echo(
-            f"--> Fact data for: {click.style(name, bold=True)}",
-            err=True,
+        console.print()
+        console.print(
+            f"--> Fact data for: {format_text(name, bold=True)}",
         )
         print_fact(data)
 
@@ -266,7 +263,7 @@ def print_support_info() -> None:
 
     from packaging.requirements import Requirement
 
-    click.echo(
+    console.print(
         """
     If you are having issues with pyinfra or wish to make feature requests, please
     check out the GitHub issues at https://github.com/Fizzadar/pyinfra/issues .
@@ -274,11 +271,11 @@ def print_support_info() -> None:
 """,
     )
 
-    click.echo(f"    System: {platform.system()}", err=True)
-    click.echo(f"      Platform: {platform.platform()}", err=True)
-    click.echo(f"      Release: {platform.uname()[2]}", err=True)
-    click.echo(f"      Machine: {platform.uname()[4]}", err=True)
-    click.echo(f"    pyinfra: v{__version__}", err=True)
+    console.print(f"    System: {platform.system()}")
+    console.print(f"      Platform: {platform.platform()}")
+    console.print(f"      Release: {platform.uname()[2]}")
+    console.print(f"      Machine: {platform.uname()[4]}")
+    console.print(f"    pyinfra: v{__version__}")
 
     seen_reqs: set[str] = set()
     for requirement_string in sorted(requires("pyinfra") or []):
@@ -287,18 +284,16 @@ def print_support_info() -> None:
             continue
         seen_reqs.add(requirement.name)
         try:
-            click.echo(
+            console.print(
                 f"      {requirement.name}: v{version(requirement.name)}",
-                err=True,
             )
         except PackageNotFoundError:
             # package not installed in this environment
             continue
 
-    click.echo(f"    Executable: {sys.argv[0]}", err=True)
-    click.echo(
+    console.print(f"    Executable: {sys.argv[0]}")
+    console.print(
         f"    Python: {platform.python_version()} ({platform.python_implementation()}, {platform.python_compiler()})",
-        err=True,
     )
 
 

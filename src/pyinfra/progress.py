@@ -1,73 +1,29 @@
-import math
 import os
-import platform
-import sys
-from collections import deque
 from contextlib import contextmanager
-import gevent
-from gevent.event import Event
 
-from pyinfra.api.output import is_output_active
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-IS_WINDOWS = platform.system() == "Windows"
-
-WAIT_TIME = 1 / 5
-WAIT_CHARS = deque(("-", "/", "|", "\\"))
-
-# Hacky way of getting terminal size (so can clear lines)
-# Source: http://stackoverflow.com/questions/566746
-IS_TTY = sys.stdout.isatty() and sys.stderr.isatty()
-TERMINAL_WIDTH = 0
-
-if IS_TTY:
-    try:
-        TERMINAL_WIDTH = os.get_terminal_size().columns
-    except AttributeError:
-        if not IS_WINDOWS:
-            terminal_size = os.popen("stty size", "r").read().split()
-            if len(terminal_size) == 2:
-                TERMINAL_WIDTH = int(terminal_size[1])
-
-
-def _print_spinner(stop_event, progress_queue):
-    if not IS_TTY or os.environ.get("PYINFRA_PROGRESS") == "off":
-        return
-
-    progress = ""
-    text = ""
-
-    while True:
-        # Stop when asked too
-        if stop_event.is_set():
-            break
-
-        WAIT_CHARS.rotate(1)
-
-        try:
-            progress = progress_queue[-1]
-        except IndexError:
-            pass
-
-        text = f"    {' '.join((WAIT_CHARS[0], progress))}"
-        text = f"{text}\r"
-
-        sys.stderr.write(text)
-        sys.stderr.flush()
-
-        # In pyinfra_cli's __main__ we set stdout & stderr to be line buffered,
-        # so write this escape code (clear line) into the buffer but don't flush,
-        # such that any next print/log/etc clear the line first.
-        if not IS_WINDOWS:
-            sys.stderr.write("\033[K")
-
-        stop_event.wait(timeout=WAIT_TIME)
+from pyinfra.api.output import get_console, is_output_active
 
 
 @contextmanager
 def progress_spinner(items, prefix_message=None):
-    # If there's no current state context we're not in CLI mode, so just return a noop
+    """
+    Display a Rich progress spinner while ``items`` are completed.
+
+    Yields a ``progress(complete_item)`` callback; callers may ignore it (using
+    the spinner purely as a "busy" indicator).  The display is refreshed
+    manually (``auto_refresh=False``) from the callback to stay well-behaved
+    under gevent (no background refresh greenlet).
+    """
+    # If there's no active output we're not in CLI mode, so return a noop
     # handler and exit.
     if not is_output_active():
+        yield lambda complete_item: None
+        return
+
+    # Allow disabling the spinner entirely.
+    if os.environ.get("PYINFRA_PROGRESS") == "off":
         yield lambda complete_item: None
         return
 
@@ -75,56 +31,39 @@ def progress_spinner(items, prefix_message=None):
         items = set(items)
 
     total_items = len(items)
-    stop_event = Event()
+    console = get_console()
 
-    def make_progress_message(include_items=True):
-        message_bits = []
+    columns = [
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+    ]
+    if total_items > 1:
+        columns.append(BarColumn())
+        columns.append(TextColumn("{task.completed}/{task.total}"))
 
-        # If we only have 1 item, don't show %
-        if total_items > 1:
-            percentage_complete = 0
-            complete = total_items - len(items)
-            percentage_complete = int(math.floor(complete / total_items * 100))
-            message_bits.append(
-                f"{percentage_complete}% ({complete}/{total_items})",
-            )
+    progress_bar = Progress(
+        *columns,
+        console=console,
+        transient=True,
+        auto_refresh=False,
+    )
 
-        if prefix_message:
-            message_bits.append(prefix_message)
+    description = prefix_message or "Working"
+    task_id = progress_bar.add_task(description, total=total_items)
 
-        if include_items and items:
-            # Plus 3 for the " - " joining below
-            message_length = sum((len(message) + 3) for message in message_bits)
-            # -8 for padding left+right, -2 for {} wrapping
-            items_allowed_width = TERMINAL_WIDTH - 10 - message_length
-
-            if items_allowed_width > 0:
-                items_string = f"{{{', '.join(f'{i}' for i in items)}}}"
-                if len(items_string) >= items_allowed_width:
-                    # -3 for the ...
-                    items_string = f"{items_string[: items_allowed_width - 3]}...}}"
-
-                message_bits.append(items_string)
-
-        return " - ".join(message_bits)
-
-    progress_queue = deque((make_progress_message(),))
+    progress_bar.start()
+    progress_bar.refresh()
 
     def progress(complete_item):
         if complete_item not in items:
             raise ValueError(
                 f"Invalid complete item: {complete_item} not in {items}",
             )
-
         items.remove(complete_item)
-        progress_queue.append(make_progress_message())
+        progress_bar.update(task_id, advance=1)
+        progress_bar.refresh()
 
-    # Kick off the spinner greenlet
-    spinner_greenlet = gevent.spawn(_print_spinner, stop_event, progress_queue)
-
-    # Yield allowing the actual code the spinner waits for to run
-    yield progress
-
-    # Finally, stop the spinner
-    stop_event.set()
-    spinner_greenlet.join()
+    try:
+        yield progress
+    finally:
+        progress_bar.stop()

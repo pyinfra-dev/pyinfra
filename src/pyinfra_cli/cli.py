@@ -3,10 +3,12 @@ import sys
 import warnings
 from fnmatch import fnmatch
 from getpass import getpass
+from typing import Annotated
 from collections.abc import Iterable
 from os import chdir as os_chdir, environ, getcwd, path
 
-import click
+from cyclopts import App, Parameter
+from rich.prompt import Confirm
 
 from pyinfra import __version__, logger, state
 from pyinfra.api import Config, Host, Inventory, State
@@ -19,7 +21,10 @@ from pyinfra.api.util import get_kwargs_str
 from pyinfra.context import ctx_config, ctx_inventory, ctx_state
 from pyinfra.operations import server
 
+from pyinfra.api.output import format_text
+
 from .commands import get_facts_and_args, get_func_and_args
+from .console import console, stdout_console
 from .exceptions import CliError, UnexpectedExternalError, UnexpectedInternalError, WrappedError
 from .inventory import make_inventory
 from .log import setup_logging
@@ -38,6 +43,45 @@ from .prints import (
 from .util import exec_file, load_deploy_file, load_func, parse_cli_arg
 from .virtualenv import init_virtualenv
 
+# A repeatable flag: each occurrence appends a ``True``; the count is the verbosity level.
+CountFlag = Annotated[list[bool], Parameter(negative="")]
+
+_FALSY_BOOL_VALUES = ("", "0", "n", "no", "off", "false", "f")
+_TRUTHY_BOOL_VALUES = ("1", "y", "yes", "on", "true", "t")
+
+
+def _lenient_bool(type_, tokens) -> bool:
+    """Lenient boolean conversion for environment variables.
+
+    An empty value counts as unset (False) and ``on``/``off`` are accepted,
+    matching the legacy Click behaviour for ``PYINFRA_YES``.
+    """
+    value = tokens[0].value.strip().lower() if tokens else ""
+    if value in _FALSY_BOOL_VALUES:
+        return False
+    if value in _TRUTHY_BOOL_VALUES:
+        return True
+    raise ValueError(f"invalid boolean value: {tokens[0].value!r}")
+
+
+app = App(
+    name="pyinfra",
+    version=__version__,
+    version_flags=["--version"],
+    help_flags=["-h", "--help"],
+    console=stdout_console,
+    error_console=console,
+)
+
+# Enable ``pyinfra --install-completion`` for shell autocompletion.
+app.register_install_completion_command()
+
+
+@app.command(name="--support")
+def _support_command() -> None:
+    """Print useful information for support and exit."""
+    print_support_info()
+
 
 def _exit() -> None:
     if ctx_state.isset() and state.failed_hosts:
@@ -45,251 +89,232 @@ def _exit() -> None:
     sys.exit(0)
 
 
-def _print_support(ctx, param, value):
-    if not value:
-        return
-
-    logger.info("--> Support information:")
-    print_support_info()
-    ctx.exit()
-
-
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+class CliCommands:
+    DEBUG_INVENTORY = "DEBUG_INVENTORY"
+    FACT = "FACT"
+    SHELL = "SHELL"
+    DEPLOY_FILES = "DEPLOY_FILES"
+    FUNC = "FUNC"
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.argument("inventory", nargs=1, type=click.Path(exists=False))
-@click.argument("operations", nargs=-1, required=True, type=click.Path(exists=False))
-@click.option(
-    "verbosity",
-    "-v",
-    count=True,
-    help="Print meta (-v), input (-vv) and output (-vvv).",
-)
-@click.option(
-    "--dry",
-    is_flag=True,
-    default=False,
-    help="Don't execute operations on the target hosts.",
-)
-@click.option(
-    "--diff",
-    is_flag=True,
-    default=False,
-    help="Show the differences when changing text files and templates.",
-)
-@click.option(
-    "-y",
-    "--yes",
-    is_flag=True,
-    default=False,
-    help="Execute operations immediately on hosts without prompt or checking for changes.",
-    envvar="PYINFRA_YES",
-    show_envvar=True,
-)
-@click.option(
-    "--limit",
-    help="Restrict the target hosts by name and group name.",
-    multiple=True,
-)
-@click.option(
-    "--exclude",
-    help="Exclude target hosts by name and group name.",
-    multiple=True,
-)
-@click.option("--fail-percent", type=int, help="% of hosts that need to fail before exiting early.")
-@click.option(
-    "--data",
-    multiple=True,
-    help="Override data values, format key=value.",
-)
-@click.option(
-    "--group-data",
-    multiple=True,
-    help="Paths to load additional group data from (overrides matching keys).",
-)
-@click.option(
-    "--config",
-    "config_filename",
-    help="Specify config file to use (default: config.py).",
-    default="config.py",
-)
-@click.option(
-    "--chdir",
-    help="Set the working directory before executing.",
-)
-# Auth args
-@click.option(
-    "--sudo",
-    is_flag=True,
-    default=False,
-    help="Whether to execute operations with sudo.",
-)
-@click.option("--sudo-user", help="Which user to sudo when sudoing.")
-@click.option(
-    "--same-sudo-password",
-    is_flag=True,
-    default=False,
-    help="All hosts have the same sudo password, so ask only once.",
-)
-@click.option(
-    "--use-sudo-password",
-    is_flag=True,
-    default=False,
-    help="Whether to use a password with sudo.",
-)
-@click.option(
-    "--use-sudo-login",
-    is_flag=True,
-    default=False,
-    help="Use a login shell when sudo-ing.",
-)
-@click.option("--su-user", help="Which user to su to.")
-@click.option(
-    "--dzdo",
-    is_flag=True,
-    default=False,
-    help="Whether to execute operations with dzdo.",
-)
-@click.option("--dzdo-user", help="Which user to dzdo when using dzdo.")
-@click.option("--shell-executable", help='Shell to use (ex: "sh", "cmd", "ps").')
-# Operation flow args
-@click.option("--parallel", type=int, help="Number of operations to run in parallel.")
-@click.option(
-    "--no-wait",
-    is_flag=True,
-    default=False,
-    help="Don't wait between operations for hosts.",
-)
-@click.option(
-    "--serial",
-    is_flag=True,
-    default=False,
-    help="Run operations in serial, host by host.",
-)
-@click.option(
-    "--retry",
-    type=int,
-    default=0,
-    help="Number of times to retry failed operations.",
-)
-@click.option(
-    "--retry-delay",
-    type=int,
-    default=5,
-    help="Delay in seconds between retry attempts.",
-)
-# SSH connector args
-# TODO: remove the non-ssh-prefixed variants
-@click.option("--ssh-user", "--user", "ssh_user", help="SSH user to connect as.")
-@click.option("--ssh-port", "--port", "ssh_port", type=int, help="SSH port to connect to.")
-@click.option("--ssh-key", "--key", "ssh_key", type=click.Path(), help="SSH Private key filename.")
-@click.option(
-    "--ssh-key-password",
-    "--key-password",
-    "ssh_key_password",
-    help="SSH Private key password.",
-)
-@click.option("--ssh-password", "--password", "ssh_password", help="SSH password.")
-@click.option(
-    "--ssh-password-prompt",
-    is_flag=True,
-    default=False,
-    help="Prompt for SSH password instead of passing it on the command line.",
-)
-# Eager commands (pyinfra --support)
-@click.option(
-    "--support",
-    is_flag=True,
-    is_eager=True,
-    callback=_print_support,
-    help="Print useful information for support and exit.",
-)
-# Debug args
-@click.option(
-    "--debug",
-    is_flag=True,
-    default=False,
-    help="Print debug logs from pyinfra.",
-)
-@click.option(
-    "--debug-all",
-    is_flag=True,
-    default=False,
-    help="Print debug logs from all packages including pyinfra.",
-)
-@click.option(
-    "--debug-facts",
-    is_flag=True,
-    default=False,
-    help="Print facts after generating operations and exit.",
-)
-@click.option(
-    "--debug-operations",
-    is_flag=True,
-    default=False,
-    help="Print operations after generating and exit.",
-)
-@click.option(
-    "--json",
-    "json_output",
-    is_flag=True,
-    default=False,
-    help=(
-        "Emit pure JSON output on stdout (for facts, debug-inventory, "
-        "debug-operations, dry runs and deploy results)."
-    ),
-)
-@click.version_option(
-    version=__version__,
-    prog_name="pyinfra",
-    message="%(prog)s: v%(version)s",
-)
-def cli(*args, **kwargs):
-    """
-    pyinfra manages the state of one or more servers. It can be used for
-    app/service deployment, config management and ad-hoc command execution.
+@app.default
+def cli(
+    inventory: str,
+    *operations: str,
+    verbose: Annotated[CountFlag, Parameter(name="-v")] = [],
+    dry: bool = False,
+    diff: bool = False,
+    yes: Annotated[
+        bool,
+        Parameter(name=["-y", "--yes"], env_var="PYINFRA_YES", converter=_lenient_bool),
+    ] = False,
+    limit: tuple[str, ...] = (),
+    exclude: tuple[str, ...] = (),
+    fail_percent: int | None = None,
+    data: tuple[str, ...] = (),
+    group_data: tuple[str, ...] = (),
+    config_filename: Annotated[str, Parameter(name="--config")] = "config.py",
+    chdir: str | None = None,
+    sudo: bool = False,
+    sudo_user: str | None = None,
+    same_sudo_password: bool = False,
+    use_sudo_password: bool = False,
+    use_sudo_login: bool = False,
+    su_user: str | None = None,
+    dzdo: bool = False,
+    dzdo_user: str | None = None,
+    shell_executable: str | None = None,
+    parallel: int | None = None,
+    no_wait: bool = False,
+    serial: bool = False,
+    retry: int = 0,
+    retry_delay: int = 5,
+    ssh_user: Annotated[str | None, Parameter(name=["--ssh-user", "--user"])] = None,
+    ssh_port: Annotated[int | None, Parameter(name=["--ssh-port", "--port"])] = None,
+    ssh_key: Annotated[str | None, Parameter(name=["--ssh-key", "--key"])] = None,
+    ssh_key_password: Annotated[
+        str | None, Parameter(name=["--ssh-key-password", "--key-password"])
+    ] = None,
+    ssh_password: Annotated[str | None, Parameter(name=["--ssh-password", "--password"])] = None,
+    ssh_password_prompt: bool = False,
+    support: bool = False,
+    debug: bool = False,
+    debug_all: bool = False,
+    debug_facts: bool = False,
+    debug_operations: bool = False,
+    json_output: Annotated[bool, Parameter(name="--json")] = False,
+):
+    """pyinfra manages the state of one or more servers.
 
-    Documentation: docs.pyinfra.com
+    It can be used for app/service deployment, config management and ad-hoc
+    command execution. Documentation: docs.pyinfra.com
 
-    # INVENTORY
+    INVENTORY is a file (inventory.py), a hostname (host.net) or comma separated
+    hostnames (host-1.net,host-2.net,@local).
 
-    \b
-    + a file (inventory.py)
-    + hostname (host.net)
-    + Comma separated hostnames:
-      host-1.net,host-2.net,@local
+    Examples:
 
-    # OPERATIONS
-
-    \b
+    ```
     # Run one or more deploys against the inventory
     pyinfra INVENTORY deploy_web.py [deploy_db.py]...
 
-    \b
     # Run a single operation against the inventory
     pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
 
-    \b
     # Execute an arbitrary command against the inventory
     pyinfra INVENTORY exec -- echo "hello world"
 
-    \b
     # Run one or more facts against the inventory
     pyinfra INVENTORY fact server.LinuxName [server.Users]...
     pyinfra INVENTORY fact files.File path=/path/to/file...
 
-    \b
     # Debug the inventory hosts and data
     pyinfra INVENTORY debug-inventory
+    ```
+
+    Parameters
+    ----------
+    inventory
+        Inventory file, hostname(s) or connector to target.
+    operations
+        Deploy file(s), an operation + args, `exec -- command`, `fact ...` or
+        `debug-inventory`.
+    verbose
+        Print meta (-v), input (-vv) and output (-vvv).
+    dry
+        Don't execute operations on the target hosts.
+    diff
+        Show the differences when changing text files and templates.
+    yes
+        Execute operations immediately without prompt or checking for changes.
+    limit
+        Restrict the target hosts by name and group name.
+    exclude
+        Exclude target hosts by name and group name.
+    fail_percent
+        % of hosts that need to fail before exiting early.
+    data
+        Override data values, format key=value.
+    group_data
+        Paths to load additional group data from (overrides matching keys).
+    config_filename
+        Specify config file to use (default: config.py).
+    chdir
+        Set the working directory before executing.
+    sudo
+        Whether to execute operations with sudo.
+    sudo_user
+        Which user to sudo when sudoing.
+    same_sudo_password
+        All hosts have the same sudo password, so ask only once.
+    use_sudo_password
+        Whether to use a password with sudo.
+    use_sudo_login
+        Use a login shell when sudo-ing.
+    su_user
+        Which user to su to.
+    dzdo
+        Whether to execute operations with dzdo.
+    dzdo_user
+        Which user to dzdo when using dzdo.
+    shell_executable
+        Shell to use (ex: "sh", "cmd", "ps").
+    parallel
+        Number of operations to run in parallel.
+    no_wait
+        Don't wait between operations for hosts.
+    serial
+        Run operations in serial, host by host.
+    retry
+        Number of times to retry failed operations.
+    retry_delay
+        Delay in seconds between retry attempts.
+    ssh_user
+        SSH user to connect as.
+    ssh_port
+        SSH port to connect to.
+    ssh_key
+        SSH Private key filename.
+    ssh_key_password
+        SSH Private key password.
+    ssh_password
+        SSH password.
+    ssh_password_prompt
+        Prompt for SSH password instead of passing it on the command line.
+    support
+        Print useful information for support and exit.
+    debug
+        Print debug logs from pyinfra.
+    debug_all
+        Print debug logs from all packages including pyinfra.
+    debug_facts
+        Print facts after generating operations and exit.
+    debug_operations
+        Print operations after generating and exit.
+    json_output
+        Emit pure JSON output on stdout (for facts, debug-inventory,
+        debug-operations, dry runs and deploy results).
     """
+    if support:
+        logger.info("--> Support information:")
+        print_support_info()
+        return
+
+    if not operations:
+        raise CliError(
+            "No operations provided.\n\n"
+            "    Operation usage:\n"
+            "    pyinfra INVENTORY deploy_web.py [deploy_db.py]...\n"
+            "    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra\n"
+            '    pyinfra INVENTORY exec -- echo "hello world"\n'
+            "    pyinfra INVENTORY fact server.LinuxName [server.Users]..."
+        )
 
     try:
-        _main(*args, **kwargs)
+        _main(
+            inventory=inventory,
+            operations=list(operations),
+            verbosity=len(verbose),
+            chdir=chdir,
+            ssh_user=ssh_user,
+            ssh_port=ssh_port,
+            ssh_key=ssh_key,
+            ssh_key_password=ssh_key_password,
+            ssh_password=ssh_password,
+            ssh_password_prompt=ssh_password_prompt,
+            same_sudo_password=same_sudo_password,
+            shell_executable=shell_executable,
+            sudo=sudo,
+            sudo_user=sudo_user,
+            use_sudo_password=use_sudo_password,
+            use_sudo_login=use_sudo_login,
+            su_user=su_user,
+            dzdo=dzdo,
+            dzdo_user=dzdo_user,
+            parallel=parallel,
+            fail_percent=fail_percent,
+            data=data,
+            group_data=group_data,
+            config_filename=config_filename,
+            dry=dry,
+            diff=diff,
+            yes=yes,
+            limit=limit,
+            exclude=exclude,
+            no_wait=no_wait,
+            serial=serial,
+            retry=retry,
+            retry_delay=retry_delay,
+            debug=debug,
+            debug_all=debug_all,
+            debug_facts=debug_facts,
+            debug_operations=debug_operations,
+            json_output=json_output,
+        )
     except (CliError, UnexpectedExternalError):
         raise
     except PyinfraError as e:
-        # Re-raise "expected" pyinfra exceptions with our click exception wrapper
+        # Re-raise "expected" pyinfra exceptions with our exception wrapper
         raise WrappedError(e)
     except Exception as e:
         # Re-raise any unexpected internal exceptions as UnexpectedInternalError
@@ -301,36 +326,28 @@ def cli(*args, **kwargs):
             disconnect_all(state)
 
 
-class CliCommands:
-    DEBUG_INVENTORY = "DEBUG_INVENTORY"
-    FACT = "FACT"
-    SHELL = "SHELL"
-    DEPLOY_FILES = "DEPLOY_FILES"
-    FUNC = "FUNC"
-
-
 def _main(
     inventory,
     operations: list | tuple,
     verbosity: int,
-    chdir: str,
-    ssh_user,
-    ssh_port: int,
-    ssh_key,
-    ssh_key_password: str,
-    ssh_password: str,
+    chdir: str | None,
+    ssh_user: str | None,
+    ssh_port: int | None,
+    ssh_key: str | None,
+    ssh_key_password: str | None,
+    ssh_password: str | None,
     ssh_password_prompt: bool,
     same_sudo_password: bool,
-    shell_executable,
+    shell_executable: str | None,
     sudo: bool,
-    sudo_user: str,
+    sudo_user: str | None,
     use_sudo_password: bool,
     use_sudo_login: bool,
-    su_user: str,
+    su_user: str | None,
     dzdo: bool,
-    dzdo_user: str,
-    parallel: int,
-    fail_percent: int,
+    dzdo_user: str | None,
+    parallel: int | None,
+    fail_percent: int | None,
     data,
     group_data,
     config_filename: str,
@@ -348,7 +365,6 @@ def _main(
     debug_facts: bool,
     debug_operations: bool,
     json_output: bool = False,
-    support: bool = False,
 ):
     # In JSON mode keep the spinner quiet so stdout stays pure JSON. Do not
     # force --yes: a JSON run must be able to diff a host without mutating
@@ -458,13 +474,12 @@ def _main(
         else:
             logger.info("--> Detected changes:")
             print_meta(state)
-            click.echo(
+            console.print(
                 """
     Detected changes may not include every change pyinfra will execute.
     Hidden side effects of operations may alter behaviour of future operations,
     this will be shown in the results. The remote state will always be updated
     to reflect the state defined by the input operations.""",
-                err=True,
             )
 
     # If --debug-facts or --debug-operations, print and exit
@@ -505,29 +520,15 @@ def _main(
 
 
 def _do_confirm(msg: str) -> bool:
-    click.echo(err=True)
-    click.echo(f"    {msg}", err=True)
+    console.print()
+    console.print(f"    {msg}")
     warning_count = state.get_warning_counter()
     if warning_count > 0:
-        click.secho(
+        console.print(
             f"    {warning_count} warnings shown during change detection, see above",
-            fg="yellow",
-            err=True,
+            style="yellow",
         )
-    confirm_msg = "    Press enter to execute..."
-    click.echo(confirm_msg, err=True, nl=False)
-    v = input()
-    if v:
-        click.echo(f"    Unexpected user input: {v}", err=True)
-        return False
-    # Go up, clear the line, go up again - as if the confirmation statement was never here!
-    click.echo(
-        "\033[1A{}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
-        err=True,
-        nl=False,
-    )
-    click.echo(err=True)
-    return True
+    return Confirm.ask("    Execute?", console=console, default=True)
 
 
 # Setup
@@ -882,7 +883,7 @@ def _prepare_deploy_operations(state, config, operations):
     for i, filename in enumerate(operations):
         config.lock_current_state()
 
-        _log_styled_msg = click.style(filename, bold=True)
+        _log_styled_msg = format_text(filename, bold=True)
         logger.info(f"Loading: {_log_styled_msg}")
 
         state.current_op_file_number = i

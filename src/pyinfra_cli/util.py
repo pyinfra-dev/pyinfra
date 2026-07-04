@@ -11,10 +11,10 @@ from pathlib import Path
 from types import CodeType, FunctionType, ModuleType
 from collections.abc import Callable
 
-import click
 import gevent
 
 from pyinfra import logger, state
+from pyinfra.api.output import format_text
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
@@ -220,7 +220,7 @@ def _parallel_load_hosts(state: State, callback: Callable, name: str):
                 with ctx_host.use(local_host):
                     callback()
                     logger.info(
-                        f"{local_host.print_prefix}{click.style('Ready:', 'green')} {click.style(name, bold=True)}",
+                        f"{local_host.print_prefix}{format_text('Ready:', 'green')} {format_text(name, bold=True)}",
                     )
         except Exception as e:
             return e

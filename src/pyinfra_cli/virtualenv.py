@@ -1,9 +1,9 @@
 import os
 import sys
 
-import click
-
 from pyinfra import logger
+
+from .console import console
 
 
 def init_virtualenv() -> None:
@@ -56,7 +56,7 @@ def init_virtualenv() -> None:
             "    If you encounter problems, please install pyinfra inside the virtualenv."
         ),
     )
-    click.echo(err=True)
+    console.print()
 
     if sys.platform == "win32":
         virtual_env = os.path.join(

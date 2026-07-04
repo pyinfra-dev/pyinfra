@@ -8,7 +8,7 @@ pyinfra is an extremely powerful tool for ad-hoc execution and management of rem
 As described in the [getting started page](./getting-started), pyinfra needs an **inventory** and some **operations**. These are used with the CLI as below:
 
 ```sh
-Usage: pyinfra [OPTIONS] INVENTORY OPERATIONS...
+Usage: pyinfra [OPTIONS] INVENTORY [OPERATIONS...]
 
 # INVENTORY
 
@@ -222,14 +222,15 @@ Interactive prompts from deploy code (e.g. `input(...)`) will still block, so av
 
 ## Shell Autocompletion
 
-Add the following to your `~/.bash_profile` or `~/.profile` files:
+pyinfra's CLI is built on [Cyclopts](https://cyclopts.readthedocs.io), which can install
+shell completion for you:
 
-+ **bash** `source scripts/pyinfra-complete.sh`.
-+ **zsh** `source scripts/pyinfra-complete.zsh`.
+```sh
+# Install completion for your current shell (bash, zsh, fish, ...)
+pyinfra --install-completion
 
-These files were generated using these commands:
-
+# Or target a specific shell
+pyinfra --install-completion --shell zsh
 ```
-env _PYINFRA_COMPLETE=bash_source pyinfra > pyinfra-complete.sh
-env _PYINFRA_COMPLETE=zsh_source pyinfra > pyinfra-complete.zsh
-```
+
+After installing you may need to restart your shell or source its configuration file.

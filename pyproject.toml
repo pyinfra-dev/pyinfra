@@ -14,7 +14,8 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "gevent>=1.5",
     "paramiko>=2.11,<5", # 2.11 (2022) adds Transport.open_channel(timeout=...) for ProxyJump timeout (#971)
-    "click>2",
+    "cyclopts>=4,<5",
+    "rich>=13",
     "jinja2>3,<4",
     "python-dateutil>2,<3",
     "typeguard>=4,<5",
@@ -49,7 +50,6 @@ repository = "https://github.com/pyinfra-dev/pyinfra"
 
 [dependency-groups]
 test = [
-    "click>=8.2",
     "pytest>=8.3.5,<9",
     "freezegun>=1.5.5",
     "coverage>=7.7.1,<8",
