@@ -6,6 +6,8 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
+from operator import methodcaller
+from itertools import takewhile
 from typing import Optional, Union
 from collections.abc import Iterable
 
@@ -286,6 +288,8 @@ class Mounts(FactBase[dict[str, MountsDict]]):
 
         if self._kernel.strip() == "FreeBSD":
             return "mount -p --libxo json"
+        if self._kernel.strip() == "OpenBSD":
+            return "mount -v"
         else:
             return "cat /proc/self/mountinfo"
 
@@ -315,6 +319,32 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                 options = [option.strip() for option in entry["opts"].split(",")]
 
                 devices[path] = {"device": device, "type": type_, "options": options}
+
+            return devices
+
+        if self._kernel == "OpenBSD":
+            p = re.compile(
+                r"""
+                    (/dev/[^ ]+) (?:\ \(.*\))?\                                  # the (diskname.label) isn't always there
+                    on\ (/.*)\                                                   # *, not +, since root path "/" will be mounted
+                    type\ (ffs|mfs|nfs|nfts|tmpfs|udf|vnd|ext2fs|msdos|cd9660)\  # taken from /sbin/mount_*
+                    \((.+)\)                                                     # flags are in this group""",
+                flags=re.VERBOSE,
+            )
+            for line in output:
+                if m := re.fullmatch(p, line):
+                    path = m[2]
+                    device = m[1]
+                    type = m[3]
+                    # assumes ctime flag is always last and drops it
+                    options = list(
+                        map(
+                            methodcaller("lstrip", " "),
+                            takewhile(lambda f: "ctime=" not in f, m[4].split(",")),
+                        )
+                    )
+
+                    devices[path] = {"device": device, "type": type, "options": options}
 
             return devices
 
