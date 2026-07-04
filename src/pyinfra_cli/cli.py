@@ -7,7 +7,7 @@ from typing import Annotated
 from collections.abc import Iterable
 from os import chdir as os_chdir, environ, getcwd, path
 
-from cyclopts import App, Parameter
+from cyclopts import App, Group, Parameter
 from rich.prompt import Confirm
 
 from pyinfra import __version__, logger, state
@@ -64,17 +64,85 @@ def _lenient_bool(type_, tokens) -> bool:
     raise ValueError(f"invalid boolean value: {tokens[0].value!r}")
 
 
+_EXAMPLES = """\
+# Run one or more deploys against the inventory
+pyinfra INVENTORY deploy_web.py [deploy_db.py]...
+
+# Run a single operation against the inventory
+pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
+
+# Execute an arbitrary command against the inventory
+pyinfra INVENTORY exec -- echo "hello world"
+
+# Run one or more facts against the inventory
+pyinfra INVENTORY fact server.LinuxName [server.Users]...
+pyinfra INVENTORY fact files.File path=/path/to/file...
+
+# Debug the inventory hosts and data
+pyinfra INVENTORY debug-inventory"""
+
+
+def _build_examples_epilogue() -> str:
+    """Render the CLI examples as syntax-highlighted (bash) ANSI text.
+
+    Used as a ``help_format="rich"`` epilogue so the examples show up
+    colourised on the help page.
+    """
+    from rich.syntax import Syntax
+
+    syntax = Syntax(_EXAMPLES, "bash", background_color="default", word_wrap=True)
+    with stdout_console.capture() as capture:
+        stdout_console.print("[bold]Examples:[/bold]\n")
+        stdout_console.print(syntax)
+    return capture.get()
+
+
+def _build_usage() -> str:
+    """Colourised usage line: required args in cyan, optionals dimmed.
+
+    Rendered to an ANSI string because Cyclopts concatenates ``usage`` as a
+    plain string; the ``Usage:`` label is added by the help formatter.  Colour
+    is only emitted when stdout is a terminal so piped output stays plain.
+    """
+    from rich.text import Text
+
+    line = Text.assemble(
+        ("pyinfra ", "bold"),
+        ("[OPTIONS] ", "dim"),
+        ("INVENTORY ", "bold cyan"),
+        ("[OPERATIONS...]", "cyan"),
+    )
+    if not stdout_console.is_terminal:
+        return line.plain
+    with stdout_console.capture() as capture:
+        stdout_console.print(line, end="")
+    return capture.get()
+
+
 app = App(
     name="pyinfra",
     version=__version__,
     version_flags=["--version"],
     help_flags=["-h", "--help"],
+    help_format="rich",
+    usage=_build_usage(),
     console=stdout_console,
     error_console=console,
+    help_epilogue=_build_examples_epilogue(),
 )
 
 # Enable ``pyinfra --install-completion`` for shell autocompletion.
 app.register_install_completion_command()
+
+# Parameter groups for the help page (ordered top-to-bottom as declared).
+# ``negative=""`` disables the auto-generated ``--no-*`` / ``--empty-*`` flags to
+# match the original flag-only CLI UX.
+_no_negative = Parameter(negative="")
+GROUP_EXECUTION = Group.create_ordered("Execution", default_parameter=_no_negative)
+GROUP_INVENTORY = Group.create_ordered("Inventory & Data", default_parameter=_no_negative)
+GROUP_PRIVILEGE = Group.create_ordered("Privilege Escalation", default_parameter=_no_negative)
+GROUP_SSH = Group.create_ordered("SSH Connection", default_parameter=_no_negative)
+GROUP_DEBUG = Group.create_ordered("Debugging & Output", default_parameter=_no_negative)
 
 
 @app.command(name="--support")
@@ -100,77 +168,80 @@ class CliCommands:
 @app.default
 def cli(
     inventory: str,
+    /,
     *operations: str,
-    verbose: Annotated[CountFlag, Parameter(name="-v")] = [],
-    dry: bool = False,
-    diff: bool = False,
+    # Execution
+    dry: Annotated[bool, Parameter(group=GROUP_EXECUTION)] = False,
     yes: Annotated[
         bool,
-        Parameter(name=["-y", "--yes"], env_var="PYINFRA_YES", converter=_lenient_bool),
+        Parameter(
+            name=["-y", "--yes"],
+            env_var="PYINFRA_YES",
+            converter=_lenient_bool,
+            group=GROUP_EXECUTION,
+        ),
     ] = False,
-    limit: tuple[str, ...] = (),
-    exclude: tuple[str, ...] = (),
-    fail_percent: int | None = None,
-    data: tuple[str, ...] = (),
-    group_data: tuple[str, ...] = (),
-    config_filename: Annotated[str, Parameter(name="--config")] = "config.py",
-    chdir: str | None = None,
-    sudo: bool = False,
-    sudo_user: str | None = None,
-    same_sudo_password: bool = False,
-    use_sudo_password: bool = False,
-    use_sudo_login: bool = False,
-    su_user: str | None = None,
-    dzdo: bool = False,
-    dzdo_user: str | None = None,
-    shell_executable: str | None = None,
-    parallel: int | None = None,
-    no_wait: bool = False,
-    serial: bool = False,
-    retry: int = 0,
-    retry_delay: int = 5,
-    ssh_user: Annotated[str | None, Parameter(name=["--ssh-user", "--user"])] = None,
-    ssh_port: Annotated[int | None, Parameter(name=["--ssh-port", "--port"])] = None,
-    ssh_key: Annotated[str | None, Parameter(name=["--ssh-key", "--key"])] = None,
-    ssh_key_password: Annotated[
-        str | None, Parameter(name=["--ssh-key-password", "--key-password"])
+    parallel: Annotated[int | None, Parameter(group=GROUP_EXECUTION)] = None,
+    no_wait: Annotated[bool, Parameter(group=GROUP_EXECUTION)] = False,
+    serial: Annotated[bool, Parameter(group=GROUP_EXECUTION)] = False,
+    fail_percent: Annotated[int | None, Parameter(group=GROUP_EXECUTION)] = None,
+    retry: Annotated[int, Parameter(group=GROUP_EXECUTION)] = 0,
+    retry_delay: Annotated[int, Parameter(group=GROUP_EXECUTION)] = 5,
+    shell_executable: Annotated[str | None, Parameter(group=GROUP_EXECUTION)] = None,
+    # Inventory & Data
+    limit: Annotated[tuple[str, ...], Parameter(group=GROUP_INVENTORY)] = (),
+    exclude: Annotated[tuple[str, ...], Parameter(group=GROUP_INVENTORY)] = (),
+    data: Annotated[tuple[str, ...], Parameter(group=GROUP_INVENTORY)] = (),
+    group_data: Annotated[tuple[str, ...], Parameter(group=GROUP_INVENTORY)] = (),
+    config_filename: Annotated[
+        str, Parameter(name="--config", group=GROUP_INVENTORY)
+    ] = "config.py",
+    chdir: Annotated[str | None, Parameter(group=GROUP_INVENTORY)] = None,
+    # Privilege escalation
+    sudo: Annotated[bool, Parameter(group=GROUP_PRIVILEGE)] = False,
+    sudo_user: Annotated[str | None, Parameter(group=GROUP_PRIVILEGE)] = None,
+    same_sudo_password: Annotated[bool, Parameter(group=GROUP_PRIVILEGE)] = False,
+    use_sudo_password: Annotated[bool, Parameter(group=GROUP_PRIVILEGE)] = False,
+    use_sudo_login: Annotated[bool, Parameter(group=GROUP_PRIVILEGE)] = False,
+    su_user: Annotated[str | None, Parameter(group=GROUP_PRIVILEGE)] = None,
+    dzdo: Annotated[bool, Parameter(group=GROUP_PRIVILEGE)] = False,
+    dzdo_user: Annotated[str | None, Parameter(group=GROUP_PRIVILEGE)] = None,
+    # SSH connection
+    ssh_user: Annotated[
+        str | None, Parameter(name=["--ssh-user", "--user"], group=GROUP_SSH)
     ] = None,
-    ssh_password: Annotated[str | None, Parameter(name=["--ssh-password", "--password"])] = None,
-    ssh_password_prompt: bool = False,
-    support: bool = False,
-    debug: bool = False,
-    debug_all: bool = False,
-    debug_facts: bool = False,
-    debug_operations: bool = False,
-    json_output: Annotated[bool, Parameter(name="--json")] = False,
+    ssh_port: Annotated[
+        int | None, Parameter(name=["--ssh-port", "--port"], group=GROUP_SSH)
+    ] = None,
+    ssh_key: Annotated[str | None, Parameter(name=["--ssh-key", "--key"], group=GROUP_SSH)] = None,
+    ssh_key_password: Annotated[
+        str | None, Parameter(name=["--ssh-key-password", "--key-password"], group=GROUP_SSH)
+    ] = None,
+    ssh_password: Annotated[
+        str | None, Parameter(name=["--ssh-password", "--password"], group=GROUP_SSH)
+    ] = None,
+    ssh_password_prompt: Annotated[bool, Parameter(group=GROUP_SSH)] = False,
+    # Debugging & output
+    verbose: Annotated[CountFlag, Parameter(name="-v", group=GROUP_DEBUG)] = [],
+    diff: Annotated[bool, Parameter(group=GROUP_DEBUG)] = False,
+    json_output: Annotated[bool, Parameter(name="--json", group=GROUP_DEBUG)] = False,
+    support: Annotated[bool, Parameter(group=GROUP_DEBUG)] = False,
+    debug: Annotated[bool, Parameter(group=GROUP_DEBUG)] = False,
+    debug_all: Annotated[bool, Parameter(group=GROUP_DEBUG)] = False,
+    debug_facts: Annotated[bool, Parameter(group=GROUP_DEBUG)] = False,
+    debug_operations: Annotated[bool, Parameter(group=GROUP_DEBUG)] = False,
 ):
     """pyinfra manages the state of one or more servers.
 
     It can be used for app/service deployment, config management and ad-hoc
-    command execution. Documentation: docs.pyinfra.com
+    command execution.
 
-    INVENTORY is a file (inventory.py), a hostname (host.net) or comma separated
-    hostnames (host-1.net,host-2.net,@local).
+    Documentation: [cyan][link=https://docs.pyinfra.com]docs.pyinfra.com[/link][/cyan]
 
-    Examples:
-
-    ```
-    # Run one or more deploys against the inventory
-    pyinfra INVENTORY deploy_web.py [deploy_db.py]...
-
-    # Run a single operation against the inventory
-    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
-
-    # Execute an arbitrary command against the inventory
-    pyinfra INVENTORY exec -- echo "hello world"
-
-    # Run one or more facts against the inventory
-    pyinfra INVENTORY fact server.LinuxName [server.Users]...
-    pyinfra INVENTORY fact files.File path=/path/to/file...
-
-    # Debug the inventory hosts and data
-    pyinfra INVENTORY debug-inventory
-    ```
+    INVENTORY can be:
+    - a file ([cyan]inventory.py[/cyan])
+    - a hostname ([cyan]host.net[/cyan])
+    - comma separated hostnames ([cyan]host-1.net,host-2.net,@local[/cyan])
 
     Parameters
     ----------
