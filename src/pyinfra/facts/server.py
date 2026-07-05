@@ -26,6 +26,14 @@ ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 # Usernames used in shell tilde expansion (``~user``) cannot be quoted without
 # disabling the expansion, so the value must be a plain, shell-safe word.
 _SAFE_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._][a-zA-Z0-9._-]*$")
+_OPENBSD_MOUNT_V_RE = re.compile(
+    r"""
+        (/dev/[^ ]+) (?:\ \(.*\))?\                                  # the (diskname.label) isn't always there
+        on\ (/.*)\                                                   # *, not +, since root path "/" will be mounted
+        type\ (ffs|mfs|nfs|ntfs|tmpfs|udf|vnd|ext2fs|msdos|cd9660)\  # taken from /sbin/mount_*
+        \((.+)\)                                                     # flags are in this group""",
+    flags=re.VERBOSE,
+)
 
 
 def _check_tilde_username(user: str) -> None:
@@ -323,16 +331,8 @@ class Mounts(FactBase[dict[str, MountsDict]]):
             return devices
 
         if self._kernel == "OpenBSD":
-            p = re.compile(
-                r"""
-                    (/dev/[^ ]+) (?:\ \(.*\))?\                                  # the (diskname.label) isn't always there
-                    on\ (/.*)\                                                   # *, not +, since root path "/" will be mounted
-                    type\ (ffs|mfs|nfs|ntfs|tmpfs|udf|vnd|ext2fs|msdos|cd9660)\  # taken from /sbin/mount_*
-                    \((.+)\)                                                     # flags are in this group""",
-                flags=re.VERBOSE,
-            )
             for line in output:
-                if m := re.fullmatch(p, line):
+                if m := _OPENBSD_MOUNT_V_RE.fullmatch(line):
                     path = m[2]
                     device = m[1]
                     type = m[3]
