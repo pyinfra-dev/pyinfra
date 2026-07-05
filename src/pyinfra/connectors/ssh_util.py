@@ -24,7 +24,12 @@ def raise_connect_error(host: "Host", message, data):
     raise ConnectError(message)
 
 
-def _load_private_key_file(filename: str, key_filename: str, key_password: str):
+def _load_private_key_file(
+    filename: str,
+    key_filename: str,
+    key_password: str,
+    allow_prompt: bool = True,
+):
     exception: PyinfraError | SSHException = PyinfraError(f"Invalid key: {filename}")
 
     key_cls: type[RSAKey] | type[ECDSAKey] | type[Ed25519Key]
@@ -40,12 +45,13 @@ def _load_private_key_file(filename: str, key_filename: str, key_password: str):
                 # If password is not provided, but we're in CLI mode, ask for it. I'm not a
                 # huge fan of having CLI specific code in here, but it doesn't really fit
                 # anywhere else without duplicating lots of key related code into cli.py.
-                if pyinfra.is_cli:
+                if pyinfra.is_cli and allow_prompt:
                     key_password = getpass(
                         f"Enter password for private key: {key_filename}: ",
                     )
 
-                # API mode and no password? We can't continue!
+                # No password and no prompt (API mode, or a non-interactive caller
+                # such as the ssh_config identity path)? We can't continue.
                 else:
                     raise PyinfraError(
                         f"Private key file ({key_filename}) is encrypted, set ssh_key_password to "
@@ -76,6 +82,7 @@ def load_key_with_certificate(
     key_password: str | None = None,
     certificate_filename: str | None = None,
     cwd: str | None = None,
+    allow_prompt: bool = True,
 ) -> PKey:
     """
     Load a paramiko ``PKey`` from disk and attach an OpenSSH certificate when one
@@ -89,6 +96,9 @@ def load_key_with_certificate(
       ``CertificateFile`` directive). When unset, the adjacent
       ``<key>-cert.pub`` is used if present, falling back to ``<key>.pub``.
     + cwd: optional working directory used to resolve relative key paths.
+    + allow_prompt: when False, an encrypted key with no known passphrase raises
+      instead of prompting. Used by non-interactive callers like the ssh_config
+      identity path so they fall through rather than block (issue #1852).
     """
 
     resolved_path: str | None = None
@@ -100,7 +110,12 @@ def load_key_with_certificate(
             continue
         key_file_exists = True
         try:
-            key = _load_private_key_file(candidate, key_filename, key_password or "")
+            key = _load_private_key_file(
+                candidate,
+                key_filename,
+                key_password or "",
+                allow_prompt=allow_prompt,
+            )
             resolved_path = candidate
             break
         except SSHException:
