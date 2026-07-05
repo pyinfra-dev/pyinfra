@@ -6,8 +6,6 @@ import re
 import shutil
 from datetime import datetime
 from tempfile import mkdtemp
-from operator import methodcaller
-from itertools import takewhile
 from typing import Optional, Union
 from collections.abc import Iterable
 
@@ -336,13 +334,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                     path = m[2]
                     device = m[1]
                     type_ = m[3]
-                    # assumes ctime flag is always last and drops it
-                    options = list(
-                        map(
-                            methodcaller("lstrip", " "),
-                            takewhile(lambda f: "ctime=" not in f, m[4].split(",")),
-                        )
-                    )
+                    options = [opt.strip(" ") for opt in m[4].split(",") if "ctime=" not in opt]
 
                     devices[path] = {"device": device, "type": type_, "options": options}
 
