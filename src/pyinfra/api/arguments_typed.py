@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 
 P = ParamSpec("P")
 
+EnvValue = str | HiddenValue
+
 
 # Unfortunately we have to re-type out all of the global arguments here because
 # Python typing doesn't (yet) support merging kwargs. This acts as the operation
@@ -45,7 +47,7 @@ class PyinfraOperation(Generic[P], Protocol):
         # Shell arguments
         _shell_executable: None | str = None,
         _chdir: None | str = None,
-        _env: None | Mapping[str, str | HiddenValue] = None,
+        _env: None | Mapping[str, EnvValue] = None,
         # Connector control
         _success_exit_codes: Iterable[int] = (0,),
         _timeout: None | int = None,

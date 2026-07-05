@@ -87,7 +87,7 @@ def generate_env(config: Config, value: Mapping[str, EnvValue] | None) -> dict[s
         key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ
     }
     env.update(config.ENV)
-    if value:
+    if value is not None:
         env.update(value)
     return env
 
