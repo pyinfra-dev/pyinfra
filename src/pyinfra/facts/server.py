@@ -327,7 +327,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                 r"""
                     (/dev/[^ ]+) (?:\ \(.*\))?\                                  # the (diskname.label) isn't always there
                     on\ (/.*)\                                                   # *, not +, since root path "/" will be mounted
-                    type\ (ffs|mfs|nfs|nfts|tmpfs|udf|vnd|ext2fs|msdos|cd9660)\  # taken from /sbin/mount_*
+                    type\ (ffs|mfs|nfs|ntfs|tmpfs|udf|vnd|ext2fs|msdos|cd9660)\  # taken from /sbin/mount_*
                     \((.+)\)                                                     # flags are in this group""",
                 flags=re.VERBOSE,
             )
