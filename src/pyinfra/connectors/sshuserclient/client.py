@@ -101,7 +101,9 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
     falls back to the implicit ``<key>-cert.pub`` lookup so OpenSSH-style CA
     auth works without explicit pyinfra ``ssh_key`` configuration (issue #1569).
     Silent fall-through when no identity exists keeps the legacy paramiko
-    ``key_filename`` flow for missing or otherwise unloadable files.
+    ``key_filename`` flow for missing or otherwise unloadable files. The load is
+    non-interactive (``allow_prompt=False``): an encrypted identity with no known
+    passphrase falls through instead of blocking on a prompt (issue #1852).
     """
 
     identity_files = host_config.get("identityfile") or []
@@ -121,6 +123,7 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
             cfg["pkey"] = load_key_with_certificate(
                 key_filename=identity_file,
                 certificate_filename=certificate_filename,
+                allow_prompt=False,
             )
         except (PyinfraError, SSHException, OSError) as e:
             logger.debug("Could not load identity %s with certificate: %s", identity_file, e)
@@ -314,7 +317,11 @@ class SSHClient(ParamikoClient):
         if "user" in host_config:
             cfg["username"] = host_config["user"]
 
-        if "identityfile" in host_config:
+        # An explicit pyinfra ``ssh_key`` (already loaded into ``pkey`` using
+        # ``ssh_key_password``) wins over any ssh_config ``IdentityFile``, the
+        # same way ``ssh -i`` overrides the config (issue #1852). Loading the
+        # config identity here would otherwise prompt for its passphrase.
+        if "identityfile" in host_config and "pkey" not in cfg:
             cfg["key_filename"] = host_config["identityfile"]
             _attach_identity_with_certificate(cfg, host_config)
 
