@@ -9,7 +9,9 @@
         "/dev/sd0h (b486026f5c43e172.h) on /usr/local type ffs (rw, local, nodev, wxallowed, ctime=Thu Jan  1 12:00:00 1970)",
         "/dev/sd0j (b486026f5c43e172.j) on /usr/obj type ffs (rw, local, nodev, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
         "/dev/sd0i (b486026f5c43e172.i) on /usr/src type ffs (rw, local, nodev, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
-        "/dev/sd0e on /var type ffs (rw, local, nosuid, ctime=Thu Jan  1 12:00:00 1970)"
+        "/dev/sd0e on /var type ffs (rw, local, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
+        "skynet:/sys on /sys type nfs (rw, nodev, nosuid, ctime=Mon Aug  4 16:21:19 1997, tcp, soft, intr)",
+        "mfs:75 on /run type mfs (rw, noexec, nosuid, ctime=Thu Jan  1 12:00:00 1970)"
     ],
     "facts": {
         "server.Kernel": "OpenBSD"
@@ -59,6 +61,16 @@
             "device": "/dev/sd0e",
             "type": "ffs",
             "options": ["rw", "local", "nosuid"]
+        },
+        "/sys": {
+            "device": "skynet:/sys",
+            "type": "nfs",
+            "options": ["rw", "nodev", "nosuid", "tcp", "soft", "intr"]
+        },
+        "/run": {
+            "device": "mfs:75",
+            "type": "mfs",
+            "options": ["rw", "noexec", "nosuid"]
         }
     }
 }
