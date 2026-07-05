@@ -26,10 +26,10 @@ ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 _SAFE_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._][a-zA-Z0-9._-]*$")
 _OPENBSD_MOUNT_V_RE = re.compile(
     r"""
-        (/dev/[^ ]+) (?:\ \(.*\))?\                                  # the (diskname.label) isn't always there
-        on\ (/.*)\                                                   # *, not +, since root path "/" will be mounted
-        type\ (ffs|mfs|nfs|ntfs|tmpfs|udf|vnd|ext2fs|msdos|cd9660)\  # taken from /sbin/mount_*
-        \((.+)\)                                                     # flags are in this group""",
+        (\S+) (?:\ \(.*\))?\  # the (diskname.label) part isn't always there, hence optional group
+        on\ (/.*)\            # *, not +, since root path "/" will be mounted
+        type\ (\w+)\          # types from /sbin/mount_*
+        \((.+)\)              # flags are in this group""",
     flags=re.VERBOSE,
 )
 
