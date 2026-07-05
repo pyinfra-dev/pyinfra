@@ -290,11 +290,11 @@ class Mounts(FactBase[dict[str, MountsDict]]):
 
     @override
     def command(self) -> str:
-        self._kernel = host.get_fact(Kernel)
+        self._kernel = host.get_fact(Kernel).strip()
 
-        if self._kernel.strip() == "FreeBSD":
+        if self._kernel == "FreeBSD":
             return "mount -p --libxo json"
-        if self._kernel.strip() == "OpenBSD":
+        if self._kernel == "OpenBSD":
             return "mount -v"
         else:
             return "cat /proc/self/mountinfo"
