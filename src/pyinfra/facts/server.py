@@ -335,7 +335,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                 if m := _OPENBSD_MOUNT_V_RE.fullmatch(line):
                     path = m[2]
                     device = m[1]
-                    type = m[3]
+                    type_ = m[3]
                     # assumes ctime flag is always last and drops it
                     options = list(
                         map(
@@ -344,7 +344,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                         )
                     )
 
-                    devices[path] = {"device": device, "type": type, "options": options}
+                    devices[path] = {"device": device, "type": type_, "options": options}
 
             return devices
 
