@@ -1309,7 +1309,7 @@ def template(
     dest: str,
     user: str | None = None,
     group: str | None = None,
-    mode: str | None = None,
+    mode: int | str | None = None,
     create_remote_dir: bool = True,
     jinja_env_kwargs: dict[str, Any] | None = None,
     **data,
