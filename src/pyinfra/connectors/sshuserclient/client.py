@@ -21,7 +21,10 @@ from typing_extensions import override
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
-from pyinfra.connectors.ssh_util import load_key_with_certificate
+from pyinfra.connectors.ssh_util import (
+    _patch_paramiko_sk_key_support,
+    load_key_with_certificate,
+)
 
 from .config import SSHConfig
 
@@ -198,6 +201,8 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_paramiko_connect_kwargs=None,
         **kwargs,
     ):
+        _patch_paramiko_sk_key_support()
+
         (
             hostname,
             config,

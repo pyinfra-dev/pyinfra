@@ -31,9 +31,6 @@ from .util import (
     write_stdin,
 )
 
-# Workaround for ED25519-SK agent keys until issue #1242 / paramiko#2462 is fixed.
-_patch_paramiko_sk_key_support()
-
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
 
@@ -219,6 +216,8 @@ class SSHConnector(BaseConnector):
 
     @override
     def connect(self) -> None:
+        _patch_paramiko_sk_key_support()
+
         retries = self.data["ssh_connect_retries"]
 
         try:
