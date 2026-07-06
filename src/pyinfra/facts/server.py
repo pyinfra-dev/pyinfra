@@ -1005,11 +1005,15 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
             # TODO: fix this!
             release_meta.pop("RELEASE_CODENAME", None)
 
+            # try_int returns its input on failure, so a missing version part comes back as ""
+            major = try_int(parsed.major_version(best=True))
+            minor = try_int(parsed.minor_version(best=True))
+
             release_info.update(
                 {
                     "name": self.name_to_pretty_name.get(parsed.id(), parsed.name()),
-                    "major": try_int(parsed.major_version(best=True)) or None,
-                    "minor": try_int(parsed.minor_version(best=True)) or None,
+                    "major": major if isinstance(major, int) else None,
+                    "minor": minor if isinstance(minor, int) else None,
                     "release_meta": release_meta,
                 },
             )
