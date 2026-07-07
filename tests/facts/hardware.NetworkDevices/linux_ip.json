@@ -6,7 +6,7 @@
         "inet 1.2.3.4/24 brd 1.2.3.4 scope global dynamic eth0",
         "valid_lft 86343sec preferred_lft 86343sec",
         "inet6 2a01::01/64 scope link",
-        "valid_lft forever preferred_lft forever",
+        "valid_lft forever preferred_lft forever"
     ],
     "fact": {
         "eth0": {
@@ -17,9 +17,9 @@
                 "address": "1.2.3.4",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": "1.2.3.4",
+                "broadcast": "1.2.3.4"
             },
-            "ipv6": {"address": "2a01::01", "mask_bits": 64},
+            "ipv6": {"address": "2a01::01", "mask_bits": 64}
         }
-    },
+    }
 }

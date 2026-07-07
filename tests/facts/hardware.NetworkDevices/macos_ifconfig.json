@@ -6,7 +6,7 @@
         "inet6 2a01::01 prefixlen 64 autoconf temporary",
         "nd6 options=201<PERFORMNUD,DAD>",
         "media: autoselect",
-        "status: active",
+        "status: active"
     ],
     "fact": {
         "en0": {
@@ -16,9 +16,9 @@
                 "address": "1.2.3.4",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": "255.255.255.255",
+                "broadcast": "255.255.255.255"
             },
-            "ipv6": {"address": "2a01::01", "mask_bits": 64},
+            "ipv6": {"address": "2a01::01", "mask_bits": 64}
         }
-    },
+    }
 }

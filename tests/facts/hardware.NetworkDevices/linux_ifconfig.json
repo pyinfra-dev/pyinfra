@@ -26,7 +26,7 @@
         "        RX packets 34  bytes 2816 (2.7 KiB)",
         "        RX errors 0  dropped 0  overruns 0  frame 0",
         "        TX packets 34  bytes 2816 (2.7 KiB)",
-        "        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0",
+        "        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0"
     ],
     "fact": {
         "enp1s0": {
@@ -37,13 +37,13 @@
                 "address": "192.168.123.111",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": "192.168.123.255",
+                "broadcast": "192.168.123.255"
             },
             "ipv6": {
                 "address": "2a01:e0a:5c2:7450:b241:6fff:fe0a:cf22",
                 "mask_bits": 64,
-                "additional_ips": [{"address": "fe80::b241:6fff:fe0a:cf22", "mask_bits": 64}],
-            },
+                "additional_ips": [{"address": "fe80::b241:6fff:fe0a:cf22", "mask_bits": 64}]
+            }
         },
         "incusbr0": {
             "ether": "00:16:3e:9c:82:00",
@@ -53,13 +53,13 @@
                 "address": "10.232.181.1",
                 "mask_bits": 24,
                 "netmask": "255.255.255.0",
-                "broadcast": "0.0.0.0",
+                "broadcast": "0.0.0.0"
             },
             "ipv6": {
                 "address": "fe80::216:3eff:fe9c:8200",
                 "mask_bits": 64,
-                "additional_ips": [{"address": "fd42:5bce:bd73:eda6::1", "mask_bits": 64}],
-            },
+                "additional_ips": [{"address": "fd42:5bce:bd73:eda6::1", "mask_bits": 64}]
+            }
         },
         "lo": {
             "mtu": 65536,
@@ -68,9 +68,9 @@
                 "address": "127.0.0.1",
                 "mask_bits": 8,
                 "netmask": "255.0.0.0",
-                "broadcast": null,
+                "broadcast": null
             },
-            "ipv6": {"address": "::1", "mask_bits": 128},
-        },
-    },
+            "ipv6": {"address": "::1", "mask_bits": 128}
+        }
+    }
 }
