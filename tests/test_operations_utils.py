@@ -1,4 +1,3 @@
-from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
 from unittest import TestCase
 from unittest.mock import MagicMock
@@ -619,30 +618,6 @@ class TestGetEnumMap(TestCase):
             pass
 
         assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
-
-    def test_mapping_key_of_simple_enum_works(self) -> None:
-        def func(a: Mapping[TestGetEnumMap.ZipEnum, str]) -> None:
-            pass
-
-        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
-
-    def test_mapping_value_of_simple_enum_works(self) -> None:
-        def func(a: Mapping[str, TestGetEnumMap.ZipEnum]) -> None:
-            pass
-
-        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
-
-    def test_sequence_of_simple_enum_works(self) -> None:
-        def func(a: Sequence[TestGetEnumMap.ZapEnum]) -> None:
-            pass
-
-        assert get_enum_map(func) == {"ZapEnum": TestGetEnumMap.ZapEnum}
-
-    def test_iterable_of_simple_enum_works(self) -> None:
-        def func(a: Iterable[TestGetEnumMap.ZowieEnum]) -> None:
-            pass
-
-        assert get_enum_map(func) == {"ZowieEnum": TestGetEnumMap.ZowieEnum}
 
     def test_multiple_enums_in_unions_work(self) -> None:
         def func(

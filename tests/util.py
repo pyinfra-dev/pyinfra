@@ -78,9 +78,7 @@ def get_enum_map(op: Callable[..., Any]) -> dict[str, type[Enum]]:
         while len(to_do) > 0:
             the_type = to_do.pop(0)
             origin = get_origin(the_type)
-            if (origin is not None) and (
-                (origin in AGGREGATES) or (origin.__module__ == "collections.abc")
-            ):
+            if (origin is not None) and (origin in AGGREGATES):
                 to_do.extend(get_args(the_type))
             elif isinstance(the_type, type) and issubclass(the_type, Enum):
                 result[the_type.__name__] = the_type
