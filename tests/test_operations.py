@@ -116,7 +116,7 @@ def make_operation_tests(arg):
 
             op_test_name = f"{arg}/{test_name}.json"
 
-            enum_map = get_enum_map(module, op._inner)  # noqa: SLF001
+            enum_map = get_enum_map(op._inner)  # noqa: SLF001
 
             # Create a host with this test's facts and attach to context host
             host = create_host(self.state, facts=parse_value(test_data.get("facts", {}), enum_map))

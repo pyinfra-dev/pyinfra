@@ -5,10 +5,11 @@ import re
 from collections.abc import Callable
 from datetime import datetime, timezone
 from enum import Enum
-from inspect import _empty, getcallargs, getfullargspec, signature  # noqa: PLC2701
+from inspect import getcallargs, getfullargspec, signature
 from os import path
 from pathlib import Path
-from types import ModuleType
+from types import UnionType
+from typing import Any, Dict, List, Set, Tuple, Union, get_args, get_type_hints, get_origin  # noqa: UP035
 from unittest.mock import patch
 
 from pyinfra.api import Config, Inventory
@@ -61,16 +62,33 @@ class FakeState:
         return "_tempfile_"
 
 
-def get_enum_map(module: ModuleType, op: Callable) -> dict[str, type[Enum]]:
-    return {  # mapping of enum type name to enum type for use by parse_value
-        v.annotation: enum_type
-        for k, v in signature(op).parameters.items()  # noqa: SLF001
-        if (v.annotation != _empty)  # noqa: SLF001
-        and issubclass(enum_type := getattr(module, str(v.annotation), type(None)), Enum)
-    }
+AGGREGATES = {Dict, List, Set, Tuple, Union, UnionType, dict, list, set, tuple}  # noqa: UP006
 
 
-def parse_value(value, enum_map: dict[str, type] | None = None):
+def get_enum_map(op: Callable[..., Any]) -> dict[str, type[Enum]]:
+    """
+    Returns a map from type name to type for all enum types used in `ops` parameters.
+    """
+    result: dict[str, type[Enum]] = {}
+    type_hints = get_type_hints(op)
+    for param in signature(op).parameters:
+        if param not in type_hints:
+            continue
+        to_do = [type_hints[param]]
+        while len(to_do) > 0:
+            the_type = to_do.pop(0)
+            origin = get_origin(the_type)
+            if (origin is not None) and (
+                (origin in AGGREGATES) or (origin.__module__ == "collections.abc")
+            ):
+                to_do.extend(get_args(the_type))
+            elif isinstance(the_type, type) and issubclass(the_type, Enum):
+                result[the_type.__name__] = the_type
+
+    return result
+
+
+def parse_value(value, enum_map: dict[str, type[Enum]] | None = None):
     """
     Convert JSON types to more complex Python types because JSON is lacking.
     """
@@ -80,8 +98,8 @@ def parse_value(value, enum_map: dict[str, type] | None = None):
             return datetime.fromisoformat(value[9:])
         if value.startswith("path:"):
             return Path(value[5:])
-        if value.startswith("enum:") and (len(enum_map or {}) > 0):
-            if len(pieces := value.split(":")) != 3:  # enum:<enum_type>:<value>
+        if value.startswith("enum:"):
+            if len(pieces := value.split(":")) != 3:  # enum:<enum_type_name>:<value>
                 raise ValueError(f"invalid enum specifier: {value}")
             try:
                 result = (enum_map or {})[pieces[1]](pieces[2])

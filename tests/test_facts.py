@@ -60,7 +60,7 @@ def make_fact_tests(folder_name):
                 short_fact = fact
                 fact = fact.fact()
 
-            test_args = parse_value(test_data.get("arg", []), get_enum_map(module, fact.command))
+            test_args = parse_value(test_data.get("arg", []), get_enum_map(fact.command))
             command = _make_command(fact.command, test_args)
 
             if "command" in test_data:
