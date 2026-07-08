@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from enum import Enum
 from inspect import getcallargs, getfullargspec, signature
+from io import StringIO
 from os import path
 from pathlib import Path
 from types import UnionType
@@ -108,6 +109,8 @@ def parse_value(value, enum_map: dict[str, type[Enum]] | None = None):
             else:
                 return result
 
+        if value.startswith("io:"):
+            return StringIO(value[3:])
         return value
 
     if isinstance(value, list):
