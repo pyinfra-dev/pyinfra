@@ -1,0 +1,15 @@
+{
+    "args": ["io:file contents", "/home"],
+    "facts": {
+        "files.File": {
+            "path=/home": false
+        },
+        "files.Directory": {
+            "path=/home": true
+        }
+    },
+    "exception": {
+        "name": "OperationTypeError",
+        "message": "When `src` is a file-like object, `dest` must be a full file path, not a directory"
+    }
+}

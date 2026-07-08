@@ -1135,7 +1135,14 @@ def put(
     remote_file = host.get_fact(File, path=dest)
 
     if not remote_file and bool(host.get_fact(Directory, path=dest)):
-        assert isinstance(src, str)
+        # A file-like ``src`` has no filename to append to the directory, so the
+        # destination is ambiguous. Raise a clear error rather than a bare
+        # ``AssertionError`` from the ``isinstance`` check below (#1144).
+        if hasattr(src, "read"):
+            raise OperationTypeError(
+                "When `src` is a file-like object, `dest` must be a full file "
+                "path, not a directory",
+            )
         dest = unix_path_join(dest, os.path.basename(src))
         remote_file = host.get_fact(File, path=dest)
 
