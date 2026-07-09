@@ -12,10 +12,10 @@ from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.exceptions import OperationValueError
 from pyinfra.facts.brew import (
     BrewCasks,
+    BrewItemKind,
     BrewPackages,
     BrewTaps,
     BrewTrusted,
-    BrewItemKind,
     BrewVersion,
     _new_cask_cli,
 )
@@ -172,7 +172,7 @@ def casks(
 def tap(
     src: str | None = None,
     present: bool = True,
-    trusted: bool | None = None,
+    trusted: bool | None = False,
     url: str | None = None,
 ):
     """
@@ -276,7 +276,7 @@ def trust(items: str | list[str], kind: BrewItemKind, trusted: bool):
     """
     Trust/untrust brew casks, commands, formulae and/or taps (see https://docs.brew.sh/Tap-Trust)
 
-    + item: the cask, command, formula or tap to be trusted or untrusted
+    + items: the cask, command, formula or tap to be trusted or untrusted
     + kind: whether the item is a CASK, COMMAND, FORMULA or TAP (using BrewItemKind enum)
     + trusted: whether this item should be trusted or not.  no default, must be specified
 
@@ -286,9 +286,9 @@ def trust(items: str | list[str], kind: BrewItemKind, trusted: bool):
 
         brew.trust(
             name="Mark magic tap as trusted",
-            item="includeos/includeos",
+            items="includeos/includeos",
             kind=BrewItemKind.TAP,
-            trust=True
+            trusted=True
         )
     """
     item_set = set(items if isinstance(items, list) else [items])
