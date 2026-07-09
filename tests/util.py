@@ -4,6 +4,7 @@ import os
 import re
 from datetime import datetime, timezone
 from inspect import getcallargs, getfullargspec
+from io import StringIO
 from os import path
 from pathlib import Path
 from unittest.mock import patch
@@ -68,6 +69,8 @@ def parse_value(value):
             return datetime.fromisoformat(value[9:])
         if value.startswith("path:"):
             return Path(value[5:])
+        if value.startswith("io:"):
+            return StringIO(value[3:])
         return value
 
     if isinstance(value, list):

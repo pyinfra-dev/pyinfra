@@ -49,7 +49,9 @@ uv add --editable ./pyinfra
 ### Code Style & Type Checking
 
 Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
-recommended for local development though currently optional. There is a script to run the linting & type-checking:
+recommended for local development though currently optional. Shell scripts are checked with
+[shellcheck](https://www.shellcheck.net/), so install it before running the lint script (eg `apt-get install shellcheck`
+or `brew install shellcheck`). There is a script to run the linting & type-checking:
 
 ```sh
 # Check formatting & types
