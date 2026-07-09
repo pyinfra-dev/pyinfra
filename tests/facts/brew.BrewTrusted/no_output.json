@@ -1,6 +1,6 @@
 {
-    "command": "brew trust --json v1",
+    "command": "brew trust --json=v1",
     "requires_command": "brew",
     "output": [],
-    "fact": {"casks": [], "commands": [], "formulae": [], "taps": []},
+    "fact": {"casks": [], "commands": [], "formulae": [], "taps": []}
 }
