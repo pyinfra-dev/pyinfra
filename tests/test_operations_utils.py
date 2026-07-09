@@ -596,7 +596,7 @@ class TestGetEnumMap(TestCase):
         assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
 
     def test_set_of_simple_enum_works(self) -> None:
-        def func(a: list[TestGetEnumMap.ZipEnum]) -> None:
+        def func(a: set[TestGetEnumMap.ZipEnum]) -> None:
             pass
 
         assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
