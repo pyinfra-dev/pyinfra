@@ -180,7 +180,7 @@ class BrewTrusted(FactBase[BrewTrustMapping]):
 
     @override
     def command(self) -> str:
-        return "brew trust --json v1"
+        return "brew trust --json=v1"
 
     @override
     def requires_command(self) -> str:
