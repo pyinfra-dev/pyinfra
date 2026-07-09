@@ -1,0 +1,6 @@
+args:
+  - app
+  - ""
+exception:
+  name: OperationError
+  message: docker.container_exec requires a command

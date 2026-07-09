@@ -49,7 +49,9 @@ uv add --editable ./pyinfra
 ### Code Style & Type Checking
 
 Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
-recommended for local development though currently optional. There is a script to run the linting & type-checking:
+recommended for local development though currently optional. Shell scripts are checked with
+[shellcheck](https://www.shellcheck.net/), so install it before running the lint script (eg `apt-get install shellcheck`
+or `brew install shellcheck`). There is a script to run the linting & type-checking:
 
 ```sh
 # Check formatting & types
@@ -109,14 +111,20 @@ not be changed, it contains build artifacts.
 
 ### Generate Documentation
 
-To generate:
+To generate the per-module operation, fact and connector pages:
+
+```sh
+scripts/generate-docs.sh
+```
+
+To preview the documentation site locally ([localhost:8000](http://localhost:8000)):
+
+```sh
+uv run zensical serve
+```
+
+To produce a full static build:
 
 ```sh
 scripts/build-public-docs.sh
-```
-
-To view ([localhost:8000](http://localhost:8000)):
-
-```sh
-uv run -m http.server -d docs/public/en/latest/
 ```

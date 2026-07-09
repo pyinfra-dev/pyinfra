@@ -1,0 +1,5 @@
+{
+    "command": "ip -j addr show 2> /dev/null || ip addr show 2> /dev/null || ifconfig -a",
+    "output": [],
+    "fact": {}
+}

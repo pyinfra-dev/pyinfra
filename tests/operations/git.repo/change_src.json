@@ -1,0 +1,31 @@
+{
+    "args": ["mynewremote", "/home/myrepo"],
+    "facts": {
+        "git.GitConfig": {
+            "repo=/home/myrepo, system=False": {
+                "remote.origin.url": ["myoldremote"]
+            }
+        },
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": {
+                "mode": 0
+            }
+        },
+        "git.GitBranch": {
+            "repo=/home/myrepo": "master"
+        },
+        "git.GitLocalCommit": {
+            "ref=master, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "git.GitRemoteBranchCommit": {
+            "branch=master, remote=origin, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+    },
+    "commands": [
+        "cd /home/myrepo && git remote set-url origin mynewremote",
+        "cd /home/myrepo && git pull"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "git remote set-url + pull run whenever src differs from the configured origin"
+}

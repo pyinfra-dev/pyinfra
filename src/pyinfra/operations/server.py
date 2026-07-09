@@ -95,7 +95,13 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield FunctionCommand(capture_uptime, (), {})
 
-    yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
+    # Detach the reboot from the SSH session so the channel closes immediately.
+    # When the reboot is run inline, paramiko blocks on `recv_exit_status` for
+    # the remote process - that never returns when the connection goes through
+    # a still-alive ProxyCommand (#1708).
+    yield StringCommand(
+        "( sleep 1 && reboot ) </dev/null >/dev/null 2>&1 &",
+    )
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
@@ -606,10 +612,12 @@ def timezone(timezone: str):
         return
 
     if host.get_fact(Which, command="timedatectl"):
-        yield f"timedatectl set-timezone {timezone}"
+        yield StringCommand("timedatectl set-timezone", QuoteString(timezone))
     else:
-        yield f"ln -sf /usr/share/zoneinfo/{timezone} /etc/localtime"
-        yield f"echo {timezone} > /etc/timezone"
+        yield StringCommand(
+            "ln -sf", QuoteString(f"/usr/share/zoneinfo/{timezone}"), "/etc/localtime"
+        )
+        yield StringCommand("echo", QuoteString(timezone), "> /etc/timezone")
 
 
 @operation()
@@ -1346,7 +1354,7 @@ def kill(pid: int, signal: str = "TERM"):
         )
     """
 
-    yield f"kill -{signal} {pid}"
+    yield StringCommand("kill", QuoteString(f"-{signal}"), QuoteString(str(pid)))
 
 
 @operation()

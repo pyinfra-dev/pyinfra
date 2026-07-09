@@ -1,3 +1,4 @@
+from enum import Enum
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -5,8 +6,10 @@ import pytest
 
 from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
-from pyinfra.operations.util.files import unix_path_join
+from pyinfra.operations.util.files import ensure_mode_int, unix_path_join
 from pyinfra.operations.util.packaging import ensure_packages
+
+from .util import get_enum_map
 
 
 class TestUnixPathJoin(TestCase):
@@ -21,6 +24,40 @@ class TestUnixPathJoin(TestCase):
 
     def test_end_slash_path(self):
         assert unix_path_join("/", "home", "pyinfra/") == "/home/pyinfra/"
+
+
+class TestEnsureModeInt(TestCase):
+    def test_int_passes_through(self):
+        assert ensure_mode_int(644) == 644
+
+    def test_plain_string(self):
+        assert ensure_mode_int("644") == 644
+
+    def test_zero_prefixed_string(self):
+        assert ensure_mode_int("0644") == 644
+
+    def test_octal_prefixed_string(self):
+        assert ensure_mode_int("0o644") == 644
+
+    def test_uppercase_octal_prefixed_string(self):
+        assert ensure_mode_int("0O644") == 644
+
+    def test_none_passes_through(self):
+        assert ensure_mode_int(None) is None
+
+    def test_symbolic_mode_passes_through(self):
+        assert ensure_mode_int("u+x") == "u+x"
+
+    def test_setuid_mode(self):
+        assert ensure_mode_int("4755") == 4755
+
+    def test_non_octal_int_raises(self):
+        with pytest.raises(ValueError, match="non-octal digits"):
+            ensure_mode_int(899)
+
+    def test_non_octal_string_raises(self):
+        with pytest.raises(ValueError, match="non-octal digits"):
+            ensure_mode_int("0o899")
 
 
 class TestParseRegistry(TestCase):
@@ -511,3 +548,93 @@ class TestEnsurePackagesDualFormat(TestCase):
         )
         assert commands == []
         host.noop.assert_called_once_with("package kernel is installed (5.10.0-26,6.1.0-13)")
+
+
+class TestGetEnumMap(TestCase):
+    """ensure get_enum_map works correctly"""
+
+    class ZipEnum(Enum):
+        FOO = 1
+        BAR = 2
+
+    class ZapEnum(Enum):
+        FOO = 1
+        BAR = 2
+
+    class ZowieEnum(Enum):
+        FOO = 1
+        BAR = 2
+
+    def test_multiple_simple_types_no_enum_works(self):
+        def func(a: int, b: str, c: float, d: complex) -> None:
+            pass
+
+        assert get_enum_map(func) == {}
+
+    def test_only_simple_enum_works(self) -> None:
+        def func(a: TestGetEnumMap.ZipEnum) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_union_simple_enum_or_none_works(self) -> None:
+        def func(a: TestGetEnumMap.ZipEnum | None) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_union_simple_enum_or_str_works(self) -> None:
+        def func(a: TestGetEnumMap.ZipEnum | str) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_list_of_simple_enum_works(self) -> None:
+        def func(a: list[TestGetEnumMap.ZipEnum]) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_set_of_simple_enum_works(self) -> None:
+        def func(a: set[TestGetEnumMap.ZipEnum]) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_tuple_of_simple_enum_works(self) -> None:
+        def func(a: tuple[TestGetEnumMap.ZipEnum, ...]) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_dict_key_of_simple_enum_works(self) -> None:
+        def func(a: dict[TestGetEnumMap.ZipEnum, str]) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_dict_value_of_simple_enum_works(self) -> None:
+        def func(a: dict[str, TestGetEnumMap.ZipEnum]) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZipEnum": TestGetEnumMap.ZipEnum}
+
+    def test_multiple_enums_in_unions_work(self) -> None:
+        def func(
+            a: TestGetEnumMap.ZipEnum | None,
+            b: TestGetEnumMap.ZapEnum | str,
+            c: TestGetEnumMap.ZowieEnum | complex,
+        ) -> None:
+            pass
+
+        assert get_enum_map(func) == {
+            "ZipEnum": TestGetEnumMap.ZipEnum,
+            "ZapEnum": TestGetEnumMap.ZapEnum,
+            "ZowieEnum": TestGetEnumMap.ZowieEnum,
+        }
+
+    def test_nested_list_of_enum_unions_works(self) -> None:
+        def func(a: list[list[TestGetEnumMap.ZapEnum | None] | None] | None) -> None:
+            pass
+
+        assert get_enum_map(func) == {"ZapEnum": TestGetEnumMap.ZapEnum}

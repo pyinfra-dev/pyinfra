@@ -12,7 +12,7 @@ from pyinfra.api import FileDownloadCommand, FileUploadCommand, FunctionCommand,
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra_cli.util import json_encode
 
-from .util import FakeState, create_host, get_command_string, parse_value, patch_files
+from .util import FakeState, create_host, get_command_string, get_enum_map, parse_value, patch_files
 
 PLATFORM_NAME = platform.system()
 
@@ -116,13 +116,15 @@ def make_operation_tests(arg):
 
             op_test_name = f"{arg}/{test_name}.json"
 
-            # Create a host with this tests facts and attach to context host
-            host = create_host(self.state, facts=test_data.get("facts", {}))
+            enum_map = get_enum_map(op._inner)  # noqa: SLF001
+
+            # Create a host with this test's facts and attach to context host
+            host = create_host(self.state, facts=parse_value(test_data.get("facts", {}), enum_map))
 
             allowed_exception = test_data.get("exception")
 
-            args = parse_value(test_data.get("args", []))
-            kwargs = parse_value(test_data.get("kwargs", {}))
+            args = parse_value(test_data.get("args", []), enum_map)
+            kwargs = parse_value(test_data.get("kwargs", {}), enum_map)
 
             with ctx_state.use(self.state):
                 with ctx_host.use(host):

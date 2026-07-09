@@ -103,7 +103,7 @@ def update():
     Updates all zypper packages.
     """
 
-    yield "zypper update -y"
+    yield "zypper --non-interactive --gpg-auto-import-keys update -y"
 
 
 _update = update._inner  # noqa: E305 (for use below where update is a kwarg)
@@ -162,7 +162,7 @@ def packages(
     if update:
         yield from _update()
 
-    install_command = ["zypper", "--non-interactive", "install", "-y"]
+    install_command = ["zypper", "--non-interactive", "--gpg-auto-import-keys", "install", "-y"]
 
     if extra_install_args:
         install_command.append(extra_install_args)
@@ -178,7 +178,7 @@ def packages(
     if extra_global_uninstall_args:
         uninstall_command.insert(1, extra_global_uninstall_args)
 
-    upgrade_command = "zypper update -y"
+    upgrade_command = "zypper --non-interactive --gpg-auto-import-keys update -y"
 
     yield from ensure_packages(
         host,

@@ -527,6 +527,56 @@ def test_parse_config_honours_certificatefile_directive(
     assert cfg["pkey"].public_blob.key_type == CERT_KEY_TYPE
 
 
+def test_parse_config_explicit_pkey_wins_over_encrypted_identityfile(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # Regression for #1852: an explicit pyinfra ssh_key (already loaded into a
+    # pkey using ssh_key_password) must win over an ssh_config IdentityFile. The
+    # encrypted IdentityFile must not be loaded, so no passphrase prompt fires.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+    )
+
+    sentinel = object()
+    client = SSHClient()
+    with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong") as fake_getpass:
+        with patch("pyinfra.is_cli", True):
+            _, cfg, *_ = client.parse_config(
+                "myhost",
+                {"pkey": sentinel},
+                ssh_config_file=str(config_path),
+            )
+
+    fake_getpass.assert_not_called()
+    assert cfg["pkey"] is sentinel
+
+
+def test_parse_config_encrypted_identityfile_does_not_prompt(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # Regression for #1852: an encrypted ssh_config IdentityFile with no known
+    # passphrase must fall through to the legacy key_filename flow instead of
+    # blocking on an interactive passphrase prompt.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+    )
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong") as fake_getpass:
+        with patch("pyinfra.is_cli", True):
+            _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    fake_getpass.assert_not_called()
+    assert "pkey" not in cfg
+    assert cfg["key_filename"] == [str(ssh_encrypted_key["key"])]
+
+
 def test_parse_config_keeps_key_filename_when_no_real_identityfile(
     tmp_path, _clear_ssh_config_cache
 ):
