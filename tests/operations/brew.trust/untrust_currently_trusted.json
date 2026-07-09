@@ -4,5 +4,5 @@
         "brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": ["foo", "baz"]}
     },
     "commands": ["brew untrust --tap baz", "brew untrust --tap foo"],
-    "noop_description": "bar taps already untrusted",
+    "noop_description": "bar taps already untrusted"
 }

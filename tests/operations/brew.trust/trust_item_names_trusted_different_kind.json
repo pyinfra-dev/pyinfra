@@ -5,8 +5,8 @@
             "casks": [],
             "commands": [],
             "formulae": ["foo", "bar", "baz"],
-            "taps": [],
+            "taps": []
         }
     },
-    "commands": ["brew trust --cask bar", "brew trust --cask baz", "brew trust --cask foo"],
+    "commands": ["brew trust --cask bar", "brew trust --cask baz", "brew trust --cask foo"]
 }

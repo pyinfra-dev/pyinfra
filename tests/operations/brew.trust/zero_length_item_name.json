@@ -4,6 +4,6 @@
     "commands": [],
     "exception": {
         "names": "OperationValueError",
-        "message": "all items must have non-zero length names",
+        "message": "all items must have non-zero length names"
     },
 }
