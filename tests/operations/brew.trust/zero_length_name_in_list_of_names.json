@@ -1,5 +1,5 @@
 {
-    "args": [["a", "", "c"], "tap", true],
+    "args": [["a", "", "c"], "enum:BrewItemKind:taps", true],
     "facts": {"brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": []}},
     "commands": [],
     "exception": {

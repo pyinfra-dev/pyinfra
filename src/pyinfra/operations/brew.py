@@ -294,12 +294,6 @@ def trust(items: str | list[str], kind: BrewItemKind, trusted: bool):
     item_set = set(items if isinstance(items, list) else [items])
     if any(len(item) < 1 for item in item_set):
         raise OperationValueError("all items must have non-zero length names")
-    # TODO: remove this once the test infrastructure supports enums
-    if isinstance(kind, str):
-        try:
-            kind = BrewItemKind(kind)
-        except (TypeError, ValueError):
-            raise OperationValueError from None
     desired_state = "trust" if trusted else "untrust"
     trusted_items = set(host.get_fact(BrewTrusted).get(kind.value, []))
     found = item_set & trusted_items
