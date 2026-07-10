@@ -232,7 +232,7 @@ class TestLocalConnector(TestCase):
             ],
         )
 
-    def test_run_shell_command_fails_with_sudo_rs(self):
+    def test_run_shell_command_fails_with_unsupported_sudo_rs(self):
         inventory = make_inventory(hosts=("@local",))
         State(inventory, Config())
         host = inventory.get_host("@local")
@@ -246,6 +246,36 @@ class TestLocalConnector(TestCase):
 
         with self.assertRaises(PyinfraError):
             host.run_shell_command("echo hi", _sudo=True)
+
+        self.fake_popen_mock.assert_any_call(
+            "sh -c 'sudo --version'",
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
+        )
+
+    def test_run_shell_command_allows_supported_sudo_rs(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        def make_process(stdout_lines, returncode):
+            fake_stdout = MagicMock()
+            fake_stdout.__iter__ = MagicMock(return_value=iter(stdout_lines))
+            fake_process = MagicMock(returncode=returncode)
+            fake_process.stdout = fake_stdout
+            fake_process.stderr = MagicMock()
+            return fake_process
+
+        self.fake_popen_mock.side_effect = [
+            make_process(["sudo-rs 0.2.13"], 0),
+            make_process([], 0),
+        ]
+
+        out = host.run_shell_command("echo hi", _sudo=True)
+        assert len(out) == 2
+        assert out[0] is True
 
         self.fake_popen_mock.assert_any_call(
             "sh -c 'sudo --version'",

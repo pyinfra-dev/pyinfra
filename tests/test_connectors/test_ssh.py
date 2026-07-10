@@ -821,12 +821,11 @@ class TestSSHConnector(TestCase):
         )
 
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
-    def test_run_shell_command_fails_with_sudo_rs(
+    def test_run_shell_command_fails_with_unsupported_sudo_rs(
         self,
         fake_ssh_client,
     ):
-        # sudo-rs (the Rust replacement, default in Ubuntu 25.10+) is not supported;
-        # pyinfra should fail fast with a clear message.
+        # sudo-rs versions older than 0.2.11 are not supported; pyinfra should fail fast.
         fake_ssh = mock.MagicMock()
         fake_stdin = mock.MagicMock()
 
@@ -851,6 +850,116 @@ class TestSSHConnector(TestCase):
             host.run_shell_command("echo hi", _sudo=True)
 
         fake_ssh.exec_command.assert_any_call("sh -c 'sudo --version'", get_pty=False)
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    def test_run_shell_command_allows_supported_sudo_rs(
+        self,
+        fake_ssh_client,
+    ):
+        # sudo-rs 0.2.11+ is allowed through and executes the command normally.
+        fake_ssh = mock.MagicMock()
+        sudo_version_stdout = mock.MagicMock()
+        sudo_version_stdout.channel.recv_exit_status.return_value = 0
+        sudo_version_stdout.__iter__ = mock.Mock(return_value=iter(["sudo-rs 0.2.13"]))
+
+        command_stdout = mock.MagicMock()
+        command_stdout.channel.recv_exit_status.return_value = 0
+        command_stdout.__iter__ = mock.Mock(return_value=iter([]))
+
+        fake_ssh.exec_command.side_effect = [
+            (
+                mock.MagicMock(),
+                sudo_version_stdout,
+                mock.MagicMock(),
+            ),
+            (
+                mock.MagicMock(),
+                command_stdout,
+                mock.MagicMock(),
+            ),
+        ]
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect(state)
+
+        out = host.run_shell_command("echo hi", _sudo=True)
+        assert len(out) == 2
+        assert out[0] is True
+
+        fake_ssh.exec_command.assert_any_call("sh -c 'sudo --version'", get_pty=False)
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    @mock.patch("pyinfra.connectors.util.getpass")
+    def test_run_shell_command_retry_for_supported_sudo_rs_password(
+        self,
+        fake_getpass,
+        fake_ssh_client,
+    ):
+        # sudo-rs 0.2.11+ uses the same "sudo:" prefix as traditional sudo when
+        # it cannot prompt non-interactively; the retry path should recognize it.
+        fake_getpass.return_value = "PASSWORD"
+
+        fake_ssh = mock.MagicMock()
+        sudo_version_stdout = mock.MagicMock()
+        sudo_version_stdout.channel.recv_exit_status.return_value = 0
+        sudo_version_stdout.__iter__ = mock.Mock(return_value=iter(["sudo-rs 0.2.13"]))
+        first_fake_stdout = mock.MagicMock()
+        second_fake_stdout = mock.MagicMock()
+        third_fake_stdout = mock.MagicMock()
+
+        first_fake_stdout.__iter__.return_value = ["sudo: interactive authentication is required\r"]
+        second_fake_stdout.__iter__.return_value = ["/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"]
+
+        fake_ssh.exec_command.side_effect = [
+            (
+                mock.MagicMock(),
+                sudo_version_stdout,
+                mock.MagicMock(),
+            ),  # sudo-rs version check
+            (
+                mock.MagicMock(),
+                first_fake_stdout,
+                mock.MagicMock(),
+            ),  # command w/o sudo password
+            (
+                mock.MagicMock(),
+                second_fake_stdout,
+                mock.MagicMock(),
+            ),  # SUDO_ASKPASS_COMMAND
+            (
+                mock.MagicMock(),
+                third_fake_stdout,
+                mock.MagicMock(),
+            ),  # command with sudo pw
+        ]
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect(state)
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
+
+        command = "echo hi"
+        sudo_version_stdout.channel.recv_exit_status.return_value = 0
+        first_fake_stdout.channel.recv_exit_status.return_value = 1
+        second_fake_stdout.channel.recv_exit_status.return_value = 0
+        third_fake_stdout.channel.recv_exit_status.return_value = 0
+
+        out = host.run_shell_command(command, _sudo=True)
+        assert len(out) == 2
+        assert out[0] is True
+        assert fake_getpass.called
+        fake_ssh.exec_command.assert_called_with(
+            "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
+            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
+            get_pty=False,
+        )
 
     # SSH file put/get tests
     #

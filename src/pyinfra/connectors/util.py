@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
@@ -26,21 +27,23 @@ SU_ASKPASS_ENV_VAR = "PYINFRA_SU_PASSWORD"
 
 # Output lines that indicate sudo could not prompt for a password and we should retry with one.
 # - sudo (Todd C. Miller's): "sudo: a password is required"
-# - sudo-rs (Trifecta Tech): "sudo-rs: interactive authentication is required"
+# - sudo-rs >= 0.2.11: "sudo: interactive authentication is required"
+# - sudo-rs < 0.2.11: "sudo-rs: interactive authentication is required"
 #   https://github.com/trifectatechfoundation/sudo-rs (default sudo on Ubuntu 25.10+)
 SUDO_PASSWORD_REQUIRED_LINES = (
     "sudo: a password is required",
+    "sudo: interactive authentication is required",
     "sudo-rs: interactive authentication is required",
 )
 
-# String printed by `sudo --version` when the target uses sudo-rs instead of traditional sudo.
-SUDO_RS_VERSION_LINE = "sudo-rs"
+# Minimum sudo-rs version that supports the flags and behavior pyinfra needs.
+SUDO_RS_MINIMUM_VERSION = (0, 2, 11)
 
 SUDO_RS_NOT_SUPPORTED_MESSAGE = (
-    "sudo-rs is installed as the system sudo, but pyinfra does not support it. "
-    "Please install or restore traditional sudo. "
+    "sudo-rs is installed as the system sudo, but pyinfra does not support versions "
+    "older than {}.{}.{}. Please upgrade sudo-rs or install traditional sudo. "
     "See https://github.com/pyinfra-dev/pyinfra/issues/1499"
-)
+).format(*SUDO_RS_MINIMUM_VERSION)
 
 
 ASKPASS_COMMAND = r"""
@@ -355,7 +358,7 @@ def _ensure_askpass_set_for_host(
     return path
 
 
-def _fail_if_sudo_rs(host: Host) -> None:
+def _fail_if_unsupported_sudo_rs(host: Host) -> None:
     # Cache the check result so we only run `sudo --version` once per host.
     if host.connector_data.get("sudo_version_checked"):
         return
@@ -370,8 +373,17 @@ def _fail_if_sudo_rs(host: Host) -> None:
         print_input=False,
     )
 
-    if ok and any(SUDO_RS_VERSION_LINE in line for line in output.stdout_lines):
-        raise PyinfraError(SUDO_RS_NOT_SUPPORTED_MESSAGE)
+    if not ok:
+        return
+
+    for line in output.stdout_lines:
+        match = re.search(r"sudo-rs\s+(\d+)\.(\d+)\.(\d+)", line)
+        if not match:
+            continue
+
+        version = tuple(int(part) for part in match.groups())
+        if version < SUDO_RS_MINIMUM_VERSION:
+            raise PyinfraError(SUDO_RS_NOT_SUPPORTED_MESSAGE)
 
 
 def make_unix_command_for_host(
@@ -387,7 +399,7 @@ def make_unix_command_for_host(
 
     # Handle sudo password
     if command_arguments.get("_sudo"):
-        _fail_if_sudo_rs(host)
+        _fail_if_unsupported_sudo_rs(host)
         # If the sudo password is not set in the direct arguments,
         # set it from the connector data value.
         if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
