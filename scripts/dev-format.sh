@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-
-set -euo pipefail
+source "$(dirname "$0")/common.bash"    # setup $uvrun, etc.
 
 echo "Execute ruff format..."
-uv run ruff format
+$uvrun ruff format

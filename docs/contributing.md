@@ -82,10 +82,10 @@ To limit the pytests to a specific fact or operation:
 
 ```sh
 # Only run fact tests for facts.efibootmgr.EFIBootMGR
-uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
+scripts/dev-test.sh tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 
 # Only run operation tests for operations.selinux
-uv run pytest tests/test_operations.py -k "selinux."
+scripts/dev-test.sh tests/test_operations.py -k "selinux."
 ```
 
 #### End-to-End Tests
@@ -97,11 +97,11 @@ The end-to-end tests are also executed via `pytest` but not selected by default,
 scripts/dev-test-e2e.sh
 
 # Run local e2e tests (works on Linux / MacOS, no Windows yet)
-uv run pytest -m end_to_end_local
+scripts/dev-test.sh -m end_to_end_local
 
 # Run Docker and SSH e2e tests (Linux / MacOS with Docker installed)
-uv run pytest -m end_to_end_ssh
-uv run pytest -m end_to_end_docker
+scripts/dev-test.sh -m end_to_end_ssh
+scripts/dev-test.sh -m end_to_end_docker
 ```
 
 ## Documentation

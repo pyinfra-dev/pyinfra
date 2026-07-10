@@ -10,16 +10,21 @@ instead of YAML, and much faster. It supports SSH, local machine, Docker, and mo
 
 ## Development Setup
 
-```bash
-uv sync  # Install all dependencies into managed venv
-```
+If you use `uv`, you may:
+
+    uv sync  # Install all dependencies into managed venv
+
+Or you can set up your own virtualenv (or even use your top-level
+environment), and ensure everything you need is installed with
+
+    pip install --group=dev -e .
 
 ## Common Commands
 
 ```bash
 # Run tests
 scripts/dev-test.sh
-# or directly:
+# or directly (leave off `uv run` if you've set up your own virtualenv):
 uv run pytest --cov --disable-warnings -m 'not end_to_end'
 
 # Run fixtures for a single operation or fact

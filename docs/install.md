@@ -83,10 +83,10 @@ First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't a
    env\Scripts\activate
    ```
 
-#### Install pyinfra via pip
+#### Install development dependencies and pyinfra in edit mode into the virtual environment
 
    ```sh
-   pip install pyinfra
+   pip install --group=dev -e .
    ```
 
 #### Verify pip Installation

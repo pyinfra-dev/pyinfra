@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
+source "$(dirname "$0")/common.bash"    # setup $uvrun, etc.
 
-set -euo pipefail
-
-VERSION=$(uv run python scripts/generate_next_version.py)
-MAJOR_BRANCH="$(uv run python scripts/generate_next_version.py | cut -d'.' -f1).x"
+VERSION=$($uvrun python scripts/generate_next_version.py)
+MAJOR_BRANCH="$($uvrun python scripts/generate_next_version.py | cut -d'.' -f1).x"
 
 echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 
 echo "# Running tests..."
-uv run pytest
+$uvrun pytest
 
 echo "# Git tag & push..."
 git tag -a "v$VERSION" -m "v$VERSION"
@@ -22,6 +21,6 @@ echo "Publishing to PyPI..."
 uv publish
 
 echo "Making GitHub release..."
-uv run python scripts/make_github_release.py
+$uvrun python scripts/make_github_release.py
 
 echo "# All done!"

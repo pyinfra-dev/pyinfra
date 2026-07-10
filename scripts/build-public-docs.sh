@@ -1,6 +1,5 @@
 #!/bin/bash
-
-set -euo pipefail
+source "$(dirname "$0")/common.bash"    # setup $uvrun, etc.
 
 NEXT_BRANCH="3.x"
 LATEST_BRANCH="3.x"
@@ -20,7 +19,7 @@ build_docs() {
 
     echo "Building zensical site for version: ${docs_version}"
     rm -rf "$build_dir"
-    uv run zensical build --clean
+    $uvrun zensical build --clean
     mkdir -p "$(dirname "$build_dir")"
     mv build/docs "$build_dir"
 }
@@ -55,7 +54,7 @@ if [ -n "${TAG_NAME}" ] && [[ "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+([\.a-z0-9]+)?$ ]];
     if [ "${BRANCH_NAME}" = "${LATEST_BRANCH}" ]; then
         echo "Generating /page redirects"
         mkdir -p "docs-public/page/"
-        DOCS_VERSION=$BRANCH_NAME uv run python scripts/generate_redirect_pages.py
+        DOCS_VERSION=$BRANCH_NAME $uvrun python scripts/generate_redirect_pages.py
     fi
 fi
 
@@ -64,5 +63,5 @@ if [[ -z "${TAG_NAME}" ]] && [[ "${BRANCH_NAME}" != "${LATEST_BRANCH}" && "${BRA
     echo "Performing local build for branch: ${BRANCH_NAME}"
     build_docs "$BRANCH_NAME" "build/local"
     echo "Docs built to build/local/"
-    echo "Preview with: uv run zensical serve"
+    echo "Preview with: $uvrun zensical serve"
 fi
