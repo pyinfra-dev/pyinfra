@@ -331,6 +331,8 @@ def mount(
     + path: the path of the mounted filesystem
     + mounted: whether the filesystem should be mounted
     + options: the mount options
+    + device: the device behind the mount
+    + fs_type: the filesystem type
 
     Options:
         If the currently mounted filesystem does not have all of the provided
@@ -379,14 +381,14 @@ def mount(
         mounted_options = mounts[mounted_path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            if host.get_fact(Kernel).strip() == "FreeBSD":
+            # the -u option is common among FreeBSD, OpenBSD, NetBSD, DragonFlyBSD
+            if "BSD" in host.get_fact(Kernel).strip():
                 fs_type = mounts[mounted_path]["type"]
                 device = mounts[mounted_path]["device"]
-
                 yield StringCommand(
                     "mount",
-                    "-o",
-                    StringCommand("update,", options_string, _separator=""),
+                    "-uo",
+                    StringCommand(options_string, _separator=""),
                     "-t",
                     fs_type,
                     QuoteString(device),
