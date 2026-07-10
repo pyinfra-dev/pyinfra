@@ -1,0 +1,4 @@
+args:
+  - [ myset_a, myset_b, myset_c ]
+commands:
+  - s6 set delete myset_a myset_b myset_c

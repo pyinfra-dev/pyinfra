@@ -1,0 +1,4 @@
+args:
+  - default
+commands:
+  - s6 set save default

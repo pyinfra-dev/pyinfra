@@ -6,4 +6,4 @@ facts:
   s6.S6SetStatus: 
     repository=None, set=default: null
 commands: []
-noop_description: "the set \"default\" doesn't exist"
+noop_description: "the set \"default\" already doesn't exist"

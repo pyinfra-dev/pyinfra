@@ -1,0 +1,4 @@
+args:
+  - myset
+commands:
+  - s6 set delete myset

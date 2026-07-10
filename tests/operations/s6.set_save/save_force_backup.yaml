@@ -1,0 +1,17 @@
+args:
+  - myset
+kwargs:
+  force: true
+  force_backup: true
+facts:
+  files.FindInFile:
+    "extended_regex=True, interpolate_variables=False, path=/etc/s6-frontend.conf, pattern=repodir\\s*=":
+      - repodir=/etc/s6/repo
+  files.Directory:
+    path=/etc/s6/repo/myset:
+      user: pyinfra
+      group: pyinfra
+      mode: 644
+commands:
+  - mv /etc/s6/repo/myset /etc/s6/repo/myset.a-timestamp
+  - s6 set save myset
