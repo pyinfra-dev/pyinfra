@@ -3,7 +3,7 @@
     "kwargs": {"trusted": true},
     "facts": {
         "brew.BrewTaps": [],
-        "brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": []},
+        "brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": []}
     },
-    "commands": ["brew tap homebrew/cask", "brew trust --tap homebrew/cask"],
+    "commands": ["brew tap homebrew/cask", "brew trust --tap homebrew/cask"]
 }

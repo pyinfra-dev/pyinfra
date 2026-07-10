@@ -5,5 +5,5 @@
     "exception": {
         "names": "OperationValueError",
         "message": "all items must have non-zero length names"
-    },
+    }
 }
