@@ -33,6 +33,15 @@ SUDO_PASSWORD_REQUIRED_LINES = (
     "sudo-rs: interactive authentication is required",
 )
 
+# String printed by `sudo --version` when the target uses sudo-rs instead of traditional sudo.
+SUDO_RS_VERSION_LINE = "sudo-rs"
+
+SUDO_RS_NOT_SUPPORTED_MESSAGE = (
+    "sudo-rs is installed as the system sudo, but pyinfra does not support it. "
+    "Please install or restore traditional sudo. "
+    "See https://github.com/pyinfra-dev/pyinfra/issues/1499"
+)
+
 
 ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
@@ -346,6 +355,25 @@ def _ensure_askpass_set_for_host(
     return path
 
 
+def _fail_if_sudo_rs(host: Host) -> None:
+    # Cache the check result so we only run `sudo --version` once per host.
+    if host.connector_data.get("sudo_version_checked"):
+        return
+
+    host.connector_data["sudo_version_checked"] = True
+
+    # Run without sudo to avoid recursion; sudo --version does not require auth.
+    ok, output = host.run_shell_command(
+        StringCommand("sudo", "--version"),
+        _sudo=False,
+        print_output=False,
+        print_input=False,
+    )
+
+    if ok and any(SUDO_RS_VERSION_LINE in line for line in output.stdout_lines):
+        raise PyinfraError(SUDO_RS_NOT_SUPPORTED_MESSAGE)
+
+
 def make_unix_command_for_host(
     state: State,
     host: Host,
@@ -359,6 +387,7 @@ def make_unix_command_for_host(
 
     # Handle sudo password
     if command_arguments.get("_sudo"):
+        _fail_if_sudo_rs(host)
         # If the sudo password is not set in the direct arguments,
         # set it from the connector data value.
         if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:

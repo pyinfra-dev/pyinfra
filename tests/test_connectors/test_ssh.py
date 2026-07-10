@@ -644,6 +644,8 @@ class TestSSHConnector(TestCase):
         fake_getpass,
     ):
         fake_ssh = mock.MagicMock()
+        sudo_version_stdout = mock.MagicMock()
+        sudo_version_stdout.__iter__.return_value = ["Sudo version 1.9.14p2"]
         first_fake_stdout = mock.MagicMock()
         second_fake_stdout = mock.MagicMock()
         third_fake_stdout = mock.MagicMock()
@@ -652,6 +654,11 @@ class TestSSHConnector(TestCase):
         second_fake_stdout.__iter__.return_value = ["/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"]
 
         fake_ssh.exec_command.side_effect = [
+            (
+                mock.MagicMock(),
+                sudo_version_stdout,
+                mock.MagicMock(),
+            ),  # sudo-rs detection check
             (
                 mock.MagicMock(),
                 first_fake_stdout,
@@ -678,6 +685,7 @@ class TestSSHConnector(TestCase):
         host.connect()
 
         command = "echo Šablony"
+        sudo_version_stdout.channel.recv_exit_status.return_value = 0
         first_fake_stdout.channel.recv_exit_status.return_value = 1
         second_fake_stdout.channel.recv_exit_status.return_value = 0
         third_fake_stdout.channel.recv_exit_status.return_value = 0
@@ -707,6 +715,8 @@ class TestSSHConnector(TestCase):
         fake_getpass,
     ):
         fake_ssh = mock.MagicMock()
+        sudo_version_stdout = mock.MagicMock()
+        sudo_version_stdout.__iter__.return_value = ["Sudo version 1.9.14p2"]
         first_fake_stdout = mock.MagicMock()
         second_fake_stdout = mock.MagicMock()
         third_fake_stdout = mock.MagicMock()
@@ -715,6 +725,11 @@ class TestSSHConnector(TestCase):
         second_fake_stdout.__iter__.return_value = ["/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"]
 
         fake_ssh.exec_command.side_effect = [
+            (
+                mock.MagicMock(),
+                sudo_version_stdout,
+                mock.MagicMock(),
+            ),  # sudo-rs detection check
             (
                 mock.MagicMock(),
                 first_fake_stdout,
@@ -741,6 +756,7 @@ class TestSSHConnector(TestCase):
         host.connect()
 
         command = "echo Šablony"
+        sudo_version_stdout.channel.recv_exit_status.return_value = 0
         first_fake_stdout.channel.recv_exit_status.return_value = 1
         second_fake_stdout.channel.recv_exit_status.return_value = 0
         third_fake_stdout.channel.recv_exit_status.return_value = 0
@@ -789,7 +805,9 @@ class TestSSHConnector(TestCase):
         host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
 
         command = "echo hi"
-        return_values = [1, 0]  # return 0 on the second call
+        # First value is for the sudo-rs detection check (sudo --version),
+        # then the failed password-required command and the retry.
+        return_values = [0, 1, 0]
         fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
 
         out = host.run_shell_command(command, _sudo=True)
@@ -803,21 +821,24 @@ class TestSSHConnector(TestCase):
         )
 
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
-    @mock.patch("pyinfra.connectors.util.getpass")
-    def test_run_shell_command_retry_for_sudo_rs_password(
+    def test_run_shell_command_fails_with_sudo_rs(
         self,
-        fake_getpass,
         fake_ssh_client,
     ):
-        # sudo-rs (the Rust replacement, default in Ubuntu 25.10+) prints a different message
-        # when it cannot prompt non-interactively; the retry path should recognize it too.
-        fake_getpass.return_value = "PASSWORD"
-
+        # sudo-rs (the Rust replacement, default in Ubuntu 25.10+) is not supported;
+        # pyinfra should fail fast with a clear message.
         fake_ssh = mock.MagicMock()
         fake_stdin = mock.MagicMock()
-        fake_stdout = mock.MagicMock()
-        fake_stderr = ["sudo-rs: interactive authentication is required"]
-        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, fake_stderr
+
+        sudo_version_stdout = mock.MagicMock()
+        sudo_version_stdout.channel.recv_exit_status.return_value = 0
+        sudo_version_stdout.__iter__ = mock.Mock(return_value=iter(["sudo-rs 0.2.0"]))
+
+        fake_ssh.exec_command.return_value = (
+            fake_stdin,
+            sudo_version_stdout,
+            mock.MagicMock(),
+        )
 
         fake_ssh_client.return_value = fake_ssh
 
@@ -825,21 +846,11 @@ class TestSSHConnector(TestCase):
         state = State(inventory, Config())
         host = inventory.get_host("somehost")
         host.connect(state)
-        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
 
-        command = "echo hi"
-        return_values = [1, 0]  # return 0 on the second call
-        fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
+        with self.assertRaises(PyinfraError):
+            host.run_shell_command("echo hi", _sudo=True)
 
-        out = host.run_shell_command(command, _sudo=True)
-        assert len(out) == 2
-        assert out[0] is True
-        assert fake_getpass.called
-        fake_ssh.exec_command.assert_called_with(
-            "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
-            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
-            get_pty=False,
-        )
+        fake_ssh.exec_command.assert_any_call("sh -c 'sudo --version'", get_pty=False)
 
     # SSH file put/get tests
     #
@@ -907,6 +918,7 @@ class TestSSHConnector(TestCase):
                     ),
                     get_pty=False,
                 ),
+                mock.call("sh -c 'sudo --version'", get_pty=False),
                 mock.call(
                     (
                         "sudo -H -n -u ubuntu sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
@@ -1240,7 +1252,8 @@ class TestSSHConnector(TestCase):
         host.connect()
 
         stdout_mock = mock.MagicMock()
-        stdout_mock.channel.recv_exit_status.side_effect = [0, 1]
+        # First call is the sudo-rs detection check (sudo --version), then cp and rm.
+        stdout_mock.channel.recv_exit_status.side_effect = [0, 0, 1]
         fake_ssh_client().exec_command.return_value = (
             mock.MagicMock(),
             stdout_mock,
@@ -1262,6 +1275,7 @@ class TestSSHConnector(TestCase):
 
         fake_ssh_client().exec_command.assert_has_calls(
             [
+                mock.call("sh -c 'sudo --version'", get_pty=False),
                 mock.call(
                     (
                         "sudo -H -n -u ubuntu sh -c 'cp not-a-file "
