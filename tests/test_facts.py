@@ -12,7 +12,7 @@ from pyinfra.api.facts import ShortFactBase
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra_cli.util import json_encode
 
-from .util import FakeState, create_host, get_command_string
+from .util import FakeState, create_host, get_command_string, get_enum_map, parse_value
 
 # show full diff on json
 TestCase.maxDiff = None
@@ -60,7 +60,7 @@ def make_fact_tests(folder_name):
                 short_fact = fact
                 fact = fact.fact()
 
-            test_args = test_data.get("arg", [])
+            test_args = parse_value(test_data.get("arg", []), get_enum_map(fact.command))
             command = _make_command(fact.command, test_args)
 
             if "command" in test_data:

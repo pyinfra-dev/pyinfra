@@ -2,11 +2,15 @@ import copy
 import json
 import os
 import re
+from collections.abc import Callable
 from datetime import datetime, timezone
-from inspect import getcallargs, getfullargspec
+from enum import Enum
+from inspect import getcallargs, getfullargspec, signature
 from io import StringIO
 from os import path
 from pathlib import Path
+from types import UnionType
+from typing import Any, Dict, List, Set, Tuple, Union, get_args, get_type_hints, get_origin  # noqa: UP035
 from unittest.mock import patch
 
 from pyinfra.api import Config, Inventory
@@ -59,7 +63,31 @@ class FakeState:
         return "_tempfile_"
 
 
-def parse_value(value):
+AGGREGATES = {Dict, List, Set, Tuple, Union, UnionType, dict, list, set, tuple}  # noqa: UP006
+
+
+def get_enum_map(op: Callable[..., Any]) -> dict[str, type[Enum]]:
+    """
+    Returns a map from type name to type for all enum types used in `ops` parameters.
+    """
+    result: dict[str, type[Enum]] = {}
+    type_hints = get_type_hints(op)
+    for param in signature(op).parameters:
+        if param not in type_hints:
+            continue
+        to_do = [type_hints[param]]
+        while len(to_do) > 0:
+            the_type = to_do.pop(0)
+            origin = get_origin(the_type)
+            if (origin is not None) and (origin in AGGREGATES):
+                to_do.extend(get_args(the_type))
+            elif isinstance(the_type, type) and issubclass(the_type, Enum):
+                result[the_type.__name__] = the_type
+
+    return result
+
+
+def parse_value(value, enum_map: dict[str, type[Enum]] | None = None):
     """
     Convert JSON types to more complex Python types because JSON is lacking.
     """
@@ -69,17 +97,29 @@ def parse_value(value):
             return datetime.fromisoformat(value[9:])
         if value.startswith("path:"):
             return Path(value[5:])
+        if value.startswith("enum:"):
+            if len(pieces := value.split(":")) != 3:  # enum:<enum_type_name>:<value>
+                raise ValueError(f"invalid enum specifier: {value}")
+            try:
+                result = (enum_map or {})[pieces[1]](pieces[2])
+            except KeyError:
+                raise ValueError(f"enum '{pieces[1]}' not defined for '{value}'") from None
+            except ValueError:
+                raise ValueError(f"value '{pieces[2]}' not valid in '{value}'") from None
+            else:
+                return result
+
         if value.startswith("io:"):
             return StringIO(value[3:])
         return value
 
     if isinstance(value, list):
         if value and value[0] == "set:":
-            return set(parse_value(value) for value in value[1:])
-        return [parse_value(value) for value in value]
+            return set(parse_value(value, enum_map) for value in value[1:])
+        return [parse_value(value, enum_map) for value in value]
 
     if isinstance(value, dict):
-        return {key: parse_value(value) for key, value in value.items()}
+        return {key: parse_value(value, enum_map) for key, value in value.items()}
 
     return value
 

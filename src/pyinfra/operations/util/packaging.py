@@ -394,6 +394,12 @@ def ensure_yum_repo(
         repo_lines.append(f"type={type_}")
 
     if gpgkey:
+        for key_url in gpgkey.split():
+            parsed_key = urlparse(key_url)
+            if not parsed_key.scheme and not key_url.startswith("/"):
+                raise OperationValueError(
+                    f"gpgkey must be a valid URL or an absolute path, got: {key_url}"
+                )
         repo_lines.append(f"gpgkey={gpgkey}")
 
     repo_lines.append("")
@@ -401,4 +407,4 @@ def ensure_yum_repo(
     repo_file = StringIO(repo)
 
     # Ensure this is the file on the server
-    yield from files.put._inner(src=repo_file, dest=filename)
+    yield from files.put._inner(src=repo_file, dest=filename, mode="0644")

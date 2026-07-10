@@ -1,14 +1,7 @@
 {
-    "args": ["some_boolean", "on"],
-    "kwargs": {
-        "persistent":true
-    },
-    "facts": {
-        "selinux.SEBoolean": {
-            "boolean=some_boolean": "on"
-        }
-    },
-    "commands": [
-    ],
+    "args": ["some_boolean", "enum:Boolean:on"],
+    "kwargs": {"persistent": true},
+    "facts": {"selinux.SEBoolean": {"boolean=some_boolean": "on"}},
+    "commands": [],
     "noop_description": "boolean 'some_boolean' already had the value 'on'"
 }

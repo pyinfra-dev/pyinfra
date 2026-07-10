@@ -4,7 +4,7 @@
         "baseurl": "http://baseurl",
         "description": "description",
         "gpgcheck": false,
-        "gpgkey": "test"
+        "gpgkey": "https://test/key"
     },
     "facts": {
         "files.File": {
@@ -17,7 +17,7 @@
     },
     "commands": [[
         "upload",
-        "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ngpgkey=test\n",
-            "/etc/yum.repos.d/somerepo.repo"
-    ]]
+        "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ngpgkey=https://test/key\n",
+        "/etc/yum.repos.d/somerepo.repo"
+    ], "chmod 644 /etc/yum.repos.d/somerepo.repo"]
 }
