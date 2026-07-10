@@ -6,7 +6,7 @@ import re
 from collections.abc import Iterable
 
 from pyinfra import host
-from pyinfra.api import QuoteString, StringCommand, OperationError, operation
+from pyinfra.api import QuoteString, StringCommand, OperationError, OperationValueError, operation
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus
 from pyinfra.facts.files import FindInFile, Directory
@@ -33,10 +33,10 @@ def _make_live_command(op: str, services: Iterable):
     )
 
 
-def _make_set_command(services: list, curr_rxs: dict, wanted_rx: str):
+def _make_rx_command(services: list, current_rxs: dict, wanted_rx: str):
     """
     + services: the services to be assigned a specific prescription.
-    + curr_rxs: the current prescriptions for all services (from the S6SetStatus fact).
+    + current_rxs: the current prescriptions for all services (from the S6SetStatus fact).
     + wanted_rx: the prescription to assign to each service.
     """
     # services that need their prescription changed (not all of them; those that are already in the
@@ -45,7 +45,7 @@ def _make_set_command(services: list, curr_rxs: dict, wanted_rx: str):
 
     for srv in services:
         try:
-            if curr_rxs[srv] != wanted_rx:
+            if current_rxs[srv] != wanted_rx:
                 service_subset.append(srv)
         except KeyError:
             service_subset.append(srv)
@@ -63,6 +63,8 @@ def _make_set_command(services: list, curr_rxs: dict, wanted_rx: str):
             f"s6 set {op} " + _make_format_fields(len(service_subset)),
             *map(QuoteString, service_subset),
         )
+    else:
+        host.noop(f"all services given ({services}) are in the desired prescription ({wanted_rx})")
 
 
 # define multiple low level non-idempotent operations, then implement a couple higher level operations which implement idempotency logic.
@@ -82,6 +84,60 @@ def set_delete(names: str | Iterable[str]):
     yield make_formatted_string_command(
         "s6 set delete " + _make_format_fields(len(names)), *map(QuoteString, names)
     )
+
+
+def set_prescribe(prescriptions: dict, name: str = "current", force_prescriptions: bool = True):
+    """Change the prescriptions for a set.
+
+    + prescriptions: map of service -> prescription, which is one of "always", "active", "usable", "masked"
+    + name: name of the set to change prescriptions for.
+    + force_prescriptions: whether to ensure there are no other services in the set or to only modify the prescriptions of the specified services, leaving others untouched.
+
+    The prescriptions are not saved. They remain in the current working set.
+    """
+
+    _working_rx_set = builtins.set(prescriptions.values())
+    if not _working_rx_set <= {"always", "active", "usable", "masked"}:
+        raise OperationValueError(
+            'prescriptions must be one of "always", "active", "usable", or "masked"'
+        )
+
+    # bin services by desired prescription
+    service_bins = {
+        "wanted_always": [],
+        "wanted_active": [],
+        "wanted_usable": [],
+        "wanted_masked": [],
+    }
+
+    if "always" in _working_rx_set:
+        service_bins["wanted_always"].extend(
+            [srv for srv in prescriptions if prescriptions[srv] == "always"]
+        )
+    if "active" in _working_rx_set:
+        service_bins["wanted_active"].extend(
+            [srv for srv in prescriptions if prescriptions[srv] == "active"]
+        )
+    if "usable" in _working_rx_set:
+        service_bins["wanted_usable"].extend(
+            [srv for srv in prescriptions if prescriptions[srv] == "usable"]
+        )
+    if "masked" in _working_rx_set:
+        service_bins["wanted_masked"].extend(
+            [srv for srv in prescriptions if prescriptions[srv] == "masked"]
+        )
+
+    current_rxs = host.get_fact(S6SetStatus, name)
+
+    if force_prescriptions:
+        # mask all services not present in `prescriptions` arg
+        service_bins["wanted_masked"].extend(
+            [srv for srv in current_rxs if srv not in prescriptions]
+        )
+
+    for wanted_rx, service_set in service_bins.items():
+        # TODO noop could be from some, but not all
+        yield from _make_rx_command(service_set, current_rxs, wanted_rx)
 
 
 # maybe it is idempotent?
@@ -147,49 +203,98 @@ def live_install():
     yield StringCommand("s6 live install")
 
 
-# TODO for now, no support for custom repository; only the s6-frontend one. but should get this at
-# some point, as it allows for user-managed (i.e. non-root) services
+# TODO support for repositories other than the one in s6-frontend.conf (e.g. a user repository for
+# user services)
 @operation(
     is_idempotent=False,
-    idempotent_notice="If `commit=True`, the operation is stateless due to an unconditional `s6 set check -F` and `s6 set commit`. Otherwise it is idempotent.",
+    # TODO verify
+    idempotent_notice="If `commit=True`, the operation is stateless due to an unconditional `s6 set check -F` and `s6 set commit`. `force_prescriptions=False` also breaks idempotency. Otherwise it is idempotent.",
 )
 def set(
     the_set: str = "current",
     prescriptions: dict[str] | None = None,
-    enforce_prescriptions: bool = True,
+    force_prescriptions: bool = True,
     present: bool = True,
-    save: bool = False,
-    save_name: str | None = None,
+    do_save: bool = False,
+    save_as: str | None = None,
     force_save: bool = False,
-    backup: bool = True,
+    force_backup: bool = True,
     do_commit: bool = True,
     # TODO configurable s6-frontend.conf location
 ):
     """
     Manage sets in a repository.
 
-    + set: name of the set to manage.
+    + the_set: name of the set to manage.
     + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only.
-    + enforce_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be removed)
+    + force_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be removed)
     + present: whether the set should be present in the repository.
-    + save: whether to save the set to the repository.
-    + save_name: name for the saved set. if `None`, the set will be saved under the same name as it was loaded from. saving to the set "current" is an error.
+    + do_save: whether to save the set to the repository.
+    + save_as: name for the saved set. required if `do_save` is True.
     + force_save: whether to overwrite existing sets.
-    + backup: whether to backup overwritten sets by appending the timestamp to the directory name. only works with `force_save`
-    + commit: whether to commit the current(ly loaded) set. Delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
+    + force_backup: whether to backup overwritten sets by appending the timestamp to the directory name. only works with `force_save`.
+    + do_commit: whether to commit the current(ly loaded) set. delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
 
     """
 
-    # TODO shouldn't need S6SetStatus if only saving current working set?
+    if present:
+        noops = []
+        if prescriptions:
+            # TODO noop here is when all 4 internal yields to set_prescribe are noop
+            # idempotency handles in set_prescribe
+            if force_prescriptions:
+                yield from set_prescribe._inner(prescriptions, the_set, True)
+            # TODO non-idempotent?
+            else:
+                yield from set_prescribe._inner(prescriptions, the_set, False)
+        if do_save:
+            if not save_as:
+                raise OperationValueError(
+                    "saving a set requires a name to save it under (do_save->save_as)"
+                )
+            # when the current set matches an existing named set exactly, noop
+            if not host.get_fact(S6SetStatus, save_as) == host.get_fact(S6SetStatus, "current"):
+                if force_save:
+                    if force_backup:
+                        yield from set_save._inner(save_as, True, True)
+                    else:
+                        yield from set_save._inner(save_as, True, False)
+                else:
+                    yield from set_save._inner(save_as, False, False)
+            else:
+                noops.append("save")
+        else:
+            noops.append("save")
+        # non-idempotent
+        if do_commit:
+            yield from set_commit._inner()
+        else:
+            noops.append("commit")
 
-    if save:
-        if save_name is None:
+        # "global" noop only occurs if all 3 branches are noop
+        if noops == ["prescribe", "save", "commit"]:
+            host.noop(
+                "at least one of the following occurred, depending on which function arguments were passed: the set matches the given prescriptions exactly, there is a saved set with the exact name and prescriptions as what would be saved, or a commit was not requested"
+            )
+
+    # present=False
+    else:
+        if host.get_fact(S6SetStatus, the_set):
+            yield make_formatted_string_command("s6 set delete {0}", QuoteString(the_set))
+        else:
+            host.noop(f'the set "{the_set}" already doesn\'t exist')
+
+    ##########
+
+    # TODO shouldn't need S6SetStatus if only saving current working set?
+    if do_save:
+        if save_as is None:
             if the_set == "current":
                 raise ValueError(
                     'cannot save to the set named "current", try changing the_set parameter to something else'
                 )
-            save_name = the_set
-        elif save_name == "current":
+            save_as = the_set
+        elif save_as == "current":
             raise ValueError('cannot save to the set named "current"')
 
     if prescriptions:
@@ -205,23 +310,23 @@ def set(
 
     if present:
         # prescription of every service in the set
-        curr_rxs = host.get_fact(S6SetStatus, set=the_set)
-        if enforce_prescriptions:
+        current_rxs = host.get_fact(S6SetStatus, set=the_set)
+        if force_prescriptions:
             # mask all services not present in `prescriptions` arg
-            wanted_masked.extend([srv for srv in curr_rxs if srv not in prescriptions])
+            wanted_masked.extend([srv for srv in current_rxs if srv not in prescriptions])
 
-        if prescriptions and prescriptions != curr_rxs:
+        if prescriptions and prescriptions != current_rxs:
             if the_set != "current":
                 yield make_formatted_string_command("s6 set load {0}", QuoteString(the_set))
 
             if wanted_always:
-                yield from _make_set_command(wanted_always, curr_rxs, "always")
+                yield from _make_rx_command(wanted_always, current_rxs, "always")
             if wanted_active:
-                yield from _make_set_command(wanted_active, curr_rxs, "active")
+                yield from _make_rx_command(wanted_active, current_rxs, "active")
             if wanted_usable:
-                yield from _make_set_command(wanted_usable, curr_rxs, "usable")
+                yield from _make_rx_command(wanted_usable, current_rxs, "usable")
             if wanted_masked:
-                yield from _make_set_command(wanted_masked, curr_rxs, "masked")
+                yield from _make_rx_command(wanted_masked, current_rxs, "masked")
 
         elif prescriptions and not do_commit:
             host.noop(
