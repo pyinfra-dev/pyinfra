@@ -66,9 +66,12 @@ scripts/dev-format.sh
 Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 standard. PRs that follow this will be rebased, PRs that do not will be squashed.
 
-The following scopes are allowed: `api`, `cli`, `operations`, `facts`, `connectors`. With the last 
-three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
+The following scopes are (optionally) allowed: `api`, `cli`, `deps`, `operations`, `facts`, `connectors`. 
+With the last three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
 
+When creating a PR, the last commit message is typically used as the PR title. When merging PRs, 
+we typically squash all commits into a single commit, and use the PR title as the commit message.
+For this reason, PR titles are linted to check if they follow our commit message conventions.
 
 ### Tests
 
