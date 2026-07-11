@@ -1,3 +1,7 @@
+# bug on windows runner, files.Directory expects path=/etc/s6\\repo
+require_platform:
+  - "Linux"
+  - "Darwin"
 args:
   - myset
 kwargs:
