@@ -1,0 +1,22 @@
+args:
+  - current
+kwargs:
+  prescriptions:
+      nftables: "active"
+      mysqld: "masked"
+      tipidee: "usable"
+  do_save: true
+  save_as: "default"
+  do_commit: false
+facts:
+  s6.S6SetStatus:
+    repository=None, set=current:
+      nftables: "active"
+      mysqld: "masked"
+      tipidee: "usable"
+    repository=None, set=default:
+      nftables: "active"
+      mysqld: "masked"
+      tipidee: "usable"
+commands: []
+noop_description: the set "current" already has the desired prescriptions and matches with the existing set "default"

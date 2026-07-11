@@ -1,9 +1,5 @@
-args:
-  - default
-facts:
-  s6.S6SetStatus:
-    repository=None, set=default:
-      tipidee: "active"
+kwargs:
+  do_commit: true
 commands:
   - s6 set check -F
   - s6 set commit

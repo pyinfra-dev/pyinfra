@@ -3,7 +3,7 @@ args:
 kwargs:
   prescriptions:
     tipidee: "usable"
-  enforce_prescriptions: true
+  force_prescriptions: true
 facts:
   s6.S6SetStatus:
     repository=None, set=default:

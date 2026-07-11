@@ -4,7 +4,7 @@ kwargs:
   prescriptions:
     tipidee: "active"
   force_save: true
-  backup: true
+  force_backup: true
 facts:
   files.FindInFile:
     'extended_regex=True, interpolate_variables=False, path=/etc/s6-frontend.conf, pattern=repodir\\s*=':
