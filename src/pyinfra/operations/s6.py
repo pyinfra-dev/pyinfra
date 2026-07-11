@@ -3,14 +3,13 @@
 import os
 import builtins
 import re
-from collections.abc import Iterable
+from collections.abc import Sequence
 
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, OperationError, OperationValueError, operation
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus
 from pyinfra.facts.files import FindInFile, Directory
-from pyinfra.operations import files
 from pyinfra.operations.files import _raise_or_remove_invalid_path
 
 # https://skarnet.org/software/execline/envfile.html#syntax
@@ -22,7 +21,7 @@ def _make_format_fields(n):
     return " ".join([f"{{{i}}}" for i in range(n)])
 
 
-def _make_live_command(op: str, services: Iterable):
+def _make_live_command(op: str, services: Sequence):
     """
     + op: the operation, e.g. "start", "stop", "restart".
     + services: the service(s) to operate on.
@@ -88,7 +87,7 @@ def _make_rx_commands(prescriptions: dict, name: str = "current", force_prescrip
         )
 
     # bin services by desired prescription
-    service_bins = {
+    service_bins: dict[str, list[str]] = {
         "wanted_always": [],
         "wanted_active": [],
         "wanted_usable": [],
@@ -127,7 +126,7 @@ def _make_rx_commands(prescriptions: dict, name: str = "current", force_prescrip
 
 
 @operation(is_idempotent=False)
-def set_delete(names: str | Iterable[str]):
+def set_delete(names: str | Sequence[str]):
     """Delete sets.
 
     + names: name or list of names of the sets to delete.
@@ -217,7 +216,7 @@ def live_install():
 )
 def set(
     the_set: str = "current",
-    prescriptions: dict[str] | None = None,
+    prescriptions: dict[str, str] | None = None,
     force_prescriptions: bool = True,
     present: bool = True,
     do_save: bool = False,
@@ -284,7 +283,9 @@ def set(
             if prescriptions and not do_save:
                 host.noop('the set "current" already has the desired prescriptions')
             elif do_save:
-                host.noop(f'the set "current" already has the desired prescriptions and matches with the existing set "{save_as}"')
+                host.noop(
+                    f'the set "current" already has the desired prescriptions and matches with the existing set "{save_as}"'
+                )
             else:
                 host.noop(f'the set "{the_set}" already exists')
 
@@ -301,7 +302,7 @@ def set(
     idempotent_notice="It is not idempotent only when at least one of `commit_set` or `install_set` are `True`.",
 )
 def service(
-    service: str | Iterable[str],
+    service: str | Sequence[str],
     running: bool | None = None,
     restarted: bool | None = None,
     reloaded: bool | None = None,
