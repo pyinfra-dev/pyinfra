@@ -331,7 +331,7 @@ def service(
     + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either "active" or "always"
     + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either "usable" or "masked"
     + commit_set: whether to commit the current(ly loaded) set. Delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
-    + install_set: whether to install the compiled service database (the result of a commit operation) into the live state. This is analagous to systemd's daemon-reload, but not completely: systemd recognizes changes to service files after a reboot, but s6 does not. It only recognizes changes when an s6 live install command is executed. Live state replacement and enablement/disablement of services are coupled in s6.
+    + install_set: whether to install the compiled service database (the result of a commit operation) into the live state. This is analogous to systemd's daemon-reload, but not completely: systemd recognizes changes to service files after a reboot, but s6 does not. It only recognizes changes when an s6 live install command is executed. Live state replacement and enablement/disablement of services are coupled in s6.
 
     Specifying multiple services results in fewer commands executed, especially in the case of
     changing the enabled status of the service, where the service database is recompiled per
