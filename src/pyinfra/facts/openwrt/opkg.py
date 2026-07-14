@@ -33,7 +33,9 @@ class OpkgPkgUpgradeInfo(NamedTuple):
     installed: str
     available: str
 
+
 OpkgPkgUpgradeMap = dict[str, OpkgPkgUpgradeInfo]
+
 
 class OpkgConfInfo(NamedTuple):
     paths: dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
@@ -46,6 +48,7 @@ class OpkgFeedInfo(NamedTuple):
     url: str  # url for the feed
     fmt: str  # format of the feed, e.g. "src/gz"
     kind: str  # whether it comes from the 'distribution' or is 'custom'
+
 
 OpkgFeedMap = dict[str, OpkgFeedInfo]
 
@@ -164,7 +167,7 @@ class OpkgFeeds(FactBase[OpkgFeedMap]):
         return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
 
     @override
-    def process(self, output:list[str]) -> OpkgFeedMap:
+    def process(self, output: list[str]) -> OpkgFeedMap:
         feeds, kind = {}, "distribution"
         for line in output:
             match = self.regex.match(line)
