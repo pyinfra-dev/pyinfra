@@ -1,1 +1,0 @@
-{"args": [], "facts": {"opkg.OpkgPackages": {}}, "commands": ["opkg update"]}

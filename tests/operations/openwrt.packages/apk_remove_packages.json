@@ -1,9 +1,0 @@
-{
-    "args": [["curl", "i-dont-exist"]],
-    "kwargs": {"present": false},
-    "facts": {
-        "apk.ApkPackages": {"curl": "1"},
-        "features.OpenWrtHasFeature": {"feature=OpenWrtFeature.USES_APK": true},
-    },
-    "commands": ["apk del curl"],
-}

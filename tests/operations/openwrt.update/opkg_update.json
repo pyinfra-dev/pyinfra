@@ -1,7 +1,0 @@
-{
-    "args": [],
-    "facts": {
-        "features.OpenWrtHasFeature": {"feature=OpenWrtFeature.USES_APK": false}
-    },
-    "commands": ["opkg update"]
-}

@@ -1,9 +1,0 @@
-{
-    "args": [null],
-    "facts": {
-        "opkg.OpkgPackages": {},
-        "features.OpenWrtHasFeature": {"feature=OpenWrtFeature.USES_APK": false}
-    },
-    "commands": [],
-    "noop_description": "empty package list provided to openwrt.packages"
-}
