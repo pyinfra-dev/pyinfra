@@ -15,6 +15,8 @@ note: this does _not_ show up in the online documentation; the file header in __
 and thus the note above is repeated in each fact.
 """
 
+from __future__ import annotations
+
 import re
 from typing import NamedTuple
 
@@ -22,13 +24,16 @@ from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api import FactBase
-from pyinfra.facts.util.packaging import parse_packages
+from pyinfra.facts.util.packaging import PackageVersionDict, parse_packages
+
+OpkgArchInstallInfo = dict[str, int]
 
 
 class OpkgPkgUpgradeInfo(NamedTuple):
     installed: str
     available: str
 
+OpkgPkgUpgradeMap = dict[str, OpkgPkgUpgradeInfo]
 
 class OpkgConfInfo(NamedTuple):
     paths: dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
@@ -42,14 +47,16 @@ class OpkgFeedInfo(NamedTuple):
     fmt: str  # format of the feed, e.g. "src/gz"
     kind: str  # whether it comes from the 'distribution' or is 'custom'
 
+OpkgFeedMap = dict[str, OpkgFeedInfo]
 
-class OpkgConf(FactBase):
+
+class OpkgConf(FactBase[OpkgConfInfo]):
     """
     Returns a ``NamedTuple`` with the current ``opkg`` configuration:
 
     .. code:: python
 
-        ConfInfo(
+        OpkgConfInfo(
             paths = {
                 "root": "/",
                 "ram": "/tmp",
@@ -91,7 +98,7 @@ class OpkgConf(FactBase):
 
     @override
     @staticmethod
-    def default():
+    def default() -> OpkgConfInfo:
         return OpkgConfInfo({}, "", {}, {})
 
     @override
@@ -99,7 +106,7 @@ class OpkgConf(FactBase):
         return "cat /etc/opkg.conf"
 
     @override
-    def process(self, output):
+    def process(self, output: list[str]) -> OpkgConfInfo:
         dest, lists_dir, options, arch_cfg = {}, "", {}, {}
         for line in output:
             match = self.regex.match(line)
@@ -118,7 +125,7 @@ class OpkgConf(FactBase):
         return OpkgConfInfo(dest, lists_dir, options, arch_cfg)
 
 
-class OpkgFeeds(FactBase):
+class OpkgFeeds(FactBase[OpkgFeedMap]):
     """
     Returns a dictionary containing the information for the distribution-provided and
     custom `opkg` feeds:
@@ -126,12 +133,12 @@ class OpkgFeeds(FactBase):
     .. code:: python
 
         {
-         'openwrt_base': FeedInfo(url='http://downloads ... /i386_pentium/base', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_core': FeedInfo(url='http://downloads ... /x86/geode/packages', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_luci': FeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_packages': FeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_routing': FeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_telephony': FeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution') # noqa: E501
+         'openwrt_base': OpkgFeedInfo(url='http://downloads ... /i386_pentium/base', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_core': OpkgFeedInfo(url='http://downloads ... /x86/geode/packages', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_luci': OpkgFeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_packages': OpkgFeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_routing': OpkgFeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_telephony': OpkgFeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution') # noqa: E501
         }
 
     .. note::
@@ -142,7 +149,11 @@ class OpkgFeeds(FactBase):
     regex = re.compile(
         r"^(CUSTOM)|(?:\s*(?P<fmt>[\w/]+)\s+(?P<name>[\w]+)\s+(?P<url>[\w./:]+))?(?:\s*#.*)?$"
     )
-    default = dict
+
+    @override
+    @staticmethod
+    def default() -> OpkgFeedMap:
+        return OpkgFeedMap({})
 
     @override
     def requires_command(self) -> str:
@@ -153,7 +164,7 @@ class OpkgFeeds(FactBase):
         return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
 
     @override
-    def process(self, output):
+    def process(self, output:list[str]) -> OpkgFeedMap:
         feeds, kind = {}, "distribution"
         for line in output:
             match = self.regex.match(line)
@@ -170,7 +181,7 @@ class OpkgFeeds(FactBase):
         return feeds
 
 
-class OpkgInstallableArchitectures(FactBase):
+class OpkgInstallableArchitectures(FactBase[OpkgArchInstallInfo]):
     """
     Returns a dictionary containing the currently installable architectures for this system along
     with their priority:
@@ -200,7 +211,7 @@ class OpkgInstallableArchitectures(FactBase):
         return "opkg print-architecture"
 
     @override
-    def process(self, output):
+    def process(self, output: list[str]) -> OpkgArchInstallInfo:
         arch_list = {}
         for line in output:
             match = self.regex.match(line)
@@ -213,7 +224,7 @@ class OpkgInstallableArchitectures(FactBase):
         return arch_list
 
 
-class OpkgPackages(FactBase):
+class OpkgPackages(FactBase[PackageVersionDict]):
     """
     Returns a dictionary of installed `opkg` packages:
 
@@ -241,11 +252,11 @@ class OpkgPackages(FactBase):
         return "opkg list-installed"
 
     @override
-    def process(self, output):
+    def process(self, output: list[str]) -> PackageVersionDict:
         return parse_packages(self.regex, sorted(output))
 
 
-class OpkgUpgradeablePackages(FactBase):
+class OpkgUpgradeablePackages(FactBase[OpkgPkgUpgradeMap]):
     """
     Returns a dict of installed and upgradable `opkg` packages:
 
@@ -262,8 +273,11 @@ class OpkgUpgradeablePackages(FactBase):
     """
 
     regex = re.compile(r"^([a-zA-Z0-9][\w\-.]*)\s-\s([\w\-.]+)\s-\s([\w\-.]+)")
-    default = dict
-    use_default_on_error = True
+
+    @override
+    @staticmethod
+    def default() -> OpkgPkgUpgradeMap:
+        return OpkgPkgUpgradeMap({})
 
     @override
     def requires_command(self) -> str:
@@ -274,7 +288,7 @@ class OpkgUpgradeablePackages(FactBase):
         return "opkg list-upgradable"  # yes, really spelled that way
 
     @override
-    def process(self, output):
+    def process(self, output: list[str]) -> OpkgPkgUpgradeMap:
         result = {}
         for line in output:
             match = self.regex.match(line)
