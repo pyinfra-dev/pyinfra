@@ -2,7 +2,7 @@
     "arg": ["has_dsa"],
     "command": "echo has_dsa && cat /etc/openwrt_release",
     "output": [
-        "uses_apk",
+        "has_dsa",
         "DISTRIB_ID='OpenWrt'",
         "DISTRIB_RELEASE='19.07.2'",
         "DISTRIB_REVISION='r10947-65030d81f3'",
