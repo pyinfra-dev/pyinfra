@@ -37,7 +37,7 @@ _update = update
 
 @operation()
 def packages(
-    packages: str | list[str] = "",
+    packages: str | list[str] | None = None,
     present: bool = True,
     latest: bool = False,
     update: bool = True,
@@ -74,13 +74,11 @@ def packages(
       as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
       OpenWrt uses [apk](../operations/apk.md)
     """
-    if str(packages) == "" or (
-        isinstance(packages, list) and (len(packages) < 1 or all(len(p) < 1 for p in packages))
-    ):
+    pkg_list = [packages] if isinstance(packages, str) else (packages or [])
+    if (len(pkg_list) < 1) or any((len(p) < 1) or (p is None) for p in pkg_list):
         host.noop("empty or invalid package list provided to openwrt.opkg.packages")
         return
 
-    pkg_list = packages if isinstance(packages, list) else [packages]
     have_equals = ",".join([pkg.split(EQUALS)[0] for pkg in pkg_list if EQUALS in pkg])
     if len(have_equals) > 0:
         raise ValueError(f"opkg does not support version pinning but found for: '{have_equals}'")

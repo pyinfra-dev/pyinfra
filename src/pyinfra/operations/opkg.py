@@ -13,7 +13,7 @@ from pyinfra.operations.openwrt.opkg import packages as openwrt_packages, update
 
 @operation(is_deprecated=True, deprecated_for="openwrt.opkg.packages or openwrt.packages")
 def packages(
-    packages: str | list[str] = "",
+    packages: str | list[str] | None = None,
     present: bool = True,
     latest: bool = False,
     update: bool = True,

@@ -1,0 +1,8 @@
+{
+    "args": ["curl"],
+    "facts": {
+        "opkg.OpkgPackages": {},
+        "features.OpenWrtHasFeature": {"feature=OpenWrtFeature.USES_APK": false}
+    },
+    "commands": ["opkg install curl"]
+}

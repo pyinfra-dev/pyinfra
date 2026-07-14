@@ -1,8 +1,8 @@
 {
-    "args": [["curl", "wget"]],
+    "args": ["curl"],
     "facts": {
         "apk.ApkPackages": {},
         "features.OpenWrtHasFeature": {"feature=OpenWrtFeature.USES_APK": true}
     },
-    "commands": ["apk add curl wget"]
+    "commands": ["apk add curl"]
 }

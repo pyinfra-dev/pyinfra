@@ -1,8 +1,10 @@
 {
-    "args": [["curl", "wget"]],
+    "args": [null],
     "facts": {
         "apk.ApkPackages": {},
         "features.OpenWrtHasFeature": {"feature=OpenWrtFeature.USES_APK": true}
     },
-    "commands": ["apk add curl wget"]
+    "commands": [],
+    "noop_description": "empty package list provided to openwrt.packages"
+
 }

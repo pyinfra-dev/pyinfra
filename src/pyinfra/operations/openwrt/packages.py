@@ -46,7 +46,7 @@ def update():
 
 @operation()
 def packages(
-    packages: str | list[str] = "",
+    packages: str | list[str] | None = None,
     present: bool = True,
     latest: bool = False,
     update: bool = False,
@@ -76,6 +76,11 @@ def packages(
             name="Ensure we have the latest version of Vim"
         )
     """
+    packages = [packages] if isinstance(packages, str) else (packages or [])
+    if (len(packages) < 1) or any((len(p) < 1) or (p is None) for p in packages):
+        host.noop("empty package list provided to openwrt.packages")
+        return
+
     if host.get_fact(OpenWrtHasFeature, feature=OpenWrtFeature.USES_APK):
         yield from apk.packages._inner(  # noqa: SLF001
             packages=packages, latest=latest, update=update, present=present
