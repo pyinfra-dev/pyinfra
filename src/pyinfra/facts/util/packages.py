@@ -11,7 +11,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 
 
 class PackageStatus(Enum):
@@ -60,14 +59,24 @@ class PackageInfo:
     def installed_version(self) -> str | None:
         return self.installed_versions[-1] if self.installed_versions else None
 
-    def to_json(self) -> dict[str, Any]:
-        """JSON-friendly form, used by ``json_encode`` for fact output and tests."""
-        return {
-            "name": self.name,
-            "installed_versions": list(self.installed_versions),
-            "available_version": self.available_version,
-            "status": self.status.value,
-        }
+
+def _package_info_from_value(value: PackageInfo | dict) -> PackageInfo:
+    """Normalize a :class:`PackageInfo` or dict-shaped value into a real instance.
+
+    This lets callers (and tests that supply plain JSON fact fixtures) pass
+    dict-like package descriptions without requiring every consumer to handle
+    the conversion themselves.
+    """
+    if isinstance(value, PackageInfo):
+        return value
+    if isinstance(value, dict):
+        return PackageInfo(
+            name=value["name"],
+            installed_versions=tuple(value.get("installed_versions", ())),
+            available_version=value.get("available_version"),
+            status=PackageStatus(value.get("status", "installed")),
+        )
+    raise TypeError(f"Cannot normalize {value!r} to PackageInfo")
 
 
 def build_package_map(

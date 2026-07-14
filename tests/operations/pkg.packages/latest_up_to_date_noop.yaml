@@ -4,9 +4,8 @@ kwargs:
   latest: true
 facts:
   pkg.PkgPackages:
-    - packageinfo:
-        name: vim
-        installed_versions: ["9.0"]
+    - name: vim
+      installed_versions: ["9.0"]
   server.Which:
     command=pkg: /usr/sbin/pkg
   files.File:

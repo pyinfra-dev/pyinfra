@@ -1,3 +1,5 @@
+import json
+from dataclasses import asdict
 from unittest import TestCase
 
 from pyinfra.facts.util.packages import (
@@ -6,6 +8,7 @@ from pyinfra.facts.util.packages import (
     _version_sort_key,
     build_package_map,
 )
+from pyinfra_cli.util import json_encode
 
 
 class TestVersionSortKey(TestCase):
@@ -120,11 +123,17 @@ class TestBuildPackageMap(TestCase):
         assert info.installed_versions == ("1.2", "1.9", "1.10")
         assert info.installed_version == "1.10"
 
-    def test_to_json_round_trip(self):
+    def test_json_encode_round_trip(self):
         (info,) = build_package_map({"vim": {"9.0"}}, upgradeable={"vim": "9.1"})
-        assert info.to_json() == {
+        assert json.loads(json.dumps(info, default=json_encode)) == {
             "name": "vim",
             "installed_versions": ["9.0"],
             "available_version": "9.1",
             "status": "upgradeable",
         }
+
+    def test_asdict_uses_enum(self):
+        (info,) = build_package_map({"vim": {"9.0"}}, upgradeable={"vim": "9.1"})
+        data = asdict(info)
+        assert data["name"] == "vim"
+        assert data["status"] == PackageStatus.UPGRADEABLE

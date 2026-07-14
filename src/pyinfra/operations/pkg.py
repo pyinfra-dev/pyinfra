@@ -9,7 +9,7 @@ from pyinfra.api import operation
 from pyinfra.facts.files import File
 from pyinfra.facts.pkg import PkgPackages
 from pyinfra.facts.server import Arch, Os, OsVersion, Which
-from pyinfra.facts.util.packages import PackageStatus
+from pyinfra.facts.util.packages import PackageStatus, _package_info_from_value
 
 from .util.packaging import ensure_packages
 
@@ -43,9 +43,9 @@ def upgrade():
 
     """
 
-    if not any(
-        package.status is PackageStatus.UPGRADEABLE for package in host.get_fact(PkgPackages)
-    ):
+    current_packages = [_package_info_from_value(package) for package in host.get_fact(PkgPackages)]
+
+    if not any(package.status is PackageStatus.UPGRADEABLE for package in current_packages):
         host.noop("all packages are up to date")
         return
 
@@ -103,13 +103,12 @@ def packages(
     if pkg_path:
         install_command = f"PKG_PATH={pkg_path} {install_command}"
 
-    current_packages = host.get_fact(PkgPackages)
+    current_packages = [_package_info_from_value(package) for package in host.get_fact(PkgPackages)]
 
     yield from ensure_packages(
         host,
         packages,
-        # list() so the FakeFact list wrapper used in tests also normalizes
-        list(current_packages),
+        current_packages,
         present,
         install_command=install_command,
         uninstall_command=uninstall_command,

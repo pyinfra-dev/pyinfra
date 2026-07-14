@@ -8,7 +8,7 @@
         "server.OsVersion": "os_version",
         "server.Arch": "arch",
         "pkg.PkgPackages": [
-            {"packageinfo": {"name": "py-pip", "installed_versions": ["20.1.1"]}}
+            {"name": "py-pip", "installed_versions": ["20.1.1"]}
         ],
         "server.Which": {
             "command=pkg": "/bin/pkg"

@@ -1,6 +1,8 @@
 import os
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from enum import Enum
 from io import StringIO
 from unittest import TestCase
 
@@ -26,6 +28,30 @@ class TestCliUtil(TestCase):
 
     def test_json_encode_set(self):
         assert json_encode({1, 2, 3}) == [1, 2, 3]
+
+    def test_json_encode_enum(self):
+        class Color(Enum):
+            RED = "red"
+
+        assert json_encode(Color.RED) == "red"
+
+    def test_json_encode_dataclass(self):
+        @dataclass
+        class Point:
+            x: int
+            y: int
+
+        assert json_encode(Point(1, 2)) == {"x": 1, "y": 2}
+
+    def test_json_encode_dataclass_prefers_to_json(self):
+        @dataclass
+        class WithCustomJson:
+            value: int
+
+            def to_json(self):
+                return {"custom": self.value}
+
+        assert json_encode(WithCustomJson(1)) == {"custom": 1}
 
     def test_setup_no_module(self):
         with self.assertRaises(CliError) as context:

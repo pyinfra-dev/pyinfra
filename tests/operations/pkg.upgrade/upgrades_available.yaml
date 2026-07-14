@@ -1,12 +1,10 @@
 facts:
   pkg.PkgPackages:
-    - packageinfo:
-        name: vim
-        installed_versions: ["9.0"]
-        available_version: "9.1"
-        status: upgradeable
-    - packageinfo:
-        name: git
-        installed_versions: ["2.40"]
+    - name: vim
+      installed_versions: ["9.0"]
+      available_version: "9.1"
+      status: upgradeable
+    - name: git
+      installed_versions: ["2.40"]
 commands:
   - pkg upgrade -y
