@@ -9,7 +9,7 @@ from pyinfra.api import operation
 from pyinfra.facts.files import File
 from pyinfra.facts.pkg import PkgPackages
 from pyinfra.facts.server import Arch, Os, OsVersion, Which
-from pyinfra.facts.util.packages import PackageStatus, _package_info_from_value
+from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 
 from .util.packaging import ensure_packages
 
@@ -43,7 +43,10 @@ def upgrade():
 
     """
 
-    current_packages = [_package_info_from_value(package) for package in host.get_fact(PkgPackages)]
+    current_packages = [
+        PackageInfo.from_dict(package) if isinstance(package, dict) else package
+        for package in host.get_fact(PkgPackages)
+    ]
 
     if not any(package.status is PackageStatus.UPGRADEABLE for package in current_packages):
         host.noop("all packages are up to date")
@@ -103,7 +106,10 @@ def packages(
     if pkg_path:
         install_command = f"PKG_PATH={pkg_path} {install_command}"
 
-    current_packages = [_package_info_from_value(package) for package in host.get_fact(PkgPackages)]
+    current_packages = [
+        PackageInfo.from_dict(package) if isinstance(package, dict) else package
+        for package in host.get_fact(PkgPackages)
+    ]
 
     yield from ensure_packages(
         host,

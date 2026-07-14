@@ -59,24 +59,20 @@ class PackageInfo:
     def installed_version(self) -> str | None:
         return self.installed_versions[-1] if self.installed_versions else None
 
+    @classmethod
+    def from_dict(cls, data: dict) -> PackageInfo:
+        """Build a :class:`PackageInfo` from a dict-shaped description.
 
-def _package_info_from_value(value: PackageInfo | dict) -> PackageInfo:
-    """Normalize a :class:`PackageInfo` or dict-shaped value into a real instance.
-
-    This lets callers (and tests that supply plain JSON fact fixtures) pass
-    dict-like package descriptions without requiring every consumer to handle
-    the conversion themselves.
-    """
-    if isinstance(value, PackageInfo):
-        return value
-    if isinstance(value, dict):
-        return PackageInfo(
-            name=value["name"],
-            installed_versions=tuple(value.get("installed_versions", ())),
-            available_version=value.get("available_version"),
-            status=PackageStatus(value.get("status", "installed")),
+        This is useful for consumers that receive plain JSON-like package
+        data (for example test fixtures or inventory variables) and need a
+        real :class:`PackageInfo` instance.
+        """
+        return cls(
+            name=data["name"],
+            installed_versions=tuple(data.get("installed_versions", ())),
+            available_version=data.get("available_version"),
+            status=PackageStatus(data.get("status", "installed")),
         )
-    raise TypeError(f"Cannot normalize {value!r} to PackageInfo")
 
 
 def build_package_map(
