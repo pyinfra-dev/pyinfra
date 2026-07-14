@@ -1,27 +1,17 @@
 import importlib
-import sys
+from glob import glob
+from os import path
 
-__ALL__ = {
-    "freebsd_update": "freebsd_update",
-    "pkg": "pkg",
-    "service": "service",
-    "sysrc": "sysrc",
-}
-
-__all__ = list(__ALL__.keys())
+_module_filenames = glob(path.join(path.dirname(__file__), "*.py"))
+__all__ = sorted(
+    set(path.basename(name)[:-3] for name in _module_filenames if not name.endswith("__init__.py"))
+)
 
 
 def __getattr__(name):
-    # On-demand import of OpenWrt facts, so we don't have to import them all at once
+    # On-demand import of operations modules, so we don't have to import them all at once
     # this forces py3.7>=, but that's fine as py2 is EOL and py3.6 is also EOL
-    # Also, pyinfra is py3.11>=, so this is not a breaking change.
+    # Also, Pyinfra is py3.11>=, so this is not a breaking change.
     if name in __all__:
-        pieces = __ALL__[name].split(".")
-        module = importlib.import_module(f".{pieces[0]}", package=__name__)
-        if len(pieces) < 2:
-            return module
-        del sys.modules[module.__name__]
-        del sys.modules[__name__].__dict__[pieces[0]]
-        return getattr(module, pieces[1])
-
+        return importlib.import_module(f".{name}", __package__)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
