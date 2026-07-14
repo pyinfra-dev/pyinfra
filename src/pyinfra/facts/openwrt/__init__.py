@@ -4,6 +4,7 @@ Facts specific to the [OpenWrt](https://www.openwrt.org) distribution.
 
 import importlib
 import sys
+from typing import Any
 
 __ALL__ = {
     "OpenWrtFeature": "features.OpenWrtFeature",
@@ -14,7 +15,7 @@ __ALL__ = {
 __all__ = list(__ALL__.keys())
 
 
-def __getattr__(name: str) -> object:
+def __getattr__(name: str) -> Any:
     # On-demand import of OpenWrt facts, so we don't have to import them all at once
     # this forces py3.7>=, but that's fine as py2 is EOL and py3.6 is also EOL
     # Also, pyinfra is py3.11>=, so this is not a breaking change.
