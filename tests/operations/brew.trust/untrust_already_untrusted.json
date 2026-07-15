@@ -1,0 +1,6 @@
+{
+    "args": [["foo", "bar", "baz"], "enum:BrewItemKind:formulae", false],
+    "facts": {"brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": []}},
+    "commands": [],
+    "noop_description": "bar, baz, foo formulae already untrusted"
+}
