@@ -1,4 +1,6 @@
 import json
+import os
+import tempfile
 from os import path
 from unittest import TestCase
 
@@ -151,6 +153,29 @@ class TestExecCli(PatchSSHTestCase):
             "echo hi",
         )
         assert result.exit_code == 0, result.stderr
+
+    def test_exec_command_with_unreadable_local_path(self):
+        # Regression test for https://github.com/pyinfra-dev/pyinfra/issues/1883
+        # exec arguments are remote shell commands and must not be validated as
+        # local paths by Click.
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            secret_path = f.name
+
+        try:
+            os.chmod(secret_path, 0o000)
+            result = run_cli(
+                path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
+                "exec",
+                "--",
+                "ls",
+                secret_path,
+            )
+            assert result.exit_code == 0, result.stderr
+            assert "is not readable" not in result.output
+            assert "Invalid value for 'OPERATIONS" not in result.output
+        finally:
+            os.chmod(secret_path, 0o644)
+            os.unlink(secret_path)
 
 
 class TestJsonOutput(PatchSSHTestCase):
