@@ -415,13 +415,20 @@ def build(
 
 
 @operation()
-def volume(volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True):
+def volume(
+    volume: str,
+    driver: str = "",
+    labels: list[str] | None = None,
+    options: list[str] | None = None,
+    present: bool = True,
+):
     """
     Manage Docker volumes
 
     + volume: Volume name
     + driver: Docker volume storage driver
     + labels: Label list to attach in the volume
+    + options: Driver-specific options
     + present: whether the Docker volume should exist
 
     **Examples:**
@@ -449,6 +456,7 @@ def volume(volume: str, driver: str = "", labels: list[str] | None = None, prese
             volume=volume,
             driver=driver,
             labels=labels,
+            options=options,
             present=present,
         )
 
