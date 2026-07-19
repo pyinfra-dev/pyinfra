@@ -4,7 +4,7 @@ import warnings
 from fnmatch import fnmatch
 from getpass import getpass
 from collections.abc import Iterable
-from os import chdir as os_chdir, environ, getcwd, path
+from os import R_OK, access, chdir as os_chdir, environ, getcwd, path
 
 import click
 
@@ -59,7 +59,7 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument("inventory", nargs=1, type=click.Path(exists=False))
-@click.argument("operations", nargs=-1, required=True, type=click.Path(exists=False))
+@click.argument("operations", nargs=-1, required=True, type=str)
 @click.option(
     "verbosity",
     "-v",
@@ -573,6 +573,8 @@ def _validate_operations(operations, chdir):
 
         for filename in operations[0:]:
             if path.exists(filename):
+                if not access(filename, R_OK):
+                    raise CliError(f"Deploy file is not readable: {filename}")
                 filenames.append(filename)
                 continue
             if chdir and filename.startswith(chdir):
