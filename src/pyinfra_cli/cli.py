@@ -35,7 +35,14 @@ from .prints import (
     print_state_operations_json,
     print_support_info,
 )
-from .util import exec_file, load_deploy_file, load_func, parse_cli_arg
+from .util import (
+    exec_file,
+    fetch_remote_deploy_file,
+    is_remote_url,
+    load_deploy_file,
+    load_func,
+    parse_cli_arg,
+)
 from .virtualenv import init_virtualenv
 
 
@@ -566,12 +573,15 @@ def _validate_operations(operations, chdir):
         operations = operations[1:]
 
     # Execute one or more deploy files
-    elif all(cmd.endswith(".py") for cmd in operations):
+    elif all(cmd.endswith(".py") or is_remote_url(cmd) for cmd in operations):
         command = CliCommands.DEPLOY_FILES
 
         filenames = []
 
         for filename in operations[0:]:
+            if is_remote_url(filename):
+                filenames.append(fetch_remote_deploy_file(filename))
+                continue
             if path.exists(filename):
                 filenames.append(filename)
                 continue
