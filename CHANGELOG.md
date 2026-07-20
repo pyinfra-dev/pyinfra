@@ -1,3 +1,8 @@
+Operations/facts:
+
+- facts.server.LinuxDistribution: resolve `major`/`minor` from the most precise release source available, not just `/etc/os-release`. Fact output changes on hosts where `VERSION_ID` only exposes the major version — e.g. CentOS 7 now reports `minor: 9` instead of `minor: null` (#1859) (@wlix13)
+- facts.server.LinuxDistribution: report `minor: 0` instead of `null` for X.0 releases (e.g. RED OS 8.0) (#1859) (@wlix13)
+
 # v3.9.2
 
 - Fix documentation recursive copy mess

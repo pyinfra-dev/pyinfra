@@ -3,6 +3,6 @@
 set -euo pipefail
 
 echo "Execute pytest..."
-uv run pytest $@
+uv run pytest "$@"
 
 echo "Tests complete!"

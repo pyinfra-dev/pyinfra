@@ -49,7 +49,9 @@ uv add --editable ./pyinfra
 ### Code Style & Type Checking
 
 Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
-recommended for local development though currently optional. There is a script to run the linting & type-checking:
+recommended for local development though currently optional. Shell scripts are checked with
+[shellcheck](https://www.shellcheck.net/), so install it before running the lint script (eg `apt-get install shellcheck`
+or `brew install shellcheck`). There is a script to run the linting & type-checking:
 
 ```sh
 # Check formatting & types
@@ -64,9 +66,12 @@ scripts/dev-format.sh
 Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 standard. PRs that follow this will be rebased, PRs that do not will be squashed.
 
-The following scopes are allowed: `api`, `cli`, `operations`, `facts`, `connectors`. With the last 
-three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
+The following scopes are (optionally) allowed: `api`, `cli`, `deps`, `operations`, `facts`, `connectors`. 
+With the last three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
 
+When creating a PR, the last commit message is typically used as the PR title. When merging PRs, 
+we typically squash all commits into a single commit, and use the PR title as the commit message.
+For this reason, PR titles are linted to check if they follow our commit message conventions.
 
 ### Tests
 
@@ -85,6 +90,12 @@ uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 # Only run operation tests for operations.selinux
 uv run pytest tests/test_operations.py -k "selinux."
 ```
+
+Tests for facts and operations are written in a declarative manner and use the 
+[pyinfra-testing harness](https://github.com/pyinfra-dev/pyinfra-testing). Review the harness README 
+to understand how tests for facts and operations are written, and how to add new tests.
+
+The test harness can also be used for writing tests for 3rd party facts and operations.
 
 #### End-to-End Tests
 

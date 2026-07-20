@@ -4,6 +4,11 @@
         "rebase": true
     },
     "facts": {
+        "git.GitConfig": {
+            "repo=/home/myrepo, system=False": {
+                "remote.origin.url": ["myrepo"]
+            }
+        },
         "files.Directory": {
             "path=/home/myrepo": {},
             "path=/home/myrepo/.git": {

@@ -96,7 +96,13 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield FunctionCommand(capture_uptime, (), {})
 
-    yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
+    # Detach the reboot from the SSH session so the channel closes immediately.
+    # When the reboot is run inline, paramiko blocks on `recv_exit_status` for
+    # the remote process - that never returns when the connection goes through
+    # a still-alive ProxyCommand (#1708).
+    yield StringCommand(
+        "( sleep 1 && reboot ) </dev/null >/dev/null 2>&1 &",
+    )
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
@@ -326,6 +332,8 @@ def mount(
     + path: the path of the mounted filesystem
     + mounted: whether the filesystem should be mounted
     + options: the mount options
+    + device: the device behind the mount
+    + fs_type: the filesystem type
 
     Options:
         If the currently mounted filesystem does not have all of the provided
@@ -374,14 +382,14 @@ def mount(
         mounted_options = mounts[mounted_path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            if host.get_fact(Kernel).strip() == "FreeBSD":
+            # the -u option is common among FreeBSD, OpenBSD, NetBSD, DragonFlyBSD
+            if "BSD" in host.get_fact(Kernel).strip():
                 fs_type = mounts[mounted_path]["type"]
                 device = mounts[mounted_path]["device"]
-
                 yield StringCommand(
                     "mount",
-                    "-o",
-                    StringCommand("update,", options_string, _separator=""),
+                    "-uo",
+                    StringCommand(options_string, _separator=""),
                     "-t",
                     fs_type,
                     QuoteString(device),
