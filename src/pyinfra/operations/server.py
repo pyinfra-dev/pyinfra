@@ -5,7 +5,6 @@ Linux/BSD.
 
 from __future__ import annotations
 
-import posixpath
 from io import StringIO
 from itertools import filterfalse, tee
 from pathlib import Path
@@ -939,7 +938,7 @@ def user_authorized_keys(
     def read_any_pub_key_file(key):
         try_path = key
         if state.cwd:
-            try_path = posixpath.join(state.cwd, key)
+            try_path = str(Path(state.cwd) / key)
 
         if Path(try_path).exists():
             with open(try_path) as f:

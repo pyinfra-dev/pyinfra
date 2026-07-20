@@ -4,9 +4,8 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import glob
-import posixpath
 import re
-from os import environ
+from os import environ, path
 from pathlib import Path
 
 import paramiko.config
@@ -88,11 +87,11 @@ def _expand_include_statements(file_obj, parsed_files=None):
             parsed_files = []
 
         # The path can be relative to its parent configuration file
-        if posixpath.isabs(value) is False and value[0] != "~":
-            folder = posixpath.dirname(file_obj.name)
-            value = posixpath.join(folder, value)
+        if path.isabs(value) is False and value[0] != "~":
+            folder = path.dirname(file_obj.name)
+            value = path.join(folder, value)
 
-        value = posixpath.expanduser(value)
+        value = path.expanduser(value)
 
         for filename in glob.iglob(value):
             if Path(filename).is_file():

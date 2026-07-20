@@ -154,11 +154,11 @@ class TestSSHUserConfigMissing(TestCase):
     lambda self: True,
 )
 @patch(
-    "pyinfra.connectors.sshuserclient.config.posixpath.expanduser",
+    "pyinfra.connectors.sshuserclient.config.path.expanduser",
     lambda path: path,
 )
 @patch(
-    "pyinfra.connectors.sshuserclient.config.posixpath.isabs",
+    "pyinfra.connectors.sshuserclient.config.path.isabs",
     lambda path: True,
 )
 @patch(

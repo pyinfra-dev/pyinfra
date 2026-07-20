@@ -696,7 +696,9 @@ def sync(
 
         # Filter excluded dirs and detect directory symlinks
         for child_dir in dirnames[:]:
-            child_path = (PurePosixPath(remote_dirpath) / child_dir).as_posix()
+            # Build the remote-style relative path from the local paths,
+            # converting to posix only for matching against ``exclude_dir``.
+            child_path = (dirpath_path / child_dir).relative_to(src_path).as_posix()
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
                 continue
@@ -913,7 +915,7 @@ def get(
     """
 
     if add_deploy_dir and state.cwd:
-        dest = posixpath.join(state.cwd, dest)
+        dest = str(Path(state.cwd) / dest)
 
     if create_local_dir:
         local_pathname = Path(dest).parent
@@ -1103,7 +1105,7 @@ def put(
         assert isinstance(src, (str, Path))
         # Add deploy directory?
         if add_deploy_dir and state.cwd:
-            src = posixpath.join(state.cwd, src)
+            src = str(Path(state.cwd) / src)
 
         local_file = src
 
@@ -1420,7 +1422,7 @@ def template(
     '''
 
     if not hasattr(src, "read") and state.cwd:
-        src = posixpath.join(state.cwd, src)
+        src = str(Path(state.cwd) / src)
 
     # Ensure host/state/inventory are available inside templates (if not set)
     data.setdefault("host", host)
