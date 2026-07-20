@@ -54,6 +54,14 @@ class TestCliUtil(TestCase):
             (["one", "two"], {"hello": "world"}),
         )
 
+    def test_setup_op_and_python_literal_list_kwarg(self):
+        commands = ("server.user", "one", "groups=['wheel', 'docker']")
+
+        assert get_func_and_args(commands) == (
+            server.user,
+            (["one"], {"groups": ["wheel", "docker"]}),
+        )
+
 
 @pytest.fixture(scope="function")
 def user_sys_path():
