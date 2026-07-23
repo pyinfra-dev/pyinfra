@@ -1,0 +1,50 @@
+{
+    "args": ["someuser"],
+    "kwargs": {
+        "public_keys": ["ssh-ed25519 AAAAkey1 alice", "ssh-rsa AAAAkey2 bob"]
+    },
+    "facts": {
+        "server.Home": {
+            "user=someuser": "/home/someuser"
+        },
+        "files.Directory": {
+            "path=/home/someuser/.other_secret_place": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 700
+            },
+            "path=/home/someuser/.ssh": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 700
+            }
+        },
+        "files.File": {
+            "path=/home/someuser/.other_secret_place/auth_keys": {
+                "user": "someuser",
+                "group": "someuser",
+                "mode": 600
+            }
+        },
+        "files.Link": {
+            "path=/home/someuser/.ssh/authorized_keys": {
+                "link_target": "../.another_symlink"
+            },
+            "path=/home/someuser/.ssh/../.another_symlink": {
+                "link_target": "/home/someuser/.other_secret_place/auth_keys"
+            },
+            "path=/home/someuser/.other_secret_place/auth_keys": false
+        },
+        "server.AuthorizedKeys": {
+            "path=/home/someuser/.other_secret_place/auth_keys, user=someuser": [
+                "ssh-ed25519 AAAAkey1 alice"
+            ]
+        },
+        "files.FindInFile": {
+            "extended_regex=False, interpolate_variables=False, path=/home/someuser/.other_secret_place/auth_keys, pattern=^.*ssh-rsa AAAAkey2 bob.*$": []
+        }
+    },
+    "commands": [
+        "( [ $(tail -c1 /home/someuser/.other_secret_place/auth_keys | wc -l) -eq 0 ] && echo ; echo 'ssh-rsa AAAAkey2 bob' ) >> /home/someuser/.other_secret_place/auth_keys"
+    ]
+}
