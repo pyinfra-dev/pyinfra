@@ -8,7 +8,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import annotations
 
 from functools import wraps
-from inspect import signature
+from inspect import Parameter, signature
 from io import StringIO
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, cast
@@ -300,7 +300,7 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
-            op_meta = attach_args(op_meta, args, kwargs)
+            op_meta = attach_args(op_meta, func, args, kwargs)
 
         # Check if we're actually running the operation on this host
         # Run once and we've already added meta for this op? Stop here.
@@ -488,13 +488,21 @@ def _get_arg_value(arg):
     return arg
 
 
-def attach_args(op_meta, args, kwargs):
+def attach_args(op_meta, func, args, kwargs):
     for arg in args:
         if arg not in op_meta.args:
             op_meta.args.append(str(_get_arg_value(arg)))
 
     # Attach keyword args
+    named_parameters = {
+        key
+        for key, parameter in signature(func).parameters.items()
+        if parameter.kind is not Parameter.VAR_KEYWORD
+    }
     for key, value in kwargs.items():
+        if key not in named_parameters:
+            continue
+
         arg = "=".join((str(key), str(_get_arg_value(value))))
         if arg not in op_meta.args:
             op_meta.args.append(arg)

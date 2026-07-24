@@ -1,4 +1,5 @@
 from collections import defaultdict
+from io import StringIO
 from os import path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
@@ -115,6 +116,29 @@ class TestOperationsApi(PatchSSHTestCase):
         # And w/o errors
         assert state.results[somehost].error_ops == 0
         assert state.results[anotherhost].error_ops == 0
+
+        disconnect_all(state)
+
+    def test_template_op_auto_name_does_not_include_data_kwargs(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(
+            state,
+            files.template,
+            StringIO("password={{ password }}"),
+            "/etc/config.toml",
+            password="!CLEARTEXTPASSWORD",
+        )
+
+        [op_hash] = state.get_op_order()
+        op_args = state.op_meta[op_hash].args
+
+        assert any(arg.startswith("StringIO(hash=") for arg in op_args)
+        assert "/etc/config.toml" in op_args
+        assert "password=!CLEARTEXTPASSWORD" not in op_args
 
         disconnect_all(state)
 
