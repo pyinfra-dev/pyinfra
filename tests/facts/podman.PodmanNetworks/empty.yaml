@@ -1,0 +1,5 @@
+command: podman network ls --format=json
+requires_command: podman
+output: |
+  []
+fact: []

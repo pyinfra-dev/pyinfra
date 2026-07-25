@@ -1,0 +1,5 @@
+command: podman pod ps --format=json
+requires_command: podman
+output: |
+  []
+fact: []
