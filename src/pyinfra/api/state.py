@@ -71,6 +71,10 @@ class BaseStateCallback:
         pass
 
     @staticmethod
+    def operation_host_skipped(state: State, host: Host, op_hash):
+        pass
+
+    @staticmethod
     def operation_host_success(state: State, host: Host, op_hash, retry_count: int = 0):
         pass
 
