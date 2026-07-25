@@ -66,7 +66,7 @@ from .util.files import (
     MetadataTimeField,
     adjust_regex,
     ensure_mode_int,
-    generate_color_diff,
+    generate_diff,
     get_timestamp,
     sed_delete,
     sed_replace,
@@ -505,9 +505,7 @@ def line(
     elif present_lines and not present:
         if state.config.DIFF:
             host.log(f"Will Remove lines in {format_text(path, bold=True)}", logger.info)
-            for line in generate_color_diff(present_lines, []):
-                logger.info("  %s", line)
-            logger.info("")
+            host.log_diff("\n".join(generate_diff(present_lines, [])))
         yield sed_delete(
             path,
             match_line,
@@ -525,8 +523,7 @@ def line(
             if state.config.DIFF:
                 host.log(f"Will replace lines in {format_text(path, bold=True)}", logger.info)
                 new_lines = [re.sub(match_line, replace, line) for line in present_lines]
-                for line in generate_color_diff(present_lines, new_lines):
-                    logger.info("  %s", line)
+                host.log_diff("\n".join(generate_diff(present_lines, new_lines)))
             yield sed_replace_command
         else:
             host.noop(f'line "{replace or line}" exists in {path}')
@@ -1159,11 +1156,9 @@ def put(
                 with get_file_io(src, "r") as f:
                     desired_lines = f.readlines()
 
-                for line in generate_color_diff([], desired_lines):
-                    logger.info("  %s", line)
+                host.log_diff("\n".join(generate_diff([], desired_lines)))
             except UnicodeDecodeError:
                 logger.info("Binary file uploaded")
-            logger.info("")
 
         yield FileUploadCommand(
             local_file,
@@ -1208,9 +1203,7 @@ def put(
                 with get_file_io(src, "r") as f:
                     desired_lines = f.readlines()
 
-                for line in generate_color_diff(current_lines, desired_lines):
-                    logger.info("  %s", line)
-                logger.info("")
+                host.log_diff("\n".join(generate_diff(current_lines, desired_lines)))
 
             yield FileUploadCommand(
                 local_file,

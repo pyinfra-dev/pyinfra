@@ -261,9 +261,14 @@ def strip_regex_anchors(line: str) -> str:
     return line
 
 
-def generate_color_diff(
-    current_lines: list[str], desired_lines: list[str]
-) -> Generator[str, None, None]:
+def generate_diff(current_lines: list[str], desired_lines: list[str]) -> Generator[str, None, None]:
+    """Yield a plain (uncoloured) unified diff between two sets of lines.
+
+    Removed lines are prefixed ``"- "``, added lines ``"+ "``, context lines
+    ``"  "`` and hunks with ``"@@ ... @@"`` headers. Kept plain so callers can
+    render it however they like (e.g. syntax highlighting).
+    """
+
     def _format_range_unified(start: int, stop: int) -> str:
         beginning = start + 1  # lines start numbering with one
         length = stop - start
@@ -286,7 +291,20 @@ def generate_color_diff(
                 continue
             if tag in {"replace", "delete"}:
                 for line in current_lines[i1:i2]:
-                    yield format_text("- " + line.rstrip(), "red")
+                    yield "- " + line.rstrip()
             if tag in {"replace", "insert"}:
                 for line in desired_lines[j1:j2]:
-                    yield format_text("+ " + line.rstrip(), "green")
+                    yield "+ " + line.rstrip()
+
+
+def generate_color_diff(
+    current_lines: list[str], desired_lines: list[str]
+) -> Generator[str, None, None]:
+    """Yield a unified diff with ``format_text`` colouring (- red, + green)."""
+    for line in generate_diff(current_lines, desired_lines):
+        if line.startswith("- "):
+            yield format_text(line, "red")
+        elif line.startswith("+ "):
+            yield format_text(line, "green")
+        else:
+            yield line
