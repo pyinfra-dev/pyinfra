@@ -16,6 +16,7 @@ from typing_extensions import Unpack, override
 
 from pyinfra import logger
 from pyinfra.api.output import format_text
+from pyinfra.api.renderable import Diff, OutputBlock
 from pyinfra.connectors.base import BaseConnector
 from pyinfra.connectors.util import CommandOutput, remove_any_sudo_askpass_file
 from pyinfra.context import ctx_config
@@ -198,18 +199,49 @@ class Host:
     def group_data(self):
         return self.inventory.get_groups_data(self.groups)
 
+    def _styled_name(self, *args, **kwargs) -> str:
+        # Dim any "@connector/" prefix so the host name stands out.
+        name = self.name
+        if name.startswith("@") and "/" in name:
+            connector, _, rest = name.partition("/")
+            return (
+                f"{format_text(f'{connector}/', 'bright_black')}"
+                f"{format_text(rest, *args, **kwargs)}"
+            )
+        return format_text(name, *args, **kwargs)
+
     @property
     def print_prefix(self) -> str:
         if self.nested_executing_op_hash:
-            return f"{format_text('')}[{format_text(self.name, bold=True)}] {format_text('nested', 'blue')}{self.print_prefix_padding} "
+            return f"{self._styled_name('cyan', bold=True)} {format_text('nested', 'blue')}{self.print_prefix_padding} "
 
-        return f"{format_text('')}[{format_text(self.name, bold=True)}]{self.print_prefix_padding} "
+        return f"{self._styled_name('cyan', bold=True)}{self.print_prefix_padding} "
 
     def style_print_prefix(self, *args, **kwargs) -> str:
-        return f"{format_text('')}[{format_text(self.name, *args, **kwargs)}]{self.print_prefix_padding} "
+        return f"{self._styled_name(*args, **kwargs)}{self.print_prefix_padding} "
 
     def log(self, message: str, log_func: Callable[[str], Any] = logger.info) -> None:
         log_func(f"{self.print_prefix}{message}")
+
+    def log_rich(
+        self,
+        descriptor: OutputBlock,
+        log_func: Callable[..., Any] = logger.info,
+    ) -> None:
+        """Emit a rich-free output descriptor as a single log record.
+
+        The descriptor and this host's name are attached to the record via
+        ``extra``; the CLI turns the descriptor into a rich renderable and routes
+        it to this host's tree node (or the console in flat mode). Keeping the
+        descriptor plain lets the core stay decoupled from any rendering library.
+        """
+        log_func("", extra={"pyinfra_rich": descriptor, "pyinfra_host": self.name})
+
+    def log_diff(self, diff_text: str) -> None:
+        """Log a whole (plain) diff block for syntax-highlighted rendering."""
+        if not diff_text:
+            return
+        self.log_rich(Diff(diff_text))
 
     def log_styled(
         self, message: str, log_func: Callable[[str], Any] = logger.info, **kwargs

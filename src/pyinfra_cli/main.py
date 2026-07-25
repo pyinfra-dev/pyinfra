@@ -6,6 +6,7 @@ import gevent
 import pyinfra
 from pyinfra.api.output import set_echo, set_formatter
 
+from . import renderables  # noqa: F401  (registers built-in descriptor renderers)
 from .cli import app
 from .console import console, echo, format_text
 from .exceptions import CliException
