@@ -1,5 +1,7 @@
 import json
+import os
 from os import path
+import tempfile
 from unittest import TestCase
 
 from pyinfra.api import Host, Inventory
@@ -150,6 +152,23 @@ class TestExecCli(PatchSSHTestCase):
             "--",
             "echo hi",
         )
+        assert result.exit_code == 0, result.stderr
+
+    def test_exec_command_does_not_validate_local_path_arguments(self):
+        with tempfile.NamedTemporaryFile() as file:
+            os.chmod(file.name, 0o000)
+            try:
+                result = run_cli(
+                    path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
+                    "exec",
+                    "--debug-operations",
+                    "--",
+                    "ls",
+                    file.name,
+                )
+            finally:
+                os.chmod(file.name, 0o600)
+
         assert result.exit_code == 0, result.stderr
 
 
