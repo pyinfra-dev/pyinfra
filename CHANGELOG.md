@@ -1,7 +1,64 @@
-Operations/facts:
+# v3.10.0
 
-- facts.server.LinuxDistribution: resolve `major`/`minor` from the most precise release source available, not just `/etc/os-release`. Fact output changes on hosts where `VERSION_ID` only exposes the major version — e.g. CentOS 7 now reports `minor: 9` instead of `minor: null` (#1859) (@wlix13)
-- facts.server.LinuxDistribution: report `minor: 0` instead of `null` for X.0 releases (e.g. RED OS 8.0) (#1859) (@wlix13)
+Another bumper update with lots of security fixes in user input quoting and many other improvements. Thank you all new and returning contributors (there are many of you!).
+
+- facts.files: render import example as a code block (#1801) (@wowi42)
+- operations.files.line: strip regex anchors from appended lines (#1802) (@wowi42)
+- operations.zfs: avoid mutable default properties leaking across operation calls (#1792) (@mvanhorn)
+- facts.zfs,facts.server.KernelModules: zfs operations broken on freebsd (#1791) (@jgelens)
+- facts.deb: DebPackage failing when file/directory with same name exists in cwd (#1829) (@bendigg)
+- operations.files: clear error for file-like src with directory dest (#1144) (#1849) (@vjsai)
+- operations.server: detach reboot from SSH session (#1711) (@wowi42)
+- facts.server: resolve major.minor from distro release file (#1859) (@wlix13)
+- operations.go,facts.go: implement go operations and facts (#1776) (@yagarea)
+- facts.server: Add OpenBSD support to server.Mounts (#1863) (@epicrazzmatazz)
+- operations.docker: add container_exec operation (#1821) (@wowi42)
+- facts.hardware: use JSON from ip address show in NetworkDevices to cope with lack of prefix length and/or broadcast (#1851) (@morrison12)
+- operations.selinux: harden commands with QuoteString and remove asserts (#1846) (@Muhammad-Ikhwan-Fathulloh)
+- operations.files: type annotation for mode in files.template (#1866) (@bbonf)
+- operations.git: update origin remote when src changes (#1763) (#1843) (@vjsai)
+- facts.pacman: parse packages with uppercase version strings (#1865) (@zlangbert)
+- operations.zypper: fix gpg validation, auto-import keys, and permissions (#1833) (@doraem-on)
+- operations.server.Mount: generalize remount to more BSDs (#1872) (@epicrazzmatazz)
+- operations.docker.volume: allow options to be passed when creating docker volumes (#1882) (@DonDebonair)
+- facts.git: GitLocalCommit fact failing on nonlocal ref (#1881) (@yagarea)
+- operations.brew, facts.brew: add support for brew trust (#1836) (@morrison12)
+- operations.brew: use enum value strings in brew.trust fixtures (#1887) (@wowi42)
+- facts.deb: clarify package resolution (#1897) (@Sanjays2402)
+- operations.{apt,crontab,dnf,docker,flatpak,lxd,openrc,puppet,server,sysvinit,vzctl,yum,zfs},facts.{crontab,mysql,server}: quote user input (#1803-#1809, #1811-#1818) (@wowi42)
+
+Connectors:
+
+- connectors.ssh: respect ssh_key_password over ssh_config IdentityFile (#1855) (@wowi42)
+- connectors: allow HiddenValue in _env (#1853) (@Jesse-11)
+- connectors: add @fake no-op execution connector (#1888) (@noirbizarre)
+
+CLI:
+
+- cli: preserve Windows paths in module errors (#1884) (@0xTaoZ)
+
+Docs/meta:
+
+- docs: add llms.txt and llms-full.txt for LLM consumption (#1800) (@wowi42)
+- docs: clarify server.shell shell usage (#1835) (@Himanshuagrawal4)
+- docs: fix version banner
+- ci: add shellcheck workflow and fix scripts (#1827) (@wowi42)
+- docs: correct documentation rendering  of operations that no parameters (#1840) (@morrison12)
+- test: Enable tests from fixtures to work with string-valued Enum params (#1841) (@morrison12)
+- chore: keep ruff away from fixtures (#1871) (@morrison12)
+- style: fix ruff lint errors (PEP 585/604, f-strings, imports) (#1856) (@wowi42)
+- test: move freezegun; `dev`→`test` (#1868) (@ScegfOd)
+- docs: clarify commit message format and PR linting (#1879) (@DonDebonair)
+- test: use pyinfra-testing harness for facts and operations tests (#1878) (@DonDebonair)
+- chore: fix mypy warning (#1890) (@simonhammes)
+- chore: deduplicate shellcheck lint command (#1891) (@0xTaoZ)
+
+Other:
+
+- feat: add --exclude CLI argument to restrict target hosts (#1789) (@mvanhorn)
+- fix: allow SSH connections when an ED25519-SK (FIDO2) key is present in the agent (#1858) (@mvanhorn)
+- refactor: replace os.path usage with pathlib (#1753) (@wowi42)
+- ci: use uv.lock for ruff action
 
 # v3.9.2
 

@@ -5,9 +5,10 @@ Linux/BSD.
 
 from __future__ import annotations
 
+import os
 from io import StringIO
 from itertools import filterfalse, tee
-from os import path
+from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING
 
@@ -938,9 +939,9 @@ def user_authorized_keys(
     def read_any_pub_key_file(key):
         try_path = key
         if state.cwd:
-            try_path = path.join(state.cwd, key)
+            try_path = os.path.join(state.cwd, key)
 
-        if path.exists(try_path):
+        if Path(try_path).exists():
             with open(try_path) as f:
                 return [key.strip() for key in f.readlines()]
 

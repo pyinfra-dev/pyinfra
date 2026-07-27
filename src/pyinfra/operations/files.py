@@ -12,7 +12,7 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from fnmatch import fnmatch
 from io import StringIO
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import IO, Any
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
@@ -667,14 +667,14 @@ def sync(
 
     """
     original_src = src  # Keep a copy to reference in errors
-    src = os.path.normpath(src)
+    src_path = Path(src)
 
     # Add deploy directory?
     if add_deploy_dir and state.cwd:
-        src = os.path.join(state.cwd, src)
+        src_path = Path(state.cwd) / src_path
 
     # Ensure the source directory exists
-    if not os.path.isdir(src):
+    if not src_path.is_dir():
         raise OSError(f"No such directory: {original_src}")
 
     # Ensure exclude is a list/tuple
@@ -690,54 +690,50 @@ def sync(
     put_files = []
     put_links = []  # List of (remote_path, link_target) tuples
     ensure_dirnames = []
-    for dirpath, dirnames, filenames in os.walk(src, topdown=True, followlinks=False):
-        remote_dirpath = Path(os.path.normpath(os.path.relpath(dirpath, src))).as_posix()
+    for dirpath, dirnames, filenames in os.walk(src_path, topdown=True, followlinks=False):
+        dirpath_path = Path(dirpath)
+        remote_dirpath = dirpath_path.relative_to(src_path).as_posix()
 
         # Filter excluded dirs and detect directory symlinks
         for child_dir in dirnames[:]:
-            child_path = os.path.normpath(os.path.join(remote_dirpath, child_dir))
+            # Build the remote-style relative path from the local paths,
+            # converting to posix only for matching against ``exclude_dir``.
+            child_path = (dirpath_path / child_dir).relative_to(src_path).as_posix()
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
                 continue
 
             # Check if this directory is actually a symlink
-            local_dir_path = os.path.join(dirpath, child_dir)
-            if os.path.islink(local_dir_path):
+            local_dir_path = dirpath_path / child_dir
+            if local_dir_path.is_symlink():
                 remote_link_path = unix_path_join(
-                    *[
-                        item
-                        for item in (dest, remote_dirpath, child_dir)
-                        if item and item != os.path.curdir
-                    ]
+                    *[item for item in (dest, remote_dirpath, child_dir) if item and item != "."]
                 )
                 link_target = os.readlink(local_dir_path)
                 put_links.append((remote_link_path, link_target))
                 dirnames.remove(child_dir)  # Don't traverse into symlinked directories
 
-        if remote_dirpath and remote_dirpath != os.path.curdir:
+        if remote_dirpath and remote_dirpath != ".":
             ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
 
         for filename in filenames:
-            full_filename = os.path.join(dirpath, filename)
+            full_filename = dirpath_path / filename
+            full_filename_str = str(full_filename)
 
             # Should we exclude this file?
-            if exclude and any(fnmatch(full_filename, match) for match in exclude):
+            if exclude and any(fnmatch(full_filename_str, match) for match in exclude):
                 continue
 
             remote_full_filename = unix_path_join(
-                *[
-                    item
-                    for item in (dest, remote_dirpath, filename)
-                    if item and item != os.path.curdir
-                ]
+                *[item for item in (dest, remote_dirpath, filename) if item and item != "."]
             )
 
             # Check if this is a symlink
-            if os.path.islink(full_filename):
+            if full_filename.is_symlink():
                 link_target = os.readlink(full_filename)
                 put_links.append((remote_full_filename, link_target))
             else:
-                put_files.append((full_filename, remote_full_filename))
+                put_files.append((full_filename_str, remote_full_filename))
 
     # Ensure the destination directory - if the destination is a link, ensure
     # the link target is a directory.
@@ -750,7 +746,7 @@ def sync(
         path=dest_to_ensure,
         user=user,
         group=group,
-        mode=dir_mode or mode or get_path_permissions_mode(src),
+        mode=dir_mode or mode or get_path_permissions_mode(str(src_path)),
     )
 
     # Ensure any remote dirnames
@@ -922,9 +918,9 @@ def get(
         dest = os.path.join(state.cwd, dest)
 
     if create_local_dir:
-        local_pathname = os.path.dirname(dest)
-        if not os.path.exists(local_pathname):
-            os.makedirs(local_pathname)
+        local_pathname = Path(dest).parent
+        if not local_pathname.exists():
+            local_pathname.mkdir(parents=True)
 
     remote_file = host.get_fact(File, path=src)
 
@@ -940,7 +936,7 @@ def get(
         )
 
     # No local file, so always download
-    elif not os.path.exists(dest):
+    elif not Path(dest).exists():
         yield FileDownloadCommand(
             src, dest, remote_temp_filename=host.get_temp_filename(dest, temp_directory=temp_dir)
         )
@@ -1113,7 +1109,7 @@ def put(
 
         local_file = src
 
-        if os.path.isfile(local_file):
+        if Path(local_file).is_file():
             local_sum_path = local_file
         elif assume_exists:
             local_sum_path = None
@@ -1121,7 +1117,7 @@ def put(
             raise OSError(f"No such file: {local_file}")
 
     if mode is True:
-        if isinstance(local_file, str) and os.path.isfile(local_file):
+        if isinstance(local_file, str) and Path(local_file).is_file():
             mode = get_path_permissions_mode(local_file)
         else:
             logger.warning(
@@ -1143,7 +1139,7 @@ def put(
                 "When `src` is a file-like object, `dest` must be a full file "
                 "path, not a directory",
             )
-        dest = unix_path_join(dest, os.path.basename(src))
+        dest = unix_path_join(dest, Path(src).name)
         remote_file = host.get_fact(File, path=dest)
 
     if create_remote_dir:
@@ -1493,7 +1489,7 @@ def move(src: str, dest: str, overwrite=False):
     if not host.get_fact(Directory, dest):
         raise OperationError(f"dest {dest} is not an existing directory")
 
-    full_dest_path = os.path.join(dest, os.path.basename(src))
+    full_dest_path = posixpath.join(dest, PurePosixPath(src).name)
     if host.get_fact(File, full_dest_path) is not None:
         if overwrite:
             yield StringCommand("rm", "-rf", QuoteString(full_dest_path))
@@ -1519,7 +1515,7 @@ def copy(src: str, dest: str, overwrite=False):
     if not host.get_fact(Directory, dest):
         raise OperationError(f"dest {dest} is not an existing directory")
 
-    dest_file_path = os.path.join(dest, os.path.basename(src))
+    dest_file_path = posixpath.join(dest, PurePosixPath(src).name)
     dest_file_exists = host.get_fact(File, dest_file_path)
     if dest_file_exists and not overwrite:
         if _remote_file_equal(src, dest_file_path):
@@ -1548,7 +1544,7 @@ def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_back
         if force_backup:
             backup_path = f"{path}.{get_timestamp()}"
             if force_backup_dir:
-                backup_path = os.path.basename(backup_path)
+                backup_path = PurePosixPath(backup_path).name
                 backup_path = f"{force_backup_dir}/{backup_path}"
             yield StringCommand("mv", QuoteString(path), QuoteString(backup_path))
         else:

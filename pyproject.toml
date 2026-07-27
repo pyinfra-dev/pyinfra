@@ -61,7 +61,7 @@ test = [
     "types-paramiko>=2.7,<4",
     "types-python-dateutil>2,<3",
     "types-PyYAML>6,<7",
-    "ruff>=0.13.1",
+    "ruff==0.14.0",
     "pyinfra-testing>=0.2.1",
 ]
 
@@ -94,6 +94,8 @@ local = "pyinfra.connectors.local:LocalConnector"
 ssh = "pyinfra.connectors.ssh:SSHConnector"
 dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
 podmanssh = "pyinfra.connectors.dockerssh:PodmanSSHConnector"
+# Testing / development connector (no-op simulation)
+fake = "pyinfra.connectors.fake:FakeConnector"
 # Inventory only connectors
 terraform = "pyinfra.connectors.terraform:TerraformInventoryConnector"
 vagrant = "pyinfra.connectors.vagrant:VagrantInventoryConnector"
@@ -126,7 +128,6 @@ combine-as-imports = true
 [tool.mypy]
 check_untyped_defs = true
 ignore_missing_imports = true
-enable_incomplete_feature = "Unpack"
 enable_error_code = "explicit-override"
 files = "src/pyinfra,src/pyinfra_cli"
 

@@ -1,5 +1,5 @@
 from getpass import getpass
-from os import path
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from paramiko import (
@@ -107,9 +107,9 @@ def _load_private_key_file(
 
 
 def _resolve_key_paths(key_filename: str, cwd: str | None = None) -> list[str]:
-    candidates = [path.expanduser(key_filename)]
+    candidates = [str(Path(key_filename).expanduser())]
     if cwd:
-        candidates.append(path.join(cwd, path.expanduser(key_filename)))
+        candidates.append(str(Path(cwd) / Path(key_filename).expanduser()))
     return candidates
 
 
@@ -142,7 +142,7 @@ def load_key_with_certificate(
     key_file_exists = False
 
     for candidate in _resolve_key_paths(key_filename, cwd):
-        if not path.isfile(candidate):
+        if not Path(candidate).is_file():
             continue
         key_file_exists = True
         try:
@@ -170,12 +170,12 @@ def load_key_with_certificate(
     # and ``load_certificate`` overwrites any previously-attached cert with a
     # non-cert public blob.
     if certificate_filename is not None:
-        expanded_cert = path.expanduser(certificate_filename)
-        if path.isfile(expanded_cert):
+        expanded_cert = str(Path(certificate_filename).expanduser())
+        if Path(expanded_cert).is_file():
             key.load_certificate(expanded_cert)
     else:
         implicit_cert = f"{resolved_path}-cert.pub"
-        if path.isfile(implicit_cert):
+        if Path(implicit_cert).is_file():
             key.load_certificate(implicit_cert)
 
     return key

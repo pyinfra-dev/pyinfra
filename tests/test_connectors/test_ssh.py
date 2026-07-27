@@ -219,7 +219,7 @@ class TestSSHConnector(TestCase):
 
         assert len(state.active_hosts) == 2
 
-    @mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True)
+    @mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True)
     @mock.patch("pyinfra.connectors.ssh_util.RSAKey.from_private_key_file")
     def test_connect_exceptions(self, fake_key_open):
         for exception_class in (
@@ -245,7 +245,7 @@ class TestSSHConnector(TestCase):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -386,7 +386,7 @@ class TestSSHConnector(TestCase):
         )
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -411,7 +411,7 @@ class TestSSHConnector(TestCase):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.getpass",
                 lambda *args, **kwargs: "testpass",
@@ -442,7 +442,7 @@ class TestSSHConnector(TestCase):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -476,7 +476,7 @@ class TestSSHConnector(TestCase):
         fake_fail_from_private_key_file.side_effect = make_raise_exception_function(SSHException)
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.ECDSAKey.from_private_key_file",
                 fake_fail_from_private_key_file,

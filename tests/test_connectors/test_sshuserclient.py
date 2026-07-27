@@ -119,8 +119,8 @@ class TestSSHUserConfigMissing(TestCase):
         get_ssh_config.cache = {}
 
     @patch(
-        "pyinfra.connectors.sshuserclient.client.path.exists",
-        lambda path: False,
+        "pyinfra.connectors.sshuserclient.client.Path.exists",
+        lambda self: False,
     )
     def test_load_ssh_config_no_exist(self):
         client = SSHClient()
@@ -142,16 +142,16 @@ class TestSSHUserConfigMissing(TestCase):
 
 
 @patch(
-    "pyinfra.connectors.sshuserclient.client.path.exists",
-    lambda path: True,
+    "pyinfra.connectors.sshuserclient.client.Path.exists",
+    lambda self: True,
 )
 @patch(
     "pyinfra.connectors.sshuserclient.config.glob.iglob",
     lambda path: ["other_file"],
 )
 @patch(
-    "pyinfra.connectors.sshuserclient.config.path.isfile",
-    lambda path: True,
+    "pyinfra.connectors.sshuserclient.config.Path.is_file",
+    lambda self: True,
 )
 @patch(
     "pyinfra.connectors.sshuserclient.config.path.expanduser",
