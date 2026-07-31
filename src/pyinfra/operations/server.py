@@ -8,7 +8,6 @@ from __future__ import annotations
 import os
 from io import StringIO
 from itertools import filterfalse, tee
-from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING
 
@@ -941,7 +940,9 @@ def user_authorized_keys(
         if state.cwd:
             try_path = os.path.join(state.cwd, key)
 
-        if Path(try_path).exists():
+        # NOTE: os.path.exists swallows OSError (eg ENAMETOOLONG from long inline
+        # keys), whereas Path.exists re-raises it on Python < 3.14.
+        if os.path.exists(try_path):
             with open(try_path) as f:
                 return [key.strip() for key in f.readlines()]
 
