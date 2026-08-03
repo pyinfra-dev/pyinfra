@@ -26,6 +26,8 @@ class ZfsPools(FactBase):
     def requires_command(self) -> str:
         return "zpool"
 
+    default = dict
+
     @override
     def process(self, output):
         return _process_zfs_props_table(output)
@@ -33,12 +35,22 @@ class ZfsPools(FactBase):
 
 class ZfsDatasets(FactBase):
     @override
-    def command(self) -> str:
-        return "zfs get -H all"
-
-    @override
     def requires_command(self) -> str:
         return "zfs"
+
+    default = dict
+
+    @override
+    def check_preconditions(self, state, host):
+        from pyinfra.facts.server import KernelModules
+
+        modules = host.get_fact(KernelModules) or {}
+        if "zfs" not in modules and "zfs.ko" not in modules:
+            return "kernel module 'zfs' is not loaded"
+
+    @override
+    def command(self) -> str:
+        return "zfs get -H all"
 
     @override
     def process(self, output):

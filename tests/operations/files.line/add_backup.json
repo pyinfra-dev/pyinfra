@@ -5,7 +5,7 @@
     },
     "facts": {
         "files.FindInFile": {
-            "interpolate_variables=False, path=somefile, pattern=^.*match_line.*$": []
+            "extended_regex=False, interpolate_variables=False, path=somefile, pattern=^.*match_line.*$": []
         }
     },
     "commands": [

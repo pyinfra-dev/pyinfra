@@ -46,12 +46,7 @@ def packages(packages: str | list[str] | None = None, present=True, pkg_path: st
     if present is True:
         if not pkg_path and not host.get_fact(File, path="/etc/installurl"):
             host_os = host.get_fact(Os) or ""
-            pkg_path = "http://ftp.{http}.org/pub/{os}/{version}/packages/{arch}/".format(
-                http=host_os.lower(),
-                os=host_os,
-                version=host.get_fact(OsVersion),
-                arch=host.get_fact(Arch),
-            )
+            pkg_path = f"http://ftp.{host_os.lower()}.org/pub/{host_os}/{host.get_fact(OsVersion)}/packages/{host.get_fact(Arch)}/"
 
     # FreeBSD used "pkg ..." and OpenBSD uses "pkg_[add|delete]"
     is_pkg = host.get_fact(Which, command="pkg")
@@ -59,7 +54,7 @@ def packages(packages: str | list[str] | None = None, present=True, pkg_path: st
     uninstall_command = "pkg delete -y" if is_pkg else "pkg_delete"
 
     if pkg_path:
-        install_command = "PKG_PATH={0} {1}".format(pkg_path, install_command)
+        install_command = f"PKG_PATH={pkg_path} {install_command}"
 
     yield from ensure_packages(
         host,

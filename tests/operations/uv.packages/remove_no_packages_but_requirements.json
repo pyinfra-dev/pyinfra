@@ -1,0 +1,12 @@
+{
+    "args": [[]],
+    "kwargs": {
+        "present": false,
+        "requirements": "requirements.txt"
+    },
+    "facts": {
+    },
+    "commands": [
+        "uv pip uninstall --no-progress  -r requirements.txt"
+    ]
+}

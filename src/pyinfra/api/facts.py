@@ -13,18 +13,18 @@ from __future__ import annotations
 import inspect
 import re
 from inspect import getcallargs
-from socket import error as socket_error, timeout as timeout_error
-from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from collections.abc import Callable
 
-import click
 import gevent
 from paramiko import SSHException
 from typing_extensions import override
 
 from pyinfra import logger
+from pyinfra.api.output import format_text
 from pyinfra.api import StringCommand
 from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
-from pyinfra.api.exceptions import FactProcessError
+from pyinfra.api.exceptions import FactPreconditionError, FactProcessError, MissingCommandError
 from pyinfra.api.util import (
     get_kwargs_str,
     log_error_or_warning,
@@ -36,9 +36,13 @@ from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .arguments import CONNECTOR_ARGUMENT_KEYS
+from .state import StateStage
 
 if TYPE_CHECKING:
     from pyinfra.api import Host, State
+
+# Sentinel output line emitted when skip_unless_command binary is absent on the remote host.
+_MISSING_COMMAND_MARKER = "##PYINFRA_NOCMD##"
 
 SUDO_REGEX = r"^sudo: unknown user"
 SU_REGEXES = (
@@ -60,6 +64,22 @@ class FactBase(Generic[T]):
     command: Callable[..., str | StringCommand]
 
     def requires_command(self, *args, **kwargs) -> str | None:
+        """Return the binary name that must exist on the remote host for this fact to run.
+        If the binary is absent the fact returns its ``default()`` value silently.
+        """
+        return None
+
+    def check_preconditions(self, state: State, host: Host) -> str | None:
+        """Check that this fact's prerequisites are satisfied before running.
+
+        Override this method to call ``host.get_fact(...)`` and return:
+
+        - ``None`` (or no return) — all prerequisites satisfied, proceed normally
+        - ``"reason message"`` — prerequisite not satisfied with explanation
+
+        The framework handles raising ``FactPreconditionError`` and phase-awareness
+        automatically; fact authors never need to import exception classes.
+        """
         return None
 
     @override
@@ -97,7 +117,7 @@ class FactBase(Generic[T]):
 
 class ShortFactBase(Generic[T]):
     name: str
-    fact: Type[FactBase]
+    fact: type[FactBase]
 
     @override
     def __init_subclass__(cls) -> None:
@@ -109,7 +129,7 @@ class ShortFactBase(Generic[T]):
         return data
 
 
-def get_short_facts(state: "State", host: "Host", short_fact, **kwargs):
+def get_short_facts(state: State, host: Host, short_fact, **kwargs):
     fact_data = get_fact(state, host, short_fact.fact, **kwargs)
     return short_fact().process_data(fact_data)
 
@@ -121,7 +141,7 @@ def _make_command(command_attribute, host_args):
     return command_attribute
 
 
-def _handle_fact_kwargs(state: "State", host: "Host", cls, args, kwargs):
+def _handle_fact_kwargs(state: State, host: Host, cls, args, kwargs):
     args = args or []
     kwargs = kwargs or {}
 
@@ -167,12 +187,12 @@ def get_facts(state, *args, **kwargs):
 
 
 def get_fact(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     cls: type[FactBase],
-    args: Optional[Any] = None,
-    kwargs: Optional[Any] = None,
-    ensure_hosts: Optional[Any] = None,
+    args: Any | None = None,
+    kwargs: Any | None = None,
+    ensure_hosts: Any | None = None,
     apply_failed_hosts: bool = True,
 ) -> Any:
     if issubclass(cls, ShortFactBase):
@@ -186,24 +206,60 @@ def get_fact(
             apply_failed_hosts=apply_failed_hosts,
         )
 
-    return _get_fact(
-        state,
-        host,
-        cls,
-        args,
-        kwargs,
-        ensure_hosts,
-        apply_failed_hosts,
-    )
+    try:
+        return _get_fact(
+            state,
+            host,
+            cls,
+            args,
+            kwargs,
+            ensure_hosts,
+            apply_failed_hosts,
+        )
+    except MissingCommandError as e:
+        # During the prepare phase the binary might not yet be installed (a prior
+        # operation will install it).  Silently return the default so change
+        # detection can proceed normally.
+        if state.current_stage != StateStage.Execute:
+            logger.debug(
+                "Fact %s skipped on %s during prepare: %s",
+                cls.__name__,
+                host.print_prefix,
+                e,
+            )
+            return cls().default()
+        # During the execute phase the binary should already be present. If it
+        # isn't, the deploy is incorrectly ordered (missing an install step?).
+        # TODO(v4): remove this compat shim and let the exception propagate.
+        logger.warning(
+            "Fact %s skipped on %s: command not found: %s (this will raise an exception in v4)",
+            cls.__name__,
+            host.print_prefix,
+            e,
+        )
+        return cls().default()
+    except FactPreconditionError as e:
+        # Same phase-aware logic: a precondition not satisfied during prepare
+        # is normal (e.g. kernel module not yet loaded); during execute it is an
+        # ordering error in the deploy.
+        if state.current_stage != StateStage.Execute:
+            logger.debug(
+                "Fact %s skipped on %s during prepare: %s",
+                cls.__name__,
+                host.print_prefix,
+                e,
+            )
+            return cls().default()
+        raise
 
 
 def _get_fact(
-    state: "State",
-    host: "Host",
+    state: State,
+    host: Host,
     cls: type[FactBase],
-    args: Optional[list] = None,
-    kwargs: Optional[dict] = None,
-    ensure_hosts: Optional[Any] = None,
+    args: list | None = None,
+    kwargs: dict | None = None,
+    ensure_hosts: Any | None = None,
     apply_failed_hosts: bool = True,
 ) -> Any:
     fact = cls()
@@ -229,20 +285,30 @@ def _get_fact(
     if fact.shell_executable:
         global_kwargs["_shell_executable"] = fact.shell_executable
 
+    # Check preconditions before running this fact's command.
+    if reason := fact.check_preconditions(state, host):
+        raise FactPreconditionError(cls, reason)
+
     command = _make_command(fact.command, fact_kwargs)
     requires_command = _make_command(fact.requires_command, fact_kwargs)
     if requires_command:
         command = StringCommand(
-            # Command doesn't exist, return 0 *or* run & return fact command
-            "!",
+            # If binary exists → run the fact command; otherwise emit the sentinel so
+            # pyinfra can distinguish "binary absent" from "no output".
+            "if",
             "command",
             "-v",
             requires_command,
             ">/dev/null",
-            "||",
+            "2>&1;",
+            "then",
             "(",
             command,
-            ")",
+            ");",
+            "else",
+            "echo",
+            f"'{_MISSING_COMMAND_MARKER}';",
+            "fi",
         )
 
     status = False
@@ -259,7 +325,7 @@ def _get_fact(
             print_input=state.print_fact_input,
             **executor_kwargs,
         )
-    except (timeout_error, socket_error, SSHException) as e:
+    except (TimeoutError, OSError, SSHException) as e:
         log_host_command_error(
             host,
             e,
@@ -267,6 +333,17 @@ def _get_fact(
         )
 
     stdout_lines, stderr_lines = output.stdout_lines, output.stderr_lines
+
+    # Detect the "binary absent" sentinel from the if/then/else shell guard.
+    if status and stdout_lines == [_MISSING_COMMAND_MARKER]:
+        cmd_str = str(requires_command) if requires_command else ""
+        logger.debug(
+            "Skipping fact %s on %s: command not found: %s",
+            name,
+            host.print_prefix,
+            cmd_str,
+        )
+        raise MissingCommandError(cmd_str)
 
     data = fact.default()
 
@@ -278,9 +355,7 @@ def _get_fact(
                 log_error_or_warning(
                     host,
                     global_kwargs["_ignore_errors"],
-                    description=("could not process fact: {0} {1}").format(
-                        name, get_kwargs_str(fact_kwargs)
-                    ),
+                    description=(f"could not process fact: {name} {get_kwargs_str(fact_kwargs)}"),
                     exception=e,
                 )
 
@@ -300,12 +375,9 @@ def _get_fact(
             status = True
 
     if status:
-        log_message = "{0}{1}".format(
+        log_message = "{}{}".format(
             host.print_prefix,
-            "Loaded fact {0}{1}".format(
-                click.style(name, bold=True),
-                f" ({get_kwargs_str(kwargs)})" if kwargs else "",
-            ),
+            f"Loaded fact {format_text(name, bold=True)}{f' ({get_kwargs_str(kwargs)})' if kwargs else ''}",
         )
         if state.print_fact_info:
             logger.info(log_message)
@@ -318,7 +390,7 @@ def _get_fact(
         log_error_or_warning(
             host,
             global_kwargs["_ignore_errors"],
-            description=("could not load fact: {0} {1}").format(name, get_kwargs_str(fact_kwargs)),
+            description=(f"could not load fact: {name} {get_kwargs_str(fact_kwargs)}"),
         )
 
     # Check we've not failed

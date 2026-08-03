@@ -1,0 +1,12 @@
+{
+    "command": "ids=$(docker ps -qa) && [ -n \"$ids\" ] && docker container inspect $ids || echo \"[]\"",
+    "requires_command": "docker",
+    "output": ["[{\"Id\": \"abc123\", \"Config\": {\"Labels\": {\"app\": \"web\", \"tier\": \"frontend\"}}}, {\"Id\": \"def456\", \"Config\": {\"Labels\": null}}]"],
+    "fact": {
+        "abc123": {
+            "app": "web",
+            "tier": "frontend"
+        },
+        "def456": {}
+    }
+}

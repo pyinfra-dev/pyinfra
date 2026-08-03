@@ -1,0 +1,17 @@
+{
+    "args": ["/data dir; rm -rf /"],
+    "kwargs": {
+        "options": ["rw", "noatime"]
+    },
+    "facts": {
+        "server.Kernel": "Linux",
+        "server.Mounts": {
+            "/data dir; rm -rf /": {
+                "options": ["rw"]
+            }
+        }
+    },
+    "commands": [
+        "mount -o remount,rw,noatime '/data dir; rm -rf /'"
+    ]
+}

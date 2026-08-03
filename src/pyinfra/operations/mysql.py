@@ -16,7 +16,7 @@ See the example/mysql.py
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import MaskString, OperationError, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.mysql import (
     MysqlDatabases,
     MysqlUserGrants,
@@ -154,26 +154,30 @@ def user(
         mysql_port=mysql_port,
     )
 
-    user_host = "{0}@{1}".format(user, user_hostname)
+    user_host = f"{user}@{user_hostname}"
     is_present = user_host in current_users
 
     if not present:
         if is_present:
             yield make_execute_mysql_command(
-                'DROP USER "{0}"@"{1}"'.format(user, user_hostname),
+                f'DROP USER "{user}"@"{user_hostname}"',
                 user=mysql_user,
                 password=mysql_password,
                 host=mysql_host,
                 port=mysql_port,
             )
         else:
-            host.noop("mysql user {0}@{1} does not exist".format(user, user_hostname))
+            host.noop(f"mysql user {user}@{user_hostname} does not exist")
         return
 
     if present and not is_present:
-        sql_bits = ['CREATE USER "{0}"@"{1}"'.format(user, user_hostname)]
+        sql_bits: list[str | StringCommand] = [f'CREATE USER "{user}"@"{user_hostname}"']
         if password:
-            sql_bits.append(MaskString('IDENTIFIED BY "{0}"'.format(password)))
+            sql_bits.append(
+                StringCommand(
+                    "IDENTIFIED BY", StringCommand('"', HiddenValue(password), '"', _separator="")
+                )
+            )
 
         if require == "SSL":
             sql_bits.append("REQUIRE SSL")
@@ -183,11 +187,11 @@ def user(
             require_bits = []
 
             if require_cipher:
-                require_bits.append('CIPHER "{0}"'.format(require_cipher))
+                require_bits.append(f'CIPHER "{require_cipher}"')
             if require_issuer:
-                require_bits.append('ISSUER "{0}"'.format(require_issuer))
+                require_bits.append(f'ISSUER "{require_issuer}"')
             if require_subject:
-                require_bits.append('SUBJECT "{0}"'.format(require_subject))
+                require_bits.append(f'SUBJECT "{require_subject}"')
 
             if not require_bits:
                 require_bits.append("X509")
@@ -196,13 +200,13 @@ def user(
 
         resource_bits = []
         if max_connections:
-            resource_bits.append("MAX_USER_CONNECTIONS {0}".format(max_connections))
+            resource_bits.append(f"MAX_USER_CONNECTIONS {max_connections}")
         if max_queries_per_hour:
-            resource_bits.append("MAX_QUERIES_PER_HOUR {0}".format(max_queries_per_hour))
+            resource_bits.append(f"MAX_QUERIES_PER_HOUR {max_queries_per_hour}")
         if max_updates_per_hour:
-            resource_bits.append("MAX_UPDATES_PER_HOUR {0}".format(max_updates_per_hour))
+            resource_bits.append(f"MAX_UPDATES_PER_HOUR {max_updates_per_hour}")
         if max_connections_per_hour:
-            resource_bits.append("MAX_CONNECTIONS_PER_HOUR {0}".format(max_connections_per_hour))
+            resource_bits.append(f"MAX_CONNECTIONS_PER_HOUR {max_connections_per_hour}")
 
         if resource_bits:
             sql_bits.append("WITH")
@@ -229,11 +233,11 @@ def user(
             require_bits = []
 
             if require_cipher and current_user["ssl_cipher"] != require_cipher:
-                require_bits.append('CIPHER "{0}"'.format(require_cipher))
+                require_bits.append(f'CIPHER "{require_cipher}"')
             if require_issuer and current_user["x509_issuer"] != require_issuer:
-                require_bits.append('ISSUER "{0}"'.format(require_issuer))
+                require_bits.append(f'ISSUER "{require_issuer}"')
             if require_subject and current_user["x509_subject"] != require_subject:
-                require_bits.append('SUBJECT "{0}"'.format(require_subject))
+                require_bits.append(f'SUBJECT "{require_subject}"')
 
             if not require_bits:
                 if current_user["ssl_type"] != "X509":
@@ -245,20 +249,20 @@ def user(
 
         resource_bits = []
         if max_connections and current_user["max_user_connections"] != max_connections:
-            resource_bits.append("MAX_USER_CONNECTIONS {0}".format(max_connections))
+            resource_bits.append(f"MAX_USER_CONNECTIONS {max_connections}")
         if max_queries_per_hour and current_user["max_questions"] != max_queries_per_hour:
-            resource_bits.append("MAX_QUERIES_PER_HOUR {0}".format(max_queries_per_hour))
+            resource_bits.append(f"MAX_QUERIES_PER_HOUR {max_queries_per_hour}")
         if max_updates_per_hour and current_user["max_updates"] != max_updates_per_hour:
-            resource_bits.append("MAX_UPDATES_PER_HOUR {0}".format(max_updates_per_hour))
+            resource_bits.append(f"MAX_UPDATES_PER_HOUR {max_updates_per_hour}")
         if max_connections_per_hour and current_user["max_connections"] != max_connections_per_hour:
-            resource_bits.append("MAX_CONNECTIONS_PER_HOUR {0}".format(max_connections_per_hour))
+            resource_bits.append(f"MAX_CONNECTIONS_PER_HOUR {max_connections_per_hour}")
 
         if resource_bits:
             alter_bits.append("WITH")
             alter_bits.append(" ".join(resource_bits))
 
         if alter_bits:
-            sql_bits = ['ALTER USER "{0}"@"{1}"'.format(user, user_hostname)]
+            sql_bits = [f'ALTER USER "{user}"@"{user_hostname}"']
             sql_bits.extend(alter_bits)
             yield make_execute_mysql_command(
                 StringCommand(*sql_bits),
@@ -268,7 +272,7 @@ def user(
                 port=mysql_port,
             )
         else:
-            host.noop("mysql user {0}@{1} exists".format(user, user_hostname))
+            host.noop(f"mysql user {user}@{user_hostname} exists")
 
     # If we're here either the user exists or we just created them; either way
     # now we can check any privileges are set.
@@ -343,25 +347,25 @@ def database(
     if not present:
         if is_present:
             yield make_execute_mysql_command(
-                "DROP DATABASE `{0}`".format(database),
+                f"DROP DATABASE `{database}`",
                 user=mysql_user,
                 password=mysql_password,
                 host=mysql_host,
                 port=mysql_port,
             )
         else:
-            host.noop("mysql database {0} does not exist".format(database))
+            host.noop(f"mysql database {database} does not exist")
         return
 
     # We want the database but it doesn't exist
     if present and not is_present:
-        sql_bits = ["CREATE DATABASE `{0}`".format(database)]
+        sql_bits = [f"CREATE DATABASE `{database}`"]
 
         if collate:
-            sql_bits.append("COLLATE {0}".format(collate))
+            sql_bits.append(f"COLLATE {collate}")
 
         if charset:
-            sql_bits.append("CHARSET {0}".format(charset))
+            sql_bits.append(f"CHARSET {charset}")
 
         yield make_execute_mysql_command(
             " ".join(sql_bits),
@@ -371,7 +375,7 @@ def database(
             port=mysql_port,
         )
     else:
-        host.noop("mysql database {0} exists".format(database))
+        host.noop(f"mysql database {database} exists")
 
     # Ensure any user privileges for this database
     if user and user_privileges:
@@ -426,21 +430,18 @@ def privileges(
         privileges.add("GRANT OPTION")
 
     if database != "*":
-        database = "`{0}`".format(database)
+        database = f"`{database}`"
 
     if table != "*":
-        table = "`{0}`".format(table)
+        table = f"`{table}`"
 
         # We can't set privileges on *.tablename as MySQL won't allow it
         if database == "*":
             raise OperationError(
-                ("Cannot apply MySQL privileges on {0}.{1}, no database provided").format(
-                    database,
-                    table,
-                ),
+                (f"Cannot apply MySQL privileges on {database}.{table}, no database provided"),
             )
 
-    database_table = "{0}.{1}".format(database, table)
+    database_table = f"{database}.{table}"
     user_grants = host.get_fact(
         MysqlUserGrants,
         user=user,
@@ -474,7 +475,7 @@ def privileges(
         )
 
         if with_statement:
-            command += " WITH {with_statement}".format(with_statement=with_statement)
+            command += f" WITH {with_statement}"
 
         yield make_execute_mysql_command(
             command,

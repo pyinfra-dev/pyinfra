@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import re
-import shlex
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString
+from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
 
@@ -48,9 +48,8 @@ class DebPackages(FactBase):
 
     default = dict
 
-    regex = r"^[i|h]i\s+({0}):?[a-zA-Z0-9]*\s+({1}).+$".format(
-        DEB_PACKAGE_NAME_REGEX,
-        DEB_PACKAGE_VERSION_REGEX,
+    regex = (
+        rf"^[i|h]i\s+({DEB_PACKAGE_NAME_REGEX}):?[a-zA-Z0-9]*\s+({DEB_PACKAGE_VERSION_REGEX}).+$"
     )
 
     @override
@@ -61,11 +60,24 @@ class DebPackages(FactBase):
 class DebPackage(FactBase):
     """
     Returns information on a .deb archive or installed package.
+
+    Package resolution depends on the remote current working directory and is
+    therefore not idempotent:
+
+    * Names that do not match the shell pattern ``*.deb`` query the installed
+      package database.
+    * Names that match ``*.deb`` inspect the archive only when that file exists
+      in the current working directory. Otherwise they query the installed
+      package database.
+
+    Consequently, archive names such as ``package.deb.old`` and
+    ``package.deb~`` cannot be queried as files. Older pyinfra versions tried
+    to inspect any existing path as an archive instead.
     """
 
     _regexes = {
-        "name": r"^Package:\s+({0})$".format(DEB_PACKAGE_NAME_REGEX),
-        "version": r"^Version:\s+({0})$".format(DEB_PACKAGE_VERSION_REGEX),
+        "name": rf"^Package:\s+({DEB_PACKAGE_NAME_REGEX})$",
+        "version": rf"^Version:\s+({DEB_PACKAGE_VERSION_REGEX})$",
     }
 
     @override
@@ -74,8 +86,9 @@ class DebPackage(FactBase):
 
     @override
     def command(self, package):
-        return "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}".format(
-            shlex.quote(package)
+        return make_formatted_string_command(
+            "test -f {0} && case {0} in *.deb) dpkg -I {0} ;; *) dpkg -s {0} 2>/dev/null || true ;; esac || dpkg -s {0} 2>/dev/null || true",
+            QuoteString(package),
         )
 
     @override

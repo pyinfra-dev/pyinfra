@@ -1,0 +1,11 @@
+{
+    "args": [],
+    "kwargs": {
+        "dest": "/etc/apt/keyrings/test.gpg"
+    },
+    "exception": {
+        "names": ["OperationError"],
+        "message": "Either `src` or `keyserver` must be provided for installation"
+    },
+    "facts": {}
+}

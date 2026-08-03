@@ -13,7 +13,7 @@ license-files = ["LICENSE.md"]
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "gevent>=1.5",
-    "paramiko>=2.7,<4", # 2.7 (2019) adds OpenSSH key format + Match SSH config
+    "paramiko>=2.11,<5", # 2.11 (2022) adds Transport.open_channel(timeout=...) for ProxyJump timeout (#971)
     "click>2",
     "jinja2>3,<4",
     "python-dateutil>2,<3",
@@ -22,6 +22,7 @@ dependencies = [
     "packaging>=16.1",
     "pydantic>=2.11,<3",
     "typing-extensions; python_version < '3.11'", # Backport of typing for Unpack (added 3.11)
+    "types-paramiko>=2.7,<5",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -35,6 +36,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Systems Administration",
     "Topic :: System :: Installation/Setup",
     "Topic :: Utilities",
@@ -49,6 +51,7 @@ repository = "https://github.com/pyinfra-dev/pyinfra"
 test = [
     "click>=8.2",
     "pytest>=8.3.5,<9",
+    "freezegun>=1.5.5",
     "coverage>=7.7.1,<8",
     "pytest-cov>=7.0.0,<8",
     "pytest-testinfra>=10.2.2,<11",
@@ -58,14 +61,13 @@ test = [
     "types-paramiko>=2.7,<4",
     "types-python-dateutil>2,<3",
     "types-PyYAML>6,<7",
-    "ruff>=0.13.1",
-    "pyinfra-testgen==0.1.1",
+    "ruff==0.14.0",
+    "pyinfra-testing>=0.2.1",
 ]
 
 docs = [
-    "pyinfra-guzzle_sphinx_theme>=0.19; python_version >= '3.13'",
-    "myst-parser>=4.0.1,<5; python_version >= '3.13'",
-    "sphinx==8.2.3; python_version >= '3.13'",
+    "zensical>=0.0.34",
+    "mkdocstrings[python]>=0.26.1",
 ]
 
 # dev includes test + docs + extra dev-only tools
@@ -78,7 +80,7 @@ dev = [
     "ipdbplugin",
     # dev-only lint extras
     "typos>=1.36.2",
-    "freezegun>=1.5.5",
+    "requests>=2.34.2",
 ]
 
 [project.scripts]
@@ -92,6 +94,8 @@ local = "pyinfra.connectors.local:LocalConnector"
 ssh = "pyinfra.connectors.ssh:SSHConnector"
 dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
 podmanssh = "pyinfra.connectors.dockerssh:PodmanSSHConnector"
+# Testing / development connector (no-op simulation)
+fake = "pyinfra.connectors.fake:FakeConnector"
 # Inventory only connectors
 terraform = "pyinfra.connectors.terraform:TerraformInventoryConnector"
 vagrant = "pyinfra.connectors.vagrant:VagrantInventoryConnector"
@@ -108,6 +112,15 @@ source = "uv-dynamic-versioning"
 
 [tool.ruff]
 line-length = 100
+target-version = "py310"
+
+extend-exclude = ["*.json", "*.yaml", "*.yml"]
+force-exclude = true
+
+[tool.ruff.lint]
+# ruff defaults + pyupgrade
+select = ["E4", "E7", "E9", "F", "UP"]
+ignore = []
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
@@ -115,7 +128,6 @@ combine-as-imports = true
 [tool.mypy]
 check_untyped_defs = true
 ignore_missing_imports = true
-enable_incomplete_feature = "Unpack"
 enable_error_code = "explicit-override"
 files = "src/pyinfra,src/pyinfra_cli"
 
@@ -133,7 +145,6 @@ markers = [
 ]
 
 [tool.coverage.run]
-concurrency = ["gevent"]
 
 [tool.coverage.report]
 show_missing = true

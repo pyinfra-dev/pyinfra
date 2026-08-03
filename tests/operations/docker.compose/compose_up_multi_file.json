@@ -1,0 +1,9 @@
+{
+    "args": ["/srv/app"],
+    "kwargs": {
+        "files": ["docker-compose.yml", "docker-compose.prod.yml"]
+    },
+    "commands": [
+        "docker compose --project-directory /srv/app -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans"
+    ]
+}

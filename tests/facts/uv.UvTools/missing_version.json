@@ -1,0 +1,9 @@
+{
+    "command": "uv tool list 2>/dev/null",
+    "requires_command": "uv",
+    "output": [
+        "pyinfra"
+    ],
+    "fact": {
+    }
+}

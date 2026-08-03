@@ -8,13 +8,16 @@ import urllib.parse
 
 from pyinfra import host
 from pyinfra.api import operation
+from pyinfra.api.command import QuoteString, StringCommand
+from pyinfra.api.exceptions import OperationValueError
 from pyinfra.facts.brew import (
-    PKG_VERSION_SEP,
     BrewCasks,
+    BrewItemKind,
     BrewPackages,
     BrewTaps,
+    BrewTrusted,
     BrewVersion,
-    new_cask_cli,
+    _new_cask_cli,
 )
 
 from .util.packaging import ensure_packages
@@ -104,7 +107,7 @@ def packages(
 
 
 def cask_args():
-    return ("", " --cask") if new_cask_cli(host.get_fact(BrewVersion)) else ("cask ", "")
+    return ("", " --cask") if _new_cask_cli(host.get_fact(BrewVersion)) else ("cask ", "")
 
 
 @operation(is_idempotent=False)
@@ -113,7 +116,7 @@ def cask_upgrade():
     Upgrades all brew casks.
     """
 
-    yield "brew %supgrade%s" % cask_args()
+    yield "brew {}upgrade{}".format(*cask_args())
 
 
 @operation()
@@ -157,21 +160,27 @@ def casks(
         casks,
         host.get_fact(BrewCasks),
         present,
-        install_command="brew %sinstall%s" % args,
-        uninstall_command="brew %suninstall%s" % args,
-        upgrade_command="brew %supgrade%s" % args,
-        version_join=PKG_VERSION_SEP,
+        install_command="brew {}install{}".format(*args),
+        uninstall_command="brew {}uninstall{}".format(*args),
+        upgrade_command="brew {}upgrade{}".format(*args),
+        version_join="@",
         latest=latest,
     )
 
 
 @operation()
-def tap(src: str | None = None, present=True, url: str | None = None):
+def tap(
+    src: str | None = None,
+    present: bool = True,
+    trusted: bool | None = False,
+    url: str | None = None,
+):
     """
     Add/remove brew taps.
 
     + src: the name of the tap
-    + present: whether this tap should be present or not
+    + present: whether this tap should be present or not. Default True.
+    + trusted: whether or not this tap should be trusted.  Default False.
     + url: the url of the tap. See https://docs.brew.sh/Taps
 
     **Examples:**
@@ -181,12 +190,14 @@ def tap(src: str | None = None, present=True, url: str | None = None):
         brew.tap(
             name="Add a brew tap",
             src="includeos/includeos",
+            trusted=True,
         )
 
         # Just url is equivalent to
         # `brew tap kptdev/kpt https://github.com/kptdev/kpt`
         brew.tap(
             url="https://github.com/kptdev/kpt",
+            trusted=True,
         )
 
         # src and url is equivalent to
@@ -194,6 +205,7 @@ def tap(src: str | None = None, present=True, url: str | None = None):
         brew.tap(
             src="example/project",
             url="https://github.example.com/project",
+            trusted=True,
         )
 
         # Multiple taps
@@ -201,9 +213,15 @@ def tap(src: str | None = None, present=True, url: str | None = None):
             brew.tap(
                 name={f"Add brew tap {tap}"},
                 src=tap,
+                trusted=True,
             )
 
     """
+
+    def mk_trust_cmd(tap: str, *, trust: bool | None = None) -> StringCommand:
+        return StringCommand("brew", "trust" if trust else "untrust", "--tap", QuoteString(tap))
+
+    trusted = trusted or False
 
     if not (src or url):
         host.noop("no tap was specified")
@@ -212,28 +230,77 @@ def tap(src: str | None = None, present=True, url: str | None = None):
     src = src or str(urllib.parse.urlparse(url).path).strip("/")
 
     if len(src.split("/")) != 2:
-        host.noop("src '{0}' doesn't have two components.".format(src))
+        host.noop(f"src '{src}' doesn't have two components.")
         return
 
     taps = host.get_fact(BrewTaps)
     already_tapped = src in taps
 
     if present and already_tapped:
-        host.noop("tap {0} already exists".format(src))
+        host.noop(f"tap {src} already exists")
+        trusted_taps = host.get_fact(BrewTrusted).get("taps", [])
+        if (trusted and (src not in trusted_taps)) or ((not trusted) and (src in trusted_taps)):
+            yield mk_trust_cmd(src, trust=trusted)
         return
 
     if already_tapped:
-        yield "brew untap {0}".format(src)
+        yield StringCommand("brew", "untap", QuoteString(src))
         return
 
     if not present:
-        host.noop("tap {0} does not exist".format(src))
+        host.noop(f"tap {src} does not exist")
         return
 
-    cmd = "brew tap {0}".format(src)
-
+    args = [QuoteString(src)]
     if url is not None:
-        cmd = " ".join([cmd, url])
+        args.append(QuoteString(url))
 
-    yield cmd
+    yield StringCommand("brew", "tap", *args)
+
+    if trusted:  # if not already present, can't be trusted so no check of BrewTrusted
+        yield mk_trust_cmd(src, trust=True)
+
     return
+
+
+TRUST_SRC_AND_OPTION = {
+    BrewItemKind.CASK: "--cask",
+    BrewItemKind.COMMAND: "--command",
+    BrewItemKind.FORMULA: "--formula",
+    BrewItemKind.TAP: "--tap",
+}
+
+
+@operation()
+def trust(items: str | list[str], kind: BrewItemKind, trusted: bool):
+    """
+    Trust/untrust brew casks, commands, formulae and/or taps (see https://docs.brew.sh/Tap-Trust)
+
+    + items: the cask, command, formula or tap to be trusted or untrusted
+    + kind: whether the item is a CASK, COMMAND, FORMULA or TAP (using BrewItemKind enum)
+    + trusted: whether this item should be trusted or not.  no default, must be specified
+
+    **Examples:**
+
+    .. code:: python
+
+        brew.trust(
+            name="Mark magic tap as trusted",
+            items="includeos/includeos",
+            kind=BrewItemKind.TAP,
+            trusted=True
+        )
+    """
+    item_set = set(items if isinstance(items, list) else [items])
+    if any(len(item) < 1 for item in item_set):
+        raise OperationValueError("all items must have non-zero length names")
+    desired_state = "trust" if trusted else "untrust"
+    trusted_items = set(host.get_fact(BrewTrusted).get(kind.value, []))
+    found = item_set & trusted_items
+    need_to_change = (item_set - found) if trusted else found
+    already_ok = item_set - need_to_change
+
+    for item in sorted(need_to_change):
+        yield StringCommand("brew", desired_state, TRUST_SRC_AND_OPTION[kind], QuoteString(item))
+    if len(already_ok) > 0:
+        host.noop(f"{', '.join(sorted(already_ok))} {kind.value} already {desired_state}ed")

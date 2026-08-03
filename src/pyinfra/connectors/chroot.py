@@ -1,11 +1,12 @@
 import os
+import shlex
 from tempfile import mkstemp
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-import click
 from typing_extensions import Unpack, override
 
 from pyinfra import local, logger
+from pyinfra.api.output import echo
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
@@ -41,16 +42,16 @@ class ChrootConnector(BaseConnector):
 
     @override
     @staticmethod
-    def make_names_data(name: Optional[str] = None):
+    def make_names_data(name: str | None = None):
         if not name:
             raise InventoryError("No directory provided!")
 
         show_warning()
 
         yield (
-            "@chroot/{0}".format(name),
+            f"@chroot/{name}",
             {
-                "chroot_directory": "/{0}".format(name.lstrip("/")),
+                "chroot_directory": f"/{name.lstrip('/')}",
             },
             ["@chroot"],
         )
@@ -64,7 +65,7 @@ class ChrootConnector(BaseConnector):
         try:
             with progress_spinner({"chroot run"}):
                 local.shell(
-                    "chroot {0} ls".format(chroot_directory),
+                    f"chroot {shlex.quote(chroot_directory)} ls",
                     splitlines=True,
                 )
         except PyinfraError as e:
@@ -91,7 +92,7 @@ class ChrootConnector(BaseConnector):
 
         chroot_command = StringCommand(
             "chroot",
-            chroot_directory,
+            QuoteString(chroot_directory),
             "sh",
             "-c",
             command,
@@ -130,8 +131,8 @@ class ChrootConnector(BaseConnector):
             chroot_directory = self.host.connector_data["chroot_directory"]
             chroot_command = StringCommand(
                 "cp",
-                temp_filename,
-                f"{chroot_directory}/{remote_filename}",
+                QuoteString(temp_filename),
+                QuoteString(f"{chroot_directory}/{remote_filename}"),
             )
 
             status, output = self.local.run_shell_command(
@@ -143,14 +144,11 @@ class ChrootConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
-            click.echo(
-                "{0}file uploaded to chroot: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+            echo(
+                f"{self.host.print_prefix}file uploaded to chroot: {remote_filename}",
                 err=True,
             )
 
@@ -172,8 +170,8 @@ class ChrootConnector(BaseConnector):
             chroot_directory = self.host.connector_data["chroot_directory"]
             chroot_command = StringCommand(
                 "cp",
-                f"{chroot_directory}/{remote_filename}",
-                temp_filename,
+                QuoteString(f"{chroot_directory}/{remote_filename}"),
+                QuoteString(temp_filename),
             )
 
             status, output = self.local.run_shell_command(
@@ -198,14 +196,11 @@ class ChrootConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
-            click.echo(
-                "{0}file downloaded from chroot: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+            echo(
+                f"{self.host.print_prefix}file downloaded from chroot: {remote_filename}",
                 err=True,
             )
 

@@ -33,10 +33,25 @@ cd pyinfra
 uv sync
 ```
 
+If you will use pyinfra as a module, and want to be able to edit its code as you go, make sure you add it as an editable dependency to your project instead:
+
+```
+# There is no need to create a virtualenv, uv will do that for you
+
+# Clone the repo
+git clone git@github.com:pyinfra-dev/pyinfra.git
+
+# Add as an editable dependency
+# Note that the path should be relative from you project to where you cloned pyinfra
+uv add --editable ./pyinfra
+```
+
 ### Code Style & Type Checking
 
 Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
-recommended for local development though currently optional. There is a script to run the linting & type-checking:
+recommended for local development though currently optional. Shell scripts are checked with
+[shellcheck](https://www.shellcheck.net/), so install it before running the lint script (eg `apt-get install shellcheck`
+or `brew install shellcheck`). There is a script to run the linting & type-checking:
 
 ```sh
 # Check formatting & types
@@ -48,7 +63,15 @@ scripts/dev-format.sh
 
 ### Commit Messages
 
-Please try to use consistent commit messages, look at the [recent history](https://github.com/pyinfra-dev/pyinfra/commits/) for examples. PRs that follow this will be rebased, PRs that do not will be squashed.
+Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+standard. PRs that follow this will be rebased, PRs that do not will be squashed.
+
+The following scopes are (optionally) allowed: `api`, `cli`, `deps`, `operations`, `facts`, `connectors`. 
+With the last three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
+
+When creating a PR, the last commit message is typically used as the PR title. When merging PRs, 
+we typically squash all commits into a single commit, and use the PR title as the commit message.
+For this reason, PR titles are linted to check if they follow our commit message conventions.
 
 ### Tests
 
@@ -67,6 +90,12 @@ uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 # Only run operation tests for operations.selinux
 uv run pytest tests/test_operations.py -k "selinux."
 ```
+
+Tests for facts and operations are written in a declarative manner and use the 
+[pyinfra-testing harness](https://github.com/pyinfra-dev/pyinfra-testing). Review the harness README 
+to understand how tests for facts and operations are written, and how to add new tests.
+
+The test harness can also be used for writing tests for 3rd party facts and operations.
 
 #### End-to-End Tests
 
@@ -91,14 +120,20 @@ not be changed, it contains build artifacts.
 
 ### Generate Documentation
 
-To generate:
+To generate the per-module operation, fact and connector pages:
+
+```sh
+scripts/generate-docs.sh
+```
+
+To preview the documentation site locally ([localhost:8000](http://localhost:8000)):
+
+```sh
+uv run zensical serve
+```
+
+To produce a full static build:
 
 ```sh
 scripts/build-public-docs.sh
-```
-
-To view ([localhost:8000](http://localhost:8000)):
-
-```sh
-uv run -m http.server -d docs/public/en/latest/
 ```

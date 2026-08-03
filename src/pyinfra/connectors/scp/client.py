@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import ntpath
 import os
-from pathlib import PurePath
+import posixpath
+from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from shlex import quote
-from socket import timeout as SocketTimeoutError
 from typing import IO, AnyStr
 
 from paramiko import Channel
@@ -97,9 +96,9 @@ class SCPClient:
     def getfo(self, remote_path: str, fl: IO):
         remote_path_sanitized = quote(remote_path)
         if os.name == "nt":
-            remote_file_name = ntpath.basename(remote_path_sanitized)
+            remote_file_name = PureWindowsPath(remote_path_sanitized).name
         else:
-            remote_file_name = os.path.basename(remote_path_sanitized)
+            remote_file_name = PurePosixPath(remote_path_sanitized).name
         self.channel.settimeout(self.socket_timeout)
         self.channel.exec_command(self.scp_command + b" -f " + asbytes(remote_path_sanitized))
         self._recv_all(fl, remote_file_name)
@@ -113,12 +112,12 @@ class SCPClient:
             self._channel = None
 
     def _send_file(self, fl, name, mode, size):
-        basename = asbytes(os.path.basename(name))
+        basename = asbytes(posixpath.basename(name))
         # The protocol can't handle \n in the filename.
         # Quote them as the control sequence \^J for now,
         # which is how openssh handles it.
         self.channel.sendall(
-            ("C%s %d " % (mode, size)).encode("ascii") + basename.replace(b"\n", b"\\^J") + b"\n"
+            f"C{mode} {size} ".encode("ascii") + basename.replace(b"\n", b"\\^J") + b"\n"
         )
         self._recv_confirm()
         file_pos = 0
@@ -135,7 +134,7 @@ class SCPClient:
         msg = b""
         try:
             msg = self.channel.recv(512)
-        except SocketTimeoutError:
+        except TimeoutError:
             raise SCPException("Timeout waiting for scp response")
         # slice off the first byte, so this compare will work in py2 and py3
         if msg and msg[0:1] == b"\x00":
@@ -193,7 +192,7 @@ class SCPClient:
             msg = chan.recv(512)
             if msg and msg[0:1] != b"\x00":
                 raise SCPException(asunicode(msg[1:]))
-        except SocketTimeoutError:
+        except TimeoutError:
             chan.close()
             raise SCPException("Error receiving, socket.timeout")
 

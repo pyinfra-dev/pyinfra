@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
 from datetime import datetime
 from importlib import import_module
 from importlib.util import find_spec
 from io import IOBase
-from os import path
 from pathlib import Path
 from types import CodeType, FunctionType, ModuleType
-from typing import Callable
+from collections.abc import Callable
 
 import click
 import gevent
@@ -36,10 +34,13 @@ PYTHON_CODES: dict[str, CodeType] = {}
 
 
 def is_subdir(child, parent):
-    child = path.realpath(child)
-    parent = path.realpath(parent)
-    relative = path.relpath(child, start=parent)
-    return not relative.startswith(os.pardir)
+    child_resolved = Path(child).resolve()
+    parent_resolved = Path(parent).resolve()
+    try:
+        child_resolved.relative_to(parent_resolved)
+    except ValueError:
+        return False
+    return True
 
 
 def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = False):
@@ -51,7 +52,7 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
     state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             code_str = f.read()
 
         code = compile(code_str, filename, "exec")
@@ -97,23 +98,23 @@ def json_encode(obj):
 
     # Python types
     if isinstance(obj, ModuleType):
-        return "Module: {0}".format(obj.__name__)
+        return f"Module: {obj.__name__}"
 
     if isinstance(obj, FunctionType):
-        return "Function: {0}".format(obj.__name__)
+        return f"Function: {obj.__name__}"
 
     if isinstance(obj, datetime):
         return obj.isoformat()
 
     if isinstance(obj, IOBase):
         if hasattr(obj, "name"):
-            return "File: {0}".format(obj.name)
+            return f"File: {obj.name}"
 
         if hasattr(obj, "template"):
-            return "Template: {0}".format(obj.template)
+            return f"Template: {obj.template}"
 
         obj.seek(0)
-        return "In memory file: {0}".format(obj.read())
+        return f"In memory file: {obj.read()}"
 
     if isinstance(obj, Path):
         return str(obj)
@@ -127,7 +128,7 @@ def json_encode(obj):
     if hasattr(obj, "to_json"):
         return obj.to_json()
 
-    raise TypeError("Cannot serialize: {0} ({1})".format(type(obj), obj))
+    raise TypeError(f"Cannot serialize: {type(obj)} ({obj})")
 
 
 def parse_cli_arg(arg):
@@ -153,7 +154,16 @@ def parse_cli_arg(arg):
     return arg
 
 
+def _is_windows_drive_path(path: str) -> bool:
+    return len(path) >= 3 and path[1] == ":" and path[2] in ("/", "\\")
+
+
 def try_import_module_attribute(path, prefix=None, raise_for_none=True):
+    if _is_windows_drive_path(path):
+        if raise_for_none:
+            raise CliError(f"No such module: {path}")
+        return None
+
     if ":" in path:
         # Allow a.module.name:function syntax
         mod_path, attr_name = path.rsplit(":", 1)
@@ -167,7 +177,7 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
     if prefix:
         possible_modules.append(f"{prefix}.{mod_path}")
 
-    module = None
+    any_module_found = False
 
     for possible in possible_modules:
         try:
@@ -182,37 +192,36 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
             # referenced above the find_spec call.
             logger.warning(f"Exception raised during inventory search on: {possible}: {e}")
             continue
-        else:
-            if spec is not None:
-                module = import_module(possible)
-                break
 
-    if module is None:
-        if raise_for_none:
-            raise CliError(f"No such module: {possible_modules[0]}")
+        if spec is None:
+            continue
+
+        any_module_found = True
+        candidate = import_module(possible)
+        # A bare module name may shadow a prefixed pyinfra fact/operation (eg. an
+        # installed `pip` package vs. `pyinfra.facts.pip`); keep trying remaining
+        # candidates when the attribute is missing rather than short-circuiting.
+        attr = getattr(candidate, attr_name, None)
+        if attr is not None:
+            return attr
+
+    if not raise_for_none:
         return
 
-    attr = getattr(module, attr_name, None)
-    if attr is None:
-        if raise_for_none:
-            raise CliError(f"No such attribute in module {possible_modules[0]}: {attr_name}")
-        return
+    if not any_module_found:
+        raise CliError(f"No such module: {possible_modules[0]}")
 
-    return attr
+    raise CliError(f"No such attribute in module {possible_modules[0]}: {attr_name}")
 
 
-def _parallel_load_hosts(state: "State", callback: Callable, name: str):
+def _parallel_load_hosts(state: State, callback: Callable, name: str):
     def load_file(local_host):
         try:
             with ctx_config.use(state.config.copy()):
                 with ctx_host.use(local_host):
                     callback()
                     logger.info(
-                        "{0}{1} {2}".format(
-                            local_host.print_prefix,
-                            click.style("Ready:", "green"),
-                            click.style(name, bold=True),
-                        ),
+                        f"{local_host.print_prefix}{click.style('Ready:', 'green')} {click.style(name, bold=True)}",
                     )
         except Exception as e:
             return e
@@ -230,10 +239,10 @@ def _parallel_load_hosts(state: "State", callback: Callable, name: str):
             progress(host)
 
 
-def load_deploy_file(state: "State", filename):
+def load_deploy_file(state: State, filename):
     state.current_deploy_filename = filename
     _parallel_load_hosts(state, lambda: exec_file(filename), filename)
 
 
-def load_func(state: "State", op_func, *args, **kwargs):
+def load_func(state: State, op_func, *args, **kwargs):
     _parallel_load_hosts(state, lambda: op_func(*args, **kwargs), op_func.__name__)

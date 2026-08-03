@@ -1,0 +1,15 @@
+{
+    "kwargs": {
+        "path": "/some/venv",
+        "python": "/opt/python 3.10/bin/python3",
+        "venv": true
+    },
+    "facts": {
+        "files.File": {
+            "path=/some/venv/bin/activate": null
+        }
+    },
+    "commands": [
+        "'/opt/python 3.10/bin/python3' -m venv /some/venv"
+    ]
+}

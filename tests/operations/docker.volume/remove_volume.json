@@ -1,0 +1,17 @@
+{
+    "kwargs": {
+        "volume": "nginx_volume",
+        "present": false
+    },
+    "facts": {
+        "docker.DockerVolume": {
+            "object_id=nginx_volume": {
+                "Name": "nginx_volume",
+                "Driver": "local"
+            }
+        }
+    },
+    "commands": [
+        "docker volume rm nginx_volume"
+    ]
+}

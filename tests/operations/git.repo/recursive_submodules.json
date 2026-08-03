@@ -5,6 +5,11 @@
         "recursive_submodules": true
     },
     "facts": {
+        "git.GitConfig": {
+            "repo=/home/myrepo, system=False": {
+                "remote.origin.url": ["myrepo"]
+            }
+        },
         "files.Directory": {
             "path=/home/myrepo": {},
             "path=/home/myrepo/.git": {
@@ -13,6 +18,12 @@
         },
         "git.GitBranch": {
             "repo=/home/myrepo": "master"
+        },
+        "git.GitLocalCommit": {
+            "ref=master, repo=/home/myrepo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "git.GitRemoteBranchCommit": {
+            "branch=master, remote=origin, repo=/home/myrepo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         }
     },
     "commands": [

@@ -1,0 +1,61 @@
+{
+    "command": "find \"/etc/apt/trusted.gpg.d\" -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --list-keys --with-colons --keyring \"$1\" --no-default-keyring 2>/dev/null || true' _ {} \\; ; find \"/etc/apt/trusted.gpg.d\" -type f -name '*.asc' 2>/dev/null -exec sh -c 'echo \"KEYRING:$1\"; gpg --with-colons \"$1\" 2>/dev/null || true' _ {} \\;",
+    "requires_command": "gpg",
+    "arg": [
+        "/etc/apt/trusted.gpg.d"
+    ],
+    "output": [
+        "KEYRING:/etc/apt/trusted.gpg.d/debian-archive-bookworm-automatic.asc",
+        "pub:-:4096:1:B7C5D7D6350947F8:1663251644:::-:::scSC::::::23::0:",
+        "fpr:::::::::4D64390375060AA4D3E84D8FB7C5D7D6350947F8:",
+        "uid:-::::1663251644::7B1EFED0F7198D8488DD53F0E95BB93FC4D0A10C::Debian Stable Release Key (12/bookworm) <debian-release@lists.debian.org>::::::::::0:",
+        "sub:-:4096:1:16E0B0B5FC11C3A7:1663251644:::-:::e::::::23:",
+        "fpr:::::::::CFD35E5D1F5CBDE15AE59C5E16E0B0B5FC11C3A7:",
+        "KEYRING:/etc/apt/trusted.gpg.d/debian-archive-bookworm-stable.asc",
+        "pub:-:4096:1:4F368D5D67269BAC:1663251677:::-:::scSC::::::23::0:",
+        "fpr:::::::::80E46CDDD2798E51FB74F84E4F368D5D67269BAC:",
+        "uid:-::::1663251677::BB28BDBA35F9A1A92F44E4C96A9E86FC66F9D4E6::Debian Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>::::::::::0:",
+        "sub:-:4096:1:D7AB25251C0A3EE3:1663251677:::-:::e::::::23:",
+        "fpr:::::::::C5691F97B9C30A5CF0A3B1F9D7AB25251C0A3EE3:"
+    ],
+    "fact": {
+        "/etc/apt/trusted.gpg.d/debian-archive-bookworm-automatic.asc": {
+            "format": "asc",
+            "keys": {
+                "B7C5D7D6350947F8": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {
+                        "16E0B0B5FC11C3A7": {
+                            "validity": "-",
+                            "length": 4096,
+                            "fingerprint": "CFD35E5D1F5CBDE15AE59C5E16E0B0B5FC11C3A7"
+                        }
+                    },
+                    "fingerprint": "4D64390375060AA4D3E84D8FB7C5D7D6350947F8",
+                    "uid_hash": "7B1EFED0F7198D8488DD53F0E95BB93FC4D0A10C",
+                    "uid": "Debian Stable Release Key (12/bookworm) <debian-release@lists.debian.org>"
+                }
+            }
+        },
+        "/etc/apt/trusted.gpg.d/debian-archive-bookworm-stable.asc": {
+            "format": "asc",
+            "keys": {
+                "4F368D5D67269BAC": {
+                    "validity": "-",
+                    "length": 4096,
+                    "subkeys": {
+                        "D7AB25251C0A3EE3": {
+                            "validity": "-",
+                            "length": 4096,
+                            "fingerprint": "C5691F97B9C30A5CF0A3B1F9D7AB25251C0A3EE3"
+                        }
+                    },
+                    "fingerprint": "80E46CDDD2798E51FB74F84E4F368D5D67269BAC",
+                    "uid_hash": "BB28BDBA35F9A1A92F44E4C96A9E86FC66F9D4E6",
+                    "uid": "Debian Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>"
+                }
+            }
+        }
+    }
+}

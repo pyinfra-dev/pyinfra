@@ -1,0 +1,18 @@
+{
+    "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list.d/multi.sources",
+        "Types: deb",
+        "URIs: http://deb.debian.org/debian https://mirror.example.com/debian",
+        "Suites: bookworm bookworm-updates",
+        "Components: main contrib",
+        ""
+    ],
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
+    "requires_command": "apt",
+    "fact": [
+        {"type": "deb", "url": "http://deb.debian.org/debian",      "distribution": "bookworm",         "components": ["main", "contrib"], "options": {}},
+        {"type": "deb", "url": "http://deb.debian.org/debian",      "distribution": "bookworm-updates", "components": ["main", "contrib"], "options": {}},
+        {"type": "deb", "url": "https://mirror.example.com/debian", "distribution": "bookworm",         "components": ["main", "contrib"], "options": {}},
+        {"type": "deb", "url": "https://mirror.example.com/debian", "distribution": "bookworm-updates", "components": ["main", "contrib"], "options": {}}
+    ]
+}

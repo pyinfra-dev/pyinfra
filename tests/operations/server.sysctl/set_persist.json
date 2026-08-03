@@ -8,12 +8,12 @@
             "keys=['kern.max-files']": {}
         },
         "files.FindInFile": {
-            "interpolate_variables=False, path=/etc/sysctl.conf, pattern=^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": [],
-            "interpolate_variables=False, path=/etc/sysctl.conf, pattern=^kern.max-files = 2000$": []
+            "extended_regex=False, interpolate_variables=False, path=/etc/sysctl.conf, pattern=^.*kern.max-files[[:space:]]*=[[:space:]]*2000.*$": [],
+            "extended_regex=False, interpolate_variables=False, path=/etc/sysctl.conf, pattern=^kern.max-files = 2000$": []
         }
     },
     "commands": [
-        "sysctl kern.max-files='2000'",
+        "sysctl kern.max-files=2000",
         "echo 'kern.max-files = 2000' >> /etc/sysctl.conf"
     ]
 }

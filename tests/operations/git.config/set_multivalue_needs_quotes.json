@@ -1,0 +1,18 @@
+{
+    "args": ["url.evil; whoami.insteadOf", "git://new"],
+    "kwargs": {
+        "multi_value": true,
+        "repo": "/my repo"
+    },
+    "facts": {
+        "git.GitConfig": {
+            "repo=/my repo, system=False": {}
+        },
+        "files.Directory": {
+            "path=/my repo/.git": true
+        }
+    },
+    "commands": [
+        "cd '/my repo' && git config --local --add 'url.evil; whoami.insteadOf' \"git://new\""
+    ]
+}

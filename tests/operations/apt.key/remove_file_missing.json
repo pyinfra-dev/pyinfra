@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "dest": "missing.gpg",
+        "present": false
+    },
+    "facts": {
+        "files.File": {
+            "path=/etc/apt/keyrings/missing.gpg": null
+        }
+    },
+    "commands": []
+}

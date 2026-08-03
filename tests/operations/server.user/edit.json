@@ -31,7 +31,10 @@
                 "group": "somegroup"
             }
         },
-        "server.Groups": {}
+        "server.Groups": {},
+        "server.Which": {
+            "command=usermod": "/usr/sbin/usermod"
+        }
     },
     "commands": [
         "usermod -d /home/someotheruser -s /bin/false -g somegroup -G group1,group2,group3 -c 'New Full Name' someuser"

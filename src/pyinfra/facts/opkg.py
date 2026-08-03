@@ -5,12 +5,15 @@ Gather the information provided by ``opkg`` on OpenWrt systems:
     + list of installed packages
     + list of packages with available upgrades
 
+See https://openwrt.org/docs/guide-user/additional-software/opkg
 
-    see https://openwrt.org/docs/guide-user/additional-software/opkg
+**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
+
+.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
 """
 
 import re
-from typing import Dict, NamedTuple, Union
+from typing import NamedTuple
 
 from typing_extensions import override
 
@@ -28,12 +31,10 @@ class OpkgPkgUpgradeInfo(NamedTuple):
 
 
 class OpkgConfInfo(NamedTuple):
-    paths: Dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
+    paths: dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
     list_dir: str  # where package lists are stored, e.g. /var/opkg-lists
-    options: Dict[
-        str, Union[str, bool]
-    ]  # mapping from option to value, e.g. {'check_signature': True}
-    arch_cfg: Dict[str, int]  # priorities for architectures
+    options: dict[str, str | bool]  # mapping from option to value, e.g. {'check_signature': True}
+    arch_cfg: dict[str, int]  # priorities for architectures
 
 
 class OpkgFeedInfo(NamedTuple):

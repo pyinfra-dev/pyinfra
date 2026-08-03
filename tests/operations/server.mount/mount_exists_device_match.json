@@ -1,0 +1,17 @@
+{
+    "args": ["/data"],
+    "kwargs": {
+        "device": "/dev/sdb1"
+    },
+    "facts": {
+        "server.Mounts": {
+            "/data": {
+                "device": "/dev/sdb1",
+                "type": "ext4",
+                "options": ["rw", "relatime"]
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "filesystem /data is mounted"
+}

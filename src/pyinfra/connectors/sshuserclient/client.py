@@ -3,7 +3,8 @@ This file as originally part of the "sshuserclient" pypi package. The GitHub
 source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
-from os import path
+import os
+from pathlib import Path
 
 from gevent.lock import BoundedSemaphore
 from paramiko import (
@@ -18,7 +19,12 @@ from paramiko.hostkeys import HostKeyEntry
 from typing_extensions import override
 
 from pyinfra import logger
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
+from pyinfra.connectors.ssh_util import (
+    _patch_paramiko_sk_key_support,
+    load_key_with_certificate,
+)
 
 from .config import SSHConfig
 
@@ -46,9 +52,7 @@ def append_hostkey(client, hostname, key):
         host_key_entry = HostKeyEntry([hostname], key)
         if host_key_entry is None:
             raise SSHException(
-                "Append Hostkey: Failed to parse host {0}, could not append to hostfile".format(
-                    hostname
-                ),
+                f"Append Hostkey: Failed to parse host {hostname}, could not append to hostfile",
             )
         with open(client._host_keys_filename, "a") as host_keys_file:
             hk_entry = host_key_entry.to_line()
@@ -93,6 +97,44 @@ class WarningPolicy(MissingHostKeyPolicy):
         logger.warning("No host key for %s found in known_hosts", hostname)
 
 
+def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
+    """
+    Replace ``cfg["key_filename"]`` with a pre-built ``pkey`` when an ssh_config
+    ``IdentityFile`` exists on disk. Honours ``CertificateFile`` directives and
+    falls back to the implicit ``<key>-cert.pub`` lookup so OpenSSH-style CA
+    auth works without explicit pyinfra ``ssh_key`` configuration (issue #1569).
+    Silent fall-through when no identity exists keeps the legacy paramiko
+    ``key_filename`` flow for missing or otherwise unloadable files. The load is
+    non-interactive (``allow_prompt=False``): an encrypted identity with no known
+    passphrase falls through instead of blocking on a prompt (issue #1852).
+    """
+
+    identity_files = host_config.get("identityfile") or []
+    if isinstance(identity_files, str):
+        identity_files = [identity_files]
+
+    certificate_files = host_config.get("certificatefile") or []
+    if isinstance(certificate_files, str):
+        certificate_files = [certificate_files]
+    certificate_filename = certificate_files[0] if certificate_files else None
+
+    for identity_file in identity_files:
+        expanded = Path(identity_file).expanduser()
+        if not expanded.is_file():
+            continue
+        try:
+            cfg["pkey"] = load_key_with_certificate(
+                key_filename=identity_file,
+                certificate_filename=certificate_filename,
+                allow_prompt=False,
+            )
+        except (PyinfraError, SSHException, OSError) as e:
+            logger.debug("Could not load identity %s with certificate: %s", identity_file, e)
+            continue
+        cfg.pop("key_filename", None)
+        return
+
+
 def get_missing_host_key_policy(policy):
     if policy is None or policy == "ask":
         return AskPolicy()
@@ -110,9 +152,9 @@ def get_ssh_config(user_config_file=None):
     logger.debug("Loading SSH config: %s", user_config_file)
 
     if user_config_file is None:
-        user_config_file = path.expanduser("~/.ssh/config")
+        user_config_file = os.path.expanduser("~/.ssh/config")
 
-    if path.exists(user_config_file):
+    if Path(user_config_file).exists():
         with open(user_config_file, encoding="utf-8") as f:
             ssh_config = SSHConfig()
             ssh_config.parse(f)
@@ -159,6 +201,8 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_paramiko_connect_kwargs=None,
         **kwargs,
     ):
+        _patch_paramiko_sk_key_support()
+
         (
             hostname,
             config,
@@ -166,6 +210,7 @@ class SSHClient(ParamikoClient):
             missing_host_key_policy,
             host_keys_files,
             keep_alive,
+            identity_agent,
         ) = self.parse_config(
             hostname,
             kwargs,
@@ -176,7 +221,7 @@ class SSHClient(ParamikoClient):
         config.update(kwargs)
 
         if _pyinfra_ssh_known_hosts_file:
-            host_keys_files = (path.expanduser(_pyinfra_ssh_known_hosts_file),)
+            host_keys_files = (os.path.expanduser(_pyinfra_ssh_known_hosts_file),)
 
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_files)
@@ -188,7 +233,21 @@ class SSHClient(ParamikoClient):
             config.update(_pyinfra_ssh_paramiko_connect_kwargs)
 
         self._ssh_config = config
-        super().connect(hostname, **config)
+        self.identity_agent = identity_agent
+
+        # Honor IdentityAgent from SSH config by temporarily setting SSH_AUTH_SOCK
+        # so Paramiko's Agent class connects to the correct socket.
+        old_auth_sock = os.environ.get("SSH_AUTH_SOCK")
+        if identity_agent:
+            os.environ["SSH_AUTH_SOCK"] = identity_agent
+        try:
+            super().connect(hostname, **config)
+        finally:
+            if identity_agent:
+                if old_auth_sock is not None:
+                    os.environ["SSH_AUTH_SOCK"] = old_auth_sock
+                else:
+                    os.environ.pop("SSH_AUTH_SOCK", None)
 
         if _pyinfra_ssh_forward_agent is not None:
             forward_agent = _pyinfra_ssh_forward_agent
@@ -204,13 +263,14 @@ class SSHClient(ParamikoClient):
             session = transport.open_session()
             AgentRequestHandler(session)
 
-    def gateway(self, hostname, host_port, target, target_port):
+    def gateway(self, hostname, host_port, target, target_port, timeout=None):
         transport = self.get_transport()
         assert transport is not None, "No transport"
         return transport.open_channel(
             "direct-tcpip",
             (target, target_port),
             (hostname, host_port),
+            timeout=timeout,
         )
 
     def parse_config(
@@ -225,8 +285,9 @@ class SSHClient(ParamikoClient):
 
         keep_alive = 0
         forward_agent = False
+        identity_agent = None
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
-        host_keys_files = (path.expanduser("~/.ssh/known_hosts"),)
+        host_keys_files: tuple[str, ...] = (os.path.expanduser("~/.ssh/known_hosts"),)
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
@@ -237,6 +298,7 @@ class SSHClient(ParamikoClient):
                 missing_host_key_policy,
                 host_keys_files,
                 keep_alive,
+                identity_agent,
             )
 
         host_config = ssh_config.lookup(hostname)
@@ -251,7 +313,7 @@ class SSHClient(ParamikoClient):
         if "userknownhostsfile" in host_config:
             # OpenSSH supports multiple space-separated known hosts files
             host_keys_files = tuple(
-                path.expanduser(f) for f in host_config["userknownhostsfile"].split()
+                os.path.expanduser(f) for f in host_config["userknownhostsfile"].split()
             )
 
         if "hostname" in host_config:
@@ -260,14 +322,30 @@ class SSHClient(ParamikoClient):
         if "user" in host_config:
             cfg["username"] = host_config["user"]
 
-        if "identityfile" in host_config:
+        # An explicit pyinfra ``ssh_key`` (already loaded into ``pkey`` using
+        # ``ssh_key_password``) wins over any ssh_config ``IdentityFile``, the
+        # same way ``ssh -i`` overrides the config (issue #1852). Loading the
+        # config identity here would otherwise prompt for its passphrase.
+        if "identityfile" in host_config and "pkey" not in cfg:
             cfg["key_filename"] = host_config["identityfile"]
+            _attach_identity_with_certificate(cfg, host_config)
 
         if "port" in host_config:
             cfg["port"] = int(host_config["port"])
 
+        # Respect ``ConnectTimeout`` from ssh_config (issue #971): without this,
+        # paramiko waits on its own default and a ProxyJump hop can hang for
+        # minutes before failing.
+        if "connecttimeout" in host_config and "timeout" not in cfg:
+            cfg["timeout"] = int(host_config["connecttimeout"])
+
         if "serveraliveinterval" in host_config:
             keep_alive = int(host_config["serveraliveinterval"])
+
+        if "identityagent" in host_config:
+            agent_path = host_config["identityagent"]
+            if agent_path.lower() != "none":
+                identity_agent = os.path.expanduser(agent_path)
 
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
@@ -275,14 +353,26 @@ class SSHClient(ParamikoClient):
         elif "proxyjump" in host_config:
             hops = host_config["proxyjump"].split(",")
             sock = None
+            # Propagate the target's timeout down so hop connections and the
+            # direct-tcpip channel don't hang forever when the network misbehaves
+            # (issue #971). Individual hops can still override via their own
+            # ``ConnectTimeout`` in ssh_config.
+            target_timeout = cfg.get("timeout")
 
             for i, hop in enumerate(hops):
                 hop_hostname, hop_config = self.derive_shorthand(ssh_config, hop)
                 logger.debug("SSH ProxyJump through %s:%s", hop_hostname, hop_config["port"])
 
+                hop_connect_kwargs = dict(hop_config)
+                if "timeout" not in hop_connect_kwargs and target_timeout is not None:
+                    hop_connect_kwargs["timeout"] = target_timeout
+
                 c = SSHClient()
                 c.connect(
-                    hop_hostname, _pyinfra_ssh_config_file=ssh_config_file, sock=sock, **hop_config
+                    hop_hostname,
+                    _pyinfra_ssh_config_file=ssh_config_file,
+                    sock=sock,
+                    **hop_connect_kwargs,
                 )
 
                 if i == len(hops) - 1:
@@ -291,10 +381,24 @@ class SSHClient(ParamikoClient):
                 else:
                     target, target_config = self.derive_shorthand(ssh_config, hops[i + 1])
 
-                sock = c.gateway(hostname, cfg["port"], target, target_config["port"])
+                sock = c.gateway(
+                    hostname,
+                    cfg["port"],
+                    target,
+                    target_config["port"],
+                    timeout=target_timeout,
+                )
             cfg["sock"] = sock
 
-        return hostname, cfg, forward_agent, missing_host_key_policy, host_keys_files, keep_alive
+        return (
+            hostname,
+            cfg,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_files,
+            keep_alive,
+            identity_agent,
+        )
 
     @staticmethod
     def derive_shorthand(ssh_config, host_string):
@@ -323,6 +427,8 @@ class SSHClient(ParamikoClient):
             "port": base_config.get("port", 22),
             "username": base_config.get("user"),
         }
+        if "connecttimeout" in base_config:
+            config["timeout"] = int(base_config["connecttimeout"])
         config.update(shorthand_config)
 
         return hostname, config

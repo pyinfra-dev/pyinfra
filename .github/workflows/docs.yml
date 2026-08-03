@@ -25,18 +25,16 @@ jobs:
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           repository: pyinfra-dev/docs.pyinfra.com
-          path: docs/public/
+          path: docs-public/
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Install
-        run: |
-          uv sync --group docs --no-default-groups
-          uv pip install 'jinja2<3.1'
+        run: uv sync --group docs --no-default-groups
 
       - name: Generate documentation
         run: scripts/build-public-docs.sh
@@ -45,7 +43,7 @@ jobs:
 
       - name: Push & Update
         run: |
-          cd docs/public/
+          cd docs-public/
 
           if [[ `git status --porcelain` ]]; then
             git config user.name github-actions

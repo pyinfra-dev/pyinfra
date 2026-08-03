@@ -5,7 +5,7 @@ Manage sysvinit services (``/etc/init.d``).
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.files import FindLinks
 from pyinfra.facts.server import LinuxDistribution
 from pyinfra.facts.sysvinit import InitdStatus
@@ -71,8 +71,8 @@ def service(
     if isinstance(enabled, bool):
         start_links = host.get_fact(
             FindLinks,
-            path="/etc/rc*.d/S*{0}".format(service),
-            quote_path=False,  # enable path glob matching
+            path="/etc",
+            path_match=f"/etc/rc*.d/S*{service}",
         )
 
         # If no links exist, attempt to enable the service using distro-specific commands
@@ -80,20 +80,20 @@ def service(
             distro = host.get_fact(LinuxDistribution).get("name")
 
             if distro in ("Ubuntu", "Debian"):
-                yield "update-rc.d {0} defaults".format(service)
+                yield StringCommand("update-rc.d", QuoteString(service), "defaults")
 
             elif distro in ("CentOS", "Fedora", "Red Hat Enterprise Linux"):
-                yield "chkconfig {0} --add".format(service)
-                yield "chkconfig {0} on".format(service)
+                yield StringCommand("chkconfig", QuoteString(service), "--add")
+                yield StringCommand("chkconfig", QuoteString(service), "on")
 
             elif distro == "Gentoo":
-                yield "rc-update add {0} default".format(service)
+                yield StringCommand("rc-update add", QuoteString(service), "default")
 
         # Remove any /etc/rcX.d/<service> start links
         elif enabled is False:
             # No state checking, just blindly remove any that exist
             for link in start_links:
-                yield "rm -f {0}".format(link)
+                yield StringCommand("rm -f", QuoteString(link))
 
 
 @operation()
@@ -129,14 +129,14 @@ def enable(
     links = []
 
     for level in start_levels:
-        links.append("/etc/rc{0}.d/S{1}{2}".format(level, start_priority, service))
+        links.append(f"/etc/rc{level}.d/S{start_priority}{service}")
 
     for level in stop_levels:
-        links.append("/etc/rc{0}.d/K{1}{2}".format(level, stop_priority, service))
+        links.append(f"/etc/rc{level}.d/K{stop_priority}{service}")
 
     # Ensure all the new links exist
     for link in links:
         yield from files.link._inner(
             path=link,
-            target="/etc/init.d/{0}".format(service),
+            target=f"/etc/init.d/{service}",
         )

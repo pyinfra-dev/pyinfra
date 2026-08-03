@@ -1,0 +1,14 @@
+{
+    "args": ["evil; rm -rf /"],
+    "kwargs": {
+        "present": false
+    },
+    "facts": {
+        "server.KernelModules": {
+            "evil; rm -rf /": {}
+        }
+    },
+    "commands": [
+        "modprobe -r -a 'evil; rm -rf /'"
+    ]
+}

@@ -1,0 +1,24 @@
+{
+  "command": "LANG=C ps -p 1 -o pid,user,stat,%cpu,%mem,comm,args",
+  "arg": 1,
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=busybox": null
+    }
+  },
+  "output": [
+    "  PID USER     STAT %CPU %MEM COMMAND         COMMAND",
+    "    1 root     Ss    0.0  0.1 systemd         /lib/systemd/systemd --system"
+  ],
+  "fact": {
+    "1": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.1,
+      "command": "systemd",
+      "args": "/lib/systemd/systemd --system"
+    }
+  }
+}

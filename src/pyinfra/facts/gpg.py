@@ -95,9 +95,9 @@ class GpgKey(GpgFactBase):
     @override
     def command(self, src):
         if urlparse(src).scheme:
-            return ("(wget -O - {0} || curl -sSLf {0}) | gpg --with-colons").format(src)
+            return f"(wget -O - {src} || curl -sSLf {src}) | gpg --with-colons"
 
-        return "gpg --with-colons {0}".format(src)
+        return f"gpg --with-colons {src}"
 
 
 class GpgKeys(GpgFactBase):
@@ -119,7 +119,7 @@ class GpgKeys(GpgFactBase):
         if not keyring:
             return "gpg --list-keys --with-colons"
 
-        return ("gpg --list-keys --with-colons --keyring {0} --no-default-keyring").format(keyring)
+        return f"gpg --list-keys --with-colons --keyring {keyring} --no-default-keyring"
 
 
 class GpgSecretKeys(GpgFactBase):
@@ -145,6 +145,70 @@ class GpgSecretKeys(GpgFactBase):
         if not keyring:
             return "gpg --list-secret-keys --with-colons"
 
-        return ("gpg --list-secret-keys --with-colons --keyring {0} --no-default-keyring").format(
-            keyring,
+        return f"gpg --list-secret-keys --with-colons --keyring {keyring} --no-default-keyring"
+
+
+class GpgKeyrings(GpgFactBase):
+    """
+    Returns information on all GPG keyrings found in specified directories.
+
+    .. code:: python
+
+        {
+            "/etc/apt/keyrings/docker.gpg": {
+                "format": "gpg",
+                "keys": {...}  # Same format as GpgKeys fact
+            }
+        }
+    """
+
+    @override
+    def command(self, directories):
+        if isinstance(directories, str):
+            directories = [directories]
+
+        search_locations = " ".join(f'"{d}"' for d in directories)
+
+        # Two separate find+exec calls to avoid bash-specific syntax:
+        # - binary keyrings (.gpg, .kbx) use --keyring / --no-default-keyring
+        # - armored keyrings (.asc) are passed directly to gpg
+        return (
+            f"find {search_locations} -type f \\( -name '*.gpg' -o -name '*.kbx' \\) 2>/dev/null"
+            f' -exec sh -c \'echo "KEYRING:$1";'
+            f' gpg --list-keys --with-colons --keyring "$1" --no-default-keyring 2>/dev/null || true\' _ {{}} \\; ;'
+            f" find {search_locations} -type f -name '*.asc' 2>/dev/null"
+            f' -exec sh -c \'echo "KEYRING:$1"; gpg --with-colons "$1" 2>/dev/null || true\' _ {{}} \\;'
         )
+
+    @override
+    def process(self, output):
+        keyrings = {}
+        current_keyring = None
+        current_output: list[str] = []
+
+        for line in output:
+            line = line.strip()
+            if not line:
+                continue
+
+            if line.startswith("KEYRING:"):
+                # Process previous keyring if exists
+                if current_keyring and current_output:
+                    keyring_format = current_keyring.split(".")[-1].lower()
+                    keys = super().process(current_output)
+                    keyrings[current_keyring] = {"format": keyring_format, "keys": keys}
+
+                # Start new keyring
+                current_keyring = line[8:]  # Remove "KEYRING:" prefix
+                current_output = []
+            else:
+                # Accumulate GPG output for current keyring
+                current_output.append(line)
+
+        # Process final keyring
+        if current_keyring and current_output:
+            keyring_format = current_keyring.split(".")[-1].lower()
+            keys = super().process(current_output)
+            keyrings[current_keyring] = {"format": keyring_format, "keys": keys}
+
+        return keyrings

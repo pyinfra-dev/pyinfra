@@ -1,3 +1,6 @@
+---
+orphan: true
+---
 # Data Across Multiple Environments
 
 Let's say you have an app that you wish to deploy in two environments: staging and production, with the dev VM as the default. A good layout for this would be:
@@ -35,4 +38,3 @@ git_branch = 'develop'
 ```
 
 For more information on inventory files, see :doc:`inventory-data`.
-

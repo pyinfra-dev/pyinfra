@@ -59,10 +59,7 @@ class WrappedError(click.ClickException):
                 name = f"{name} in {info.filename} line {info.lineno}"
 
         logger.warning(
-            "--> {0}: {1}".format(
-                click.style(name, "red", bold=True),
-                self,
-            ),
+            f"--> {click.style(name, 'red', bold=True)}: {self}",
         )
 
 
@@ -70,10 +67,7 @@ class CliError(click.ClickException):
     @override
     def show(self, file=None):
         logger.warning(
-            "--> {0}: {1}".format(
-                click.style("pyinfra error", "red", bold=True),
-                self,
-            ),
+            f"--> {click.style('pyinfra error', 'red', bold=True)}: {self}",
         )
 
 
@@ -102,9 +96,9 @@ class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
     @override
     def show(self, file=None):
         logger.warning(
-            "--> {0}:\n".format(
+            "--> {}:\n".format(
                 click.style(
-                    "An exception occurred in: {0}".format(self.filename),
+                    f"An exception occurred in: {self.filename}",
                     "red",
                     bold=True,
                 ),
@@ -125,7 +119,7 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
     @override
     def show(self, file=None):
         click.echo(
-            "--> {0}:\n".format(
+            "--> {}:\n".format(
                 click.style(
                     "An internal exception occurred",
                     "red",
@@ -154,9 +148,7 @@ class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
         logger.debug(exception)
 
         click.echo(
-            "--> The full traceback has been written to {0}".format(
-                click.style("pyinfra-debug.log", bold=True),
-            ),
+            f"--> The full traceback has been written to {click.style('pyinfra-debug.log', bold=True)}",
             err=True,
         )
         click.echo(

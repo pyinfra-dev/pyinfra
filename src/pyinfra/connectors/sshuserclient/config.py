@@ -6,6 +6,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 import glob
 import re
 from os import environ, path
+from pathlib import Path
 
 import paramiko.config
 from gevent.subprocess import CalledProcessError, check_call
@@ -35,16 +36,29 @@ class FakeInvoke:
             result.ok = code == 0
         except Exception as e:
             logger.warning(
-                ("pyinfra encountered an error loading SSH config match exec {0}: {1}").format(
-                    cmd,
-                    e,
-                ),
+                (f"pyinfra encountered an error loading SSH config match exec {cmd}: {e}"),
             )
 
         return result
 
 
 paramiko.config.invoke = FakeInvoke  # type: ignore
+
+
+def _strip_inline_comment(line):
+    """Strip inline comments from SSH config lines, respecting quoted strings"""
+    in_quote = False
+    quote_char = None
+    for i, char in enumerate(line):
+        if char in ('"', "'") and not in_quote:
+            in_quote = True
+            quote_char = char
+        elif char == quote_char and in_quote:
+            in_quote = False
+            quote_char = None
+        elif char == "#" and not in_quote and i > 0 and line[i - 1] in (" ", "\t"):
+            return line[:i].rstrip()
+    return line
 
 
 def _expand_include_statements(file_obj, parsed_files=None):
@@ -54,6 +68,8 @@ def _expand_include_statements(file_obj, parsed_files=None):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
+
+        line = _strip_inline_comment(line)
 
         match = re.match(SETTINGS_REGEX, line)
         if not match:
@@ -78,10 +94,10 @@ def _expand_include_statements(file_obj, parsed_files=None):
         value = path.expanduser(value)
 
         for filename in glob.iglob(value):
-            if path.isfile(filename):
+            if Path(filename).is_file():
                 if filename in parsed_files:
                     raise Exception(
-                        "Include loop detected in ssh config file: %s" % filename,
+                        f"Include loop detected in ssh config file: {filename}",
                     )
                 with open(filename, encoding="utf-8") as fd:
                     parsed_files.append(filename)

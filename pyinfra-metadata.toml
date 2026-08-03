@@ -232,6 +232,18 @@ path = "src/pyinfra/facts/gem.py"
 type = "fact"
 tags = ["package-manager", "ruby"]
 
+[pyinfra.plugins."go-ops"]
+name = "go"
+path = "src/pyinfra/operations/go.py"
+type = "operation"
+tags = ["package-manager", "go"]
+
+[pyinfra.plugins."go-facts"]
+name = "go"
+path = "src/pyinfra/facts/go.py"
+type = "fact"
+tags = ["package-manager", "go"]
+
 [pyinfra.plugins."git-ops"]
 name = "git"
 path = "src/pyinfra/operations/git.py"
@@ -548,3 +560,15 @@ name = "python"
 path = "src/pyinfra/operations/python.py"
 type = "operation"
 tags = ["system"]
+
+[pyinfra.plugins."uv-ops"]
+name = "uv"
+path = "src/pyinfra/operations/uv.py"
+type = "operation"
+tags = ["package-manager", "python"]
+
+[pyinfra.plugins."uv-facts"]
+name = "uv"
+path = "src/pyinfra/facts/uv.py"
+type = "fact"
+tags = ["package-manager", "python"]

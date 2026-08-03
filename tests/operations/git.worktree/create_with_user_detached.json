@@ -1,0 +1,22 @@
+{
+    "args": ["/home/myworktree"],
+    "kwargs": {
+        "repo": "/home/mainrepo",
+        "detached": true,
+        "user": "myuser"
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/mainrepo": {},
+            "path=/home/mainrepo/.git": {
+                "mode": 0
+            },
+            "path=/home/myworktree": null
+        }
+    },
+    "commands": [
+        "cd /home/mainrepo && git worktree add --detach /home/myworktree",
+        "chown -R myuser /home/myworktree",
+        "chown -R myuser /home/mainrepo/.git/worktrees/myworktree"
+    ]
+}

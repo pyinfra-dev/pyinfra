@@ -1,17 +1,15 @@
-from os import path
-from typing import Optional
-
-import click
+from pathlib import Path
 
 import pyinfra
 from pyinfra import config, host, logger, state
+from pyinfra.api.output import echo
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import get_file_path
 from pyinfra.connectors.util import run_local_process
 from pyinfra.context import ctx_state
 
 
-def include(filename: str, data: Optional[dict] = None):
+def include(filename: str, data: dict | None = None):
     """
     Executes a local python file within the ``pyinfra.state.cwd``
     directory.
@@ -34,7 +32,13 @@ def include(filename: str, data: Optional[dict] = None):
 
         from pyinfra_cli.util import exec_file
 
-        with host.deploy(path.relpath(filename, state.cwd), None, data, in_deploy=False):
+        deploy_name = filename
+        if state.cwd:
+            try:
+                deploy_name = str(Path(filename).relative_to(state.cwd))
+            except ValueError:
+                pass
+        with host.deploy(deploy_name, None, data, in_deploy=False):
             exec_file(filename)
 
         # One potential solution to the above is to add local as an actual
@@ -75,7 +79,7 @@ def shell(
         print_prefix = "localhost: "
 
         if print_input:
-            click.echo("{0}>>> {1}".format(print_prefix, command), err=True)
+            echo(f"{print_prefix}>>> {command}", err=True)
 
         return_code, output = run_local_process(
             command,
@@ -85,7 +89,7 @@ def shell(
 
         if return_code > 0 and not ignore_errors:
             raise PyinfraError(
-                "Local command failed: {0}\n{1}".format(command, output.stderr),
+                f"Local command failed: {command}\n{output.stderr}",
             )
 
         all_stdout.extend(output.stdout_lines)

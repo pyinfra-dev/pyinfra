@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import gevent
 from gevent.event import Event
 
-import pyinfra
+from pyinfra.api.output import is_output_active
 
 IS_WINDOWS = platform.system() == "Windows"
 
@@ -48,10 +48,8 @@ def _print_spinner(stop_event, progress_queue):
         except IndexError:
             pass
 
-        text = "    {0}".format(
-            " ".join((WAIT_CHARS[0], progress)),
-        )
-        text = "{0}\r".format(text)
+        text = f"    {' '.join((WAIT_CHARS[0], progress))}"
+        text = f"{text}\r"
 
         sys.stderr.write(text)
         sys.stderr.flush()
@@ -62,14 +60,14 @@ def _print_spinner(stop_event, progress_queue):
         if not IS_WINDOWS:
             sys.stderr.write("\033[K")
 
-        gevent.sleep(WAIT_TIME)
+        stop_event.wait(timeout=WAIT_TIME)
 
 
 @contextmanager
 def progress_spinner(items, prefix_message=None):
     # If there's no current state context we're not in CLI mode, so just return a noop
     # handler and exit.
-    if not pyinfra.is_cli:
+    if not is_output_active():
         yield lambda complete_item: None
         return
 
@@ -88,11 +86,7 @@ def progress_spinner(items, prefix_message=None):
             complete = total_items - len(items)
             percentage_complete = int(math.floor(complete / total_items * 100))
             message_bits.append(
-                "{0}% ({1}/{2})".format(
-                    percentage_complete,
-                    complete,
-                    total_items,
-                ),
+                f"{percentage_complete}% ({complete}/{total_items})",
             )
 
         if prefix_message:
@@ -105,12 +99,10 @@ def progress_spinner(items, prefix_message=None):
             items_allowed_width = TERMINAL_WIDTH - 10 - message_length
 
             if items_allowed_width > 0:
-                items_string = "{%s}" % (", ".join("{0}".format(i) for i in items))
+                items_string = f"{{{', '.join(f'{i}' for i in items)}}}"
                 if len(items_string) >= items_allowed_width:
-                    items_string = "%s...}" % (
-                        # -3 for the ...
-                        items_string[: items_allowed_width - 3],
-                    )
+                    # -3 for the ...
+                    items_string = f"{items_string[: items_allowed_width - 3]}...}}"
 
                 message_bits.append(items_string)
 
@@ -121,10 +113,7 @@ def progress_spinner(items, prefix_message=None):
     def progress(complete_item):
         if complete_item not in items:
             raise ValueError(
-                "Invalid complete item: {0} not in {1}".format(
-                    complete_item,
-                    items,
-                ),
+                f"Invalid complete item: {complete_item} not in {items}",
             )
 
         items.remove(complete_item)

@@ -1,0 +1,21 @@
+{
+  "command": "netstat -tunp 2>/dev/null || true",
+  "facts": {
+    "server.Kernel": "Linux",
+    "server.Which": {
+      "command=ss": null
+    }
+  },
+  "output": [
+    "Active Internet connections (w/o servers)",
+    "Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name",
+    "tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1234/sshd",
+    "tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      5678/nginx",
+    "udp        0      0 0.0.0.0:53              0.0.0.0:*                           1000/named"
+  ],
+  "fact": [
+    {"port": 22, "ip": "0.0.0.0", "protocol": "tcp", "process": "sshd"},
+    {"port": 80, "ip": "0.0.0.0", "protocol": "tcp", "process": "nginx"},
+    {"port": 53, "ip": "0.0.0.0", "protocol": "udp", "process": "named"}
+  ]
+}

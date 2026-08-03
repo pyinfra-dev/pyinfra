@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
-import click
 from typing_extensions import TypedDict, Unpack, override
 
 from pyinfra import local, logger
+from pyinfra.api.output import echo, format_text
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api.util import get_file_io
@@ -88,7 +89,7 @@ class DockerConnector(BaseConnector):
     container_id: str
     no_stop: bool = False
 
-    def __init__(self, state: "State", host: "Host"):
+    def __init__(self, state: State, host: Host):
         super().__init__(state, host)
         self.local = LocalConnector(state, host)
 
@@ -106,12 +107,13 @@ class DockerConnector(BaseConnector):
 
     # 2 helper functions
     def _find_start_docker_container(self, container_id) -> tuple[str, bool]:
-        docker_info = local.shell(f"{self.docker_cmd} container inspect {container_id}")
+        quoted_container_id = shlex.quote(container_id)
+        docker_info = local.shell(f"{self.docker_cmd} container inspect {quoted_container_id}")
         assert isinstance(docker_info, str)
         docker_info = json.loads(docker_info)[0]
         if docker_info["State"]["Running"] is False:
             logger.info(f"Starting stopped container: {container_id}")
-            local.shell(f"{self.docker_cmd} container start {container_id}")
+            local.shell(f"{self.docker_cmd} container start {quoted_container_id}")
             return container_id, False
         return container_id, True
 
@@ -123,13 +125,13 @@ class DockerConnector(BaseConnector):
         ]
 
         if self.data.get("docker_platform"):
-            docker_cmd_parts.extend(["--platform", self.data["docker_platform"]])
+            docker_cmd_parts.extend(["--platform", shlex.quote(self.data["docker_platform"])])
         if self.data.get("docker_architecture"):
-            docker_cmd_parts.extend(["--arch", self.data["docker_architecture"]])
+            docker_cmd_parts.extend(["--arch", shlex.quote(self.data["docker_architecture"])])
 
         docker_cmd_parts.extend(
             [
-                image_name,
+                shlex.quote(image_name),
                 "tail",
                 "-f",
                 "/dev/null",
@@ -165,30 +167,24 @@ class DockerConnector(BaseConnector):
 
         if self.no_stop:
             logger.info(
-                "{0}{1} build complete, container left running: {2}".format(
-                    self.host.print_prefix,
-                    self.docker_cmd,
-                    click.style(container_id, bold=True),
-                ),
+                f"{self.host.print_prefix}{self.docker_cmd} build complete, container left running: {format_text(container_id, bold=True)}",
             )
             return
 
+        quoted_container_id = shlex.quote(container_id)
+
         with progress_spinner({f"{self.docker_cmd} commit"}):
-            image_id = local.shell(f"{self.docker_cmd} commit {container_id}", splitlines=True)[-1][
-                7:19
-            ]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
+            image_id = local.shell(
+                f"{self.docker_cmd} commit {quoted_container_id}", splitlines=True
+            )[-1][7:19]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
 
         with progress_spinner({f"{self.docker_cmd} rm"}):
             local.shell(
-                f"{self.docker_cmd} rm -f {container_id}",
+                f"{self.docker_cmd} rm -f {quoted_container_id}",
             )
 
         logger.info(
-            "{0}{1} build complete, image ID: {2}".format(
-                self.host.print_prefix,
-                self.docker_cmd,
-                click.style(image_id, bold=True),
-            ),
+            f"{self.host.print_prefix}{self.docker_cmd} build complete, image ID: {format_text(image_id, bold=True)}",
         )
 
     @override
@@ -197,7 +193,7 @@ class DockerConnector(BaseConnector):
         command: StringCommand,
         print_output: bool = False,
         print_input: bool = False,
-        **arguments: Unpack["ConnectorArguments"],
+        **arguments: Unpack[ConnectorArguments],
     ) -> tuple[bool, CommandOutput]:
         local_arguments = extract_control_arguments(arguments)
 
@@ -255,8 +251,8 @@ class DockerConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                temp_filename,
-                f"{self.container_id}:{remote_filename}",
+                QuoteString(temp_filename),
+                QuoteString(f"{self.container_id}:{remote_filename}"),
             )
 
             status, output = self.local.run_shell_command(
@@ -269,14 +265,11 @@ class DockerConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
-            click.echo(
-                "{0}file uploaded to container: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+            echo(
+                f"{self.host.print_prefix}file uploaded to container: {remote_filename}",
                 err=True,
             )
 
@@ -303,8 +296,8 @@ class DockerConnector(BaseConnector):
             docker_command = StringCommand(
                 self.docker_cmd,
                 "cp",
-                f"{self.container_id}:{remote_filename}",
-                temp_filename,
+                QuoteString(f"{self.container_id}:{remote_filename}"),
+                QuoteString(temp_filename),
             )
 
             status, output = self.local.run_shell_command(
@@ -323,14 +316,11 @@ class DockerConnector(BaseConnector):
             os.remove(temp_filename)
 
         if not status:
-            raise IOError(output.stderr)
+            raise OSError(output.stderr)
 
         if print_output:
-            click.echo(
-                "{0}file downloaded from container: {1}".format(
-                    self.host.print_prefix,
-                    remote_filename,
-                ),
+            echo(
+                f"{self.host.print_prefix}file downloaded from container: {remote_filename}",
                 err=True,
             )
 

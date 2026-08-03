@@ -4,11 +4,10 @@ import difflib
 import re
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Callable, Generator
+from collections.abc import Callable, Generator
 
-import click
-
-from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api import OperationError, QuoteString, StringCommand
+from pyinfra.api.output import format_text
 
 
 class MetadataTimeField(Enum):
@@ -23,19 +22,39 @@ def unix_path_join(*parts) -> str:
 
 
 def ensure_mode_int(mode: str | int | None) -> int | str | None:
-    # Already an int (/None)?
-    if isinstance(mode, int) or mode is None:
+    """
+    Normalise the accepted mode spellings to the canonical octal-digit
+    integer pyinfra passes to ``chmod`` (and that facts emit), so ``644``,
+    ``"644"``, ``"0644"`` and ``"0o644"`` all mean ``rw-r--r--``.
+
+    Integers are read as their octal digit representation (``644`` means
+    ``rw-r--r--``), matching the existing operations/facts contract. A true
+    octal literal (``0o644``) is indistinguishable from its decimal value
+    (``420``) at runtime - use the ``"0o644"`` string form instead.
+
+    Symbolic modes (``"u+x"``) and ``None`` pass through unchanged.
+    """
+    if mode is None or isinstance(mode, bool):
         return mode
 
-    try:
-        # Try making an int ('700' -> 700)
-        return int(mode)
+    if isinstance(mode, int):
+        digits = str(mode)
+    else:
+        digits = mode.strip().lower()
+        if digits.startswith("0o"):
+            digits = digits[2:]
+        if not digits.isdigit():
+            # Return as-is (ie +x which we don't need to normalise, it always gets run)
+            return mode
 
-    except (TypeError, ValueError):
-        pass
+    if any(c not in "01234567" for c in digits):
+        raise ValueError(
+            f"Invalid file mode: {mode!r} contains non-octal digits "
+            "(expected octal digits 0-7, eg 644, '0644' or '0o644')",
+        )
 
-    # Return as-is (ie +x which we don't need to normalise, it always gets run)
-    return mode
+    # Drop any leading zeros ('0644' -> 644) for the canonical digit int
+    return int(digits)
 
 
 def get_timestamp() -> str:
@@ -61,6 +80,7 @@ def sed_delete(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
 ) -> StringCommand:
     return _sed_command(**locals(), sed_script_builder=_sed_delete_builder)
 
@@ -81,6 +101,7 @@ def sed_replace(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
 ) -> StringCommand:
     return _sed_command(**locals(), sed_script_builder=_sed_replace_builder)
 
@@ -92,6 +113,7 @@ def _sed_command(
     flags: list[str] | None = None,
     backup=False,
     interpolate_variables=False,
+    extended_regex=False,
     # Python requires a default value here, so use _sed_replace_builder for
     # backwards compatibility.
     sed_script_builder: Callable[[str, str, str, bool], str] = _sed_replace_builder,
@@ -115,15 +137,19 @@ def _sed_command(
 
     sed_script = sed_script_builder(line, replace, flags_str, interpolate_variables)
 
+    sed_args: list[str] = ["sed"]
+    if extended_regex:
+        sed_args.append("-E")
+    sed_args.append(f"-i.{backup_extension}")
+
     sed_command = StringCommand(
-        "sed",
-        "-i.{0}".format(backup_extension),
+        *sed_args,
         sed_script,
         QuoteString(filename),
     )
 
     if not backup:  # if we're not backing up, remove the file *if* sed succeeds
-        backup_filename = "{0}.{1}".format(filename, backup_extension)
+        backup_filename = f"{filename}.{backup_extension}"
         sed_command = StringCommand(sed_command, "&&", "rm", "-f", QuoteString(backup_filename))
 
     return sed_command
@@ -134,7 +160,7 @@ def chmod(target: str, mode: str | int, recursive=False) -> StringCommand:
     if recursive:
         args.append("-R")
 
-    args.append("{0}".format(mode))
+    args.append(f"{mode}")
 
     return StringCommand(" ".join(args), QuoteString(target))
 
@@ -147,10 +173,10 @@ def chown(
     dereference=True,
 ) -> StringCommand:
     command = "chown"
-    user_group = None
+    user_group: str | None = None
 
     if user and group:
-        user_group = "{0}:{1}".format(user, group)
+        user_group = f"{user}:{group}"
 
     elif user:
         user_group = user
@@ -159,6 +185,9 @@ def chown(
         command = "chgrp"
         user_group = group
 
+    if user_group is None:
+        raise OperationError("chown() requires at least one of user or group")
+
     args = [command]
     if recursive:
         args.append("-R")
@@ -166,7 +195,7 @@ def chown(
     if not dereference:
         args.append("-h")
 
-    return StringCommand(" ".join(args), user_group, QuoteString(target))
+    return StringCommand(" ".join(args), QuoteString(user_group), QuoteString(target))
 
 
 # like the touch command, but only supports setting one field at a time, and expects any
@@ -209,11 +238,27 @@ def adjust_regex(line: str, escape_regex_characters: bool) -> str:
     # Ensure we're matching a whole line, note: match may be a partial line so we
     # put any matches on either side.
     if not match_line.startswith("^"):
-        match_line = "^.*{0}".format(match_line)
+        match_line = f"^.*{match_line}"
     if not match_line.endswith("$"):
-        match_line = "{0}.*$".format(match_line)
+        match_line = f"{match_line}.*$"
 
     return match_line
+
+
+def strip_regex_anchors(line: str) -> str:
+    """
+    Strip a leading ``^`` and trailing ``$`` regex anchor from a line.
+
+    Used when appending a missing line to a file: the user-supplied ``line`` is a
+    regex used to find existing matches, but the text written to the file must be
+    literal. Anchors that only have meaning while matching must not leak into the
+    file. An escaped trailing anchor (``\\$``) is left untouched.
+    """
+    if line.startswith("^"):
+        line = line[1:]
+    if line.endswith("$") and not line.endswith("\\$"):
+        line = line[:-1]
+    return line
 
 
 def generate_color_diff(
@@ -223,16 +268,16 @@ def generate_color_diff(
         beginning = start + 1  # lines start numbering with one
         length = stop - start
         if length == 1:
-            return "{}".format(beginning)
+            return f"{beginning}"
         if not length:
             beginning -= 1  # empty ranges begin at line just before the range
-        return "{},{}".format(beginning, length)
+        return f"{beginning},{length}"
 
     for group in difflib.SequenceMatcher(None, current_lines, desired_lines).get_grouped_opcodes(2):
         first, last = group[0], group[-1]
         file1_range = _format_range_unified(first[1], last[2])
         file2_range = _format_range_unified(first[3], last[4])
-        yield "@@ -{} +{} @@".format(file1_range, file2_range)
+        yield f"@@ -{file1_range} +{file2_range} @@"
 
         for tag, i1, i2, j1, j2 in group:
             if tag == "equal":
@@ -241,7 +286,7 @@ def generate_color_diff(
                 continue
             if tag in {"replace", "delete"}:
                 for line in current_lines[i1:i2]:
-                    yield click.style("- " + line.rstrip(), "red")
+                    yield format_text("- " + line.rstrip(), "red")
             if tag in {"replace", "insert"}:
                 for line in desired_lines[j1:j2]:
-                    yield click.style("+ " + line.rstrip(), "green")
+                    yield format_text("+ " + line.rstrip(), "green")

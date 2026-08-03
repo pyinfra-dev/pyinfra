@@ -14,7 +14,7 @@ class OpenrcStatus(FactBase):
 
     default = dict
     regex = (
-        r"\s+([a-zA-Z0-9\-_]+)"
+        r"\s+([a-zA-Z0-9\-_.]+)"
         r"\s+\[\s+"
         r"([a-z]+)"
         r"(?:\s(?:[0-9]+\sday\(s\)\s)?"
@@ -28,7 +28,7 @@ class OpenrcStatus(FactBase):
 
     @override
     def command(self, runlevel="default"):
-        return "rc-status {0}".format(runlevel)
+        return f"rc-status {runlevel}"
 
     @override
     def process(self, output):

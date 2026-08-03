@@ -1,0 +1,19 @@
+{
+    "kwargs": {
+        "src": "/tmp/missing.tar.gz",
+        "dest": "/opt/app",
+        "remote_src": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/opt/app": true
+        },
+        "files.File": {
+            "path=/tmp/missing.tar.gz": null
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Remote archive /tmp/missing.tar.gz does not exist"
+    }
+}

@@ -4,7 +4,7 @@ The Python module allows you to execute Python code within the context of a depl
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from pyinfra.api import FunctionCommand, operation
 
@@ -48,7 +48,7 @@ def call(function: Callable, *args, **kwargs):
 
 
 @operation(is_idempotent=False, _set_in_op=False)
-def raise_exception(exception: Exception, *args, **kwargs):
+def raise_exception(exception: type[Exception], *args, **kwargs):
     """
     Raise a Python exception within a deploy.
 
@@ -61,9 +61,9 @@ def raise_exception(exception: Exception, *args, **kwargs):
     .. code:: python
 
         python.raise_exception(
+            NotImplementedError,
+            "This is not implemented",
             name="Raise NotImplementedError exception",
-            exception=NotImplementedError,
-            message="This is not implemented",
         )
     """
 

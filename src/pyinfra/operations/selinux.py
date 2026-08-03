@@ -50,7 +50,8 @@ def boolean(bool_name: str, value: Boolean, persistent=False):
 
     value_str: str
     if value in ["on", "off"]:  # compatibility with the old version
-        assert isinstance(value, str)
+        if not isinstance(value, str):
+            raise TypeError("value must be a string")
         value_str = value
     elif value is Boolean.ON:
         value_str = "on"
@@ -60,8 +61,12 @@ def boolean(bool_name: str, value: Boolean, persistent=False):
         raise OperationValueError(f"Invalid value '{value}' for boolean operation")
 
     if host.get_fact(SEBoolean, boolean=bool_name) != value_str:
-        persist = "-P " if persistent else ""
-        yield StringCommand("setsebool", f"{persist}{bool_name}", value_str)
+        command_bits: list = ["setsebool"]
+        if persistent:
+            command_bits.append("-P")
+        command_bits.append(QuoteString(bool_name))
+        command_bits.append(value_str)
+        yield StringCommand(*command_bits)
     else:
         host.noop(f"boolean '{bool_name}' already had the value '{value_str}'")
 
@@ -87,7 +92,7 @@ def file_context(path: str, se_type: str):
 
     current = host.get_fact(FileContext, path=path) or {}
     if se_type != current.get("type", ""):
-        yield StringCommand("chcon", "-t", se_type, QuoteString(path))
+        yield StringCommand("chcon", "-t", QuoteString(se_type), QuoteString(path))
     else:
         host.noop(f"file_context: '{path}' already had type '{se_type}'")
 
@@ -121,8 +126,10 @@ def file_context_mapping(target: str, se_type: str | None = None, present=True):
     current = host.get_fact(FileContextMapping, target=target)
     if present:
         option = "-a" if len(current) == 0 else ("-m" if current.get("type") != se_type else "")
-        if option != "":
-            yield StringCommand("semanage", "fcontext", option, "-t", se_type, QuoteString(target))
+        if option != "" and se_type is not None:
+            yield StringCommand(
+                "semanage", "fcontext", option, "-t", QuoteString(se_type), QuoteString(target)
+            )
         else:
             host.noop(f"mapping for '{target}' -> '{se_type}' already present")
     else:
@@ -156,8 +163,7 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
         )
     """
 
-    if protocol is Protocol:
-        assert isinstance(protocol, Protocol)
+    if isinstance(protocol, Protocol):
         protocol = protocol.value
 
     if present and (se_type is None):
@@ -169,17 +175,33 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
         current = host.get_fact(SEPort, protocol=protocol, port=port_num)
     else:
         port_info = host.get_fact(SEPorts)
-        current = port_info.get(protocol, {}).get(str(port_num), "")
+        current = port_info.get(protocol, {}).get(port_num, "")
 
     if present:
         option = "-a" if current == "" else ("-m" if current != se_type else "")
-        if option != "":
-            yield StringCommand("semanage", "port", option, "-t", se_type, "-p", protocol, port_num)
+        if option != "" and se_type is not None:
+            yield StringCommand(
+                "semanage",
+                "port",
+                option,
+                "-t",
+                QuoteString(se_type),
+                "-p",
+                QuoteString(str(protocol)),
+                QuoteString(str(port_num)),
+            )
         else:
             host.noop(f"setype for '{protocol}/{port_num}' is already '{se_type}'")
     else:
         if current != "":
-            yield StringCommand("semanage", "port", "-d", "-p", protocol, port_num)
+            yield StringCommand(
+                "semanage",
+                "port",
+                "-d",
+                "-p",
+                QuoteString(str(protocol)),
+                QuoteString(str(port_num)),
+            )
         else:
             host.noop(f"setype for '{protocol}/{port_num}' is already unset")
 
@@ -187,4 +209,4 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
         if not direct_get:
             if protocol not in port_info:
                 port_info[protocol] = {}
-            port_info[protocol][str(port_num)] = new_type
+            port_info[protocol][port_num] = new_type

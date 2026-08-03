@@ -5,17 +5,20 @@ from functools import wraps
 from hashlib import md5, sha1, sha256
 from inspect import getframeinfo, stack
 from io import BytesIO, StringIO
-from os import getcwd, path, stat
+import os.path
+from os import getcwd, stat
+from pathlib import Path
 from socket import error as socket_error, timeout as timeout_error
-from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional, Type, Union
+from typing import IO, TYPE_CHECKING, Any
+from collections.abc import Callable
 
-import click
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
 from paramiko import SSHException
 from typeguard import TypeCheckError, check_type
 
 import pyinfra
 from pyinfra import logger
+from pyinfra.api.output import format_text
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -26,31 +29,35 @@ if TYPE_CHECKING:
 BLOCKSIZE = 65536
 
 # Caches
-TEMPLATES: Dict[str, Template] = {}
-FILE_SHAS: Dict[Any, Any] = {}
+TEMPLATES: dict[str, Template] = {}
+FILE_SHAS: dict[Any, Any] = {}
 
-PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
+PYINFRA_INSTALL_DIR = str(Path(__file__).parent.parent)
 
 
-def get_file_path(state: "State", filename: str):
-    if path.isabs(filename):
+def get_file_path(state: State, filename: str):
+    # These are real local controller paths (state.cwd from getcwd(),
+    # current_exec_filename is an actual file), so use the platform-aware
+    # pathlib.Path (WindowsPath on Windows, PosixPath elsewhere) rather than
+    # forcing posix semantics.
+    if Path(filename).is_absolute():
         return filename
 
     assert state.cwd is not None, "Cannot use `get_file_path` with no `state.cwd` set"
     relative_to = state.cwd
 
     if state.current_exec_filename and (filename.startswith("./") or filename.startswith(".\\")):
-        relative_to = path.dirname(state.current_exec_filename)
+        relative_to = str(Path(state.current_exec_filename).parent)
 
-    return path.join(relative_to, filename)
+    return str(Path(relative_to) / filename)
 
 
-def get_kwargs_str(kwargs: Dict[Any, Any]):
+def get_kwargs_str(kwargs: dict[Any, Any]):
     if not kwargs:
         return ""
 
     items = [
-        "{0}={1}".format(key, value)
+        f"{key}={value}"
         for key, value in sorted(kwargs.items())
         if key not in ("self", "state", "host")
     ]
@@ -67,7 +74,7 @@ def try_int(value):
 def memoize(func: Callable[..., Any]):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        key = "{0}{1}".format(args, kwargs)
+        key = f"{args}{kwargs}"
         if key in wrapper.cache:  # type: ignore[attr-defined]
             return wrapper.cache[key]  # type: ignore[attr-defined]
 
@@ -86,11 +93,11 @@ def get_call_location(frame_offset: int = 1):
     try:
         # On Windows if pyinfra is on a different drive to the filename here, this will
         # error as there's no way to do relative paths between drives.
-        relpath = path.relpath(frame.filename)
+        relpath = os.path.relpath(frame.filename)
     except ValueError:
         pass
 
-    return "line {0} in {1}".format(frame.lineno, relpath)
+    return f"line {frame.lineno} in {relpath}"
 
 
 def get_caller_frameinfo(frame_offset: int = 0):
@@ -109,7 +116,7 @@ def get_caller_frameinfo(frame_offset: int = 0):
     return info
 
 
-def get_operation_order_from_stack(state: "State"):
+def get_operation_order_from_stack(state: State):
     stack_items = list(reversed(stack()))
 
     i = 0
@@ -185,16 +192,16 @@ def format_exception(e: Exception) -> str:
     return f"{e.__class__.__name__}{e.args}"
 
 
-def print_host_combined_output(host: "Host", output: "CommandOutput") -> None:
+def print_host_combined_output(host: Host, output: CommandOutput) -> None:
     for line in output:
         if line.buffer_name == "stderr":
-            logger.error(f"{host.print_prefix}{click.style(line.line, 'red')}")
+            logger.error(f"{host.print_prefix}{format_text(line.line, 'red')}")
         else:
             logger.error(f"{host.print_prefix}{line.line}")
 
 
 def log_operation_start(
-    op_meta: "StateOperationMeta", op_types: Optional[List] = None, prefix: str = "--> "
+    op_meta: StateOperationMeta, op_types: list | None = None, prefix: str = "--> "
 ) -> None:
     op_types = op_types or []
     if op_meta.global_arguments["_serial"]:
@@ -204,25 +211,25 @@ def log_operation_start(
 
     args = ""
     if op_meta.args:
-        args = "({0})".format(", ".join(str(arg) for arg in op_meta.args))
+        args = f"({', '.join(str(arg) for arg in op_meta.args)})"
 
     logger.info(
-        "{0} {1} {2}".format(
-            click.style(
-                "{0}Starting{1}operation:".format(
+        "{} {} {}".format(
+            format_text(
+                "{}Starting{}operation:".format(
                     prefix,
-                    " {0} ".format(", ".join(op_types)) if op_types else " ",
+                    " {} ".format(", ".join(op_types)) if op_types else " ",
                 ),
                 "blue",
             ),
-            click.style(", ".join(op_meta.names), bold=True),
+            format_text(", ".join(op_meta.names), bold=True),
             args,
         ),
     )
 
 
 def log_error_or_warning(
-    host: "Host",
+    host: Host,
     ignore_errors: bool,
     description: str = "",
     continue_on_error: bool = False,
@@ -243,32 +250,23 @@ def log_error_or_warning(
 
     if exception:
         exc = exception.__cause__ or exception
-        exc_text = "{0}: {1}".format(type(exc).__name__, exc)
+        exc_text = f"{type(exc).__name__}: {exc}"
         log_func(
-            "{0}{1}".format(
-                host.print_prefix,
-                click.style(exc_text, log_color),
-            ),
+            f"{host.print_prefix}{format_text(exc_text, log_color)}",
         )
 
     log_func(
-        "{0}{1}{2}".format(
-            host.print_prefix,
-            click.style(log_text, log_color),
-            description,
-        ),
+        f"{host.print_prefix}{format_text(log_text, log_color)}{description}",
     )
 
 
-def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) -> None:
-    if isinstance(e, timeout_error):
+def log_host_command_error(host: Host, e: Exception, timeout: int | None = 0) -> None:
+    if isinstance(e, (TimeoutError, timeout_error)):
         logger.error(
-            "{0}{1}".format(
+            "{}{}".format(
                 host.print_prefix,
-                click.style(
-                    "Command timed out after {0}s".format(
-                        timeout,
-                    ),
+                format_text(
+                    f"Command timed out after {timeout}s",
                     "red",
                 ),
             ),
@@ -276,10 +274,10 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
 
     elif isinstance(e, (socket_error, SSHException)):
         logger.error(
-            "{0}{1}".format(
+            "{}{}".format(
                 host.print_prefix,
-                click.style(
-                    "Command socket/SSH error: {0}".format(format_exception(e)),
+                format_text(
+                    f"Command socket/SSH error: {format_exception(e)}",
                     "red",
                 ),
             ),
@@ -287,10 +285,10 @@ def log_host_command_error(host: "Host", e: Exception, timeout: int | None = 0) 
 
     elif isinstance(e, IOError):
         logger.error(
-            "{0}{1}".format(
+            "{}{}".format(
                 host.print_prefix,
-                click.style(
-                    "Command IO error: {0}".format(format_exception(e)),
+                format_text(
+                    f"Command IO error: {format_exception(e)}",
                     "red",
                 ),
             ),
@@ -316,7 +314,7 @@ def make_hash(obj):
     else:
         hash_string = (
             # Capture integers first (as 1 == True)
-            "{0}".format(obj)
+            f"{obj}"
             if isinstance(obj, int)
             # Constants - the values can change between hosts but we should still
             # group them under the same operation hash.
@@ -352,7 +350,7 @@ class get_file_io:
     will open and close filenames, and leave IO objects alone.
     """
 
-    filename_or_io: Union[str, IO[Any]]
+    filename_or_io: str | IO[Any]
     mode: str
 
     _close: bool = False
@@ -366,9 +364,7 @@ class get_file_io:
             or isinstance(filename_or_io, str)
         ):
             raise TypeError(
-                "Invalid filename or IO object: {0}".format(
-                    filename_or_io,
-                ),
+                f"Invalid filename or IO object: {filename_or_io}",
             )
 
         # Convert any StringIO/BytesIO to the other to match the desired mode
@@ -460,7 +456,7 @@ def get_path_permissions_mode(pathname: str):
 
 def raise_if_bad_type(
     value: Any,
-    type_: Type,
+    type_: type,
     exception: type[Exception],
     message_prefix: str,
 ):

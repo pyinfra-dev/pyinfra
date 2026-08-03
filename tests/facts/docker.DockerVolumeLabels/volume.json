@@ -1,0 +1,11 @@
+{
+    "command": "docker volume inspect `docker volume ls -q`",
+    "requires_command": "docker",
+    "output": ["[{\"Name\": \"vol1\", \"Labels\": {\"role\": \"data\"}}, {\"Name\": \"vol2\", \"Labels\": null}]"],
+    "fact": {
+        "vol1": {
+            "role": "data"
+        },
+        "vol2": {}
+    }
+}

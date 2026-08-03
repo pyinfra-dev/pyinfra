@@ -1,0 +1,13 @@
+{
+    "command": "dnf module list --disabled",
+    "requires_command": "dnf",
+    "output": [
+        "Name         Stream        Profiles              Summary",
+        "postgresql   15 [x]        client, server [d]    PostgreSQL server and client module",
+        "postgresql   16 [x]        client, server [d]    PostgreSQL server and client module",
+        "ruby         3.1 [x]       common [d]            An interpreter of object-oriented scripting language",
+        "",
+        "Hint: [d]efault, [e]nabled, [x]disabled, [i]nstalled"
+    ],
+    "fact": ["postgresql", "ruby"]
+}

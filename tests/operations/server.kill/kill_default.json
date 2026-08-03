@@ -1,0 +1,5 @@
+{
+  "args": [1234],
+  "commands": ["kill -TERM 1234"],
+  "idempotent": false
+}

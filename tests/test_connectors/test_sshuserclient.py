@@ -2,10 +2,13 @@ from base64 import b64decode
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
+import pytest
 from paramiko import PKey, ProxyCommand, SSHException
 
 from pyinfra.connectors.sshuserclient import SSHClient
 from pyinfra.connectors.sshuserclient.client import AskPolicy, get_ssh_config
+
+CERT_KEY_TYPE = "ssh-ed25519-cert-v01@openssh.com"
 
 SSH_CONFIG_DATA = """
 # Comment
@@ -17,6 +20,13 @@ Host 127.0.0.1
     ProxyCommand echo thing
 
 Include other_file
+"""
+
+SSH_CONFIG_INLINE_COMMENTS = """
+Host 127.0.0.1
+    IdentityFile /id_rsa   # my main key
+    User testuser # the test user
+    Port 33 # custom port
 """
 
 SSH_CONFIG_OTHER_FILE = """
@@ -34,9 +44,41 @@ Host 192.168.1.2
     ForwardAgent yes
 """
 
+SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT = """
+Host jump
+    HostName jump.example.com
+    User jumpuser
+    ConnectTimeout 7
+
+Host device
+    HostName 10.0.0.170
+    ProxyJump jump
+    ConnectTimeout 5
+    User deviceuser
+"""
+
+SSH_CONFIG_CONNECTTIMEOUT = """
+Host slowhost
+    HostName slow.example.com
+    User slowuser
+    ConnectTimeout 12
+"""
+
 SSH_CONFIG_MULTIPLE_KNOWN_HOSTS = """
 Host 192.168.1.3
     UserKnownHostsFile ~/.ssh/known_hosts ~/.ssh/known_hosts.infra ~/.ssh/known_hosts.webservers
+"""
+
+SSH_CONFIG_IDENTITY_AGENT = """
+Host 10.0.0.1
+    User agentuser
+    IdentityAgent ~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock
+"""
+
+SSH_CONFIG_IDENTITY_AGENT_NONE = """
+Host 10.0.0.2
+    User agentuser
+    IdentityAgent none
 """
 
 BAD_SSH_CONFIG_DATA = """
@@ -77,32 +119,39 @@ class TestSSHUserConfigMissing(TestCase):
         get_ssh_config.cache = {}
 
     @patch(
-        "pyinfra.connectors.sshuserclient.client.path.exists",
-        lambda path: False,
+        "pyinfra.connectors.sshuserclient.client.Path.exists",
+        lambda self: False,
     )
     def test_load_ssh_config_no_exist(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("port") == 22
+        assert identity_agent is None
 
 
 @patch(
-    "pyinfra.connectors.sshuserclient.client.path.exists",
-    lambda path: True,
+    "pyinfra.connectors.sshuserclient.client.Path.exists",
+    lambda self: True,
 )
 @patch(
     "pyinfra.connectors.sshuserclient.config.glob.iglob",
     lambda path: ["other_file"],
 )
 @patch(
-    "pyinfra.connectors.sshuserclient.config.path.isfile",
-    lambda path: True,
+    "pyinfra.connectors.sshuserclient.config.Path.is_file",
+    lambda self: True,
 )
 @patch(
     "pyinfra.connectors.sshuserclient.config.path.expanduser",
@@ -133,10 +182,16 @@ class TestSSHUserConfig(TestCase):
     def test_load_ssh_config(self):
         client = SSHClient()
 
-        _, config, forward_agent, missing_host_key_policy, host_keys_file, keep_alive = (
-            client.parse_config(
-                "127.0.0.1",
-            )
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config(
+            "127.0.0.1",
         )
 
         assert config.get("key_filename") == ["/id_rsa", "/id_rsa2"]
@@ -146,6 +201,7 @@ class TestSSHUserConfig(TestCase):
         assert forward_agent is False
         assert isinstance(missing_host_key_policy, AskPolicy)
         assert host_keys_file == ("~/.ssh/known_hosts",)  # OpenSSH default
+        assert identity_agent is None
 
         (
             _,
@@ -154,12 +210,36 @@ class TestSSHUserConfig(TestCase):
             missing_host_key_policy,
             host_keys_file,
             keep_alive,
+            identity_agent,
         ) = client.parse_config("192.168.1.1")
 
         assert other_config.get("username") == "otheruser"
         assert forward_agent is True
         assert isinstance(missing_host_key_policy, AskPolicy)
         assert host_keys_file == ("~/.ssh/test3",)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_INLINE_COMMENTS),
+        create=True,
+    )
+    def test_load_ssh_config_inline_comments(self):
+        """Test that inline comments are stripped from SSH config values (issue #1568)."""
+        client = SSHClient()
+
+        (
+            _,
+            config,
+            forward_agent,
+            missing_host_key_policy,
+            host_keys_file,
+            keep_alive,
+            identity_agent,
+        ) = client.parse_config("127.0.0.1")
+
+        assert config.get("key_filename") == ["/id_rsa"]
+        assert config.get("username") == "testuser"
+        assert config.get("port") == 33
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
@@ -182,6 +262,7 @@ class TestSSHUserConfig(TestCase):
             missing_host_key_policy,
             host_keys_files,
             keep_alive,
+            identity_agent,
         ) = client.parse_config("192.168.1.3")
 
         # Verify multiple known hosts files are parsed as a tuple
@@ -190,6 +271,34 @@ class TestSSHUserConfig(TestCase):
             "~/.ssh/known_hosts.infra",
             "~/.ssh/known_hosts.webservers",
         )
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_IDENTITY_AGENT),
+        create=True,
+    )
+    def test_load_ssh_config_identity_agent(self):
+        """Test that IdentityAgent is parsed from SSH config."""
+        client = SSHClient()
+
+        _, config, _, _, _, _, identity_agent = client.parse_config("10.0.0.1")
+
+        assert config.get("username") == "agentuser"
+        assert identity_agent == "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_IDENTITY_AGENT_NONE),
+        create=True,
+    )
+    def test_load_ssh_config_identity_agent_none(self):
+        """Test that IdentityAgent set to 'none' is ignored."""
+        client = SSHClient()
+
+        _, config, _, _, _, _, identity_agent = client.parse_config("10.0.0.2")
+
+        assert config.get("username") == "agentuser"
+        assert identity_agent is None
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
@@ -238,7 +347,7 @@ class TestSSHUserConfig(TestCase):
         client = SSHClient()
 
         # Load the SSH config with ProxyJump configured
-        _, config, forward_agent, _, _, _ = client.parse_config(
+        _, config, forward_agent, _, _, _, _ = client.parse_config(
             "192.168.1.2",
             {"port": 1022},
             ssh_config_file="other_file",
@@ -251,7 +360,51 @@ class TestSSHUserConfig(TestCase):
             sock=None,
             username="nottestuser",
         )
-        fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022)
+        fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022, timeout=None)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_CONNECTTIMEOUT),
+        create=True,
+    )
+    def test_connecttimeout_sets_timeout_kwarg(self):
+        """Regression test for #971: ``ConnectTimeout`` in ssh_config must be
+        propagated so paramiko doesn't hang on its own default."""
+        client = SSHClient()
+        _, config, *_ = client.parse_config("slowhost")
+        assert config.get("timeout") == 12
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_proxyjump_propagates_connecttimeout(self, fake_gateway, fake_ssh_connect):
+        """Regression test for #971: ``ConnectTimeout`` on both the target and
+        the hop must be honored so neither the hop connect nor the direct-tcpip
+        channel can hang forever."""
+        client = SSHClient()
+
+        _, config, *_ = client.parse_config("device")
+
+        # Target's ConnectTimeout wins for the channel open.
+        assert config.get("timeout") == 5
+        # Hop connect receives the hop's own ConnectTimeout (7s, per its own
+        # ssh_config block) rather than inheriting the target's 5s.
+        fake_ssh_connect.assert_called_once()
+        _, kwargs = fake_ssh_connect.call_args
+        assert kwargs["timeout"] == 7
+        # Channel open (gateway) uses the target's ConnectTimeout.
+        fake_gateway.assert_called_once()
+        _, gw_kwargs = fake_gateway.call_args
+        assert gw_kwargs["timeout"] == 5
 
     @patch("pyinfra.connectors.sshuserclient.client.open", mock_open(), create=True)
     @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
@@ -308,3 +461,136 @@ class TestSSHUserConfig(TestCase):
             # Ensure we wrote the correct content
             correct_output = f"{example_hostname} {example_keytype} {example_key}\n"
             assert write_call_args[0][0] == correct_output
+
+
+@pytest.fixture
+def _clear_ssh_config_cache():
+    get_ssh_config.cache = {}
+    yield
+    get_ssh_config.cache = {}
+
+
+def _write_ssh_config(config_path, host, **directives):
+    body = [f"Host {host}"]
+    for key, value in directives.items():
+        body.append(f"    {key} {value}")
+    config_path.write_text("\n".join(body) + "\n")
+
+
+def test_parse_config_loads_cert_for_identityfile(
+    ssh_ca_keypair, tmp_path, _clear_ssh_config_cache
+):
+    # ssh_config IdentityFile points at a key with an adjacent -cert.pub; the
+    # cert must be attached and key_filename must be dropped so paramiko uses
+    # the pkey we built.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_ca_keypair["user_key"]),
+    )
+
+    client = SSHClient()
+    _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert "key_filename" not in cfg
+    assert isinstance(cfg["pkey"], PKey)
+    assert cfg["pkey"].public_blob is not None
+    assert cfg["pkey"].public_blob.key_type == CERT_KEY_TYPE
+
+
+def test_parse_config_honours_certificatefile_directive(
+    ssh_ca_keypair, tmp_path, _clear_ssh_config_cache
+):
+    # CertificateFile in ssh_config overrides the implicit <key>-cert.pub
+    # lookup. We copy the real cert to a different path and reference it.
+    other_cert = tmp_path / "other-cert.pub"
+    other_cert.write_bytes(ssh_ca_keypair["user_cert"].read_bytes())
+
+    # Use a bare copy of the key so the implicit lookup would NOT find a cert.
+    bare_key = tmp_path / "bare_ed25519"
+    bare_key.write_bytes(ssh_ca_keypair["user_key"].read_bytes())
+
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(bare_key),
+        CertificateFile=str(other_cert),
+    )
+
+    client = SSHClient()
+    _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert "key_filename" not in cfg
+    assert cfg["pkey"].public_blob is not None
+    assert cfg["pkey"].public_blob.key_type == CERT_KEY_TYPE
+
+
+def test_parse_config_explicit_pkey_wins_over_encrypted_identityfile(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # Regression for #1852: an explicit pyinfra ssh_key (already loaded into a
+    # pkey using ssh_key_password) must win over an ssh_config IdentityFile. The
+    # encrypted IdentityFile must not be loaded, so no passphrase prompt fires.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+    )
+
+    sentinel = object()
+    client = SSHClient()
+    with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong") as fake_getpass:
+        with patch("pyinfra.is_cli", True):
+            _, cfg, *_ = client.parse_config(
+                "myhost",
+                {"pkey": sentinel},
+                ssh_config_file=str(config_path),
+            )
+
+    fake_getpass.assert_not_called()
+    assert cfg["pkey"] is sentinel
+
+
+def test_parse_config_encrypted_identityfile_does_not_prompt(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # Regression for #1852: an encrypted ssh_config IdentityFile with no known
+    # passphrase must fall through to the legacy key_filename flow instead of
+    # blocking on an interactive passphrase prompt.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+    )
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong") as fake_getpass:
+        with patch("pyinfra.is_cli", True):
+            _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    fake_getpass.assert_not_called()
+    assert "pkey" not in cfg
+    assert cfg["key_filename"] == [str(ssh_encrypted_key["key"])]
+
+
+def test_parse_config_keeps_key_filename_when_no_real_identityfile(
+    tmp_path, _clear_ssh_config_cache
+):
+    # IdentityFile that doesn't exist on disk must not crash: fall back to the
+    # legacy key_filename path and let paramiko handle it.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(tmp_path / "does-not-exist"),
+    )
+
+    client = SSHClient()
+    _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert "pkey" not in cfg
+    assert cfg["key_filename"] == [str(tmp_path / "does-not-exist")]

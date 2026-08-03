@@ -6,10 +6,8 @@ Eg: ``pyinfra -> inventory-host.net <-> another-host.net``
 
 from __future__ import annotations
 
-import shlex
-
 from pyinfra import host
-from pyinfra.api import OperationError, operation
+from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.files import File, FindInFile
 from pyinfra.facts.server import Home
 
@@ -38,31 +36,32 @@ def keyscan(hostname: str, force=False, port=22):
     homedir = host.get_fact(Home)
 
     yield from files.directory._inner(
-        "{0}/.ssh".format(homedir),
+        f"{homedir}/.ssh",
         mode=700,
     )
 
     hostname_present = host.get_fact(
         FindInFile,
-        path="{0}/.ssh/known_hosts".format(homedir),
+        path=f"{homedir}/.ssh/known_hosts",
         pattern=hostname,
     )
 
-    keyscan_command = "ssh-keyscan -p {0} {1} >> {2}/.ssh/known_hosts".format(
-        port,
-        hostname,
-        homedir,
+    homedir = str(homedir)
+
+    known_hosts = StringCommand(QuoteString(homedir), "/.ssh/known_hosts", _separator="")
+    keyscan_command = StringCommand(
+        "ssh-keyscan", "-p", str(port), QuoteString(hostname), ">>", known_hosts
     )
 
     if not hostname_present:
         yield keyscan_command
 
     elif force:
-        yield "ssh-keygen -R {0}".format(hostname)
+        yield StringCommand("ssh-keygen", "-R", QuoteString(hostname))
         yield keyscan_command
 
     else:
-        host.noop("host key for {0} already exists".format(hostname))
+        host.noop(f"host key for {hostname} already exists")
 
 
 @operation(is_idempotent=False)
@@ -87,13 +86,13 @@ def command(hostname: str, command: str, user: str | None = None, port=22):
         )
     """
 
-    command = shlex.quote(command)
-
     connection_target = hostname
     if user:
         connection_target = "@".join((user, hostname))
 
-    yield "ssh -p {0} {1} {2}".format(port, connection_target, command)
+    yield StringCommand(
+        "ssh", "-p", str(port), QuoteString(connection_target), QuoteString(command)
+    )
 
 
 @operation(is_idempotent=False)
@@ -130,31 +129,27 @@ def upload(
 
     # If we're not using sudo on the remote side, just scp the file over
     if not use_remote_sudo:
-        yield "scp -P {0} {1} {2}:{3}".format(
-            port,
-            filename,
-            connection_target,
-            remote_filename,
+        scp_target = StringCommand(
+            QuoteString(connection_target), ":", QuoteString(remote_filename), _separator=""
         )
+        yield StringCommand("scp", "-P", str(port), QuoteString(filename), scp_target)
 
     else:
         # Otherwise - we need a temporary location for the file
         temp_remote_filename = host.get_temp_filename()
 
         # scp it to the temporary location
-        upload_cmd = "scp -P {0} {1} {2}:{3}".format(
-            port,
-            filename,
-            connection_target,
-            temp_remote_filename,
+        scp_target = StringCommand(
+            QuoteString(connection_target), ":", QuoteString(temp_remote_filename), _separator=""
         )
+        yield StringCommand("scp", "-P", str(port), QuoteString(filename), scp_target)
 
-        yield upload_cmd
-
-        # And sudo sudo to move it
+        # And sudo to move it
         yield from command._inner(
             hostname=hostname,
-            command="sudo mv {0} {1}".format(temp_remote_filename, remote_filename),
+            command=StringCommand(
+                "sudo", "mv", QuoteString(temp_remote_filename), QuoteString(remote_filename)
+            ).get_raw_value(),
             port=port,
             user=user,
         )
@@ -190,14 +185,12 @@ def download(
     # Local file exists but isn't a file?
     if local_file_info is False:
         raise OperationError(
-            "Local destination {0} already exists and is not a file".format(
-                local_filename,
-            ),
+            f"Local destination {local_filename} already exists and is not a file",
         )
 
     # If the local file exists and we're not forcing a re-download, no-op
     if local_file_info and not force:
-        host.noop("file {0} is already downloaded".format(filename))
+        host.noop(f"file {filename} is already downloaded")
         return
 
     # Figure out where we're connecting (host or user@host)
@@ -209,9 +202,7 @@ def download(
         yield from keyscan._inner(hostname)
 
     # Download the file with scp
-    yield "scp -P {0} {1}:{2} {3}".format(
-        port,
-        connection_target,
-        filename,
-        local_filename,
+    scp_source = StringCommand(
+        QuoteString(connection_target), ":", QuoteString(filename), _separator=""
     )
+    yield StringCommand("scp", "-P", str(port), scp_source, QuoteString(local_filename))
