@@ -1,15 +1,14 @@
 {
-    "args": [["php", "i-dont-exist"]],
+    "args": ["python@3.10"],
     "kwargs": {
         "present": false
     },
     "facts": {
         "brew.BrewPackages": {
-            "php": ["set:", "1"]
+            "python@3.10": ["set:", "3.10.17"]
         }
     },
     "commands": [
-        "brew uninstall php"
+        "brew uninstall python@3.10"
     ]
-
 }

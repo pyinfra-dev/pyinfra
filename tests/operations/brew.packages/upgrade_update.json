@@ -6,7 +6,7 @@
     },
     "facts": {
         "brew.BrewPackages": {
-            "php": ["1"]
+            "php": ["set:","1"]
         }
     },
     "commands": [
