@@ -1,9 +1,0 @@
-{
-    "args": [[]],
-    "facts": {
-        "brew.BrewPackages": {}
-    },
-    "commands": [
-    ],
-    "noop_description": "no packages specified"
-}

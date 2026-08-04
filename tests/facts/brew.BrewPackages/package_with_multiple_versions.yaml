@@ -1,0 +1,14 @@
+#
+# Homebrew allows multiple versions of certain packages to be installed at once
+# but they look like distinct packages in pyinfra: see notes in BrewPackages and brew.packages
+#
+command: brew list --versions
+requires_command: brew
+output:
+  - python@3.13 3.13.2
+  - python@3.14 3.14.3
+fact:
+  python@3.13:
+    - 3.13.2
+  python@3.14:
+    - 3.14.3

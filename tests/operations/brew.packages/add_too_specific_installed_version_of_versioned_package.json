@@ -1,7 +1,0 @@
-{
-    "args": ["python@3.12.7"],
-    "facts": {
-        "brew.BrewPackages": {"python@3.12": ["set:", "3.12.7"]}
-    },
-    "commands": ["brew install python@3.12.7"]
-}
