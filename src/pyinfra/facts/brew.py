@@ -13,8 +13,7 @@ from pyinfra.api import FactBase
 
 from .util.packaging import parse_packages
 
-PKG_VERSION_SEP = "@"
-BREW_REGEX = rf"^([^{PKG_VERSION_SEP}]+)(?:{PKG_VERSION_SEP}[0-9\.]+)?\s([0-9\._+a-z\-]+)"
+BREW_REGEX = r"^([^\s]+)\s([0-9\._+a-z\-]+)"
 
 
 @unique
@@ -65,12 +64,10 @@ class BrewVersion(FactBase[Sequence[int]]):
         return [0, 0, 0]
 
     @override
-    def process(self, output: Iterable[str]) -> BrewVersionType:
-        if ((out := next(iter(output), None)) is not None) and (
-            (m := VERSION_MATCHER.match(out)) is not None
-        ):
+    def process(self, output: list[str]) -> BrewVersionType:
+        if (len(output) > 0) and ((m := VERSION_MATCHER.match(output[0])) is not None):
             return [int(m.group(key)) for key in ["major", "minor", "patch"]]
-        logger.warning(f"could not parse version string from brew: '{out}'")
+        logger.warning(f"could not parse version string from brew: '{output[0]}'")
         return self.default()
 
 
@@ -86,6 +83,14 @@ class BrewPackages(FactBase[BrewPackingMapping]):
         {
             "package_name": ["version"],
         }
+
+    !!! note
+        Homebrew maintains separate versions of certain formulae (e.g. `python`, `postgres` and
+        `node`) and multiple versions of these formulae can be installed at the same time
+        (e.g. `python@3.15` and `python@3.10`) but Homebrew does not otherwise support installing
+        a specific version of a formula (e.g. `rclone@1.75`).  In the case where multiple versions
+        of a formula are installed at once, they will show up as distinct entries in
+        `BrewPackages`
     """
 
     @override
@@ -99,7 +104,7 @@ class BrewPackages(FactBase[BrewPackingMapping]):
     default = dict
 
     @override
-    def process(self, output: Iterable[str]) -> BrewPackingMapping:
+    def process(self, output: list[str]) -> BrewPackingMapping:
         return parse_packages(BREW_REGEX, output)
 
 
@@ -154,7 +159,7 @@ class BrewTaps(FactBase[BrewTapList]):
     default = list
 
     @override
-    def process(self, output: Iterable[str]) -> BrewTapList:
+    def process(self, output: list[str]) -> BrewTapList:
         return output
 
 
@@ -193,7 +198,7 @@ class BrewTrusted(FactBase[BrewTrustMapping]):
         return {kind.value: [] for kind in BrewItemKind.__members__.values()}
 
     @override
-    def process(self, output: Iterable[str]) -> BrewTrustMapping:
+    def process(self, output: list[str]) -> BrewTrustMapping:
         error = False
         body = "\n".join(s for s in output)
         try:
