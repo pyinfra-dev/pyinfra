@@ -64,8 +64,13 @@ def packages(
     + update: run ``brew update`` before installing packages
     + upgrade: run ``brew upgrade`` before installing packages
 
-    Versions:
-        Package versions can be pinned like brew: ``<pkg>@<version>``.
+    !!! note
+        Homebrew maintains separate versions of certain formulae (e.g. `python`, `postgres` and
+        `node`) and multiple versions of these formulae can be installed at the same time
+        (e.g. `python@3.15` and `python@3.10`) but Homebrew does not otherwise support installing
+        a specific version of a formula (e.g. `rclone@1.75`).
+        When one adds one of these specific packages with `package@X.Y.Z`, brew will drop the
+        `Z` (if it was supplied) and install the latest sub-version of `X.Y` of `package`.
 
     **Examples:**
 
@@ -93,15 +98,27 @@ def packages(
     if upgrade:
         yield from _upgrade._inner()
 
+    # brew "versions" are really distinct packages and multi versions can be installed at one time
+    # (e.g. python@3.15 and python@3.10) thus we shouldn't use a version separator at all but
+    # instead maintains multiple packages thus there is no version separator passed to
+    # ensure_packages. One can, see https://docs.brew.sh/Versions#brew-version-install,
+    # pin a specific version (using brew pin) or "fork" the formula with `brew version-install`
+    # or `brew extract` but those are beyond the scope of pyinfra
+
+    packages = [packages] if isinstance(packages, str) else (packages or [])
+    if len(packages) < 1:
+        host.noop("no packages specified")
+        return
+
+    current = host.get_fact(BrewPackages)
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(BrewPackages),
+        current,
         present,
         install_command="brew install",
         uninstall_command="brew uninstall",
         upgrade_command="brew upgrade",
-        version_join="@",
         latest=latest,
     )
 
