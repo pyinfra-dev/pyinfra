@@ -6,6 +6,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 import glob
 import re
 from os import environ, path
+from pathlib import Path
 
 import paramiko.config
 from gevent.subprocess import CalledProcessError, check_call
@@ -93,7 +94,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
         value = path.expanduser(value)
 
         for filename in glob.iglob(value):
-            if path.isfile(filename):
+            if Path(filename).is_file():
                 if filename in parsed_files:
                     raise Exception(
                         f"Include loop detected in ssh config file: {filename}",

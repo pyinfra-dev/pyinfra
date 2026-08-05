@@ -1,0 +1,49 @@
+{
+    "command": "cd /etc/ && for file in $(ls -pdL *-release | grep -v /); do echo \"/etc/${file}\"; cat \"/etc/${file}\"; echo ---; done",
+    "output": [
+        "/etc/centos-release",
+        "CentOS Linux release 8.4.2105",
+        "---",
+        "/etc/os-release",
+        "NAME=\"CentOS Linux\"",
+        "VERSION=\"8\"",
+        "ID=\"centos\"",
+        "ID_LIKE=\"rhel fedora\"",
+        "VERSION_ID=\"8\"",
+        "PLATFORM_ID=\"platform:el8\"",
+        "PRETTY_NAME=\"CentOS Linux 8\"",
+        "ANSI_COLOR=\"0;31\"",
+        "CPE_NAME=\"cpe:/o:centos:centos:8\"",
+        "HOME_URL=\"https://centos.org/\"",
+        "BUG_REPORT_URL=\"https://bugs.centos.org/\"",
+        "CENTOS_MANTISBT_PROJECT=\"CentOS-8\"",
+        "CENTOS_MANTISBT_PROJECT_VERSION=\"8\"",
+        "---",
+        "/etc/redhat-release",
+        "CentOS Linux release 8.4.2105",
+        "---",
+        "/etc/system-release",
+        "CentOS Linux release 8.4.2105",
+        "---"
+    ],
+    "fact": {
+        "name": "CentOS",
+        "major": 8,
+        "minor": 4,
+        "release_meta": {
+            "NAME": "CentOS Linux",
+            "VERSION": "8",
+            "ID": "centos",
+            "ID_LIKE": "rhel fedora",
+            "VERSION_ID": "8",
+            "PLATFORM_ID": "platform:el8",
+            "PRETTY_NAME": "CentOS Linux 8",
+            "ANSI_COLOR": "0;31",
+            "CPE_NAME": "cpe:/o:centos:centos:8",
+            "HOME_URL": "https://centos.org/",
+            "BUG_REPORT_URL": "https://bugs.centos.org/",
+            "CENTOS_MANTISBT_PROJECT": "CentOS-8",
+            "CENTOS_MANTISBT_PROJECT_VERSION": "8"
+        }
+    }
+}

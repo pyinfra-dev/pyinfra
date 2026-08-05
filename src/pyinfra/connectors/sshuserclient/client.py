@@ -4,7 +4,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import os
-from os import path
+from pathlib import Path
 
 from gevent.lock import BoundedSemaphore
 from paramiko import (
@@ -21,7 +21,10 @@ from typing_extensions import override
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
-from pyinfra.connectors.ssh_util import load_key_with_certificate
+from pyinfra.connectors.ssh_util import (
+    _patch_paramiko_sk_key_support,
+    load_key_with_certificate,
+)
 
 from .config import SSHConfig
 
@@ -101,7 +104,9 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
     falls back to the implicit ``<key>-cert.pub`` lookup so OpenSSH-style CA
     auth works without explicit pyinfra ``ssh_key`` configuration (issue #1569).
     Silent fall-through when no identity exists keeps the legacy paramiko
-    ``key_filename`` flow for missing or otherwise unloadable files.
+    ``key_filename`` flow for missing or otherwise unloadable files. The load is
+    non-interactive (``allow_prompt=False``): an encrypted identity with no known
+    passphrase falls through instead of blocking on a prompt (issue #1852).
     """
 
     identity_files = host_config.get("identityfile") or []
@@ -114,13 +119,14 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
     certificate_filename = certificate_files[0] if certificate_files else None
 
     for identity_file in identity_files:
-        expanded = path.expanduser(identity_file)
-        if not path.isfile(expanded):
+        expanded = Path(identity_file).expanduser()
+        if not expanded.is_file():
             continue
         try:
             cfg["pkey"] = load_key_with_certificate(
                 key_filename=identity_file,
                 certificate_filename=certificate_filename,
+                allow_prompt=False,
             )
         except (PyinfraError, SSHException, OSError) as e:
             logger.debug("Could not load identity %s with certificate: %s", identity_file, e)
@@ -146,9 +152,9 @@ def get_ssh_config(user_config_file=None):
     logger.debug("Loading SSH config: %s", user_config_file)
 
     if user_config_file is None:
-        user_config_file = path.expanduser("~/.ssh/config")
+        user_config_file = os.path.expanduser("~/.ssh/config")
 
-    if path.exists(user_config_file):
+    if Path(user_config_file).exists():
         with open(user_config_file, encoding="utf-8") as f:
             ssh_config = SSHConfig()
             ssh_config.parse(f)
@@ -195,6 +201,8 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_paramiko_connect_kwargs=None,
         **kwargs,
     ):
+        _patch_paramiko_sk_key_support()
+
         (
             hostname,
             config,
@@ -213,7 +221,7 @@ class SSHClient(ParamikoClient):
         config.update(kwargs)
 
         if _pyinfra_ssh_known_hosts_file:
-            host_keys_files = (path.expanduser(_pyinfra_ssh_known_hosts_file),)
+            host_keys_files = (os.path.expanduser(_pyinfra_ssh_known_hosts_file),)
 
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_files)
@@ -279,7 +287,7 @@ class SSHClient(ParamikoClient):
         forward_agent = False
         identity_agent = None
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
-        host_keys_files = (path.expanduser("~/.ssh/known_hosts"),)
+        host_keys_files: tuple[str, ...] = (os.path.expanduser("~/.ssh/known_hosts"),)
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
@@ -305,7 +313,7 @@ class SSHClient(ParamikoClient):
         if "userknownhostsfile" in host_config:
             # OpenSSH supports multiple space-separated known hosts files
             host_keys_files = tuple(
-                path.expanduser(f) for f in host_config["userknownhostsfile"].split()
+                os.path.expanduser(f) for f in host_config["userknownhostsfile"].split()
             )
 
         if "hostname" in host_config:
@@ -314,7 +322,11 @@ class SSHClient(ParamikoClient):
         if "user" in host_config:
             cfg["username"] = host_config["user"]
 
-        if "identityfile" in host_config:
+        # An explicit pyinfra ``ssh_key`` (already loaded into ``pkey`` using
+        # ``ssh_key_password``) wins over any ssh_config ``IdentityFile``, the
+        # same way ``ssh -i`` overrides the config (issue #1852). Loading the
+        # config identity here would otherwise prompt for its passphrase.
+        if "identityfile" in host_config and "pkey" not in cfg:
             cfg["key_filename"] = host_config["identityfile"]
             _attach_identity_with_certificate(cfg, host_config)
 
@@ -333,7 +345,7 @@ class SSHClient(ParamikoClient):
         if "identityagent" in host_config:
             agent_path = host_config["identityagent"]
             if agent_path.lower() != "none":
-                identity_agent = path.expanduser(agent_path)
+                identity_agent = os.path.expanduser(agent_path)
 
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])

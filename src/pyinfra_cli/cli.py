@@ -3,8 +3,10 @@ import sys
 import warnings
 from fnmatch import fnmatch
 from getpass import getpass
+import os.path
+from os import chdir as os_chdir, environ, getcwd
+from pathlib import Path
 from collections.abc import Iterable
-from os import chdir as os_chdir, environ, getcwd, path
 
 import click
 
@@ -572,11 +574,11 @@ def _validate_operations(operations, chdir):
         filenames = []
 
         for filename in operations[0:]:
-            if path.exists(filename):
+            if Path(filename).exists():
                 filenames.append(filename)
                 continue
             if chdir and filename.startswith(chdir):
-                correct_filename = path.relpath(filename, chdir)
+                correct_filename = os.path.relpath(filename, chdir)
                 logger.warning(
                     (
                         "Fixing deploy filename under `--chdir` argument: "
@@ -586,7 +588,7 @@ def _validate_operations(operations, chdir):
                 filenames.append(correct_filename)
                 continue
             raise CliError(
-                f"No deploy file: {path.join(chdir, filename) if chdir else filename}",
+                f"No deploy file: {str(Path(chdir) / filename) if chdir else filename}",
             )
 
         operations = filenames
@@ -662,8 +664,8 @@ def _set_config(
 
     # Load up any config.py from the filesystem
     if state.cwd:
-        config_filename = path.join(state.cwd, config_filename)
-    if path.exists(config_filename):
+        config_filename = str(Path(state.cwd) / config_filename)
+    if Path(config_filename).exists():
         exec_file(config_filename)
 
     # Arg based config overrides

@@ -101,10 +101,8 @@ def progress_spinner(items, prefix_message=None):
             if items_allowed_width > 0:
                 items_string = f"{{{', '.join(f'{i}' for i in items)}}}"
                 if len(items_string) >= items_allowed_width:
-                    items_string = "{}...}}".format(
-                        # -3 for the ...
-                        items_string[: items_allowed_width - 3],
-                    )
+                    # -3 for the ...
+                    items_string = f"{items_string[: items_allowed_width - 3]}...}}"
 
                 message_bits.append(items_string)
 
