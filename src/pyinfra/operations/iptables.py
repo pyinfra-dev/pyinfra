@@ -158,7 +158,7 @@ def rule(
         extras = f"{extras} --sport {source_port}"
 
     if comment:
-        extras = "{0} -m comment --comment '{1}'".format(extras, comment)
+        extras = "{0} -m comment --comment {1}".format(extras, shlex.quote(comment))
 
     # Parse the extras string into a sorted list of [flag, value] pairs for comparison with the fact
     extras_list = parse_extras(shlex.split(extras))
