@@ -1,0 +1,12 @@
+args:
+  - rad
+kwargs:
+  enabled: false
+facts:
+  server.Os: OpenBSD
+  bsdinit.RcdStatus:
+    rad: true
+  bsdinit.RcdEnabled:
+    rad: true
+commands:
+  - rcctl disable rad

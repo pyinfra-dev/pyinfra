@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing_extensions import override
 
+from pyinfra.api import FactBase
+
 from .sysvinit import InitdStatus
 
 
@@ -21,3 +23,23 @@ class RcdStatus(InitdStatus):
         """
 
     default = dict
+
+
+class RcdEnabled(FactBase):
+    """
+    Returns a dict of OpenBSD rc.d services enabled at boot.
+    """
+
+    default = dict
+
+    @override
+    def requires_command(self) -> str:
+        return "rcctl"
+
+    @override
+    def command(self) -> str:
+        return "rcctl ls on"
+
+    @override
+    def process(self, output: list[str]) -> dict[str, bool]:
+        return {line: True for line in output}
