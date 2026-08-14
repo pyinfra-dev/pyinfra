@@ -347,11 +347,15 @@ class SSHClient(ParamikoClient):
             if agent_path.lower() != "none":
                 identity_agent = os.path.expanduser(agent_path)
 
+        proxyjump = host_config.get("proxyjump")
+
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
 
-        elif "proxyjump" in host_config:
-            hops = host_config["proxyjump"].split(",")
+        # ``ProxyJump none`` disables jumping entirely (issue #1445), the same as
+        # OpenSSH - without this we'd jump via a host literally called "none".
+        elif proxyjump and proxyjump.strip().lower() != "none":
+            hops = proxyjump.split(",")
             sock = None
             # Propagate the target's timeout down so hop connections and the
             # direct-tcpip channel don't hang forever when the network misbehaves

@@ -44,6 +44,16 @@ Host 192.168.1.2
     ForwardAgent yes
 """
 
+SSH_CONFIG_PROXYJUMP_NONE = """
+Host 192.168.1.4
+    User otheruser
+    ProxyJump none
+
+Host 192.168.1.5
+    User otheruser
+    ProxyJump NONE
+"""
+
 SSH_CONFIG_PROXYJUMP_CONNECTTIMEOUT = """
 Host jump
     HostName jump.example.com
@@ -361,6 +371,31 @@ class TestSSHUserConfig(TestCase):
             username="nottestuser",
         )
         fake_gateway.assert_called_once_with("192.168.1.2", 1022, "192.168.1.2", 1022, timeout=None)
+
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_PROXYJUMP_NONE),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_load_ssh_config_proxyjump_none(self, fake_gateway, fake_ssh_connect):
+        """Regression test for #1445: ``ProxyJump none`` disables jumping rather
+        than jumping via a host literally called "none"."""
+        client = SSHClient()
+
+        _, config, *_ = client.parse_config("192.168.1.4")
+
+        assert "sock" not in config
+        fake_ssh_connect.assert_not_called()
+        fake_gateway.assert_not_called()
+
+        # OpenSSH compares the value case insensitively.
+        _, config, *_ = client.parse_config("192.168.1.5")
+
+        assert "sock" not in config
+        fake_ssh_connect.assert_not_called()
+        fake_gateway.assert_not_called()
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.open",
