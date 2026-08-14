@@ -554,12 +554,11 @@ def test_parse_config_explicit_pkey_wins_over_encrypted_identityfile(
     assert cfg["pkey"] is sentinel
 
 
-def test_parse_config_encrypted_identityfile_does_not_prompt(
+def test_parse_config_encrypted_identityfile_prompts_in_cli(
     ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
 ):
-    # Regression for #1852: an encrypted ssh_config IdentityFile with no known
-    # passphrase must fall through to the legacy key_filename flow instead of
-    # blocking on an interactive passphrase prompt.
+    # Regression for #1917: under the CLI an encrypted ssh_config IdentityFile
+    # must prompt for its passphrase, the way it did before 3.10.0.
     config_path = tmp_path / "ssh_config"
     _write_ssh_config(
         config_path,
@@ -568,11 +567,35 @@ def test_parse_config_encrypted_identityfile_does_not_prompt(
     )
 
     client = SSHClient()
-    with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong") as fake_getpass:
+    with patch(
+        "pyinfra.connectors.ssh_util.getpass",
+        return_value=ssh_encrypted_key["passphrase"],
+    ) as fake_getpass:
         with patch("pyinfra.is_cli", True):
             _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
 
-    fake_getpass.assert_not_called()
+    fake_getpass.assert_called_once()
+    assert isinstance(cfg["pkey"], PKey)
+    assert "key_filename" not in cfg
+
+
+def test_parse_config_encrypted_identityfile_wrong_passphrase_falls_through(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # A wrong passphrase must not blow up parse_config: fall back to the legacy
+    # key_filename flow and let paramiko report the failure.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+    )
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong"):
+        with patch("pyinfra.is_cli", True):
+            _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
     assert "pkey" not in cfg
     assert cfg["key_filename"] == [str(ssh_encrypted_key["key"])]
 
