@@ -6,7 +6,7 @@ import pytest
 from paramiko import PKey, ProxyCommand, SSHException
 
 from pyinfra.connectors.sshuserclient import SSHClient
-from pyinfra.connectors.sshuserclient.client import AskPolicy, get_ssh_config
+from pyinfra.connectors.sshuserclient.client import AskPolicy, get_host_keys, get_ssh_config
 
 CERT_KEY_TYPE = "ssh-ed25519-cert-v01@openssh.com"
 
@@ -575,6 +575,36 @@ def test_parse_config_encrypted_identityfile_does_not_prompt(
     fake_getpass.assert_not_called()
     assert "pkey" not in cfg
     assert cfg["key_filename"] == [str(ssh_encrypted_key["key"])]
+
+
+def test_get_host_keys_skips_unparsable_lines(tmp_path):
+    # Regression for #1339: a line paramiko can't parse (here a @cert-authority
+    # marker) must not throw away the rest of the file, otherwise known hosts
+    # look unknown and get appended to known_hosts again on every run.
+    example_hostname = "192.168.1.222"
+    example_keytype = "ecdsa-sha2-nistp256"
+    example_key = (
+        "AAAAE2VjZHNhLXNoYTItbmlzdHAyNT"
+        "YAAAAIbmlzdHAyNTYAAABBBHNp1NM"
+        "ZjxPBuuKwIPfkVJqWaH3oUtW137kIW"
+        "P4PlCyACt8zVIIimFhIpwRUidcf7jw"
+        "VWPAJvfBjEPqewDApnZQ="
+    )
+
+    known_hosts = tmp_path / "known_hosts"
+    known_hosts.write_text(
+        "# a comment\n"
+        "\n"
+        f"@cert-authority *.example.com ssh-rsa {EXAMPLE_KEY_1}\n"
+        f"{example_hostname} {example_keytype} {example_key}\n"
+    )
+
+    get_host_keys.cache = {}
+    host_keys = get_host_keys((str(known_hosts),))
+
+    keys = host_keys.lookup(example_hostname)
+    assert keys is not None
+    assert keys[example_keytype].get_base64() == example_key
 
 
 def test_parse_config_keeps_key_filename_when_no_real_identityfile(
