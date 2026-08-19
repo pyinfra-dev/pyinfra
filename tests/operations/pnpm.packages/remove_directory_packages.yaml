@@ -8,4 +8,4 @@ facts:
     directory=/opt/app:
       lodash: ["4.17.21"]
 commands:
-  - pnpm --dir /opt/app remove lodash
+  - cd /opt/app && pnpm remove lodash

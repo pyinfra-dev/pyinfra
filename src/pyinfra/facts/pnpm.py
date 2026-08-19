@@ -54,20 +54,24 @@ class PnpmPackages(FactBase[PackageVersionDict]):
         if directory is None:
             return StringCommand(PNPM_CMD, "--global", "list", "--depth=0", "--json")
 
-        # pnpm fails on a directory that doesn't exist, so guard on it - no
-        # directory means no packages installed there (yet).
+        # pnpm fails on a directory that doesn't exist, so guard on it - no directory
+        # means no packages installed there (yet). The subshell keeps the guard from
+        # binding to the wrong side: `A || B && C` parses as `(A || B) && C`.
+        # pnpm runs inside the directory rather than via --dir so that corepack, which
+        # only looks at the working directory, resolves the project's pnpm version.
         return StringCommand(
             "!",
             "test",
             "-d",
             QuoteString(directory),
             "||",
-            PNPM_CMD,
-            "--dir",
+            "(cd",
             QuoteString(directory),
+            "&&",
+            PNPM_CMD,
             "list",
             "--depth=0",
-            "--json",
+            "--json)",
         )
 
     @override

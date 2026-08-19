@@ -4,4 +4,4 @@ args:
 kwargs:
   args: ["--mode", "production"]
 commands:
-  - pnpm --dir /opt/app run build --mode production
+  - cd /opt/app && pnpm run build --mode production

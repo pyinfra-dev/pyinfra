@@ -8,4 +8,4 @@ facts:
     directory=/opt/app:
       typescript: ["5.7.2"]
 commands:
-  - pnpm --dir /opt/app update --latest typescript
+  - cd /opt/app && pnpm update --latest typescript

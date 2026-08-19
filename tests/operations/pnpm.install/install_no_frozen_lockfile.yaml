@@ -6,4 +6,4 @@ facts:
   pnpm.PnpmModulesUpToDate:
     directory=/opt/app: false
 commands:
-  - pnpm --dir /opt/app install --no-frozen-lockfile
+  - cd /opt/app && pnpm install --no-frozen-lockfile

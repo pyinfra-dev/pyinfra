@@ -4,4 +4,4 @@ facts:
   pnpm.PnpmModulesUpToDate:
     directory=/opt/app: false
 commands:
-  - pnpm --dir /opt/app install
+  - cd /opt/app && pnpm install

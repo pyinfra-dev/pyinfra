@@ -7,4 +7,4 @@ facts:
     directory=/opt/app:
       lodash: ["4.17.20"]
 commands:
-  - pnpm --dir /opt/app add lodash@4.17.21 dayjs
+  - cd /opt/app && pnpm add lodash@4.17.21 dayjs

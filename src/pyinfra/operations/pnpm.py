@@ -1,5 +1,9 @@
 """
 Manage pnpm (Node.js) packages. See https://pnpm.io/
+
+Operations taking a ``directory`` run pnpm from inside it rather than passing pnpm's
+``--dir``, so wrappers that only look at the working directory - corepack resolving a
+``packageManager`` pin, for one - see the project. No ``_chdir`` needed.
 """
 
 from __future__ import annotations
@@ -38,6 +42,19 @@ def _drop_version(name: str, operator: str, version: str) -> str:
     """
 
     return name
+
+
+def _in_directory(directory: str) -> list[str | QuoteString]:
+    """
+    Start a pnpm command that runs *in* ``directory``.
+
+    pnpm's own ``--dir`` would be enough for pnpm itself, but anything wrapping it sees
+    only the working directory: corepack picks the pnpm version by walking up from there
+    looking for a ``packageManager`` pin, so pointing ``--dir`` at a pinned project from
+    elsewhere fetches the wrong pnpm instead.
+    """
+
+    return ["cd", QuoteString(directory), "&&", PNPM_CMD]
 
 
 @operation()
@@ -90,11 +107,9 @@ def packages(
     if isinstance(packages, str):
         packages = [packages]
 
-    pnpm_command: list[str | QuoteString] = [PNPM_CMD]
-    if directory is None:
-        pnpm_command.append("--global")
-    else:
-        pnpm_command.extend(("--dir", QuoteString(directory)))
+    pnpm_command: list[str | QuoteString] = (
+        [PNPM_CMD, "--global"] if directory is None else _in_directory(directory)
+    )
 
     install_parts: list[str | QuoteString] = [*pnpm_command, "add"]
     if dev:
@@ -157,12 +172,7 @@ def install(
         host.noop(f"node_modules in {directory} is up to date")
         return
 
-    install_parts: list[str | QuoteString] = [
-        PNPM_CMD,
-        "--dir",
-        QuoteString(directory),
-        "install",
-    ]
+    install_parts: list[str | QuoteString] = [*_in_directory(directory), "install"]
 
     if frozen_lockfile is not None:
         install_parts.append("--frozen-lockfile" if frozen_lockfile else "--no-frozen-lockfile")
@@ -210,7 +220,7 @@ def run(
         )
     """
 
-    run_parts: list[str | QuoteString] = [PNPM_CMD, "--dir", QuoteString(directory), "run"]
+    run_parts: list[str | QuoteString] = [*_in_directory(directory), "run"]
 
     # pnpm forwards everything after the script name to the script itself, so its own
     # flags have to come first.

@@ -1,6 +1,6 @@
 arg:
   directory: "/app dir; rm -rf /"
-command: "! test -d '/app dir; rm -rf /' || pnpm --dir '/app dir; rm -rf /' list --depth=0 --json"
+command: "! test -d '/app dir; rm -rf /' || (cd '/app dir; rm -rf /' && pnpm list --depth=0 --json)"
 requires_command: pnpm
 output: |
   [

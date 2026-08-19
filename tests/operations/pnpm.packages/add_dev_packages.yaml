@@ -7,4 +7,4 @@ facts:
   pnpm.PnpmPackages:
     directory=/opt/app: {}
 commands:
-  - pnpm --dir /opt/app add --save-dev typescript@5.4.5
+  - cd /opt/app && pnpm add --save-dev typescript@5.4.5

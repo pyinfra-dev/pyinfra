@@ -4,4 +4,4 @@ args:
 kwargs:
   args: ["--out", "/tmp/dist dir; reboot"]
 commands:
-  - "pnpm --dir '/app dir; rm -rf /' run 'build; rm -rf /' --out '/tmp/dist dir; reboot'"
+  - "cd '/app dir; rm -rf /' && pnpm run 'build; rm -rf /' --out '/tmp/dist dir; reboot'"

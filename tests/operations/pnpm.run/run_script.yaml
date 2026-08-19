@@ -2,4 +2,4 @@ args:
   - build
   - /opt/app
 commands:
-  - pnpm --dir /opt/app run build
+  - cd /opt/app && pnpm run build

@@ -4,4 +4,4 @@ args:
 kwargs:
   args: "--prod"
 commands:
-  - pnpm --dir /opt/app run build --prod
+  - cd /opt/app && pnpm run build --prod

@@ -6,4 +6,4 @@ facts:
   pnpm.PnpmModulesUpToDate:
     directory=/opt/app: false
 commands:
-  - pnpm --dir /opt/app install --package-import-method hardlink
+  - cd /opt/app && pnpm install --package-import-method hardlink

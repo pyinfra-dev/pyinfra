@@ -8,4 +8,4 @@ facts:
   pnpm.PnpmModulesUpToDate:
     directory=/opt/app: false
 commands:
-  - pnpm --dir /opt/app install --frozen-lockfile --ignore-scripts --package-import-method clone-or-copy
+  - cd /opt/app && pnpm install --frozen-lockfile --ignore-scripts --package-import-method clone-or-copy

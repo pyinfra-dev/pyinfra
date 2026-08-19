@@ -1,6 +1,6 @@
 arg:
   directory: /opt/app
-command: "! test -d /opt/app || pnpm --dir /opt/app list --depth=0 --json"
+command: "! test -d /opt/app || (cd /opt/app && pnpm list --depth=0 --json)"
 requires_command: pnpm
 output: |
   [

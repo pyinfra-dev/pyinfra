@@ -6,4 +6,4 @@ facts:
   pnpm.PnpmPackages:
     "directory=/app dir; rm -rf /": {}
 commands:
-  - "pnpm --dir '/app dir; rm -rf /' add react"
+  - "cd '/app dir; rm -rf /' && pnpm add react"

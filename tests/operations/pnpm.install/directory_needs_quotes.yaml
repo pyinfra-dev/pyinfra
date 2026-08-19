@@ -4,4 +4,4 @@ facts:
   pnpm.PnpmModulesUpToDate:
     "directory=/app dir; rm -rf /": false
 commands:
-  - "pnpm --dir '/app dir; rm -rf /' install"
+  - "cd '/app dir; rm -rf /' && pnpm install"
