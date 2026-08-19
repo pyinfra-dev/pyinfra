@@ -26,6 +26,8 @@ DEPENDENCY_FIELDS = (
     "unsavedDependencies",
 )
 
+UP_TO_DATE_MARKER = "up_to_date"
+
 
 class PnpmPackages(FactBase[PackageVersionDict]):
     """
@@ -91,6 +93,43 @@ class PnpmPackages(FactBase[PackageVersionDict]):
                         packages.setdefault(name, set()).add(version)
 
         return packages
+
+
+class PnpmModulesUpToDate(FactBase[bool]):
+    """
+    Returns whether a project's ``node_modules`` was installed from the
+    ``pnpm-lock.yaml`` currently in the directory.
+
+    pnpm copies the lockfile it installed to ``node_modules/.pnpm/lock.yaml``,
+    so the two files matching means the packages on disk are the ones the
+    lockfile asks for. Note this says nothing about ``package.json`` changes
+    that have not been written to the lockfile.
+    """
+
+    @override
+    @staticmethod
+    def default() -> bool:
+        return False
+
+    @override
+    def command(self, directory: str) -> StringCommand:
+        return StringCommand(
+            "if",
+            "cmp",
+            "-s",
+            QuoteString(f"{directory}/pnpm-lock.yaml"),
+            QuoteString(f"{directory}/node_modules/.pnpm/lock.yaml"),
+            ";",
+            "then",
+            f"echo {UP_TO_DATE_MARKER};",
+            "else",
+            "echo not_up_to_date;",
+            "fi",
+        )
+
+    @override
+    def process(self, output: list[str]) -> bool:
+        return output[0].strip() == UP_TO_DATE_MARKER
 
 
 class PnpmVersion(FactBase[str]):

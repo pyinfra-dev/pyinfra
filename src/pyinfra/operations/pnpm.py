@@ -4,9 +4,11 @@ Manage pnpm (Node.js) packages. See https://pnpm.io/
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
-from pyinfra.facts.pnpm import PNPM_CMD, PnpmPackages
+from pyinfra.facts.pnpm import PNPM_CMD, PnpmModulesUpToDate, PnpmPackages
 
 from .util.packaging import PkgInfo, ensure_packages
 
@@ -114,3 +116,110 @@ def packages(
         upgrade_command=StringCommand(*pnpm_command, "update", "--latest"),
         latest=latest,
     )
+
+
+@operation()
+def install(
+    directory: str,
+    *,
+    frozen_lockfile: bool | None = None,
+    ignore_scripts: bool = False,
+    package_import_method: Literal["auto", "clone", "clone-or-copy", "copy", "hardlink"]
+    | None = None,
+):
+    """
+    Install every dependency a project declares, as resolved by its lockfile.
+
+    + directory: project directory holding ``package.json`` and ``pnpm-lock.yaml``
+    + frozen_lockfile: fail rather than update an outdated lockfile, defaults to pnpm's own
+      behaviour of doing so on CI only
+    + ignore_scripts: don't run lifecycle scripts of the project or the installed packages
+    + package_import_method: how packages are placed into ``node_modules`` from the store,
+      one of ``auto`` (default), ``hardlink``, ``clone``, ``clone-or-copy`` or ``copy``
+
+    Note:
+        The install is skipped when ``node_modules`` was already built from the lockfile now
+        in the directory, so edits to ``package.json`` that have not been written to
+        ``pnpm-lock.yaml`` are not picked up - deploy both files together.
+
+    **Example:**
+
+    .. code:: python
+
+        pnpm.install(
+            name="Install app dependencies",
+            directory="/opt/app",
+            package_import_method="hardlink",
+        )
+    """
+
+    if host.get_fact(PnpmModulesUpToDate, directory=directory):
+        host.noop(f"node_modules in {directory} is up to date")
+        return
+
+    install_parts: list[str | QuoteString] = [
+        PNPM_CMD,
+        "--dir",
+        QuoteString(directory),
+        "install",
+    ]
+
+    if frozen_lockfile is not None:
+        install_parts.append("--frozen-lockfile" if frozen_lockfile else "--no-frozen-lockfile")
+    if ignore_scripts:
+        install_parts.append("--ignore-scripts")
+    if package_import_method is not None:
+        install_parts.extend(("--package-import-method", QuoteString(package_import_method)))
+
+    yield StringCommand(*install_parts)
+
+
+@operation()
+def run(
+    script: str,
+    directory: str,
+    *,
+    args: str | list[str] | None = None,
+    if_present: bool = False,
+):
+    """
+    Run one of a project's ``package.json`` scripts.
+
+    + script: name of the script to run
+    + directory: project directory holding ``package.json``
+    + args: argument(s) to append to the script's own command line, one per item
+    + if_present: succeed quietly when the project has no such script, instead of failing
+
+    This operation is not idempotent: the script runs on every deploy. Gate it on an
+    earlier operation with the ``_if`` global argument to build only when something
+    actually changed.
+
+    **Example:**
+
+    .. code:: python
+
+        install = pnpm.install(directory="/opt/app")
+
+        pnpm.run(
+            name="Build the app",
+            script="build",
+            directory="/opt/app",
+            _if=install.did_change,
+        )
+    """
+
+    run_parts: list[str | QuoteString] = [PNPM_CMD, "--dir", QuoteString(directory), "run"]
+
+    # pnpm forwards everything after the script name to the script itself, so its own
+    # flags have to come first.
+    if if_present:
+        run_parts.append("--if-present")
+
+    run_parts.append(QuoteString(script))
+
+    if args is not None:
+        if isinstance(args, str):
+            args = [args]
+        run_parts.extend(QuoteString(arg) for arg in args)
+
+    yield StringCommand(*run_parts)

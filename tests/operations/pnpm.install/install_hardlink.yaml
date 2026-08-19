@@ -1,0 +1,9 @@
+args:
+  - /opt/app
+kwargs:
+  package_import_method: hardlink
+facts:
+  pnpm.PnpmModulesUpToDate:
+    directory=/opt/app: false
+commands:
+  - pnpm --dir /opt/app install --package-import-method hardlink

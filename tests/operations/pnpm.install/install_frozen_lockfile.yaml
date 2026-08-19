@@ -1,0 +1,9 @@
+args:
+  - /opt/app
+kwargs:
+  frozen_lockfile: true
+facts:
+  pnpm.PnpmModulesUpToDate:
+    directory=/opt/app: false
+commands:
+  - pnpm --dir /opt/app install --frozen-lockfile
