@@ -274,6 +274,18 @@ path = "src/pyinfra/facts/npm.py"
 type = "fact"
 tags = ["package-manager", "javascript"]
 
+[pyinfra.plugins."pnpm-ops"]
+name = "pnpm"
+path = "src/pyinfra/operations/pnpm.py"
+type = "operation"
+tags = ["package-manager", "javascript"]
+
+[pyinfra.plugins."pnpm-facts"]
+name = "pnpm"
+path = "src/pyinfra/facts/pnpm.py"
+type = "fact"
+tags = ["package-manager", "javascript"]
+
 # Service Management
 [pyinfra.plugins."launchd-ops"]
 name = "launchd"
