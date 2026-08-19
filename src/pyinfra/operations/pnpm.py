@@ -190,21 +190,23 @@ def run(
     + args: argument(s) to append to the script's own command line, one per item
     + if_present: succeed quietly when the project has no such script, instead of failing
 
-    This operation is not idempotent: the script runs on every deploy. Gate it on an
-    earlier operation with the ``_if`` global argument to build only when something
-    actually changed.
+    This operation is not idempotent: the script runs on every deploy. To build only when
+    there is something new to build, gate it with the ``_if`` global argument on whatever
+    delivered the new source - the checkout, not the dependency install, which reports no
+    change when only application code moved.
 
     **Example:**
 
     .. code:: python
 
-        install = pnpm.install(directory="/opt/app")
+        checkout = git.repo(src="git@github.com:me/app.git", dest="/opt/app", branch=VERSION)
+        pnpm.install(directory="/opt/app")
 
         pnpm.run(
             name="Build the app",
             script="build",
             directory="/opt/app",
-            _if=install.did_change,
+            _if=checkout.did_change,
         )
     """
 
