@@ -1,0 +1,9 @@
+args:
+  - ["typescript@5.4.5", "cowsay", "@types/node@22.10.2"]
+facts:
+  pnpm.PnpmPackages:
+    directory=None:
+      typescript: ["5.0.0"]
+      "@types/node": ["22.10.2"]
+commands:
+  - pnpm --global add typescript@5.4.5 cowsay

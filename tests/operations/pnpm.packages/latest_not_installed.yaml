@@ -1,0 +1,9 @@
+args:
+  - ["typescript"]
+kwargs:
+  latest: true
+facts:
+  pnpm.PnpmPackages:
+    directory=None: {}
+commands:
+  - pnpm --global add typescript
