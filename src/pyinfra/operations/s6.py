@@ -3,6 +3,7 @@
 import os
 import builtins
 import re
+import shlex
 from collections.abc import Sequence
 
 from pyinfra import host
@@ -405,4 +406,4 @@ def service(
                 yield from live_install._inner()
 
     if command:
-        yield make_formatted_string_command("s6 {0}", command)
+        yield StringCommand("s6", *map(QuoteString, shlex.split(command)))
