@@ -6,7 +6,7 @@ import re
 import shlex
 from collections.abc import Sequence
 
-from pyinfra import host
+from pyinfra import host, logger
 from pyinfra.api import QuoteString, StringCommand, OperationError, OperationValueError, operation
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus
@@ -168,7 +168,7 @@ def set_save(name: str, force: bool = False, force_backup: bool = True):
                 )
             if len(lines) != 1:
                 # no OperationWarning
-                raise RuntimeWarning(
+                logger.warning(
                     "multiple repodir definitions found in /etc/s6-frontend.conf, using the first one"
                 )
             if (m := _repodir_pattern.fullmatch(lines[0])) is None:
