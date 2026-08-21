@@ -1,7 +1,6 @@
 """Manage s6-rc services (https://www.skarnet.org/software/s6-rc/)."""
 
 import os
-import builtins
 import re
 import shlex
 from collections.abc import Sequence
@@ -81,7 +80,7 @@ def _make_rx_commands(prescriptions: dict, name: str = "current", force_prescrip
     invocations of `_make_rx_command` for each type of prescription.
     """
 
-    _working_rx_set = builtins.set(prescriptions.values())
+    _working_rx_set = set(prescriptions.values())
     if not _working_rx_set <= {"always", "active", "usable", "masked"}:
         raise OperationValueError(
             'prescriptions must be one of "always", "active", "usable", or "masked"'
@@ -215,7 +214,7 @@ def live_install():
     # force_save idempotent?
     idempotent_notice='Not idempotent by default. If any of the following are true, then idempotency is broken: `the_set != "current", `do_commit=True`',
 )
-def set(
+def manage_set(
     the_set: str = "current",
     prescriptions: dict[str, str] | None = None,
     force_prescriptions: bool = True,
@@ -320,7 +319,7 @@ def service(
     """
     Manage the state of s6-supervised services.
 
-    + services: name(s) of the service(s) to manage.
+    + service: name(s) of the service(s) to manage.
     + running: whether the service(s) should be under an s6-supervise.
     + restarted: whether the service(s) should be restarted
     + reloaded: whether the service(s) should be reloaded by sending a SIGHUP. Whether the service is reloaded depends on how it handles SIGHUP.
@@ -362,19 +361,19 @@ def service(
             if some_up:
                 yield _make_live_command("stop", all_up_services)
             else:
-                host.noop(f"all specified services are already down: {service}")
+                host.noop(f"all specified services are already down: {', '.join(service)}")
 
         if running is True:
             if not all_up:
                 yield _make_live_command("start", all_down_services)
             else:
-                host.noop(f"all specified services are already up: {service}")
+                host.noop(f"all specified services are already up: {', '.join(service)}")
 
         if restarted:
             if some_up:
                 yield _make_live_command("restart", all_up_services)
             else:
-                host.noop(f"all specified services are down: {service}")
+                host.noop(f"all specified services are down: {', '.join(service)}")
 
         if reloaded:
             if some_up:
@@ -385,17 +384,17 @@ def service(
                     *map(QuoteString, all_up_services),
                 )
             else:
-                host.noop(f"all specified services are down: {service}")
+                host.noop(f"all specified services are down: {', '.join(service)}")
 
     # TODO: test masked services present in `services` arg on a real system
     if enabled is not None:
         if enabled is True:
-            yield from set._inner(
+            yield from manage_set._inner(
                 the_set=the_set, prescriptions={srv: enabled_rx for srv in service}
             )
 
         if enabled is False:
-            yield from set._inner(
+            yield from manage_set._inner(
                 the_set=the_set, prescriptions={srv: disabled_rx for srv in service}
             )
 

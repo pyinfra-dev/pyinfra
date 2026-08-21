@@ -6,3 +6,4 @@ facts:
   s6.S6LiveStatus:
     tipidee: false
 commands: []
+noop_description: "all specified services are down: tipidee"
