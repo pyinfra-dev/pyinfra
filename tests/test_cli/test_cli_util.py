@@ -102,3 +102,11 @@ def test_try_import_module_attribute_falls_through_when_attr_missing(monkeypatch
     result = try_import_module_attribute("pip.Pip3Packages", prefix="pyinfra.facts")
 
     assert result is Pip3Packages
+
+
+def test_try_import_module_attribute_preserves_windows_path_in_error():
+    with pytest.raises(CliError, match=r"^No such module: D:/non_existing_script\.py$"):
+        try_import_module_attribute("D:/non_existing_script.py")
+
+    with pytest.raises(CliError, match=r"^No such module: D:\\non_existing_script\.py$"):
+        try_import_module_attribute(r"D:\non_existing_script.py")

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 from random import uniform
-from shutil import which
+from shutil import copyfileobj, which
 from socket import gaierror
+from tempfile import SpooledTemporaryFile
 from time import sleep
 from typing import IO, TYPE_CHECKING, Any, Protocol
 from collections.abc import Iterable
@@ -20,7 +21,7 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .base import BaseConnector, DataMeta
 from .scp import SCPClient
-from .ssh_util import get_private_key, raise_connect_error
+from .ssh_util import _patch_paramiko_sk_key_support, get_private_key, raise_connect_error
 from .sshuserclient import SSHClient
 from .util import (
     CommandOutput,
@@ -33,6 +34,10 @@ from .util import (
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
+
+# Downloads are buffered in memory up to this size before spilling over onto disk, so that
+# the local destination is only written once the remote file has arrived in full.
+GET_FILE_BUFFER_MAX_SIZE = 1024 * 1024  # 1MB
 
 
 class ConnectorData(TypedDict):
@@ -216,6 +221,8 @@ class SSHConnector(BaseConnector):
 
     @override
     def connect(self) -> None:
+        _patch_paramiko_sk_key_support()
+
         retries = self.data["ssh_connect_retries"]
 
         try:
@@ -465,10 +472,15 @@ class SSHConnector(BaseConnector):
                 ),
             ) from e
 
-    def _get_file(self, remote_filename: str, filename_or_io: str | IO):
-        with get_file_io(filename_or_io, "wb") as file_io:
-            sftp = self.get_file_transfer_connection()
-            sftp.getfo(remote_filename, file_io)
+    def _get_file(self, remote_filename: str, filename_or_io: str | IO) -> None:
+        # Download into a temporary buffer first - opening the destination truncates it, so
+        # writing into it directly would destroy the local file if the transfer then failed.
+        transfer_client = self.get_file_transfer_connection()
+        with SpooledTemporaryFile(max_size=GET_FILE_BUFFER_MAX_SIZE, mode="w+b") as buff:
+            transfer_client.getfo(remote_filename, buff)
+            buff.seek(0)
+            with get_file_io(filename_or_io, "wb") as file_io:
+                copyfileobj(buff, file_io)
 
     @override
     def get_file(

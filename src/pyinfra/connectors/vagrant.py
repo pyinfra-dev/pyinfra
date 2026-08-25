@@ -1,5 +1,5 @@
 import json
-from os import path
+from pathlib import Path
 from queue import Queue
 from threading import Thread
 
@@ -81,7 +81,7 @@ def get_vagrant_config(limit=None):
 
 @memoize
 def get_vagrant_options():
-    if path.exists("@vagrant.json"):
+    if Path("@vagrant.json").exists():
         with open("@vagrant.json", encoding="utf-8") as f:
             return json.loads(f.read())
     return {}

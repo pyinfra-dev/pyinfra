@@ -163,6 +163,16 @@ def repo(
 
     # Ensuring existing repo
     else:
+        # Reconcile the `origin` remote URL with `src`. If `src` has changed for
+        # an existing working copy, update `origin` so the fetch/pull below
+        # operate against the new source instead of silently continuing to track
+        # the old remote (see GH #1763). Only act when an `origin` URL already
+        # exists and differs - if it is missing we leave remote management alone.
+        existing_remote = host.get_fact(GitConfig, repo=dest).get("remote.origin.url")
+        remote_changed = existing_remote is not None and existing_remote != [src]
+        if remote_changed:
+            git_commands.append(StringCommand("remote", "set-url", "origin", QuoteString(src)))
+
         is_tag = False
         current_branch = host.get_fact(GitBranch, repo=dest)
         if branch is not None and current_branch != branch:
@@ -182,9 +192,11 @@ def repo(
             # remote tip, so pyinfra reports the operation unchanged rather
             # than always "Success". This still applies when we switch branch:
             # if the target branch already exists locally at the remote tip,
-            # the fetch+checkout leaves nothing for pull to do.
+            # the fetch+checkout leaves nothing for pull to do. When the remote
+            # URL just changed, the cached remote-tip fact was gathered against
+            # the old origin, so never skip - we must pull from the new source.
             effective_branch = branch or current_branch
-            if effective_branch:
+            if not remote_changed and effective_branch:
                 local_commit = host.get_fact(GitLocalCommit, repo=dest, ref=effective_branch)
                 remote_commit = host.get_fact(
                     GitRemoteBranchCommit,

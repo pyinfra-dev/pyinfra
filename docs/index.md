@@ -8,6 +8,7 @@ Welcome to the pyinfra v3 documentation. If you're new to pyinfra you should sta
 - [**Using Operations**](using-operations.md) — The guide to writing reusable, committable operations in Python files.
 - [**Inventory & Data**](inventory-data.md) — Use groups, host, and group data to control and configure operations for any environment.
 - [**Using the CLI**](cli.md) — The pyinfra CLI is extremely powerful for ad hoc command execution and management.
+- [**Debugging Deploys**](debugging.md) — Inspect inventory, facts and operations, and add focused diagnostic logging.
 - [**FAQ**](faq.md) — Quick answers to the most commonly asked questions for using pyinfra.
 
 ## Deploy Reference

@@ -1,0 +1,7 @@
+args:
+  - ["github.com/foo/bar"]
+facts:
+  go.GoPackages:
+    github.com/foo/bar: ["v1.2.3"]
+commands: []
+noop_description: "package github.com/foo/bar is installed (v1.2.3)"

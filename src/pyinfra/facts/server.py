@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-import os
+import pathlib
 import re
 import shutil
 from datetime import datetime
+from pathlib import PurePosixPath
 from tempfile import mkdtemp
-from typing import Optional, Union
 from collections.abc import Iterable
 
 from dateutil.parser import parse as parse_date
@@ -24,6 +24,14 @@ ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 # Usernames used in shell tilde expansion (``~user``) cannot be quoted without
 # disabling the expansion, so the value must be a plain, shell-safe word.
 _SAFE_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._][a-zA-Z0-9._-]*$")
+_OPENBSD_MOUNT_V_RE = re.compile(
+    r"""
+        (\S+) (?:\ \(.*\))?\  # the (diskname.label) part isn't always there, hence optional group
+        on\ (/.*)\            # *, not +, since root path "/" will be mounted
+        type\ (\w+)\          # types from /sbin/mount_*
+        \((.+)\)              # flags are in this group""",
+    flags=re.VERBOSE,
+)
 
 
 def _check_tilde_username(user: str) -> None:
@@ -41,7 +49,7 @@ class User(FactBase):
         return "echo $USER"
 
 
-class Home(FactBase[Optional[str]]):
+class Home(FactBase[str | None]):
     """
     Returns the home directory of the given user, or the current user if no user is given.
     """
@@ -205,7 +213,7 @@ class Timezone(FactBase[str]):
         return output[0]
 
 
-class Which(FactBase[Optional[str]]):
+class Which(FactBase[str | None]):
     """
     Returns the path of a given command according to `command -v`, if available.
     """
@@ -282,10 +290,12 @@ class Mounts(FactBase[dict[str, MountsDict]]):
 
     @override
     def command(self) -> str:
-        self._kernel = host.get_fact(Kernel)
+        self._kernel = host.get_fact(Kernel).strip()
 
-        if self._kernel.strip() == "FreeBSD":
+        if self._kernel == "FreeBSD":
             return "mount -p --libxo json"
+        if self._kernel == "OpenBSD":
+            return "mount -v"
         else:
             return "cat /proc/self/mountinfo"
 
@@ -315,6 +325,18 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                 options = [option.strip() for option in entry["opts"].split(",")]
 
                 devices[path] = {"device": device, "type": type_, "options": options}
+
+            return devices
+
+        if self._kernel == "OpenBSD":
+            for line in output:
+                if m := _OPENBSD_MOUNT_V_RE.fullmatch(line):
+                    path = m[2]
+                    device = m[1]
+                    type_ = m[3]
+                    options = [opt.strip(" ") for opt in m[4].split(",") if "ctime=" not in opt]
+
+                    devices[path] = {"device": device, "type": type_, "options": options}
 
             return devices
 
@@ -354,7 +376,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
+class Port(FactBase[tuple[str, int] | tuple[None, None]]):
     """
     Returns the process occupying a port and its PID.
 
@@ -915,6 +937,11 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
     Fedora & Gentoo currently. Also contains any key/value items located in
     release files.
 
+    ``major`` and ``minor`` resolved from the most precise source available, when
+    ``/etc/os-release`` exposes only major version (e.g. CentOS 8's ``VERSION_ID="8"``),
+    ``major.minor`` is read from distro-specific release file (e.g. ``/etc/centos-release``)
+    instead. ``minor`` is ``None`` when no source provides it (e.g. CentOS Stream).
+
     .. code:: python
 
         {
@@ -978,16 +1005,12 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
 
         temp_root = mkdtemp()
         try:
-            temp_etc_dir = os.path.join(temp_root, "etc")
-            os.mkdir(temp_etc_dir)
+            temp_etc_dir = pathlib.Path(temp_root) / "etc"
+            temp_etc_dir.mkdir()
 
             for filename, content in parts.items():
-                with open(
-                    os.path.join(temp_etc_dir, os.path.basename(filename)),
-                    "w",
-                    encoding="utf-8",
-                ) as fp:
-                    fp.write(content)
+                target = temp_etc_dir / PurePosixPath(filename).name
+                target.write_text(content, encoding="utf-8")
 
             parsed = distro.LinuxDistribution(
                 root_dir=temp_root,
@@ -1000,11 +1023,15 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
             # TODO: fix this!
             release_meta.pop("RELEASE_CODENAME", None)
 
+            # try_int returns its input on failure, so a missing version part comes back as ""
+            major = try_int(parsed.major_version(best=True))
+            minor = try_int(parsed.minor_version(best=True))
+
             release_info.update(
                 {
                     "name": self.name_to_pretty_name.get(parsed.id(), parsed.name()),
-                    "major": try_int(parsed.major_version()) or None,
-                    "minor": try_int(parsed.minor_version()) or None,
+                    "major": major if isinstance(major, int) else None,
+                    "minor": minor if isinstance(minor, int) else None,
                     "release_meta": release_meta,
                 },
             )

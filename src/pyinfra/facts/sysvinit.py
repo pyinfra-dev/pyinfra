@@ -32,7 +32,7 @@ class InitdStatus(FactBase):
         done
     """
 
-    regex = r"([a-zA-Z0-9\-]+)=([0-9]+)"
+    regex = r"([a-zA-Z0-9_\-.]+)=([0-9]+)"
     default = dict
 
     @override

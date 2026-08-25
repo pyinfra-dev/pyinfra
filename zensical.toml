@@ -20,6 +20,7 @@ nav = [
         { "Using Operations" = "using-operations.md" },
         { "Inventory & Data" = "inventory-data.md" },
         { "Using the CLI" = "cli.md" },
+        { "Debugging Deploys" = "debugging.md" },
         { "FAQ" = "faq.md" },
     ] },
     { "Deploy Reference" = [

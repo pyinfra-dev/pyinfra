@@ -1,11 +1,8 @@
 import importlib
-from glob import glob
-from os import path
+from pathlib import Path
 
-_module_filenames = glob(path.join(path.dirname(__file__), "*.py"))
-__all__ = sorted(
-    set(path.basename(name)[:-3] for name in _module_filenames if not name.endswith("__init__.py"))
-)
+_module_paths = Path(__file__).parent.glob("*.py")
+__all__ = sorted(set(p.stem for p in _module_paths if p.name != "__init__.py"))
 
 
 def __getattr__(name):

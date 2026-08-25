@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -euo pipefail
 
-VERSION=`uv run python scripts/generate_next_version.py`
-MAJOR_BRANCH="`uv run python scripts/generate_next_version.py | cut -d'.' -f1`.x"
+VERSION=$(uv run python scripts/generate_next_version.py)
+MAJOR_BRANCH="$(uv run python scripts/generate_next_version.py | cut -d'.' -f1).x"
 
 echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 
