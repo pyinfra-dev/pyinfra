@@ -104,9 +104,9 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
     falls back to the implicit ``<key>-cert.pub`` lookup so OpenSSH-style CA
     auth works without explicit pyinfra ``ssh_key`` configuration (issue #1569).
     Silent fall-through when no identity exists keeps the legacy paramiko
-    ``key_filename`` flow for missing or otherwise unloadable files. The load is
-    non-interactive (``allow_prompt=False``): an encrypted identity with no known
-    passphrase falls through instead of blocking on a prompt (issue #1852).
+    ``key_filename`` flow for missing or otherwise unloadable files. An encrypted
+    identity prompts for its passphrase under the CLI and raises in API mode,
+    both handled inside :func:`load_key_with_certificate` (issue #1917).
     """
 
     identity_files = host_config.get("identityfile") or []
@@ -126,7 +126,6 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
             cfg["pkey"] = load_key_with_certificate(
                 key_filename=identity_file,
                 certificate_filename=certificate_filename,
-                allow_prompt=False,
             )
         except (PyinfraError, SSHException, OSError) as e:
             logger.debug("Could not load identity %s with certificate: %s", identity_file, e)
@@ -161,6 +160,38 @@ def get_ssh_config(user_config_file=None):
             return ssh_config
 
 
+def _load_host_keys_file(host_keys: HostKeys, filename: str) -> None:
+    """
+    Load a single known_hosts file, skipping any line paramiko cannot parse.
+
+    ``HostKeys.load`` only ignores lines that raise ``SSHException``, so a line
+    it fails on for any other reason (``@cert-authority``/``@revoked`` markers,
+    a truncated key) aborts the whole file and drops every valid key in it. That
+    makes pyinfra treat known hosts as unknown and append them again (issue
+    #1339). See: https://github.com/paramiko/paramiko/pull/1990
+    """
+
+    with open(filename) as f:
+        for lineno, line in enumerate(f, 1):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            try:
+                entry = HostKeyEntry.from_line(line, lineno)
+            # Broad by necessity: paramiko raises a bare ``Exception`` subclass
+            # (``InvalidHostKey``) for undecodable key data.
+            except Exception as e:
+                logger.warning("Skipping bad host keys line %s:%i: %s", filename, lineno, e)
+                continue
+
+            if entry is None:
+                continue
+
+            for hostname in entry.hostnames:
+                host_keys.add(hostname, entry.key.get_name(), entry.key)
+
+
 @memoize
 def get_host_keys(filenames):
     """
@@ -174,10 +205,9 @@ def get_host_keys(filenames):
 
         for filename in filenames:
             try:
-                host_keys.load(filename)
-            # When paramiko encounters a bad host keys line it sometimes bails the
-            # entire load incorrectly.
-            # See: https://github.com/paramiko/paramiko/pull/1990
+                _load_host_keys_file(host_keys, filename)
+            # A missing or unreadable known_hosts file is not fatal, the keys
+            # from any other files should still be used.
             except Exception as e:
                 logger.warning("Failed to load host keys from %s: %s", filename, e)
 
@@ -347,11 +377,15 @@ class SSHClient(ParamikoClient):
             if agent_path.lower() != "none":
                 identity_agent = os.path.expanduser(agent_path)
 
+        proxyjump = host_config.get("proxyjump")
+
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
 
-        elif "proxyjump" in host_config:
-            hops = host_config["proxyjump"].split(",")
+        # ``ProxyJump none`` disables jumping entirely (issue #1445), the same as
+        # OpenSSH - without this we'd jump via a host literally called "none".
+        elif proxyjump and proxyjump.strip().lower() != "none":
+            hops = proxyjump.split(",")
             sock = None
             # Propagate the target's timeout down so hop connections and the
             # direct-tcpip channel don't hang forever when the network misbehaves

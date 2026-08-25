@@ -7,7 +7,7 @@ import gevent
 import pyinfra
 from pyinfra.api.output import set_echo, set_formatter
 
-from .cli import cli
+from .cli import app
 
 
 def main():
@@ -42,4 +42,9 @@ def main():
         gevent.signal(signal.SIGINT, gevent.kill)
 
     signal.signal(signal.SIGINT, _handle_interrupt)  # print the message and exit main
-    cli()
+
+    try:
+        app()
+    except click.ClickException as e:
+        e.show()
+        sys.exit(e.exit_code)
