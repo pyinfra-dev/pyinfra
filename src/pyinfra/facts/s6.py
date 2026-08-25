@@ -1,46 +1,34 @@
 from typing_extensions import override
 
 from pyinfra.api import FactBase, QuoteString
-from pyinfra.api.command import make_formatted_string_command
+from pyinfra.api.command import make_formatted_string_command, StringCommand
+from pyinfra.facts.server import Command
 from pyinfra.facts.files import File
 
 
 class S6RepositoryList(FactBase[list[str]]):
-    """Returns the name of every set in a repository."""
-
-    @override
-    def check_preconditions(self, state, host):
-        # TODO allow passing S6_FRONTEND_CONF envvar
-        if not host.get_fact(File, "/etc/s6/frontend.conf"):
-            return "couldn't read /etc/s6/frontend.conf or it doesn't exist"
+    """Returns the name of every set in a repository, including the set named "current"."""
 
     @override
     def requires_command(self, repository=None):
-        # "s6" only sees the repository configured in /etc/s6-frontend.conf
-        if repository:
-            return "s6-rc-repo-list"
-
-        return "s6"
+        return "s6-rc-repo-list"
+        # and envfile, but that comes bundled in execline dependency of s6
 
     @override
     def command(self, repository=None):
         """
-        + repository: path of the repository to inspect, default the one configured in `/etc/s6-frontend.conf`.
+        + repository: path of the repository to inspect, default the one in the s6-frontend configuration.
         """
         if repository:
             return make_formatted_string_command("s6-rc-repo-list -r {0}", QuoteString(repository))
 
-        return "s6 repository list"
+        # if no repository passed, try to get its location from the s6-frontend configuration file
+        return StringCommand(
+            '[ ! -z "$S6_CONF" ] || S6_CONF=/etc/s6.conf && envfile "$S6_CONF" sh -c \'s6-rc-repo-list -r "$repodir"\'; echo EXIT CODE: $?'
+        )
 
     @override
     def process(self, output):
-        # "s6" command doesn't list the set named "current", while s6-rc-repo-list does. this
-        # try-except normalizes the output.
-        try:
-            del output[output.index("current")]
-        except ValueError:
-            pass
-
         return output
 
 
@@ -56,43 +44,29 @@ class S6SetStatus(FactBase[dict[str, str]]):
     """
 
     @override
-    def check_preconditions(self, state, host):
-        # TODO allow passing S6_FRONTEND_CONF envvar
-        if not host.get_fact(File, "/etc/s6/frontend.conf"):
-            return "couldn't read /etc/s6/frontend.conf or it doesn't exist"
-
-    @override
     def requires_command(self, set="current", repository=None):
-        if repository or set != "current":
-            return "s6-rc-set-status"
-
-        return "s6"
+        return "s6-rc-set-status"
+        # and sh
 
     @override
     def command(self, set="current", repository=None):
         """
         + set: the set to inspect.
+        TODO update
         + repository: path of the repository to inspect, default `None` which resolves the following way: If `set` is unspecified, the repository in `/etc/s6-frontend.conf` will be used. If `set` is specified, the compiled-in default `/var/lib/s6-rc/repository` will be used.
         """
-        if set != "current":
-            if repository:
-                return make_formatted_string_command(
-                    "s6-rc-set-status -r {0} {1}; echo EXIT CODE: $?",
-                    QuoteString(repository),
-                    QuoteString(set),
-                )
-
-            return make_formatted_string_command(
-                "s6-rc-set-status {0}; echo EXIT CODE: $?", QuoteString(set)
-            )
-
         if repository:
             return make_formatted_string_command(
-                "s6-rc-set-status -r {0} current; echo EXIT CODE: $?", QuoteString(repository)
+                "s6-rc-set-status -r {0} {1}; echo EXIT CODE: $?",
+                QuoteString(repository),
+                QuoteString(set),
             )
 
-        # TODO consider case where util-linux triggers column pretty printing
-        return "s6 set status; echo EXIT CODE: $?"
+        # extra escaping needed for make_formatted_string_command, but not in StringCommand
+        return make_formatted_string_command(
+            '[ ! -z \\"$S6_CONF\\" ] || S6_CONF=/etc/s6.conf && envfile \\"$S6_CONF\\" sh -c \\\'s6-rc-set-status -r \\"$repodir\\" {0}\\\'; echo EXIT CODE: $?',
+            QuoteString(set),
+        )
 
     @override
     def process(self, output):
@@ -108,8 +82,7 @@ class S6SetStatus(FactBase[dict[str, str]]):
 
 
 class S6LiveStatus(FactBase[dict[str, bool]]):
-    """
-    Returns a dict of name -> status for each service in the live state.
+    """ Returns a dict of name -> status for each service in the live state.
 
     True when the service is "running", meaning the service is managed by an `s6-supervise`s, False
     otherwise.
@@ -118,21 +91,24 @@ class S6LiveStatus(FactBase[dict[str, bool]]):
     # could also rewrite this using the "s6 live status" command
     @override
     def requires_command(self):
-        return "s6"
+        return "s6-rc"
 
     @override
     def check_preconditions(self, state, host):
-        # TODO allow passing S6_FRONTEND_CONF envvar
-        if not host.get_fact(File, "/etc/s6/frontend.conf"):
-            return "couldn't read /etc/s6/frontend.conf or it doesn't exist"
+        if not host.run_shell_command('[ ! -z "$S6_CONF" ] || [ -f /etc/s6.conf ]')[0]:
+            return "couldn't find s6-frontend configuration"
 
     @override
     def command(self):
-        return "s6 live status"
+        return "s6-rc -c list"
 
     @override
     def process(self, output):
+        # example of an output line:
+        #    seatd-srv/longrun//up/explicit
+        # returns
+        #    { "seatd-srv": True }
         return {
-            triple[0]: True if triple[2] == "up" else False
-            for triple in map(lambda line: line.partition("/"), output)
+            statusline[0]: True if statusline[3] == "up" else False
+            for statusline in map(lambda line: line.split("/"), output)
         }
