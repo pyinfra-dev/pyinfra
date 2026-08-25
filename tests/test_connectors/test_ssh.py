@@ -1,5 +1,7 @@
 import importlib
+from pathlib import Path
 from socket import error as socket_error, gaierror
+from tempfile import TemporaryDirectory
 from unittest import TestCase, mock
 
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
@@ -219,7 +221,7 @@ class TestSSHConnector(TestCase):
 
         assert len(state.active_hosts) == 2
 
-    @mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True)
+    @mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True)
     @mock.patch("pyinfra.connectors.ssh_util.RSAKey.from_private_key_file")
     def test_connect_exceptions(self, fake_key_open):
         for exception_class in (
@@ -245,7 +247,7 @@ class TestSSHConnector(TestCase):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -386,7 +388,7 @@ class TestSSHConnector(TestCase):
         )
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -411,7 +413,7 @@ class TestSSHConnector(TestCase):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.getpass",
                 lambda *args, **kwargs: "testpass",
@@ -442,7 +444,7 @@ class TestSSHConnector(TestCase):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -476,7 +478,7 @@ class TestSSHConnector(TestCase):
         fake_fail_from_private_key_file.side_effect = make_raise_exception_function(SSHException)
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.ECDSAKey.from_private_key_file",
                 fake_fail_from_private_key_file,
@@ -1138,6 +1140,29 @@ class TestSSHConnector(TestCase):
         #     "not-a-file",
         #     fake_open(),
         # )
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    @mock.patch("pyinfra.connectors.ssh.SFTPClient")
+    def test_get_file_failure_leaves_local_file_alone(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect()
+
+        fake_sftp_client.from_transport().getfo.side_effect = PermissionError(
+            13,
+            "Permission denied",
+        )
+
+        with TemporaryDirectory() as temp_dir:
+            local_file = Path(temp_dir) / "existing-file"
+            local_file.write_bytes(b"do not truncate me")
+
+            with ctx_state.use(state):
+                with self.assertRaises(PermissionError):
+                    host.get_file("not-a-file", str(local_file))
+
+            assert local_file.read_bytes() == b"do not truncate me"
 
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     @mock.patch("pyinfra.connectors.ssh.SFTPClient")

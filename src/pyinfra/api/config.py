@@ -3,7 +3,7 @@ try:
 except ImportError:
     import importlib.metadata as importlib_metadata  # type: ignore[no-redef]
 
-from os import path
+from pathlib import Path
 from collections.abc import Iterable, Sequence
 
 from packaging.markers import Marker
@@ -188,7 +188,7 @@ def check_require_packages(requirements_config):
     if isinstance(requirements_config, (list, tuple)):
         requirements = requirements_config
     else:
-        with open(path.join(state.cwd or "", requirements_config), encoding="utf-8") as f:
+        with open(Path(state.cwd or "") / requirements_config, encoding="utf-8") as f:
             requirements = [line.split("#egg=")[-1] for line in f.read().splitlines()]
 
     requirements_not_met = _check_requirements(requirements)

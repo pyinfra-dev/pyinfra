@@ -3,12 +3,10 @@ from __future__ import annotations
 import dataclasses
 import enum
 import json
-import os
 from datetime import datetime
 from importlib import import_module
 from importlib.util import find_spec
 from io import IOBase
-from os import path
 from pathlib import Path
 from types import CodeType, FunctionType, ModuleType
 from collections.abc import Callable
@@ -38,10 +36,13 @@ PYTHON_CODES: dict[str, CodeType] = {}
 
 
 def is_subdir(child, parent):
-    child = path.realpath(child)
-    parent = path.realpath(parent)
-    relative = path.relpath(child, start=parent)
-    return not relative.startswith(os.pardir)
+    child_resolved = Path(child).resolve()
+    parent_resolved = Path(parent).resolve()
+    try:
+        child_resolved.relative_to(parent_resolved)
+    except ValueError:
+        return False
+    return True
 
 
 def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = False):

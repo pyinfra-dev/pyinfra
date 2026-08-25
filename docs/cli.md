@@ -222,14 +222,17 @@ Interactive prompts from deploy code (e.g. `input(...)`) will still block, so av
 
 ## Shell Autocompletion
 
-Add the following to your `~/.bash_profile` or `~/.profile` files:
-
-+ **bash** `source scripts/pyinfra-complete.sh`.
-+ **zsh** `source scripts/pyinfra-complete.zsh`.
-
-These files were generated using these commands:
+pyinfra can install shell completion for you:
 
 ```
-env _PYINFRA_COMPLETE=bash_source pyinfra > pyinfra-complete.sh
-env _PYINFRA_COMPLETE=zsh_source pyinfra > pyinfra-complete.zsh
+pyinfra --install-completion
+```
+
+This auto-detects your current shell (`bash`, `zsh` and `fish` are supported), then generates and installs the completion script to the shell-specific default location. After installation you may need to restart your shell or source your shell configuration file.
+
+You can also target a specific shell or output path:
+
+```
+pyinfra --install-completion --shell zsh
+pyinfra --install-completion --shell bash --output ~/.pyinfra-complete.bash
 ```

@@ -119,11 +119,8 @@ def _has_package(
         return any(version in value for version in pkg_versions)
 
     packages_to_check: list[str | list[str]] = [package]
-    if expand_package_fact:
-        if isinstance(package, list):
-            packages_to_check = expand_package_fact(package[0]) or packages_to_check
-        else:
-            packages_to_check = expand_package_fact(package) or packages_to_check
+    if expand_package_fact and not isinstance(package, list):
+        packages_to_check = expand_package_fact(package) or packages_to_check
 
     package_name_to_versions = defaultdict(set)
     for pkg in packages_to_check:
