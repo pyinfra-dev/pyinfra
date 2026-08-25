@@ -1500,6 +1500,28 @@ def move(src: str, dest: str, overwrite=False):
 
 
 @operation()
+def rename(src: str, dest: str, overwrite=False):
+    """
+    Rename a remote file/directory/link to a new path
+
+    + src: remote file/directory to rename
+    + dest: new path for `src`
+    + overwrite: whether to overwrite dest, if present
+    """
+
+    if host.get_fact(File, src) is None:
+        raise OperationError(f"src {src} does not exist")
+
+    if host.get_fact(File, dest) is not None:
+        if overwrite:
+            yield StringCommand("rm", "-rf", QuoteString(dest))
+        else:
+            raise OperationError(f"dest {dest} already exists and `overwrite` is unset")
+
+    yield StringCommand("mv", QuoteString(src), QuoteString(dest))
+
+
+@operation()
 def copy(src: str, dest: str, overwrite=False):
     """
     Copy remote file/directory/link into remote directory
