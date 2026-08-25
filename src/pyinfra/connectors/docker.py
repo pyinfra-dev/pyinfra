@@ -174,9 +174,13 @@ class DockerConnector(BaseConnector):
         quoted_container_id = shlex.quote(container_id)
 
         with progress_spinner({f"{self.docker_cmd} commit"}):
-            image_id = local.shell(
-                f"{self.docker_cmd} commit {quoted_container_id}", splitlines=True
-            )[-1][7:19]  # last line is the image ID, get sha256:[XXXXXXXXXX]...
+            # last line is the image ID, optionally prefixed with the digest algorithm
+            # (docker prints "sha256:XXXX...", podman prints the bare digest)
+            image_id = (
+                local.shell(f"{self.docker_cmd} commit {quoted_container_id}", splitlines=True)[-1]
+                .strip()
+                .removeprefix("sha256:")[:12]
+            )
 
         with progress_spinner({f"{self.docker_cmd} rm"}):
             local.shell(

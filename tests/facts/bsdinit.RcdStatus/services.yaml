@@ -1,0 +1,11 @@
+command: "\n            for SERVICE in `find /etc/rc.d /usr/local/etc/rc.d -type f`; do\n                $SERVICE status 2> /dev/null || $SERVICE check 2> /dev/null\n                echo \"`basename $SERVICE`=$?\"\n            done\n        "
+output: |
+  node_exporter=0
+  unbound=0
+  isc_dhcpd=1
+  sshd=0
+fact:
+  node_exporter: true
+  unbound: true
+  isc_dhcpd: false
+  sshd: true
