@@ -133,8 +133,8 @@ def load_key_with_certificate(
       ``<key>-cert.pub`` is used if present, falling back to ``<key>.pub``.
     + cwd: optional working directory used to resolve relative key paths.
     + allow_prompt: when False, an encrypted key with no known passphrase raises
-      instead of prompting. Used by non-interactive callers like the ssh_config
-      identity path so they fall through rather than block (issue #1852).
+      instead of prompting. Only for callers that must never block on input;
+      prompting is already limited to CLI runs, so API mode always raises.
     """
 
     resolved_path: str | None = None
