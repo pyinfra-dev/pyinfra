@@ -1,0 +1,12 @@
+{
+    "args": ["somerepo", "http://baseurl"],
+    "kwargs": {
+        "description": "description",
+        "gpgcheck": false,
+        "gpgkey": "INVALID TEXT"
+    },
+    "exception": {
+        "name": "OperationValueError",
+        "message": "gpgkey must be a valid URL or an absolute path, got: INVALID"
+    }
+}

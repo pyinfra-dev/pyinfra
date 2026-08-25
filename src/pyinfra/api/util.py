@@ -5,7 +5,9 @@ from functools import wraps
 from hashlib import md5, sha1, sha256
 from inspect import getframeinfo, stack
 from io import BytesIO, StringIO
-from os import getcwd, path, stat
+import os.path
+from os import getcwd, stat
+from pathlib import Path
 from socket import error as socket_error, timeout as timeout_error
 from typing import IO, TYPE_CHECKING, Any
 from collections.abc import Callable
@@ -30,20 +32,24 @@ BLOCKSIZE = 65536
 TEMPLATES: dict[str, Template] = {}
 FILE_SHAS: dict[Any, Any] = {}
 
-PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
+PYINFRA_INSTALL_DIR = str(Path(__file__).parent.parent)
 
 
 def get_file_path(state: State, filename: str):
-    if path.isabs(filename):
+    # These are real local controller paths (state.cwd from getcwd(),
+    # current_exec_filename is an actual file), so use the platform-aware
+    # pathlib.Path (WindowsPath on Windows, PosixPath elsewhere) rather than
+    # forcing posix semantics.
+    if Path(filename).is_absolute():
         return filename
 
     assert state.cwd is not None, "Cannot use `get_file_path` with no `state.cwd` set"
     relative_to = state.cwd
 
     if state.current_exec_filename and (filename.startswith("./") or filename.startswith(".\\")):
-        relative_to = path.dirname(state.current_exec_filename)
+        relative_to = str(Path(state.current_exec_filename).parent)
 
-    return path.join(relative_to, filename)
+    return str(Path(relative_to) / filename)
 
 
 def get_kwargs_str(kwargs: dict[Any, Any]):
@@ -87,7 +93,7 @@ def get_call_location(frame_offset: int = 1):
     try:
         # On Windows if pyinfra is on a different drive to the filename here, this will
         # error as there's no way to do relative paths between drives.
-        relpath = path.relpath(frame.filename)
+        relpath = os.path.relpath(frame.filename)
     except ValueError:
         pass
 

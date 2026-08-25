@@ -95,6 +95,8 @@ def make_prod():
 
     Provide per-group data via the `(hosts, data)` tuple in the function's return value, or compose the data inside the function itself (e.g. by reading files, calling APIs, or importing Python modules). The function-based inventory loader is also still in alpha and will log a warning at startup.
 
+See [Dynamic Inventories & Data](examples/dynamic_inventories_data.md) for a worked example, including building a fake-data test inventory against the `@fake` connector.
+
 ## Project Layout
 
 There is no enforced project structure — pyinfra works with anything from a single `deploy.py` file to a multi-directory tree. The CLI only auto-loads two things by convention:

@@ -5,10 +5,14 @@ from collections.abc import Callable, Generator, Iterable, Mapping
 
 from typing_extensions import ParamSpec, Protocol
 
+from pyinfra.api.hiddenvalue import HiddenValue
+
 if TYPE_CHECKING:
     from pyinfra.api.operation import OperationMeta
 
 P = ParamSpec("P")
+
+EnvValue = str | HiddenValue
 
 
 # Unfortunately we have to re-type out all of the global arguments here because
@@ -43,7 +47,7 @@ class PyinfraOperation(Generic[P], Protocol):
         # Shell arguments
         _shell_executable: None | str = None,
         _chdir: None | str = None,
-        _env: None | Mapping[str, str] = None,
+        _env: None | Mapping[str, EnvValue] = None,
         # Connector control
         _success_exit_codes: Iterable[int] = (0,),
         _timeout: None | int = None,

@@ -119,7 +119,7 @@ class TestOperationsApi(PatchSSHTestCase):
         disconnect_all(state)
 
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
-    @patch("pyinfra.operations.files.os.path.isfile", lambda *args, **kwargs: True)
+    @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)
     def test_file_upload_op(self):
         inventory = make_inventory()
 
@@ -203,7 +203,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state.current_stage = StateStage.Prepare
         connect_all(state)
 
-        with patch("pyinfra.operations.files.os.path.isfile", lambda *args, **kwargs: True):
+        with patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True):
             add_op(
                 state,
                 files.get,

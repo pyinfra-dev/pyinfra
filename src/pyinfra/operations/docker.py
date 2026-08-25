@@ -17,9 +17,9 @@ from pyinfra.facts.docker import (
     DockerVolume,
 )
 
-DOCKER_HUB_SERVER = "https://index.docker.io/v1/"
-
 from .util.docker import ContainerSpec, handle_docker, parse_image_reference
+
+DOCKER_HUB_SERVER = "https://index.docker.io/v1/"
 
 
 @operation()
@@ -415,13 +415,20 @@ def build(
 
 
 @operation()
-def volume(volume: str, driver: str = "", labels: list[str] | None = None, present: bool = True):
+def volume(
+    volume: str,
+    driver: str = "",
+    labels: list[str] | None = None,
+    options: list[str] | None = None,
+    present: bool = True,
+):
     """
     Manage Docker volumes
 
     + volume: Volume name
     + driver: Docker volume storage driver
     + labels: Label list to attach in the volume
+    + options: Driver-specific options
     + present: whether the Docker volume should exist
 
     **Examples:**
@@ -449,6 +456,7 @@ def volume(volume: str, driver: str = "", labels: list[str] | None = None, prese
             volume=volume,
             driver=driver,
             labels=labels,
+            options=options,
             present=present,
         )
 
@@ -913,5 +921,87 @@ def compose(
             command_bits.append("-v")
         if remove_orphans:
             command_bits.append("--remove-orphans")
+
+    yield StringCommand(*command_bits)
+
+
+@operation(is_idempotent=False)
+def container_exec(
+    container: str,
+    command: str | list[str],
+    user: str | None = None,
+    workdir: str | None = None,
+    env: dict[str, str] | None = None,
+    detach: bool = False,
+    privileged: bool = False,
+    tty: bool = False,
+):
+    """
+    Run a command inside an existing Docker container (``docker exec``).
+
+    + container: name or ID of the target container
+    + command: command to run. A string is run through the container's shell
+      (``sh -c``) so pipes/redirects work; a list is passed straight through as
+      ``argv`` with no shell
+    + user: run as this user (maps to ``--user``)
+    + workdir: working directory inside the container (maps to ``--workdir``)
+    + env: environment variables to set (maps to repeated ``--env``)
+    + detach: run in the background (maps to ``--detach``)
+    + privileged: give extended privileges to the command (maps to ``--privileged``)
+    + tty: allocate a pseudo-TTY (maps to ``--tty``)
+
+    This operation is not idempotent: it always runs the command. The target
+    container must already exist and be running.
+
+    **Examples:**
+
+    .. code:: python
+
+        from pyinfra.operations import docker
+
+        # Run a shell command (pipes/redirects work)
+        docker.container_exec(
+            name="Migrate the database",
+            container="app",
+            command="./manage.py migrate 2>&1 | tee /var/log/migrate.log",
+        )
+
+        # Pass an explicit argv (no shell)
+        docker.container_exec(
+            name="Touch a file as appuser",
+            container="app",
+            command=["touch", "/srv/ready"],
+            user="appuser",
+            workdir="/srv",
+            env={"STAGE": "prod"},
+        )
+    """
+    if not container:
+        raise OperationError("docker.container_exec requires a container")
+
+    if not command:
+        raise OperationError("docker.container_exec requires a command")
+
+    command_bits: list[str | QuoteString] = ["docker exec"]
+
+    if detach:
+        command_bits.append("--detach")
+    if privileged:
+        command_bits.append("--privileged")
+    if tty:
+        command_bits.append("--tty")
+    if user is not None:
+        command_bits.extend(["--user", QuoteString(user)])
+    if workdir is not None:
+        command_bits.extend(["--workdir", QuoteString(workdir)])
+    for key, value in (env or {}).items():
+        command_bits.extend(["--env", QuoteString(f"{key}={value}")])
+
+    command_bits.append(QuoteString(container))
+
+    if isinstance(command, list):
+        command_bits.extend(QuoteString(arg) for arg in command)
+    else:
+        command_bits.extend(["sh -c", QuoteString(command)])
 
     yield StringCommand(*command_bits)

@@ -1,0 +1,16 @@
+{
+    "args": ["INPUT"],
+    "kwargs": {
+        "jump": "ACCEPT",
+        "protocol": "TCP",
+        "extras": "--another 'argument with spaces'"
+    },
+    "facts": {
+        "iptables.IptablesRules": {
+            "table=filter": []
+        }
+    },
+    "commands": [
+        "iptables -t filter -A INPUT -p tcp --another 'argument with spaces' -j ACCEPT"
+    ]
+}

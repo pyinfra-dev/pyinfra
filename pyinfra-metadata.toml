@@ -232,6 +232,18 @@ path = "src/pyinfra/facts/gem.py"
 type = "fact"
 tags = ["package-manager", "ruby"]
 
+[pyinfra.plugins."go-ops"]
+name = "go"
+path = "src/pyinfra/operations/go.py"
+type = "operation"
+tags = ["package-manager", "go"]
+
+[pyinfra.plugins."go-facts"]
+name = "go"
+path = "src/pyinfra/facts/go.py"
+type = "fact"
+tags = ["package-manager", "go"]
+
 [pyinfra.plugins."git-ops"]
 name = "git"
 path = "src/pyinfra/operations/git.py"
