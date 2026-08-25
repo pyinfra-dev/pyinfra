@@ -22,7 +22,7 @@ Multiple facts with arguments may be called like so:
 pyinfra @local fact files.File path=setup.py files.File path=anotherfile.txt
 ```
 
-You can leverage facts within [operations](../using-operations.md) like this:
+You can leverage facts within [operations](using-operations.md) like this:
 
 ```python
 from pyinfra import host
@@ -32,6 +32,6 @@ if host.get_fact(LinuxName) == 'Ubuntu':
     apt.packages(...)
 ```
 
-**Want a new fact?** Check out [the writing facts guide](../api/facts.md).
+**Want a new fact?** Check out [the writing facts guide](api/facts.md).
 
 --8<-- "facts-cards.html"
