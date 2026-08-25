@@ -1,0 +1,23 @@
+{
+    "args": ["INPUT"],
+    "kwargs": {
+        "jump": "ACCEPT",
+        "comment": "This rule is amazing!"
+    },
+    "facts": {
+        "iptables.IptablesRules": {
+            "table=filter": [
+                {
+                    "chain": "INPUT",
+                    "jump": "ACCEPT",
+                    "extras": [
+                        ["--comment", "This rule is amazing!"],
+                        ["-m", "comment"]
+                    ]
+                }
+            ]
+        }
+    },
+    "commands": [],
+    "noop_description": "iptables INPUT rule exists"
+}
