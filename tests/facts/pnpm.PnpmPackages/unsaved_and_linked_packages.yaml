@@ -12,6 +12,7 @@ output: |
       "dependencies": {
         "shared": {
           "from": "shared",
+          "version": "link:../shared",
           "path": "/opt/shared"
         }
       },
@@ -25,4 +26,5 @@ output: |
     }
   ]
 fact:
+  shared: ["link:../shared"]
   cowsay: ["1.6.0"]
