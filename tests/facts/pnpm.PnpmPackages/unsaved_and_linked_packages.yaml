@@ -27,4 +27,3 @@ output: |
   ]
 fact:
   shared: ["link:../shared"]
-  cowsay: ["1.6.0"]

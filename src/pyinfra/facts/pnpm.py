@@ -20,13 +20,13 @@ from .util.packaging import PackageVersionDict
 
 PNPM_CMD = "pnpm"
 
-# Every dependency group ``pnpm list --json`` reports; all count as installed.
-# ``unsavedDependencies`` is what is in ``node_modules`` but not the manifest.
+# The dependency groups ``pnpm list --json`` reports for declared packages. Its
+# fourth, ``unsavedDependencies`` (in ``node_modules`` but not the manifest), is
+# left out - ``pnpm add`` should claim those and ``pnpm remove`` rejects them.
 DEPENDENCY_FIELDS = (
     "dependencies",
     "devDependencies",
     "optionalDependencies",
-    "unsavedDependencies",
 )
 
 UP_TO_DATE_MARKER = "up_to_date"
@@ -41,6 +41,8 @@ class PnpmPackages(FactBase[PackageVersionDict]):
         {
             "package_name": {"version"},
         }
+
+    Only packages the manifest declares are reported.
     """
 
     @override
