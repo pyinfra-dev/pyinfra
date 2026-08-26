@@ -6,18 +6,95 @@ import shlex
 from collections.abc import Sequence
 
 from pyinfra import host, logger
-from pyinfra.api import QuoteString, StringCommand, OperationError, OperationValueError, operation
+from pyinfra.api import (
+    QuoteString,
+    StringCommand,
+    OperationError,
+    OperationValueError,
+    operation,
+    Host,
+)
 from pyinfra.api.command import make_formatted_string_command
-from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus
-from pyinfra.facts.files import FindInFile, Directory
+from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus, S6RepositoryList
+from pyinfra.facts.files import FindInFile, Directory, File, FileContents
+from pyinfra.facts.server import Command
 from pyinfra.operations.files import _raise_or_remove_invalid_path
 
 # https://skarnet.org/software/execline/envfile.html#syntax
 _repodir_pattern = re.compile(r'^\s*repodir\s*=\s*(/[^\s]*|"/.*")\s*$')
 
 
+def _get_repodir_from_conf(content: list[str]):
+    """Get the path to a repodir from an s6 configuration file.
+
+    + content: the text in the file, with each line being a string in the list.
+    """
+    # simplistic check for now, avoiding complicated syntax
+    # does not account for a statement broken over multiple lines with backslashes
+    # assume repodir line is unique
+    if match := re.search(
+        r'^\s*repodir\s*=\s*(/[^\s]*|"/.*")\s*$', "\n".join(content), re.MULTILINE
+    ):
+        return match.group(1)
+
+    return
+
+    ## TODO edge case
+    # for line, next_line in itertools.pairwise(content):
+    #    # ignore commented, empty and whitespace lines
+    #    if line == "":
+    #        continue
+    #    elif re.search(r'^\s*#', line, re.ASCII):
+    #        continue
+    #    elif re.fullmatch(r'\s+', line, re.ASCII):
+    #        continue
+
+    #    # line continuation detected
+    #    if line.endswith("\\"):
+    #        if next_line.endswith("\\"):
+    #            pass
+    #    elif "=" not in line:
+    #        return False
+
+
+def _s6_repo_lookup(host: Host):
+    """Attempts to find an s6-rc repository.
+
+    The algorithm is as follows:
+
+    The environment variable `S6_CONF` is checked for a valid filesystem path, and if it is, check
+    whether the file defines a repodir. Otherwise check whether the file `/etc/s6.conf` exists and
+    if it defines a repodir. If both fail, no value is returned.
+    """
+    conf_envvar = host.get_fact(Command, 'printf %s "$S6_CONF"')
+
+    if conf_envvar != "":
+        conf = host.get_fact(FileContents, conf_envvar)
+        if repodir := _get_repodir_from_conf(conf):
+            return repodir
+
+    if s6_conf := host.get_fact(FileContents, "/etc/s6.conf"):
+        if repodir := _get_repodir_from_conf(s6_conf):
+            return repodir
+
+    # for compatibility with older versions of s6-frontend. the envvar used to have a different name
+    # and config file was called something else.
+    conf_envvar_old = host.get_fact(Command, 'printf %s "$S6_FRONTEND_CONF"')
+
+    if conf_envvar_old != "":
+        conf = host.get_fact(FileContents, conf_envvar_old)
+        if repodir := _get_repodir_from_conf(conf):
+            return repodir
+
+    if frontend_conf := host.get_fact(FileContents, "/etc/s6-frontend.conf"):
+        if repodir := _get_repodir_from_conf(frontend_conf):
+            return repodir
+
+    return
+
+
 def _make_format_fields(n):
-    """Returns "{0} {1} ... {n}"."""
+    """Returns "{0} {1} ... {n-1}"."""
     return " ".join([f"{{{i}}}" for i in range(n)])
 
 
@@ -31,12 +108,13 @@ def _make_live_command(op: str, services: Sequence):
     )
 
 
-def _make_rx_command(services: list, current_rxs: dict, wanted_rx: str):
+def _make_rx_command(services: list, current_rxs: dict, wanted_rx: str, the_set: str = "current"):
     """Returns a command like "s6 set enable httpd".
 
     + services: the services to be assigned a specific prescription.
     + current_rxs: the current prescriptions for all services (from the S6SetStatus fact).
     + wanted_rx: the prescription to assign to each service.
+    + the_set: name of the set to operate on
 
     If every service already matches the desired prescription, None is returned.
     """
@@ -59,16 +137,21 @@ def _make_rx_command(services: list, current_rxs: dict, wanted_rx: str):
             "masked": "mask",
         }
 
+        # example of the string passed into make_formatted_string_command
+        # s6 set disable -s {5} {0} {1} {2} {3} {4}
         op = _rx_to_subcommand[wanted_rx]
         return make_formatted_string_command(
-            f"s6 set {op} " + _make_format_fields(len(service_subset)),
+            f"s6 set {op} -s {{{len(service_subset)}}} " + _make_format_fields(len(service_subset)),
             *map(QuoteString, service_subset),
+            QuoteString(the_set),
         )
     else:
         return None
 
 
-def _make_rx_commands(prescriptions: dict, name: str = "current", force_prescriptions: bool = True):
+def _make_rx_commands(
+    prescriptions: dict, the_set: str = "current", force_prescriptions: bool = True
+):
     """Returns all commands necessary to bring the prescriptions to the desired state.
 
     + prescriptions: map of service -> prescription, which is one of "always", "active", "usable", "masked"
@@ -111,7 +194,7 @@ def _make_rx_commands(prescriptions: dict, name: str = "current", force_prescrip
             [srv for srv in prescriptions if prescriptions[srv] == "masked"]
         )
 
-    current_rxs = host.get_fact(S6SetStatus, name)
+    current_rxs = host.get_fact(S6SetStatus, the_set)
 
     if force_prescriptions:
         # mask all services not present in `prescriptions` arg
@@ -120,9 +203,39 @@ def _make_rx_commands(prescriptions: dict, name: str = "current", force_prescrip
         )
 
     return [
-        _make_rx_command(service_set, current_rxs, wanted_rx.removeprefix("wanted_"))
+        _make_rx_command(
+            service_set, current_rxs, wanted_rx.removeprefix("wanted_"), the_set=the_set
+        )
         for wanted_rx, service_set in service_bins.items()
     ]
+
+
+@operation(is_idempotent=False)
+def set_create(name: str, repository: str | None = None):
+    """Create a new set.
+
+    + name: name for the new set.
+    + repository: repository to save the set in.
+
+    This is a distinct operation from set_copy.
+    """
+    if repository:
+        existing_sets = host.get_fact(S6RepositoryList, repository=repository)
+        if name not in existing_sets:
+            yield make_formatted_string_command(
+                "s6-rc-set-new -r {0} {1}", QuoteString(repository), QuoteString(name)
+            )
+
+    elif repodir := _s6_repo_lookup(host):
+        existing_sets = host.get_fact(S6RepositoryList, repository=repodir)
+        if name not in existing_sets:
+            yield make_formatted_string_command(
+                "s6-rc-set-new -r {0} {1}", QuoteString(repodir), QuoteString(name)
+            )
+    # fallback to compiled-in default repo, which is /var/lib/s6/repository if left unchanged at
+    # compile time
+    else:
+        yield make_formatted_string_command("s6-rc-set-new {0}", QuoteString(name))
 
 
 @operation(is_idempotent=False)
@@ -141,69 +254,90 @@ def set_delete(names: str | Sequence[str]):
     )
 
 
-# maybe it is idempotent?
 @operation(is_idempotent=False)
-def set_save(name: str, force: bool = False, force_backup: bool = True):
-    """Save the current working set.
+def set_copy(dest: str, source="current", force: bool = False):
+    """Save the contents of the given set as a new set.
 
-    + name: name to save the current working set as.
+    + dest: name of the saved copy.
+    + source: name of the set to copy.
     + force: whether to overwrite an existing set of the same name if it exists.
-    + force_backup: whether to backup an existing set that would be overwritten by `force`.
     """
     if force:
-        if force_backup:
-            # requires knowing path of the repository.
-            # regex will break if repodir key pair in /etc/s6-frontend.conf spans several lines.
-            lines = host.get_fact(
-                FindInFile,
-                "/etc/s6-frontend.conf",
-                r"repodir\s*=",
-                interpolate_variables=False,
-                extended_regex=True,
-            )
-            if lines is None:
-                raise OperationError(
-                    "no repodir found in /etc/s6-frontend.conf, or file doesn't exist"
-                )
-            if len(lines) != 1:
-                # no OperationWarning
-                logger.warning(
-                    "multiple repodir definitions found in /etc/s6-frontend.conf, using the first one"
-                )
-            if (m := _repodir_pattern.fullmatch(lines[0])) is None:
-                raise OperationError("failed to match repodir line in /etc/s6-frontend.conf")
-            repodir = m[1]
+        yield make_formatted_string_command(
+            "s6 set copy -f {0} {1}", QuoteString(source), QuoteString(dest)
+        )
 
-            if host.get_fact(Directory, os.path.join(repodir, name)):
-                yield from _raise_or_remove_invalid_path(
-                    "directory", os.path.join(repodir, name), True, True, False
-                )
+        # backing up requires more thought. try to use $S6_FRONTEND_CONF, envfile, and whether the
+        # fact that the friendly set names are symlinks to unique names changes anything
+        # (e.g. `readlink /etc/s6/repo/sources/default` gives `.default:YN2tP3`).
 
-            # no -f since the old set has already been moved
-            yield make_formatted_string_command("s6 set save {0}", QuoteString(name))
+        # + force_backup: whether to backup an existing set that would be overwritten by `force`.
+        # if force_backup:
+        #    # requires knowing path of the repository.
+        #    # regex will break if repodir key pair in /etc/s6-frontend.conf spans several lines.
+        #    lines = host.get_fact(
+        #        FindInFile,
+        #        "/etc/s6-frontend.conf",
+        #        r"repodir\s*=",
+        #        interpolate_variables=False,
+        #        extended_regex=True,
+        #    )
+        #    if lines is None:
+        #        raise OperationError(
+        #            "no repodir found in /etc/s6-frontend.conf, or file doesn't exist"
+        #        )
+        #    if len(lines) != 1:
+        #        # no OperationWarning
+        #        logger.warning(
+        #            "multiple repodir definitions found in /etc/s6-frontend.conf, using the first one"
+        #        )
+        #    if (m := _repodir_pattern.fullmatch(lines[0])) is None:
+        #        raise OperationError("failed to match repodir line in /etc/s6-frontend.conf")
+        #    repodir = m[1]
+
+        #    if host.get_fact(Directory, os.path.join(repodir, dest)):
+        #        yield from _raise_or_remove_invalid_path(
+        #            "directory", os.path.join(repodir, dest), True, True, False
+        #        )
+
+        #    # no -f since the old set has already been moved
+        #    yield make_formatted_string_command(
+        #        "s6 set copy {0} {1}", QuoteString(source), QuoteString(dest)
+        #    )
 
         # force_save=True, backup=False
-        else:
-            yield make_formatted_string_command("s6 set save -f {0}", QuoteString(name))
+        # else:
+        #    yield make_formatted_string_command(
+        #        "s6 set copy -f {0} {1}", QuoteString(source), QuoteString(dest)
+        #    )
 
     # save=True, force_save=False
     else:
-        yield make_formatted_string_command("s6 set save {0}", QuoteString(name))
+        yield make_formatted_string_command(
+            "s6 set copy {0} {1}", QuoteString(source), QuoteString(dest)
+        )
 
 
 @operation(is_idempotent=False)
-def set_commit():
-    """Check the current working set and commit it."""
-    yield StringCommand("s6 set check -F")
-    yield StringCommand("s6 set commit")
+def set_commit(the_set: str = "current"):
+    """Check the given set and commit it.
+
+    + the_set: name of the set to check and commit.
+    """
+    yield make_formatted_string_command("s6 set check -F -s {0}", QuoteString(the_set))
+    yield make_formatted_string_command("s6 set commit -s {0}", QuoteString(the_set))
 
 
 @operation(is_idempotent=False)
-def live_install():
-    """Install the compiled (committed) service database into the live state."""
-    yield StringCommand("s6 live install")
+def live_install(the_set: str = "current"):
+    """Install a compiled (committed) service database into the live state.
+
+    + the_set: name of the set containing an already compiled service database to be installed into the live state.
+    """
+    yield make_formatted_string_command("s6 live install -s {0}", QuoteString(the_set))
 
 
+# TODO refactor now that skarnet added -s option to many s6 frontend commands
 # TODO support for repositories other than the one in s6-frontend.conf (e.g. a user repository for
 # user services)
 @operation(
@@ -216,15 +350,16 @@ def live_install():
 )
 def manage_set(
     the_set: str = "current",
+    # no -r option exposed by s6-frontend
+    # repository: str | None = None,
     prescriptions: dict[str, str] | None = None,
     force_prescriptions: bool = True,
     present: bool = True,
     do_save: bool = False,
     save_as: str | None = None,
     force_save: bool = False,
-    force_backup: bool = True,
+    # force_backup: bool = True,
     do_commit: bool = True,
-    # TODO configurable s6-frontend.conf location
 ):
     """
     Manage sets in a repository.
@@ -236,14 +371,29 @@ def manage_set(
     + do_save: whether to save the set to the repository.
     + save_as: name for the saved set. required if `do_save` is True.
     + force_save: whether to overwrite existing sets.
-    + force_backup: whether to backup overwritten sets by appending the timestamp to the directory name. only works with `force_save`.
     + do_commit: whether to commit the current(ly loaded) set. delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
 
     """
+    # + force_backup: whether to backup overwritten sets by appending the timestamp to the directory name. only works with `force_save`.
 
     if present:
         # deleting noops from the set if they don't occur cleans up conditionals, not requiring else clauses
-        noops = {"prescribe", "save", "commit"}
+        noops = {"create", "prescribe", "save", "commit"}
+
+        ### set creation ###
+        # the repository needs to be the one recognized by s6-frontend, as the other sub-operations
+        # use s6-frontend commands that don't have a repository option; they implicitly use the one
+        # in the configuration. if the repository were able to be specified by the user here, set
+        # creation could occur in a different repository than the other operations.
+        if repodir := _s6_repo_lookup(host):
+            existing_sets = host.get_fact(S6RepositoryList, repository=repodir)
+            if the_set not in existing_sets:
+                noops.remove("create")
+                yield make_formatted_string_command(
+                    "s6-rc-set-new -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
+                )
+
+        ### prescription assignment ###
         if prescriptions:
             if any(
                 cmds := _make_rx_commands(
@@ -251,35 +401,32 @@ def manage_set(
                 )
             ):
                 noops.remove("prescribe")
-                if the_set != "current":
-                    yield make_formatted_string_command("s6 set load {0}", QuoteString(the_set))
+                # _make_rx_commands should already include -s the_set, no need to load now
+                # if the_set != "current":
+                # yield make_formatted_string_command("s6 set load {0}", QuoteString(the_set))
                 yield from filter(lambda cmd: cmd is not None, cmds)
 
+        ### saving ###
         if do_save:
             if not save_as:
                 raise OperationValueError(
                     "saving a set requires a name to save it under (do_save => save_as)"
                 )
             # when the current set matches an existing named set exactly, noop
-            if not host.get_fact(S6SetStatus, save_as) == host.get_fact(S6SetStatus, "current"):
+            if not host.get_fact(S6SetStatus, save_as) == host.get_fact(S6SetStatus, the_set):
                 noops.remove("save")
-                if the_set != "current":
-                    yield make_formatted_string_command("s6 set load {0}", QuoteString(the_set))
-                if force_save:
-                    if force_backup:
-                        yield from set_save._inner(save_as, True, True)
-                    else:
-                        yield from set_save._inner(save_as, True, False)
-                else:
-                    yield from set_save._inner(save_as, False, False)
+                yield from set_copy._inner(
+                    dest=save_as, source=the_set, force=True if force_save else False
+                )
 
+        ### committing ###
         # non-idempotent
         if do_commit:
             noops.remove("commit")
-            yield from set_commit._inner()
+            yield from set_commit._inner(the_set)
 
-        # "global" noop if all 3 branches noop
-        if noops == {"prescribe", "save", "commit"}:
+        # "global" noop if all 4 branches noop
+        if noops == {"create", "prescribe", "save", "commit"}:
             if prescriptions and not do_save:
                 host.noop('the set "current" already has the desired prescriptions')
             elif do_save:
@@ -289,6 +436,7 @@ def manage_set(
             else:
                 host.noop(f'the set "{the_set}" already exists')
 
+    ### deleting ###
     # present=False
     else:
         if host.get_fact(S6SetStatus, the_set):
