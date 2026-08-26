@@ -10,6 +10,7 @@ the project's ``packageManager`` pin.
 from __future__ import annotations
 
 import json
+import posixpath
 
 from typing_extensions import override
 
@@ -123,8 +124,8 @@ class PnpmModulesUpToDate(FactBase[bool]):
             "if",
             "cmp",
             "-s",
-            QuoteString(f"{directory}/pnpm-lock.yaml"),
-            QuoteString(f"{directory}/node_modules/.pnpm/lock.yaml"),
+            QuoteString(posixpath.join(directory, "pnpm-lock.yaml")),
+            QuoteString(posixpath.join(directory, "node_modules/.pnpm/lock.yaml")),
             ";",
             "then",
             f"echo {UP_TO_DATE_MARKER};",
@@ -135,6 +136,8 @@ class PnpmModulesUpToDate(FactBase[bool]):
 
     @override
     def process(self, output: list[str]) -> bool:
+        if not output:
+            return self.default()
         return output[0].strip() == UP_TO_DATE_MARKER
 
 
