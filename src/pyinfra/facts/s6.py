@@ -44,28 +44,27 @@ class S6SetStatus(FactBase[dict[str, str]]):
     """
 
     @override
-    def requires_command(self, set="current", repository=None):
+    def requires_command(self, the_set="current", repository=None):
         return "s6-rc-set-status"
         # and sh
 
     @override
-    def command(self, set="current", repository=None):
+    def command(self, the_set="current", repository=None):
         """
-        + set: the set to inspect.
-        TODO update
-        + repository: path of the repository to inspect, default `None` which resolves the following way: If `set` is unspecified, the repository in `/etc/s6-frontend.conf` will be used. If `set` is specified, the compiled-in default `/var/lib/s6-rc/repository` will be used.
+        + the_set: the set to inspect.
+        + repository: path of the repository to inspect, default `None` which resolves the following way: the repository is read from the config file stored in the environment variable `S6_CONF`, with fallback to a hardcoded path `/etc/s6.conf`, and if that fails, the compiled-in default repository will be used, most likely `/var/lib/s6/repository`.
         """
         if repository:
             return make_formatted_string_command(
                 "s6-rc-set-status -r {0} {1}; echo EXIT CODE: $?",
                 QuoteString(repository),
-                QuoteString(set),
+                QuoteString(the_set),
             )
 
         # extra escaping needed for make_formatted_string_command, but not in StringCommand
         return make_formatted_string_command(
             '[ ! -z \\"$S6_CONF\\" ] || S6_CONF=/etc/s6.conf && envfile \\"$S6_CONF\\" sh -c \\\'s6-rc-set-status -r \\"$repodir\\" {0}\\\'; echo EXIT CODE: $?',
-            QuoteString(set),
+            QuoteString(the_set),
         )
 
     @override
