@@ -1,6 +1,10 @@
 """
 Facts for pnpm, the fast, disk space efficient Node.js package manager.
 See https://pnpm.io/
+
+Facts taking a ``directory`` run pnpm inside it rather than under pnpm's ``--dir``,
+so corepack - which resolves the pnpm version from the working directory - picks up
+the project's ``packageManager`` pin.
 """
 
 from __future__ import annotations
@@ -16,9 +20,8 @@ from .util.packaging import PackageVersionDict
 
 PNPM_CMD = "pnpm"
 
-# The dependency groups ``pnpm list --json`` reports, all of which count as
-# installed packages. Anything in ``node_modules`` but missing from the
-# manifest is reported under ``unsavedDependencies``.
+# Every dependency group ``pnpm list --json`` reports; all count as installed.
+# ``unsavedDependencies`` is what is in ``node_modules`` but not the manifest.
 DEPENDENCY_FIELDS = (
     "dependencies",
     "devDependencies",
@@ -54,11 +57,9 @@ class PnpmPackages(FactBase[PackageVersionDict]):
         if directory is None:
             return StringCommand(PNPM_CMD, "--global", "list", "--depth=0", "--json")
 
-        # pnpm fails on a directory that doesn't exist, so guard on it - no directory
-        # means no packages installed there (yet). The subshell keeps the guard from
-        # binding to the wrong side: `A || B && C` parses as `(A || B) && C`.
-        # pnpm runs inside the directory rather than via --dir so that corepack, which
-        # only looks at the working directory, resolves the project's pnpm version.
+        # A fact command that fails fails the host, so guard the directory - one that
+        # isn't there yet simply has nothing installed. The subshell binds the guard,
+        # as `A || B && C` parses as `(A || B) && C`.
         return StringCommand(
             "!",
             "test",
@@ -91,7 +92,7 @@ class PnpmPackages(FactBase[PackageVersionDict]):
         for project in projects:
             for field in DEPENDENCY_FIELDS:
                 for name, package in project.get(field, {}).items():
-                    # Linked & unmet dependencies have no version to compare.
+                    # Not every version is a semver: linked deps report ``link:<path>``.
                     version = package.get("version")
                     if version:
                         packages.setdefault(name, set()).add(version)
@@ -102,12 +103,11 @@ class PnpmPackages(FactBase[PackageVersionDict]):
 class PnpmModulesUpToDate(FactBase[bool]):
     """
     Returns whether a project's ``node_modules`` was installed from the
-    ``pnpm-lock.yaml`` currently in the directory.
+    ``pnpm-lock.yaml`` now in the directory.
 
-    pnpm copies the lockfile it installed to ``node_modules/.pnpm/lock.yaml``,
-    so the two files matching means the packages on disk are the ones the
-    lockfile asks for. Note this says nothing about ``package.json`` changes
-    that have not been written to the lockfile.
+    pnpm keeps the lockfile it installed at ``node_modules/.pnpm/lock.yaml``, so
+    the two matching means the packages on disk are the ones the lockfile asks
+    for - though not that ``package.json`` agrees with the lockfile.
     """
 
     @override
