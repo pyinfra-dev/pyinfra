@@ -129,8 +129,7 @@ def install(
     *,
     frozen_lockfile: bool | None = None,
     ignore_scripts: bool = False,
-    package_import_method: Literal["auto", "clone", "clone-or-copy", "copy", "hardlink"]
-    | None = None,
+    package_import_method: Literal["auto", "clone", "copy", "hardlink"] | None = None,
 ):
     """
     Install every dependency a project declares, as resolved by its lockfile.
@@ -140,7 +139,7 @@ def install(
       behaviour of doing so on CI only
     + ignore_scripts: don't run lifecycle scripts of the project or the installed packages
     + package_import_method: how packages are placed into ``node_modules`` from the store,
-      one of ``auto`` (default), ``hardlink``, ``clone``, ``clone-or-copy`` or ``copy``
+      one of ``auto`` (default), ``hardlink``, ``clone`` or ``copy``
 
     Note:
         The install is skipped when ``node_modules`` was already built from the lockfile

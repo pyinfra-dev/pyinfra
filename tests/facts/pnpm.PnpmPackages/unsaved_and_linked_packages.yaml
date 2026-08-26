@@ -20,7 +20,7 @@ output: |
         "cowsay": {
           "from": "cowsay",
           "version": "1.6.0",
-          "path": "/opt/app/node_modules/.pnpm/cowsay@1.6.0/node_modules/cowsay"
+          "path": "/opt/app/node_modules/cowsay"
         }
       }
     }
