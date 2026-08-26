@@ -1,9 +1,9 @@
 """
 Manage pnpm (Node.js) packages. See https://pnpm.io/
 
-Operations taking a ``directory`` run pnpm from inside it rather than passing pnpm's
-``--dir``, so wrappers that only look at the working directory - corepack resolving a
-``packageManager`` pin, for one - see the project. No ``_chdir`` needed.
+Operations taking a ``directory`` run pnpm inside it rather than under pnpm's
+``--dir``, so corepack - which resolves the pnpm version from the working
+directory - picks up the project's ``packageManager`` pin. No ``_chdir`` needed.
 """
 
 from __future__ import annotations
@@ -21,10 +21,9 @@ def _parse_package(package: str) -> PkgInfo:
     """
     Split a ``<name>[@<version>]`` package into its name and version.
 
-    A leading ``@`` starts a scope (eg ``@types/node``), so only an ``@`` after
-    the first character separates the two. ``latest`` is the dist-tag pnpm
-    installs by default, so it is treated as no version at all - which keeps
-    ``<pkg>@latest`` idempotent.
+    A leading ``@`` starts a scope (eg ``@types/node``), so only an ``@`` past the
+    first character separates the two. ``latest`` is pnpm's default dist-tag, so it
+    counts as no version - which keeps ``<pkg>@latest`` idempotent.
     """
 
     index = package.rfind("@", 1)
@@ -45,14 +44,7 @@ def _drop_version(name: str, operator: str, version: str) -> str:
 
 
 def _in_directory(directory: str) -> list[str | QuoteString]:
-    """
-    Start a pnpm command that runs *in* ``directory``.
-
-    pnpm's own ``--dir`` would be enough for pnpm itself, but anything wrapping it sees
-    only the working directory: corepack picks the pnpm version by walking up from there
-    looking for a ``packageManager`` pin, so pointing ``--dir`` at a pinned project from
-    elsewhere fetches the wrong pnpm instead.
-    """
+    """Start a pnpm command that runs *in* ``directory`` - see the module docstring."""
 
     return ["cd", QuoteString(directory), "&&", PNPM_CMD]
 
@@ -75,17 +67,16 @@ def packages(
     + dev: add the packages as development dependencies, requires ``directory``
 
     Versions:
-        Package versions can be pinned like pnpm: ``<pkg>@<version>``. Only
-        exact versions are compared against the installed ones, so ranges and
-        dist-tags (eg ``<pkg>@^5``) are re-applied on every run.
+        Pin like pnpm: ``<pkg>@<version>``. Only exact versions are compared against
+        the installed ones, so ranges and dist-tags (eg ``<pkg>@^5``) re-apply on
+        every run.
 
     Note:
-        Packages are matched by name across every dependency group, so a
-        package already installed as a (dev/optional) dependency is left where
-        it is rather than moved. ``latest=True`` upgrades with
-        ``pnpm update --latest``, which ignores the ranges in ``package.json``,
-        and always reports as changed - there is no local version to compare
-        the newest published one against.
+        Packages match by name across every dependency group, so one already
+        installed as a (dev/optional) dependency stays where it is rather than
+        moving. ``latest=True`` upgrades via ``pnpm update --latest``, ignoring the
+        ranges in ``package.json``; with no local version to compare against the
+        newest published one, it always reports as changed.
 
     **Example:**
 
@@ -117,8 +108,7 @@ def packages(
 
     package_infos = [_parse_package(package) for package in packages]
     if not present:
-        # Any version still has to match the installed one, it just can't be
-        # part of the removal command itself.
+        # The version still has to match what's installed, just not appear in the command.
         package_infos = [info._replace(inst_vers_format_fn=_drop_version) for info in package_infos]
 
     yield from ensure_packages(
@@ -153,9 +143,9 @@ def install(
       one of ``auto`` (default), ``hardlink``, ``clone``, ``clone-or-copy`` or ``copy``
 
     Note:
-        The install is skipped when ``node_modules`` was already built from the lockfile now
-        in the directory, so edits to ``package.json`` that have not been written to
-        ``pnpm-lock.yaml`` are not picked up - deploy both files together.
+        The install is skipped when ``node_modules`` was already built from the lockfile
+        now in the directory, so ``package.json`` edits not yet written to
+        ``pnpm-lock.yaml`` are missed - deploy both files together.
 
     **Example:**
 
@@ -200,10 +190,9 @@ def run(
     + args: argument(s) to append to the script's own command line, one per item
     + if_present: succeed quietly when the project has no such script, instead of failing
 
-    This operation is not idempotent: the script runs on every deploy. To build only when
-    there is something new to build, gate it with the ``_if`` global argument on whatever
-    delivered the new source - the checkout, not the dependency install, which reports no
-    change when only application code moved.
+    Not idempotent: the script runs on every deploy. To build only when something new
+    arrived, gate it with ``_if`` on whatever delivered the source - the checkout, not
+    the dependency install, which reports no change when only application code moved.
 
     **Example:**
 
@@ -222,8 +211,7 @@ def run(
 
     run_parts: list[str | QuoteString] = [*_in_directory(directory), "run"]
 
-    # pnpm forwards everything after the script name to the script itself, so its own
-    # flags have to come first.
+    # pnpm forwards everything after the script name to the script, so its flags come first.
     if if_present:
         run_parts.append("--if-present")
 
