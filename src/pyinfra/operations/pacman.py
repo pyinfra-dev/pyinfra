@@ -74,9 +74,11 @@ def packages(
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(PacmanPackages),
+        host.get_fact(PacmanPackages, _sudo=False),
         present,
         install_command="pacman --noconfirm -S",
         uninstall_command="pacman --noconfirm -R",
-        expand_package_fact=lambda package: host.get_fact(PacmanUnpackGroup, package=package),
+        expand_package_fact=lambda package: host.get_fact(
+            PacmanUnpackGroup, package=package, _sudo=False
+        ),
     )
