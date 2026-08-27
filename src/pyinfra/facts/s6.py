@@ -17,15 +17,17 @@ class S6RepositoryList(FactBase[list[str]]):
     @override
     def command(self, repository=None):
         """
-        + repository: path of the repository to inspect, default the one in the s6-frontend configuration.
+        + repository: path of the repository to inspect. If `None`, the compiled-in default will be used, most likely `/var/lib/s6/repository`.
         """
         if repository:
             return make_formatted_string_command("s6-rc-repo-list -r {0}", QuoteString(repository))
 
+        return StringCommand("s6-rc-repo-list")
+
         # if no repository passed, try to get its location from the s6-frontend configuration file
-        return StringCommand(
-            '[ ! -z "$S6_CONF" ] || S6_CONF=/etc/s6.conf && envfile "$S6_CONF" sh -c \'s6-rc-repo-list -r "$repodir"\'; echo EXIT CODE: $?'
-        )
+        # return StringCommand(
+        #    '[ ! -z "$S6_CONF" ] || S6_CONF=/etc/s6.conf && envfile "$S6_CONF" sh -c \'s6-rc-repo-list -r "$repodir"\'; echo EXIT CODE: $?'
+        # )
 
     @override
     def process(self, output):
@@ -52,7 +54,7 @@ class S6SetStatus(FactBase[dict[str, str]]):
     def command(self, the_set="current", repository=None):
         """
         + the_set: the set to inspect.
-        + repository: path of the repository to inspect, default `None` which resolves the following way: the repository is read from the config file stored in the environment variable `S6_CONF`, with fallback to a hardcoded path `/etc/s6.conf`, and if that fails, the compiled-in default repository will be used, most likely `/var/lib/s6/repository`.
+        + repository: path of the repository to inspect, default `None`, which means to use the compiled-in default repository most likely `/var/lib/s6/repository`.
         """
         if repository:
             return make_formatted_string_command(
@@ -61,11 +63,14 @@ class S6SetStatus(FactBase[dict[str, str]]):
                 QuoteString(the_set),
             )
 
-        # extra escaping needed for make_formatted_string_command, but not in StringCommand
         return make_formatted_string_command(
-            '[ ! -z \\"$S6_CONF\\" ] || S6_CONF=/etc/s6.conf && envfile \\"$S6_CONF\\" sh -c \\\'s6-rc-set-status -r \\"$repodir\\" {0}\\\'; echo EXIT CODE: $?',
-            QuoteString(the_set),
+            "s6-rc-set-status {0}; echo EXIT CODE: $?", QuoteString(the_set)
         )
+        # extra escaping needed for make_formatted_string_command, but not in StringCommand
+        # return make_formatted_string_command(
+        #    '[ ! -z \\"$S6_CONF\\" ] || S6_CONF=/etc/s6.conf && envfile \\"$S6_CONF\\" sh -c \\\'s6-rc-set-status -r \\"$repodir\\" {0}\\\'; echo EXIT CODE: $?',
+        #    QuoteString(the_set),
+        # )
 
     @override
     def process(self, output):
@@ -81,21 +86,20 @@ class S6SetStatus(FactBase[dict[str, str]]):
 
 
 class S6LiveStatus(FactBase[dict[str, bool]]):
-    """ Returns a dict of name -> status for each service in the live state.
+    """Returns a dict of name -> status for each service in the live state.
 
     True when the service is "running", meaning the service is managed by an `s6-supervise`s, False
     otherwise.
     """
 
-    # could also rewrite this using the "s6 live status" command
     @override
     def requires_command(self):
         return "s6-rc"
 
-    @override
-    def check_preconditions(self, state, host):
-        if not host.run_shell_command('[ ! -z "$S6_CONF" ] || [ -f /etc/s6.conf ]')[0]:
-            return "couldn't find s6-frontend configuration"
+    # @override
+    # def check_preconditions(self, state, host):
+    #    if not host.run_shell_command('[ ! -z "$S6_CONF" ] || [ -f /etc/s6.conf ]')[0]:
+    #        return "couldn't find s6-frontend configuration"
 
     @override
     def command(self):

@@ -16,7 +16,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus, S6RepositoryList
-from pyinfra.facts.files import FindInFile, Directory, File, FileContents
+from pyinfra.facts.files import FindInFile, Directory, File, FileContents, Sha256File
 from pyinfra.facts.server import Command
 from pyinfra.operations.files import _raise_or_remove_invalid_path
 
@@ -37,24 +37,25 @@ def _get_s6_frontend_conf_contents(host: Host) -> list[str] | None:
         return contents
 
 
-def _get_value_from_conf(key: str, content: list[str]):
+def _get_value_from_conf(key: str, content: list[str] | None) -> str | None:
     """Get the value associated with a key in an s6-frontend configuration.
 
     If no repodir is found, nothing is returned.
 
     + key: the key associated with the value, e.g. "repodir".
-    + content: the file contents, as a list of strings.
+    + content: the file contents, as a list of strings. if `None`, this function returns nothing.
     """
     # simplistic check for now, avoiding complicated syntax
     # does not account for a statement broken over multiple lines with backslashes
     # assume the key is unique
-    if match := re.search(
-        # https://skarnet.org/software/execline/envfile.html#syntax
-        r"^\s*" + re.escape(key) + r'\s*=\s*(/[^\s]*|"/.*")\s*$',
-        "\n".join(content),
-        re.MULTILINE,
-    ):
-        return match.group(1)
+    if content is not None:
+        if match := re.search(
+            # https://skarnet.org/software/execline/envfile.html#syntax
+            r"^\s*" + re.escape(key) + r'\s*=\s*(/[^\s]*|"/.*")\s*$',
+            "\n".join(content),
+            re.MULTILINE,
+        ):
+            return match.group(1)
 
     ## TODO edge case
     # for line, next_line in itertools.pairwise(content):
@@ -126,7 +127,11 @@ def _make_live_command(op: str, services: Sequence):
 
 
 def _make_set_change_command(
-    services: list, current_rxs: dict, wanted_rx: str, repository: str, the_set: str = "current"
+    services: list,
+    current_rxs: dict,
+    wanted_rx: str,
+    repository: str | None = None,
+    the_set: str = "current",
 ):
     """Returns a command like "s6-rc-set-change -r /etc/s6/repo current active httpd".
 
@@ -164,20 +169,30 @@ def _make_set_change_command(
 
         # example of the string passed into make_formatted_string_command:
         # s6-rc-set-change -r {5} {6} usable {0} {1} {2} {3} {4}
+        if repository:
+            return make_formatted_string_command(
+                f"s6-rc-set-change -r {{{len(service_subset)}}} {{{len(service_subset) + 1}}} {wanted_rx} "
+                + _make_format_fields(len(service_subset)),
+                *map(QuoteString, service_subset),
+                QuoteString(repository),
+                QuoteString(the_set),
+            )
+
         return make_formatted_string_command(
-            f"s6-rc-set-change -r {{{len(service_subset)}}} {{{len(service_subset) + 1}}} {wanted_rx} "
+            f"s6-rc-set-change {{{len(service_subset)}}} {wanted_rx} "
             + _make_format_fields(len(service_subset)),
             *map(QuoteString, service_subset),
-            QuoteString(repository),
             QuoteString(the_set),
         )
 
-    else:
-        return None
+    return None
 
 
 def _make_all_set_change_commands(
-    prescriptions: dict, repository: str, the_set: str = "current", force_prescriptions: bool = True
+    prescriptions: dict,
+    repository: str | None = None,
+    the_set: str = "current",
+    force_prescriptions: bool = True,
 ):
     """Returns all commands necessary to bring the prescriptions to the desired state.
 
@@ -239,21 +254,22 @@ def _make_all_set_change_commands(
 
 
 @operation(is_idempotent=False)
-def set_create(name: str, repository: str):
+def set_create(name: str, repository: str | None = None):
     """Create a new set.
 
     + name: name for the new set.
     + repository: repository to save the set in.
-
-    This is a distinct operation from set_copy.
     """
-    yield make_formatted_string_command(
-        "s6-rc-set-new -r {0} {1}", QuoteString(repository), QuoteString(name)
-    )
+    if repository:
+        yield make_formatted_string_command(
+            "s6-rc-set-new -r {0} {1}", QuoteString(repository), QuoteString(name)
+        )
+    else:
+        yield make_formatted_string_command("s6-rc-set-new -r {0}", QuoteString(name))
 
 
 @operation(is_idempotent=False)
-def set_delete(the_sets: str | Sequence[str], repository: str):
+def set_delete(the_sets: str | Sequence[str], repository: str | None = None):
     """Delete sets.
 
     + the_sets: name or list of names of the sets to delete.
@@ -262,16 +278,23 @@ def set_delete(the_sets: str | Sequence[str], repository: str):
     if isinstance(the_sets, str):
         the_sets = (the_sets,)
 
-    yield make_formatted_string_command(
-        f"s6-rc-set-delete -r {{{len(the_sets)}}} " + _make_format_fields(len(the_sets)),
-        *map(QuoteString, the_sets),
-        QuoteString(repository),
-    )
+    if "current" in the_sets:
+        raise OperationValueError('cannot delete the set "current"')
+
+    if repository:
+        yield make_formatted_string_command(
+            f"s6-rc-set-delete -r {{{len(the_sets)}}} " + _make_format_fields(len(the_sets)),
+            *map(QuoteString, the_sets),
+            QuoteString(repository),
+        )
+    else:
+        yield make_formatted_string_command(
+            "s6-rc-set-delete " + _make_format_fields(len(the_sets)), *map(QuoteString, the_sets)
+        )
 
 
-# TODO make it idempotent?
-@operation(is_idempotent=False)
-def set_copy(dest: str, repository: str, source="current", force: bool = False):
+@operation()
+def set_copy(dest: str, repository: str | None = None, source="current", force: bool = False):
     """Save the contents of the given set as a new set.
 
     + dest: name of the saved copy.
@@ -279,12 +302,24 @@ def set_copy(dest: str, repository: str, source="current", force: bool = False):
     + source: name of the set to copy.
     + force: whether to overwrite an existing set of the same name if it exists.
     """
-    yield make_formatted_string_command(
-        f"s6-rc-set-copy -r {{0}}{' -f' if force else ''} {{1}} {{2}}",
-        QuoteString(repository),
-        QuoteString(source),
-        QuoteString(dest),
-    )
+    source_set_contents = host.get_fact(S6SetStatus, the_set=source, repository=repository)
+    dest_set_contents = host.get_fact(S6SetStatus, the_set=dest, repository=repository)
+    if source_set_contents != dest_set_contents:
+        if repository:
+            yield make_formatted_string_command(
+                f"s6-rc-set-copy -r {{0}}{' -f' if force else ''} {{1}} {{2}}",
+                QuoteString(repository),
+                QuoteString(source),
+                QuoteString(dest),
+            )
+        else:
+            yield make_formatted_string_command(
+                f"s6-rc-set-copy{' -f' if force else ''} {{0}} {{1}}",
+                QuoteString(source),
+                QuoteString(dest),
+            )
+    else:
+        host.noop(f'the set "{dest}" exists and is identical to "{source}"')
 
     # TODO
     # backing up a set when it would have been overwritten by -f requires more thought. try to use
@@ -327,18 +362,22 @@ def set_copy(dest: str, repository: str, source="current", force: bool = False):
 
 
 @operation(is_idempotent=False)
-def set_commit(repository: str, the_set: str = "current"):
+def set_commit(repository: str | None = None, the_set: str = "current"):
     """Check the given set and commit it.
 
     + repository: path to the repository containing the set.
     + the_set: name of the set to check and commit.
     """
-    yield make_formatted_string_command(
-        "s6-rc-set-fix -r {0} {1}", QuoteString(repository), QuoteString(the_set)
-    )
-    yield make_formatted_string_command(
-        "s6-rc-set-commit -r {0} {1}", QuoteString(repository), QuoteString(the_set)
-    )
+    if repository is not None:
+        yield make_formatted_string_command(
+            "s6-rc-set-fix -r {0} {1}", QuoteString(repository), QuoteString(the_set)
+        )
+        yield make_formatted_string_command(
+            "s6-rc-set-commit -r {0} {1}", QuoteString(repository), QuoteString(the_set)
+        )
+    else:
+        yield make_formatted_string_command("s6-rc-set-fix {0}", QuoteString(the_set))
+        yield make_formatted_string_command("s6-rc-set-commit {0}", QuoteString(the_set))
 
 
 # TODO switch to s6-rc-set-install, need to find livedir dynamically like repodir, add repository argument
@@ -359,54 +398,66 @@ def live_install(the_set: str = "current"):
 )
 def manage_set(
     the_set: str = "current",
-    # no -r option exposed by s6-frontend
-    # repository: str | None = None,
+    present: bool = True,
     prescriptions: dict[str, str] | None = None,
     force_prescriptions: bool = True,
-    present: bool = True,
-    # do_save: bool = False,
-    # save_as: str | None = None,
-    # force_save: bool = False,
-    # force_backup: bool = True,
     do_commit: bool = True,
 ):
-    """
-    Manage sets in a repository.
+    """Manage sets in a repository.
+
+    The repository is automatically found by inspecting the `S6_CONF` environment variable or
+    trying the hardcoded path `/etc/s6.conf`, in line with `s6-frontend` behavior. `manage_set`
+    combines smaller operations into one:
+        - ensuring existence or non-existence, like `files.file` does
+        - ensuring specific prescriptions within sets, with support for ensuring only prescriptions
+          on only a subset of the services in a set
+        - committing a set, which is a stateless operation
 
     + the_set: name of the set to manage.
+    + present: whether the set should be present in the repository.
     + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only.
     + force_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be removed)
-    + present: whether the set should be present in the repository.
     + do_commit: whether to commit the current(ly loaded) set. delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
 
     """
-    # + do_save: whether to save the set to the repository.
-    # + save_as: name for the saved set. required if `do_save` is True.
-    # + force_save: whether to overwrite existing sets.
-    # + force_backup: whether to backup overwritten sets by appending the timestamp to the directory name. only works with `force_save`.
 
-    # automatically find the configured s6-frontend repository to use in commands
-    if not (s6_conf_lines := _get_s6_frontend_conf_contents(host)):
-        raise OperationError("failed to find an s6-frontend configuration on the remote host")
-    if not (repodir := _get_value_from_conf(key="repodir", content=s6_conf_lines)):
-        raise OperationError(
-            f"failed to extract a repodir from remote s6-frontend config: {s6_conf_lines}"
+    # automatically find the configured s6-frontend repository to use in commands. the value can be
+    # `None`, which happens when no configuration file was found. in this case, s6 commands will use
+    # the compiled-in default repository.
+    s6_conf_lines = _get_s6_frontend_conf_contents(host)
+    if s6_conf_lines is None:
+        # TODO should it really be a warning instead of info?
+        logger.warning(
+            "could not find an s6-frontend configuration on remote host, will use compiled-in default repository for s6 commands"
         )
+    elif s6_conf_lines == []:
+        logger.warning(
+            "remote host's s6-frontend configuration is an empty file, will use compiled-in default repository for s6 commands"
+        )
+    # repodir will be `None` if not found, but possibility of None is handled, resulting in the
+    # compiled-in default repository being used.
+    repodir = _get_value_from_conf(key="repodir", content=s6_conf_lines)
+
+    # if not (repodir := _get_value_from_conf(key="repodir", content=s6_conf_lines)):
+    #    raise OperationError(
+    #        f"failed to extract a repodir from remote s6-frontend config: {s6_conf_lines}"
+    #    )
 
     if present:
-        # noops = {"create", "prescribe", "save", "commit"}
+        # remove noops from this set as conditions are satisfied
         noops = {"create", "prescribe", "commit"}
 
-        ### set creation ###
-        if repodir:
-            existing_sets = host.get_fact(S6RepositoryList, repository=repodir)
-            if the_set not in existing_sets:
-                noops.remove("create")
+        # create a new set if it doesn't exist
+        existing_sets = host.get_fact(S6RepositoryList, repository=repodir)
+        if the_set not in existing_sets:
+            noops.remove("create")
+            if repodir is not None:
                 yield make_formatted_string_command(
                     "s6-rc-set-new -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
                 )
+            else:
+                yield make_formatted_string_command("s6-rc-set-new {0}", QuoteString(the_set))
 
-        ### prescription assignment ###
         if prescriptions:
             if any(
                 cmds := _make_all_set_change_commands(
@@ -416,54 +467,33 @@ def manage_set(
                 noops.remove("prescribe")
                 yield from filter(lambda cmd: cmd is not None, cmds)
 
-        ### saving ###
-        # if do_save:
-        #    if not save_as:
-        #        raise OperationValueError(
-        #            "saving a set requires a name to save it under (do_save => save_as)"
-        #        )
-        #    # when the current set matches an existing named set exactly, noop
-        #    if not host.get_fact(S6SetStatus, save_as) == host.get_fact(S6SetStatus, the_set):
-        #        noops.remove("save")
-        #        yield from set_copy._inner(
-        #            dest=save_as, source=the_set, repository=repodir, force=True if force_save else False
-        #        )
-
-        ### committing ###
-        # non-idempotent, I don't know of a way of checking whether the to-be compiled database the
-        # matches the existing compiled service database hash
+        # non-idempotent, I don't know of a way of checking whether the to-be compiled database
+        # matches the existing compiled service database
         if do_commit:
             noops.remove("commit")
             yield from set_commit._inner(repository=repodir, the_set=the_set)
 
-        # "global" noop if all 4 branches noop
-        # if noops == {"create", "prescribe", "save", "commit"}:
+        # "global" noop if all 3 branches noop
         if noops == {"create", "prescribe", "commit"}:
-            # TODO rework noop messages
-            pass
-            # if prescriptions and not do_save:
-            #    host.noop('the set "current" already has the desired prescriptions')
-            # elif do_save:
-            #    host.noop(
-            #        f'the set "current" already has the desired prescriptions and matches with the existing set "{save_as}"'
-            #    )
-            # else:
-            #    host.noop(f'the set "{the_set}" already exists')
+            host.noop(
+                f'the set "{the_set}" already exists, has the desired prescriptions, and no commit was requested'
+            )
 
-    ### deleting ###
     # present=False
     else:
         if the_set in host.get_fact(S6RepositoryList, repository=repodir):
-            yield make_formatted_string_command(
-                "s6-rc-set-delete -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
-            )
-        # if host.get_fact(S6SetStatus, the_set):
-        #    yield make_formatted_string_command("s6 set delete {0}", QuoteString(the_set))
+            if repodir is not None:
+                yield make_formatted_string_command(
+                    "s6-rc-set-delete -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
+                )
+            else:
+                yield make_formatted_string_command("s6-rc-set-delete {0}", QuoteString(the_set))
         else:
-            host.noop(f'the set "{the_set}" already doesn\'t exist')
+            host.noop(f'the set "{the_set}" is already nonexistent')
 
 
 @operation(
+    # TODO verify idempotency paths
     is_idempotent=False,
     idempotent_notice="It is not idempotent only when at least one of `commit_set` or `install_set` are `True`.",
 )
@@ -472,7 +502,6 @@ def service(
     running: bool | None = None,
     restarted: bool | None = None,
     reloaded: bool | None = None,
-    # TODO command
     command: str | None = None,
     enabled: bool | None = None,
     reload_signal: str = "SIGHUP",
@@ -487,25 +516,24 @@ def service(
 
     + service: name(s) of the service(s) to manage.
     + running: whether the service(s) should be under an s6-supervise.
-    + restarted: whether the service(s) should be restarted
+    + restarted: whether the service(s) should be restarted.
     + reloaded: whether the service(s) should be reloaded by sending a signal, SIGHUP by default. Whether the service is reloaded depends on how it handles the signal.
     + command: custom command to run after the auto-computed commands. This must be an s6 subcommand, e.g. "system reboot" gives the command "s6 system reboot".
-    + enabled: whether the service should be given an "active" or "usable" prescription
+    + enabled: whether the service should be given an "active" or "usable" prescription.
     + reload_signal: the signal to send to the service(s) when a reload is desired.
-    + repo: name of the repository to use when managing enabled status, using the one configured in s6-frontend.conf by default.
     + the_set: name of the set to use when managing enabled status, using the set named "current" by default.
-    + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either "active" or "always"
-    + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either "usable" or "masked"
+    + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either "active" or "always".
+    + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either "usable" or "masked".
     + commit_set: whether to commit the current(ly loaded) set. Delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
     + install_set: whether to install the compiled service database (the result of a commit operation) into the live state. This is analogous to systemd's daemon-reload, but not completely: systemd recognizes changes to service files after a reboot, but s6 does not. It only recognizes changes when an s6 live install command is executed. Live state replacement and enablement/disablement of services are coupled in s6.
 
     Specifying multiple services results in fewer commands executed, especially in the case of
-    changing the enabled status of the service, where the service database is recompiled per
-    command. Note that this operation does not give as granular control over prescriptions as the
-    set operation does; all services will be assigned the same prescription.
+    changing the enabled status of the service, where the service database is recompiled per command
+    by default.
+
+    Note that this operation does not give as granular control over prescriptions as the
+    `manage_set` operation does; all services will be assigned the same prescription.
     """
-
-
     if enabled_rx not in {"active", "always"}:
         raise ValueError('enabled_rx must be either "active" or "always"')
     if disabled_rx not in {"usable", "masked"}:
@@ -566,14 +594,20 @@ def service(
 
         if commit_set:
             if not (s6_conf_lines := _get_s6_frontend_conf_contents(host)):
-                raise OperationError("failed to find an s6-frontend configuration on the remote host")
-            if not (repodir := _get_value_from_conf(key="repodir", content=s6_conf_lines)):
                 raise OperationError(
-                    f"failed to extract a repodir from remote s6-frontend config: {s6_conf_lines}"
+                    "failed to find an s6-frontend configuration on the remote host"
                 )
+            repodir = _get_value_from_conf(key="repodir", content=s6_conf_lines)
+
+            # if not (repodir := _get_value_from_conf(key="repodir", content=s6_conf_lines)):
+            #    raise OperationError(
+            #        f"failed to extract a repodir from remote s6-frontend config: {s6_conf_lines}"
+            #    )
+
             yield from set_commit._inner(repository=repodir)
-            if install_set:
-                yield from live_install._inner()
+
+    if install_set:
+        yield from live_install._inner()
 
     if command:
         yield StringCommand("s6", *map(QuoteString, shlex.split(command)))

@@ -1,4 +1,5 @@
 args:
   - myset
+  - /etc/s6/repo
 commands:
-  - s6 set delete myset
+  - s6-rc-set-delete -r /etc/s6/repo myset

@@ -1,5 +1,16 @@
+args:
+  - default
 kwargs:
   do_commit: true
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
+      - default
 commands:
-  - s6 set check -F
-  - s6 set commit
+  - s6-rc-set-fix default
+  - s6-rc-set-commit default

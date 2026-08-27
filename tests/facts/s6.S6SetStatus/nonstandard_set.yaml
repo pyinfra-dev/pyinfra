@@ -1,6 +1,7 @@
 arg:
-  set: recovery
-command: "s6-rc-set-status recovery; echo EXIT CODE: $?"
+  repository: /etc/s6/repo
+  the_set: recovery
+command: "s6-rc-set-status -r /etc/s6/repo recovery; echo EXIT CODE: $?"
 requires_command: s6-rc-set-status
 output: |
   swap/always

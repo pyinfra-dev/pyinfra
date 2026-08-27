@@ -1,10 +1,10 @@
-command: s6 live status
-requires_command: s6
+command: s6-rc -c list
+requires_command: s6-rc
 output: |
-  NetworkManager-log/up
-  NetworkManager-srv/up
-  avahi-daemon-srv/up
-  avahi-daemon-log/up
+  NetworkManager-log/longrun//up/explicit
+  NetworkManager-srv/longrun//up/explicit
+  avahi-daemon-srv/longrun//up/explicit
+  avahi-daemon-log/longrun//up/explicit
 fact:
   NetworkManager-srv: true
   NetworkManager-log: true

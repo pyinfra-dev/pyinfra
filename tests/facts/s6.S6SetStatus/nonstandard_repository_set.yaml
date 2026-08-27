@@ -1,5 +1,5 @@
 arg:
-  set: recovery
+  the_set: recovery
   repository: /etc/s6/repo
 command: "s6-rc-set-status -r /etc/s6/repo recovery; echo EXIT CODE: $?"
 requires_command: s6-rc-set-status

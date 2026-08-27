@@ -3,7 +3,12 @@ args:
 kwargs:
   present: false
 facts:
-  s6.S6SetStatus: 
-    repository=None, set=default: null
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
 commands: []
-noop_description: the set "default" already doesn't exist
+noop_description: the set "default" is already nonexistent

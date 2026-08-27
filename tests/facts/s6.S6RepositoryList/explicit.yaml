@@ -3,9 +3,15 @@ arg:
 command: s6-rc-repo-list -r /etc/s6/repo
 requires_command: s6-rc-repo-list
 output: |
+  kiosk
+  current
   default
   minimal
   recovery
-  kiosk
-fact:
-  [ default, minimal, recovery, kiosk ]
+fact: [
+  kiosk,
+  current,
+  default,
+  minimal,
+  recovery
+]

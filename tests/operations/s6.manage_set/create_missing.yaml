@@ -1,6 +1,8 @@
 args:
   - default
 kwargs:
+  present: true
+  prescriptions: null
   do_commit: false
 facts:
   server.Command:
@@ -10,6 +12,5 @@ facts:
   s6.S6RepositoryList:
     repository=None:
       - current
-      - default
-commands: []
-noop_description: the set "default" already exists, has the desired prescriptions, and no commit was requested
+commands:
+  - s6-rc-set-new default

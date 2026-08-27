@@ -1,7 +1,0 @@
-args:
-  - default
-kwargs:
-  force: true
-  force_backup: false
-commands:
-  - s6 set save -f default

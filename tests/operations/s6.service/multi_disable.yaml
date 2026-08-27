@@ -4,12 +4,19 @@ kwargs:
   running: null
   enabled: false
 facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
   s6.S6SetStatus:
-    repository=None, set=current:
+    repository=None, the_set=current:
       nftables: "active"
       mysqld: "active"
       tipidee: "active"
 commands:
-  - s6 set disable nftables mysqld tipidee
-  - s6 set check -F
-  - s6 set commit
+  - s6-rc-set-change current usable nftables mysqld tipidee
+  - s6-rc-set-fix current
+  - s6-rc-set-commit current
