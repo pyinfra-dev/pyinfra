@@ -2,8 +2,6 @@ from typing_extensions import override
 
 from pyinfra.api import FactBase, QuoteString
 from pyinfra.api.command import make_formatted_string_command, StringCommand
-from pyinfra.facts.server import Command
-from pyinfra.facts.files import File
 
 
 class S6RepositoryList(FactBase[list[str]]):

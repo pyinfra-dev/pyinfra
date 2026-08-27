@@ -1,6 +1,5 @@
 """Manage s6-rc services (https://www.skarnet.org/software/s6-rc/)."""
 
-import os
 import re
 import shlex
 from collections.abc import Sequence
@@ -16,9 +15,8 @@ from pyinfra.api import (
 )
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus, S6RepositoryList
-from pyinfra.facts.files import FindInFile, Directory, File, FileContents, Sha256File
+from pyinfra.facts.files import FileContents
 from pyinfra.facts.server import Command
-from pyinfra.operations.files import _raise_or_remove_invalid_path
 
 
 def _get_s6_frontend_conf_contents(host: Host) -> list[str] | None:
@@ -35,6 +33,8 @@ def _get_s6_frontend_conf_contents(host: Host) -> list[str] | None:
 
     if contents := host.get_fact(FileContents, "/etc/s6.conf"):
         return contents
+
+    return None
 
 
 def _get_value_from_conf(key: str, content: list[str] | None) -> str | None:
@@ -56,6 +56,8 @@ def _get_value_from_conf(key: str, content: list[str] | None) -> str | None:
             re.MULTILINE,
         ):
             return match.group(1)
+
+    return None
 
     ## TODO edge case
     # for line, next_line in itertools.pairwise(content):
