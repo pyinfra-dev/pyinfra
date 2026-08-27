@@ -1,3 +1,7 @@
+# str(Path) renders with backslashes on Windows, breaking the fake fact lookup
+require_platform:
+  - Darwin
+  - Linux
 args:
   - "path:/home/myworktree"
 kwargs:
