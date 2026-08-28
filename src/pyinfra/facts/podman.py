@@ -53,9 +53,7 @@ class PodmanSystemInfo(PodmanFactBase[dict[str, Any]]):
 
     @override
     def process(self, output: Iterable[str]) -> dict[str, Any]:
-        output = json.loads(("").join(output))
-        assert isinstance(output, dict)
-        return output
+        return _parse_podman_json(output, dict)
 
 
 class PodmanPs(PodmanFactBase[list[dict[str, Any]]]):
@@ -69,9 +67,7 @@ class PodmanPs(PodmanFactBase[list[dict[str, Any]]]):
 
     @override
     def process(self, output: Iterable[str]) -> list[dict[str, Any]]:
-        output = json.loads(("").join(output))
-        assert isinstance(output, list)
-        return output  # type: ignore
+        return _parse_podman_json(output, list)
 
 
 class PodmanImages(PodmanFactBase[list[dict[str, Any]]]):
