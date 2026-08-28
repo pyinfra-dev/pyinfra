@@ -43,8 +43,8 @@ class PodmanFactBase(FactBase[T]):
 
 
 class PodmanSystemInfo(PodmanFactBase[dict[str, Any]]):
-    """
-    Output of 'podman system info'
+    """Returns the podman system information
+    This is equivalent to ``podman system info``.
     """
 
     @override
@@ -57,8 +57,46 @@ class PodmanSystemInfo(PodmanFactBase[dict[str, Any]]):
 
 
 class PodmanPs(PodmanFactBase[list[dict[str, Any]]]):
-    """
-    Output of 'podman ps'
+    """Returns a list of all containers.
+    This is equivalent to ``podman ps --all``.
+
+    .. code:: python
+
+        [
+            {
+                "AutoRemove": true,
+                "Command": [
+                    "bash"
+                ],
+                "CreatedAt": "24 seconds ago",
+                "CIDFile": "",
+                "Exited": false,
+                "ExitedAt": -62135596800,
+                "ExitCode": 0,
+                "ExposedPorts": null,
+                "Id": "3b2f3186...",
+                "Image": "docker.io/library/bash:latest",
+                "ImageID": "bc60f0547...",
+                "IsInfra": false,
+                "Labels": null,
+                "Mounts": [],
+                "Names": [
+                    "hardcore_darwin"
+                ],
+                "Namespaces": {},
+                "Networks": [],
+                "Pid": 65638,
+                "Pod": "",
+                "PodName": "",
+                "Ports": null,
+                "Restarts": 0,
+                "Size": null,
+                "StartedAt": 1785003868,
+                "State": "running",
+                "Status": "Up 24 seconds",
+                "Created": 1785003868
+            }
+        ]
     """
 
     @override
