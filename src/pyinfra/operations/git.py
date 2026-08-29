@@ -5,9 +5,11 @@ Manage git repositories and configuration.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
+from pyinfra.api.arguments import EnvValue
 from pyinfra.facts.files import Directory, File
 from pyinfra.facts.git import (
     GitBranch,
@@ -20,6 +22,43 @@ from pyinfra.facts.git import (
 
 from . import files, ssh
 from .util.files import chown, unix_path_join
+
+
+def _git_command(safe_directory: str | None = None) -> StringCommand:
+    command: list[str | StringCommand] = ["git"]
+    if safe_directory is not None:
+        command.extend(
+            [
+                "-c",
+                StringCommand("safe.directory=", QuoteString(safe_directory), _separator=""),
+            ],
+        )
+    return StringCommand(*command)
+
+
+def _git_safe_directory_env(safe_directory: str | None) -> dict[str, str]:
+    if safe_directory is None:
+        return {}
+
+    return {
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "safe.directory",
+        "GIT_CONFIG_VALUE_0": safe_directory,
+    }
+
+
+def _git_safe_directory_fact_kwargs(
+    safe_directory: str | None,
+) -> dict[str, Mapping[str, EnvValue]]:
+    safe_env = _git_safe_directory_env(safe_directory)
+    if not safe_env:
+        return {}
+
+    env: dict[str, EnvValue] = {}
+    if host.current_op_global_arguments:
+        env.update(host.current_op_global_arguments.get("_env") or {})
+    env.update(safe_env)
+    return {"_env": env}
 
 
 @operation()
@@ -163,18 +202,28 @@ def repo(
 
     # Ensuring existing repo
     else:
+        safe_directory = dest if user or group else None
+        safe_directory_fact_kwargs = _git_safe_directory_fact_kwargs(safe_directory)
         # Reconcile the `origin` remote URL with `src`. If `src` has changed for
         # an existing working copy, update `origin` so the fetch/pull below
         # operate against the new source instead of silently continuing to track
         # the old remote (see GH #1763). Only act when an `origin` URL already
         # exists and differs - if it is missing we leave remote management alone.
-        existing_remote = host.get_fact(GitConfig, repo=dest).get("remote.origin.url")
+        existing_remote = host.get_fact(
+            GitConfig,
+            repo=dest,
+            **safe_directory_fact_kwargs,
+        ).get("remote.origin.url")
         remote_changed = existing_remote is not None and existing_remote != [src]
         if remote_changed:
             git_commands.append(StringCommand("remote", "set-url", "origin", QuoteString(src)))
 
         is_tag = False
-        current_branch = host.get_fact(GitBranch, repo=dest)
+        current_branch = host.get_fact(
+            GitBranch,
+            repo=dest,
+            **safe_directory_fact_kwargs,
+        )
         if branch is not None and current_branch != branch:
             # fetch to ensure we have the branch/tag locally
             if fetch_tags:
@@ -183,7 +232,14 @@ def repo(
                 git_commands.append(StringCommand("fetch"))
 
             git_commands.append(StringCommand("checkout", QuoteString(branch)))
-        if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
+        if branch and branch in (
+            host.get_fact(
+                GitTag,
+                repo=dest,
+                **safe_directory_fact_kwargs,
+            )
+            or []
+        ):
             git_commands.append(StringCommand("checkout", QuoteString(branch)))
             is_tag = True
         if pull and not is_tag:
@@ -197,11 +253,17 @@ def repo(
             # the old origin, so never skip - we must pull from the new source.
             effective_branch = branch or current_branch
             if not remote_changed and effective_branch:
-                local_commit = host.get_fact(GitLocalCommit, repo=dest, ref=effective_branch)
+                local_commit = host.get_fact(
+                    GitLocalCommit,
+                    repo=dest,
+                    ref=effective_branch,
+                    **safe_directory_fact_kwargs,
+                )
                 remote_commit = host.get_fact(
                     GitRemoteBranchCommit,
                     repo=dest,
                     branch=effective_branch,
+                    **safe_directory_fact_kwargs,
                 )
                 if local_commit and remote_commit and local_commit == remote_commit:
                     skip_pull = True
@@ -221,7 +283,12 @@ def repo(
             git_commands.append("submodule update --init")
 
     # Attach prefixes for directory
-    command_prefix = StringCommand("cd", QuoteString(dest), "&&", "git")
+    command_prefix = StringCommand(
+        "cd",
+        QuoteString(dest),
+        "&&",
+        _git_command(safe_directory if is_repo else None),
+    )
 
     for cmd in git_commands:
         yield StringCommand(command_prefix, cmd)
