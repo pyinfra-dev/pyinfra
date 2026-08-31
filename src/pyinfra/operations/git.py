@@ -416,7 +416,7 @@ def worktree(
             # branch it creates. When the command runs as root (e.g. via
             # `_sudo`), those files end up root-owned and break later git
             # commands run as the worktree owner.
-            worktree_name = worktree.rstrip("/").rsplit("/", 1)[-1]
+            worktree_name = str(worktree).rstrip("/").rsplit("/", 1)[-1]
             yield chown(
                 unix_path_join(repo, ".git", "worktrees", worktree_name),
                 user,
