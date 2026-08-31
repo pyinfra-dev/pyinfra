@@ -26,7 +26,6 @@ Another bumper update with lots of security fixes in user input quoting and many
 - operations.brew: use enum value strings in brew.trust fixtures (#1887) (@wowi42)
 - facts.deb: clarify package resolution (#1897) (@Sanjays2402)
 - operations.{apt,crontab,dnf,docker,flatpak,lxd,openrc,puppet,server,sysvinit,vzctl,yum,zfs},facts.{crontab,mysql,server}: quote user input (#1803-#1809, #1811-#1818) (@wowi42)
-- api: include operation name & arguments in operation hash to fix collisions with per-host data (#1370)
 
 Connectors:
 
