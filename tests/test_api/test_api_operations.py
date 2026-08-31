@@ -164,6 +164,73 @@ class TestOperationsApi(PatchSSHTestCase):
         assert shared_op_hash in state.ops[somehost]
         assert shared_op_hash in state.ops[anotherhost]
 
+    def test_op_per_host_args_no_name_no_hash_collision(self):
+        inventory = make_inventory(
+            hosts=(
+                ("somehost", {"users": ["user-1"]}),
+                ("anotherhost", {"users": ["user-5"]}),
+            ),
+        )
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+
+        # Same operation and position with per-host arguments but no explicit
+        # name - these must not collapse into a single operation hash (#1370).
+        for host in inventory:
+            for user in host.data.users:
+                add_op(state, server.shell, commands=[f"echo {user}"], host=host)
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        somehost_op_hash = next(iter(state.ops[somehost]))
+        anotherhost_op_hash = next(iter(state.ops[anotherhost]))
+        assert somehost_op_hash != anotherhost_op_hash
+
+        # Both auto-named the same, but the attached arguments are kept separate
+        assert state.op_meta[somehost_op_hash].names == {"server.shell"}
+        assert state.op_meta[anotherhost_op_hash].names == {"server.shell"}
+        assert state.op_meta[somehost_op_hash].args == ["commands=['echo user-1']"]
+        assert state.op_meta[anotherhost_op_hash].args == ["commands=['echo user-5']"]
+
+    def test_op_per_host_data_different_execution_kwargs(self):
+        inventory = make_inventory()
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+
+        # Distinct operations at the same position with different execution kwargs
+        # must not raise - they only shared a hash by accident before #1370.
+        add_op(
+            state,
+            server.shell,
+            commands=["echo somehost"],
+            name="somehost op",
+            _parallel=1,
+            host=somehost,
+        )
+        add_op(
+            state,
+            server.shell,
+            commands=["echo anotherhost"],
+            name="anotherhost op",
+            _parallel=2,
+            host=anotherhost,
+        )
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        somehost_op_hash = next(iter(state.ops[somehost]))
+        anotherhost_op_hash = next(iter(state.ops[anotherhost]))
+        assert state.op_meta[somehost_op_hash].global_arguments["_parallel"] == 1
+        assert state.op_meta[anotherhost_op_hash].global_arguments["_parallel"] == 2
+
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
     @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)
     def test_file_upload_op(self):
@@ -807,6 +874,84 @@ class TestOperationOrdering(PatchSSHTestCase):
             # Ensure somehost has two ops and anotherhost only has the one
             assert len(state.ops[inventory.get_host("somehost")]) == 2
             assert len(state.ops[inventory.get_host("anotherhost")]) == 2
+
+    # Operations called in a plain loop share the same stack position, so their
+    # hash must come from the name & arguments - otherwise per-host data makes
+    # different operations collapse into one (#1370).
+    def test_cli_op_loop_per_host_data_no_hash_collision(self):
+        inventory = make_inventory(
+            hosts=(
+                ("somehost", {"users": ["user-1", "user-2"]}),
+                ("anotherhost", {"users": ["user-5"]}),
+            ),
+        )
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        state.current_deploy_filename = __file__
+
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                for name in ("somehost", "anotherhost"):
+                    host = inventory.get_host(name)
+                    with ctx_host.use(host):
+                        for user in host.data.users:
+                            server.shell(  # called on *the same line* for every host/user
+                                name=f"Create {user} user",
+                                commands=[f"echo {user}"],
+                            )
+        finally:
+            ctx_state.reset()
+            ctx_host.reset()
+            pyinfra.is_cli = False
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 3
+
+        names_by_host = {
+            host_name: {
+                name for op_hash in state.ops[host] for name in state.op_meta[op_hash].names
+            }
+            for host_name, host in (("somehost", somehost), ("anotherhost", anotherhost))
+        }
+        assert names_by_host == {
+            "somehost": {"Create user-1 user", "Create user-2 user"},
+            "anotherhost": {"Create user-5 user"},
+        }
+
+    # Identical operations called in a loop (same position, same name & arguments)
+    # must still be deduplicated by appending a counter to the hash.
+    def test_cli_op_loop_identical_ops_dedupe(self):
+        inventory = make_inventory(hosts=("somehost",))
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        state.current_deploy_filename = __file__
+
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                with ctx_host.use(inventory.get_host("somehost")):
+                    for _ in range(3):
+                        server.shell(commands=["echo same"])  # called on *the same line*
+        finally:
+            ctx_state.reset()
+            ctx_host.reset()
+            pyinfra.is_cli = False
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 3
+        assert op_order[1] == f"{op_order[0]}-0"
+        assert op_order[2] == f"{op_order[0]}-0-1"
 
     # In API mode, pyinfra *overrides* the line numbers such that whenever an
     # operation or deploy is added it is simply appended. This makes sense as
