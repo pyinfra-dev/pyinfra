@@ -118,6 +118,52 @@ class TestOperationsApi(PatchSSHTestCase):
 
         disconnect_all(state)
 
+    def test_op_per_host_data_no_hash_collision(self):
+        inventory = make_inventory(
+            hosts=(
+                ("somehost", {"users": ["user-1"]}),
+                ("anotherhost", {"users": ["user-5"]}),
+            ),
+        )
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+
+        # Call the "same" operation (identical position) with per-host names and
+        # arguments - these must not collapse into a single operation hash (#1370).
+        for host in inventory:
+            for user in host.data.users:
+                add_op(
+                    state,
+                    server.shell,
+                    commands=[f"echo {user}"],
+                    name=f"Create {user} user",
+                    host=host,
+                )
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        names_by_host = {
+            host_name: {
+                name for op_hash in state.ops[host] for name in state.op_meta[op_hash].names
+            }
+            for host_name, host in (("somehost", somehost), ("anotherhost", anotherhost))
+        }
+        assert names_by_host == {
+            "somehost": {"Create user-1 user"},
+            "anotherhost": {"Create user-5 user"},
+        }
+
+        # Identical operations on both hosts must still share a single hash
+        add_op(state, server.shell, commands=["echo same"], host=[somehost, anotherhost])
+
+        shared_op_hash = state.get_op_order()[-1]
+        assert shared_op_hash in state.ops[somehost]
+        assert shared_op_hash in state.ops[anotherhost]
+
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
     @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)
     def test_file_upload_op(self):
