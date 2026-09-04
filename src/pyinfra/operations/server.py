@@ -957,6 +957,18 @@ def user_authorized_keys(
 
     public_keys = [key for key_or_file in public_keys for key in read_any_pub_key_file(key_or_file)]
 
+    # follow symlinks to the actual authorized_keys location:
+    while True:
+        auth_key_link = host.get_fact(Link, f"{authorized_key_directory}/{authorized_key_filename}")
+        if not auth_key_link:
+            break  # we're targeting the final file
+        link_target = auth_key_link["link_target"]
+        authorized_key_filename = os.path.basename(link_target)
+        if "/" == str(link_target)[0]:
+            authorized_key_directory = os.path.dirname(link_target)
+        else:
+            authorized_key_directory += "/" + os.path.dirname(link_target)
+
     # Ensure .ssh directory
     # note that this always outputs commands unless the SSH user has access to the
     # authorized_keys file, ie the SSH user is the user defined in this function
