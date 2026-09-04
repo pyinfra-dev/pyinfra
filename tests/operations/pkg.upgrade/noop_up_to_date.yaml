@@ -1,0 +1,6 @@
+facts:
+  pkg.PkgPackages:
+    - name: vim
+      installed_versions: ["9.0"]
+commands: []
+noop_description: all packages are up to date
