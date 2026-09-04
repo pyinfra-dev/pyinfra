@@ -1,0 +1,5 @@
+command: supervisorctl pid || true
+requires_command: supervisorctl
+output: |
+  2964
+fact: 2964

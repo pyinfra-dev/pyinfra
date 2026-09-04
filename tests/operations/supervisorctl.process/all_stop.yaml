@@ -1,0 +1,11 @@
+args:
+  - all
+kwargs:
+  running: false
+facts:
+  supervisorctl.SupervisorctlStatus:
+    "config_file=None, password=None, server_url=None, username=None":
+      web: true
+      "workers:worker_0": false
+commands:
+  - supervisorctl stop all

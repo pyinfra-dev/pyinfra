@@ -1,0 +1,4 @@
+args:
+  - all
+commands:
+  - supervisorctl clear all

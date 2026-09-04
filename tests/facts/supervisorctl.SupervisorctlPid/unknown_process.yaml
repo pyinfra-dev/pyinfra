@@ -1,0 +1,7 @@
+arg:
+  process: nope
+command: supervisorctl pid nope || true
+requires_command: supervisorctl
+output: |
+  No such process nope
+fact: null

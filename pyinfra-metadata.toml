@@ -377,6 +377,18 @@ path = "src/pyinfra/facts/runit.py"
 type = "fact"
 tags = ["service-management", "system"]
 
+[pyinfra.plugins."supervisorctl-ops"]
+name = "supervisorctl"
+path = "src/pyinfra/operations/supervisorctl.py"
+type = "operation"
+tags = ["service-management"]
+
+[pyinfra.plugins."supervisorctl-facts"]
+name = "supervisorctl"
+path = "src/pyinfra/facts/supervisorctl.py"
+type = "fact"
+tags = ["service-management", "system"]
+
 # Containers
 [pyinfra.plugins."docker-ops"]
 name = "docker"
