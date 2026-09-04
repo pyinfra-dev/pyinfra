@@ -1,0 +1,27 @@
+args:
+  - default
+kwargs:
+  prescriptions:
+    nftables: "active"
+    mysqld: "masked"
+    tipidee: "usable"
+  do_commit: false
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
+      - default
+      - desktop
+      - kiosk
+  s6.S6SetStatus:
+    repository=None, the_set=default:
+      nftables: "active"
+      mysqld: "masked"
+      tipidee: "usable"
+commands: []
+noop_description: the set "default" already exists, has the desired prescriptions, and no commit was requested
+

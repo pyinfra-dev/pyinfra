@@ -1,0 +1,16 @@
+args:
+  - default
+kwargs:
+  present: true
+  prescriptions: null
+  do_commit: false
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
+commands:
+  - s6-rc-set-new default

@@ -1,0 +1,22 @@
+args:
+  - [ nftables, mysqld, tipidee ]
+kwargs:
+  running: null
+  enabled: true
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
+  s6.S6SetStatus:
+    repository=None, the_set=current:
+      nftables: "usable"
+      mysqld: "usable"
+      tipidee: "usable"
+commands:
+  - s6-rc-set-change current active nftables mysqld tipidee
+  - s6-rc-set-fix current
+  - s6-rc-set-commit current

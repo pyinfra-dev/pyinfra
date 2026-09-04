@@ -1,0 +1,19 @@
+args:
+  - tipidee
+kwargs:
+  running: true
+facts:
+  server.Which:
+    command=systemctl: null
+    command=rc-service: null
+    command=initctl: null
+    command=sv: null
+    command=service: null
+    command=s6: /usr/bin/s6
+  files.Directory:
+    path=/etc/init.d: false
+    path=/etc/rc.d: false
+  s6.S6LiveStatus:
+    tipidee: false
+commands:
+  - s6 live start tipidee

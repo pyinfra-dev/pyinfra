@@ -1,0 +1,14 @@
+args:
+  - default
+kwargs:
+  present: false
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
+commands: []
+noop_description: the set "default" is already nonexistent

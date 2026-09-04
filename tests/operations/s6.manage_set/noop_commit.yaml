@@ -1,0 +1,15 @@
+args:
+  - default
+kwargs:
+  do_commit: false
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
+      - default
+commands: []
+noop_description: the set "default" already exists, has the desired prescriptions, and no commit was requested
