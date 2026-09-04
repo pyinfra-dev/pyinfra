@@ -86,7 +86,19 @@ packages, not added to this repo.
 rather than explicit passing.
 
 **Concurrency** — Uses gevent greenlets for parallel host execution. `pyinfra_cli/main.py`
-monkey-patches stdlib at startup.
+monkey-patches stdlib at startup. Coverage uses gevent concurrency mode (configured in
+`pyproject.toml`).
+
+**Command objects** (from `pyinfra.api`):
+- `StringCommand("cmd", "arg", ...)` — basic shell command, accepts mixed strings and
+  `QuoteString` / `MaskString` parts.
+- `FileUploadCommand` / `RsyncCommand` — file transfer commands.
+- `FunctionCommand(func, args, kwargs)` — Python function executed at run time.
+- `QuoteString("value")` — value to be shell-quoted (use for any user-controlled input).
+- `MaskString("secret")` — value masked from logs.
+
+**Connector data** — Each connector defines typed data in a `connector_data_meta` dict
+mapping keys to `DataMeta` objects. Operations / facts read it via `host.connector_data`.
 
 ### Adding Operations / Facts
 
@@ -173,6 +185,24 @@ explicit exception instead: `OperationError` for operation argument issues, `Val
 conventions: built-in generics (`list`, `set`, `dict`, `tuple`) instead of `typing` equivalents
 (`List`, `Set`, etc.), and avoid quoting class names unless a forward reference is strictly
 required.
+
+### Detailed conventions
+
+In-depth, file-scoped patterns are packaged as Claude skills under
+[`.claude/skills/`](.claude/skills/):
+
+- [`writing-operations`](.claude/skills/writing-operations/SKILL.md) — operation module
+  structure, `_inner()` composition, `host.get_temp_filename()`, error handling, helpers
+  in `src/pyinfra/operations/util/`.
+- [`writing-facts`](.claude/skills/writing-facts/SKILL.md) — `FactBase` anatomy,
+  `requires_command` / `check_preconditions` / `default` / `abstract`, parsing patterns,
+  shell robustness, `##PYINFRA_FILE` multi-file marker, `GpgFactBase`.
+- [`writing-operation-tests`](.claude/skills/writing-operation-tests/SKILL.md) —
+  full JSON / YAML fixture schema for `tests/operations/`, `facts` keyed by `arg=value`,
+  idempotency cases, error cases.
+- [`writing-fact-tests`](.claude/skills/writing-fact-tests/SKILL.md) —
+  full JSON / YAML fixture schema for `tests/facts/`, `arg` multi-call, multi-file marker
+  handling, coverage checklist.
 
 ## Branch Strategy
 
