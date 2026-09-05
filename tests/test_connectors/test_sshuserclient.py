@@ -4,9 +4,15 @@ from unittest.mock import mock_open, patch
 
 import pytest
 from paramiko import PKey, ProxyCommand, SSHException
+from paramiko.ed25519key import Ed25519Key
 
 from pyinfra.connectors.sshuserclient import SSHClient
-from pyinfra.connectors.sshuserclient.client import AskPolicy, get_host_keys, get_ssh_config
+from pyinfra.connectors.sshuserclient.client import (
+    AskPolicy,
+    StrictPolicy,
+    get_host_keys,
+    get_ssh_config,
+)
 
 CERT_KEY_TYPE = "ssh-ed25519-cert-v01@openssh.com"
 
@@ -663,6 +669,37 @@ def test_get_host_keys_skips_unparsable_lines(tmp_path):
     keys = host_keys.lookup(example_hostname)
     assert keys is not None
     assert keys[example_keytype].get_base64() == example_key
+
+
+def test_strict_policy_accepts_matching_cert_authority(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority 192.168.1.* {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    StrictPolicy().missing_host_key(client, "192.168.1.236", server_key)
+
+
+def test_strict_policy_rejects_nonmatching_cert_authority(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority 10.0.0.* {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    with pytest.raises(SSHException, match="No host key for 192.168.1.236"):
+        StrictPolicy().missing_host_key(client, "192.168.1.236", server_key)
 
 
 def test_parse_config_keeps_key_filename_when_no_real_identityfile(
