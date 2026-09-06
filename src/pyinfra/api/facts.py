@@ -43,6 +43,7 @@ if TYPE_CHECKING:
 
 # Sentinel output line emitted when skip_unless_command binary is absent on the remote host.
 _MISSING_COMMAND_MARKER = "##PYINFRA_NOCMD##"
+_SU_PASSWORD_PROMPT = "Password:"
 
 SUDO_REGEX = r"^sudo: unknown user"
 SU_REGEXES = (
@@ -333,6 +334,15 @@ def _get_fact(
         )
 
     stdout_lines, stderr_lines = output.stdout_lines, output.stderr_lines
+    if (
+        executor_kwargs["_su_user"]
+        and stdout_lines
+        and stdout_lines[0].startswith(_SU_PASSWORD_PROMPT)
+    ):
+        stdout_lines = stdout_lines.copy()
+        stdout_lines[0] = stdout_lines[0][len(_SU_PASSWORD_PROMPT) :]
+        if stdout_lines[0] == "":
+            stdout_lines.pop(0)
 
     # Detect the "binary absent" sentinel from the if/then/else shell guard.
     if status and stdout_lines == [_MISSING_COMMAND_MARKER]:

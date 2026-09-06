@@ -104,6 +104,28 @@ class TestFactsApi(PatchSSHTestCase):
             **defaults,
         )
 
+    def test_get_fact_strips_freebsd_su_password_prompt_from_stdout(self):
+        inventory = make_inventory(hosts=("anotherhost",))
+        state = State(inventory, Config())
+
+        anotherhost = inventory.get_host("anotherhost")
+        anotherhost.data._su_user = "root"
+
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (
+                True,
+                CommandOutput(
+                    [
+                        OutputLine("stdout", "Password:some-output"),
+                    ],
+                ),
+            )
+            fact_data = get_facts(state, Command, ("echo some-output",))
+
+        assert fact_data == {anotherhost: "some-output"}
+
     def test_get_fact_error(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
