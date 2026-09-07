@@ -118,11 +118,30 @@ def _make_format_fields(n):
     return " ".join([f"{{{i}}}" for i in range(n)])
 
 
-def _make_live_command(op: str, services: Sequence):
+def _make_live_command(op: str, services: Sequence, livedir: str | None = None):
     """
     + op: the operation, e.g. "start", "stop", "restart".
     + services: the service(s) to operate on.
     """
+    # fall back to s6-rc cli that allows a custom livedir
+    if livedir:
+        if op == "restart":
+            return make_formatted_string_command(
+                    f"s6-rc -l {{{len(services)}}} -d change " +
+                    _make_format_fields(len(services)) +
+                    f" && s6-rc -l {{{len(services)}}} -u change " +
+                    _make_format_fields(len(services)),
+                    *map(QuoteString, services),
+                    QuoteString(livedir)
+                    )
+        # translate s6 frontend arguments to s6-rc arguments
+        op = "-u" if op == "start" else "-d"
+        return make_formatted_string_command(
+                f"s6-rc -l {{{len(services)}}} {op} change " + _make_format_fields(len(services)),
+                *map(QuoteString, services),
+                QuoteString(livedir)
+                )
+
     return make_formatted_string_command(
         f"s6 live {op} " + _make_format_fields(len(services)), *map(QuoteString, services)
     )
@@ -132,7 +151,7 @@ def _make_set_change_command(
     services: list,
     current_rxs: dict,
     wanted_rx: str,
-    repository: str | None = None,
+    repodir: str | None = None,
     the_set: str = "current",
 ):
     """Returns a command like "s6-rc-set-change -r /etc/s6/repo current active httpd".
@@ -140,7 +159,7 @@ def _make_set_change_command(
     + services: the services to be assigned a specific prescription.
     + current_rxs: the current prescriptions for all services (from the `S6SetStatus` fact).
     + wanted_rx: the prescription to assign to each service.
-    + repository: path to the repository containing the set.
+    + repodir: path to the repository containing the set.
     + the_set: name of the set to operate on.
 
     If every service already matches the desired prescription, None is returned.
@@ -171,12 +190,12 @@ def _make_set_change_command(
 
         # example of the string passed into make_formatted_string_command:
         # s6-rc-set-change -r {5} {6} usable {0} {1} {2} {3} {4}
-        if repository:
+        if repodir:
             return make_formatted_string_command(
                 f"s6-rc-set-change -r {{{len(service_subset)}}} {{{len(service_subset) + 1}}} {wanted_rx} "
                 + _make_format_fields(len(service_subset)),
                 *map(QuoteString, service_subset),
-                QuoteString(repository),
+                QuoteString(repodir),
                 QuoteString(the_set),
             )
 
@@ -192,14 +211,14 @@ def _make_set_change_command(
 
 def _make_all_set_change_commands(
     prescriptions: dict,
-    repository: str | None = None,
+    repodir: str | None = None,
     the_set: str = "current",
     force_prescriptions: bool = True,
 ):
     """Returns all commands necessary to bring the prescriptions to the desired state.
 
     + prescriptions: map of service -> prescription, which is one of "always", "active", "usable", "masked".
-    + repository: path to a repository containing the set.
+    + repodir: path to a repository containing the set.
     + the_set: the set to change the prescriptions of.
     + force_prescriptions: whether to ensure there are no other services in the set or to only modify the prescriptions of the specified services, leaving others untouched.
 
@@ -239,7 +258,7 @@ def _make_all_set_change_commands(
             [srv for srv in prescriptions if prescriptions[srv] == "masked"]
         )
 
-    current_rxs = host.get_fact(S6SetStatus, the_set, repository)
+    current_rxs = host.get_fact(S6SetStatus, the_set, repodir)
 
     if force_prescriptions:
         # mask all services not present in `prescriptions` arg
@@ -249,33 +268,33 @@ def _make_all_set_change_commands(
 
     return [
         _make_set_change_command(
-            service_set, current_rxs, wanted_rx.removeprefix("wanted_"), repository, the_set=the_set
+            service_set, current_rxs, wanted_rx.removeprefix("wanted_"), repodir, the_set=the_set
         )
         for wanted_rx, service_set in service_bins.items()
     ]
 
 
 @operation(is_idempotent=False)
-def set_create(name: str, repository: str | None = None):
+def set_create(name: str, repodir: str | None = None):
     """Create a new set.
 
     + name: name for the new set.
-    + repository: repository to save the set in.
+    + repodir: path to the repository to save the set in.
     """
-    if repository:
+    if repodir:
         yield make_formatted_string_command(
-            "s6-rc-set-new -r {0} {1}", QuoteString(repository), QuoteString(name)
+            "s6-rc-set-new -r {0} {1}", QuoteString(repodir), QuoteString(name)
         )
     else:
         yield make_formatted_string_command("s6-rc-set-new -r {0}", QuoteString(name))
 
 
 @operation(is_idempotent=False)
-def set_delete(the_sets: str | Sequence[str], repository: str | None = None):
+def set_delete(the_sets: str | Sequence[str], repodir: str | None = None):
     """Delete sets.
 
     + the_sets: name or list of names of the sets to delete.
-    + repository: path to the repository containing the sets
+    + repodir: path to the repository containing the sets
     """
     if isinstance(the_sets, str):
         the_sets = (the_sets,)
@@ -283,11 +302,11 @@ def set_delete(the_sets: str | Sequence[str], repository: str | None = None):
     if "current" in the_sets:
         raise OperationValueError('cannot delete the set "current"')
 
-    if repository:
+    if repodir:
         yield make_formatted_string_command(
             f"s6-rc-set-delete -r {{{len(the_sets)}}} " + _make_format_fields(len(the_sets)),
             *map(QuoteString, the_sets),
-            QuoteString(repository),
+            QuoteString(repodir),
         )
     else:
         yield make_formatted_string_command(
@@ -296,21 +315,21 @@ def set_delete(the_sets: str | Sequence[str], repository: str | None = None):
 
 
 @operation()
-def set_copy(dest: str, repository: str | None = None, source="current", force: bool = False):
+def set_copy(dest: str, repodir: str | None = None, source="current", force: bool = False):
     """Save the contents of the given set as a new set.
 
     + dest: name of the saved copy.
-    + repository: path to the repository containing the set.
+    + repodir: path to the repository containing the set.
     + source: name of the set to copy.
     + force: whether to overwrite an existing set of the same name if it exists.
     """
-    source_set_contents = host.get_fact(S6SetStatus, the_set=source, repository=repository)
-    dest_set_contents = host.get_fact(S6SetStatus, the_set=dest, repository=repository)
+    source_set_contents = host.get_fact(S6SetStatus, the_set=source, repodir=repodir)
+    dest_set_contents = host.get_fact(S6SetStatus, the_set=dest, repodir=repodir)
     if source_set_contents != dest_set_contents:
-        if repository:
+        if repodir:
             yield make_formatted_string_command(
                 f"s6-rc-set-copy -r {{0}}{' -f' if force else ''} {{1}} {{2}}",
-                QuoteString(repository),
+                QuoteString(repodir),
                 QuoteString(source),
                 QuoteString(dest),
             )
@@ -364,33 +383,45 @@ def set_copy(dest: str, repository: str | None = None, source="current", force: 
 
 
 @operation(is_idempotent=False)
-def set_commit(repository: str | None = None, the_set: str = "current"):
+def set_commit(repodir: str | None = None, the_set: str = "current"):
     """Check the given set and commit it.
 
-    + repository: path to the repository containing the set.
+    + repodir: path to the repository containing the set.
     + the_set: name of the set to check and commit.
     """
-    if repository is not None:
+    if repodir is not None:
         yield make_formatted_string_command(
-            "s6-rc-set-fix -r {0} {1}", QuoteString(repository), QuoteString(the_set)
+            "s6-rc-set-fix -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
         )
         yield make_formatted_string_command(
-            "s6-rc-set-commit -r {0} {1}", QuoteString(repository), QuoteString(the_set)
+            "s6-rc-set-commit -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
         )
     else:
         yield make_formatted_string_command("s6-rc-set-fix {0}", QuoteString(the_set))
         yield make_formatted_string_command("s6-rc-set-commit {0}", QuoteString(the_set))
 
 
-# TODO switch to s6-rc-set-install, need to find livedir dynamically like repodir, add repository argument
 @operation(is_idempotent=False)
-def live_install(the_set: str = "current"):
+def live_install(repodir: str | None = None, the_set: str = "current", livedir: str | None = None):
     """Install a compiled (committed) service database into the live state.
 
-    + repository: path to the repository containing the set.
+    + repodir: path to the repository containing the set.
     + the_set: name of the set containing an already compiled service database to be installed into the live state.
+    + livedir: path to the live state to manage. Uses the one configured for s6-frontend by default.
     """
-    yield make_formatted_string_command("s6 live install -s {0}", QuoteString(the_set))
+    if repodir:
+        if livedir:
+            yield make_formatted_string_command("s6-rc-set-install -r {0} -l {1} {2}",
+                                                QuoteString(repodir), QuoteString(livedir),
+                                                QuoteString(the_set))
+        else:
+            yield make_formatted_string_command("s6-rc-set-install -r {0} {1}",
+                                                QuoteString(repodir), QuoteString(the_set))
+    elif livedir:
+        yield make_formatted_string_command("s6-rc-set-install -l {0} {1}",
+                                            QuoteString(livedir), QuoteString(the_set))
+    else:
+        yield make_formatted_string_command("s6 live install -s {0}", QuoteString(the_set))
 
 
 @operation(
@@ -398,12 +429,15 @@ def live_install(the_set: str = "current"):
     # TODO verify idempotency paths
     idempotent_notice="Not idempotent by default. If `do_commit=False`, then the operation is idempotent.",
 )
+# TODO add option to install a set
 def manage_set(
     the_set: str = "current",
     present: bool = True,
     prescriptions: dict[str, str] | None = None,
     force_prescriptions: bool = True,
     do_commit: bool = True,
+    do_install: bool = False,
+    livedir: str | None = None,
 ):
     """Manage sets in a repository.
 
@@ -419,7 +453,8 @@ def manage_set(
     + present: whether the set should be present in the repository.
     + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only.
     + force_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be removed)
-    + do_commit: whether to commit the current(ly loaded) set. delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
+    + do_commit: whether to commit the set.
+    + do_install: whether to install the set to the livedir.
 
     """
 
@@ -447,10 +482,10 @@ def manage_set(
 
     if present:
         # remove noops from this set as conditions are satisfied
-        noops = {"create", "prescribe", "commit"}
+        noops = {"create", "prescribe", "commit", "install"}
 
         # create a new set if it doesn't exist
-        existing_sets = host.get_fact(S6RepositoryList, repository=repodir)
+        existing_sets = host.get_fact(S6RepositoryList, repodir=repodir)
         if the_set not in existing_sets:
             noops.remove("create")
             if repodir is not None:
@@ -473,17 +508,21 @@ def manage_set(
         # matches the existing compiled service database
         if do_commit:
             noops.remove("commit")
-            yield from set_commit._inner(repository=repodir, the_set=the_set)
+            yield from set_commit._inner(repodir=repodir, the_set=the_set)
+
+        if do_install:
+            noops.remove("install")
+            yield from live_install._inner(repodir=repodir, the_set=the_set, livedir=livedir)
 
         # "global" noop if all 3 branches noop
-        if noops == {"create", "prescribe", "commit"}:
+        if noops == {"create", "prescribe", "commit", "install"}:
             host.noop(
                 f'the set "{the_set}" already exists, has the desired prescriptions, and no commit was requested'
             )
 
     # present=False
     else:
-        if the_set in host.get_fact(S6RepositoryList, repository=repodir):
+        if the_set in host.get_fact(S6RepositoryList, repodir=repodir):
             if repodir is not None:
                 yield make_formatted_string_command(
                     "s6-rc-set-delete -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
@@ -494,11 +533,10 @@ def manage_set(
             host.noop(f'the set "{the_set}" is already nonexistent')
 
 
-@operation(
-    # TODO verify idempotency paths
-    is_idempotent=False,
-    idempotent_notice="It is not idempotent only when at least one of `commit_set` or `install_set` are `True`.",
-)
+# TODO enabled masks all other services (and doesn't consider bundles)
+# TODO verify idempotency paths
+# TODO commit_set should allow specification of which set to commit
+@operation()
 def service(
     service: str | Sequence[str],
     running: bool | None = None,
@@ -506,12 +544,12 @@ def service(
     reloaded: bool | None = None,
     command: str | None = None,
     enabled: bool | None = None,
+    repodir: str | None = None,
+    livedir: str | None = None,
     reload_signal: str = "SIGHUP",
     the_set: str = "current",
     enabled_rx: str = "active",
     disabled_rx: str = "usable",
-    commit_set: bool = False,
-    install_set: bool = False,
 ):
     """
     Manage the state of s6-supervised services.
@@ -522,12 +560,12 @@ def service(
     + reloaded: whether the service(s) should be reloaded by sending a signal, SIGHUP by default. Whether the service is reloaded depends on how it handles the signal.
     + command: custom command to run after the auto-computed commands. This must be an s6 subcommand, e.g. "system reboot" gives the command "s6 system reboot".
     + enabled: whether the service should be given an "active" or "usable" prescription.
+    + repodir: path to the repository to manage. Uses the one compiled into s6 by default.
+    + livedir: path to the live state to manage. Uses the one configured for s6-frontend by default.
     + reload_signal: the signal to send to the service(s) when a reload is desired.
     + the_set: name of the set to use when managing enabled status, using the set named "current" by default.
     + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either "active" or "always".
     + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either "usable" or "masked".
-    + commit_set: whether to commit the current(ly loaded) set. Delaying this step can allow for other operations to modify the current set, with the final result being committed at the end.
-    + install_set: whether to install the compiled service database (the result of a commit operation) into the live state. This is analogous to systemd's daemon-reload, but not completely: systemd recognizes changes to service files after a reboot, but s6 does not. It only recognizes changes when an s6 live install command is executed. Live state replacement and enablement/disablement of services are coupled in s6.
 
     Specifying multiple services results in fewer commands executed, especially in the case of
     changing the enabled status of the service, where the service database is recompiled per command
@@ -546,7 +584,7 @@ def service(
 
     if (running, restarted, reloaded) != (None,) * 3:
         # dict[str, bool] whether each service given in the services arg are running.
-        live_statuses = {srv: host.get_fact(S6LiveStatus)[srv] for srv in service}
+        live_statuses = {srv: host.get_fact(S6LiveStatus, livedir=livedir)[srv] for srv in service}
         all_up = all(live_statuses.values())
         some_up = any(live_statuses.values())
         all_down_services = [srv for srv, stat in live_statuses.items() if not stat]
@@ -554,19 +592,19 @@ def service(
 
         if running is False:
             if some_up:
-                yield _make_live_command("stop", all_up_services)
+                yield _make_live_command("stop", all_up_services, livedir=livedir)
             else:
                 host.noop(f"all specified services are already down: {', '.join(service)}")
 
         if running is True:
             if not all_up:
-                yield _make_live_command("start", all_down_services)
+                yield _make_live_command("start", all_down_services, livedir=livedir)
             else:
                 host.noop(f"all specified services are already up: {', '.join(service)}")
 
         if restarted:
             if some_up:
-                yield _make_live_command("restart", all_up_services)
+                yield _make_live_command("restart", all_up_services, livedir=livedir)
             else:
                 host.noop(f"all specified services are down: {', '.join(service)}")
 
@@ -593,23 +631,6 @@ def service(
             yield from manage_set._inner(
                 the_set=the_set, prescriptions={srv: disabled_rx for srv in service}
             )
-
-        if commit_set:
-            if not (s6_conf_lines := _get_s6_frontend_conf_contents(host)):
-                raise OperationError(
-                    "failed to find an s6-frontend configuration on the remote host"
-                )
-            repodir = _get_value_from_conf(key="repodir", content=s6_conf_lines)
-
-            # if not (repodir := _get_value_from_conf(key="repodir", content=s6_conf_lines)):
-            #    raise OperationError(
-            #        f"failed to extract a repodir from remote s6-frontend config: {s6_conf_lines}"
-            #    )
-
-            yield from set_commit._inner(repository=repodir)
-
-    if install_set:
-        yield from live_install._inner()
 
     if command:
         yield StringCommand("s6", *map(QuoteString, shlex.split(command)))

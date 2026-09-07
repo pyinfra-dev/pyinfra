@@ -10,7 +10,7 @@ facts:
     path=/etc/s6.conf:
       [ "repodir = /etc/s6-stuff/repositories/bleeding-edge" ]
   s6.S6RepositoryList:
-    repository=/etc/s6-stuff/repositories/bleeding-edge:
+    repodir=/etc/s6-stuff/repositories/bleeding-edge:
       - current
       - desktop
       - kiosk

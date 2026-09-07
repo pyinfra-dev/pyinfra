@@ -8,17 +8,17 @@ class S6RepositoryList(FactBase[list[str]]):
     """Returns the name of every set in a repository, including the set named "current"."""
 
     @override
-    def requires_command(self, repository=None):
+    def requires_command(self, repodir=None):
         return "s6-rc-repo-list"
         # and envfile, but that comes bundled in execline dependency of s6
 
     @override
-    def command(self, repository=None):
+    def command(self, repodir=None):
         """
         + repository: path of the repository to inspect. If `None`, the compiled-in default will be used, most likely `/var/lib/s6/repository`.
         """
-        if repository:
-            return make_formatted_string_command("s6-rc-repo-list -r {0}", QuoteString(repository))
+        if repodir:
+            return make_formatted_string_command("s6-rc-repo-list -r {0}", QuoteString(repodir))
 
         return StringCommand("s6-rc-repo-list")
 
@@ -33,36 +33,28 @@ class S6RepositoryList(FactBase[list[str]]):
 
 
 class S6SetStatus(FactBase[dict[str, str]]):
-    """Returns a dict of name -> rx (prescription) for each service in a given set.
-
-    If the set does not exist, nothing is returned.
-
-    > [!IMPORTANT]
-    > The fact only returns `None` when the set doesn't exist if `3` is in the `_success_exit_codes`
-    > parameter for the fact. It will throw an exception otherwise due to a limitation in pyinfra.
-
-    """
+    """Returns a dict of name -> rx (prescription) for each service in a given set."""
 
     @override
-    def requires_command(self, the_set="current", repository=None):
+    def requires_command(self, the_set="current", repodir=None):
         return "s6-rc-set-status"
         # and sh
 
     @override
-    def command(self, the_set="current", repository=None):
+    def command(self, the_set="current", repodir=None):
         """
         + the_set: the set to inspect.
         + repository: path of the repository to inspect, default `None`, which means to use the compiled-in default repository most likely `/var/lib/s6/repository`.
         """
-        if repository:
+        if repodir:
             return make_formatted_string_command(
-                "s6-rc-set-status -r {0} {1}; echo EXIT CODE: $?",
-                QuoteString(repository),
+                "s6-rc-set-status -r {0} {1}",
+                QuoteString(repodir),
                 QuoteString(the_set),
             )
 
         return make_formatted_string_command(
-            "s6-rc-set-status {0}; echo EXIT CODE: $?", QuoteString(the_set)
+            "s6-rc-set-status {0}", QuoteString(the_set)
         )
         # extra escaping needed for make_formatted_string_command, but not in StringCommand
         # return make_formatted_string_command(
@@ -72,16 +64,10 @@ class S6SetStatus(FactBase[dict[str, str]]):
 
     @override
     def process(self, output):
-        # exit code 3: nonexistent set
-        # NOTE: will have to always specify 3 as success exit code when using this fact
-        if output[-1] == "EXIT CODE: 3":
-            return
-
         return {
             triplet[0]: triplet[-1]
-            for triplet in map(lambda line: line.partition("/"), output[:-1])
+            for triplet in map(lambda line: line.partition("/"), output)
         }
-
 
 class S6LiveStatus(FactBase[dict[str, bool]]):
     """Returns a dict of name -> status for each service in the live state.
@@ -91,7 +77,11 @@ class S6LiveStatus(FactBase[dict[str, bool]]):
     """
 
     @override
-    def requires_command(self):
+    def requires_command(self, livedir=None):
+        """
+        + livedir: the directory of the live state. If `None`, it will use the compiled-in default,
+        most likely `/run/s6-rc`.
+        """
         return "s6-rc"
 
     # @override
@@ -100,7 +90,9 @@ class S6LiveStatus(FactBase[dict[str, bool]]):
     #        return "couldn't find s6-frontend configuration"
 
     @override
-    def command(self):
+    def command(self, livedir=None):
+        if livedir:
+            return make_formatted_string_command("s6-rc -l {0} -c list", QuoteString(livedir))
         return "s6-rc -c list"
 
     @override

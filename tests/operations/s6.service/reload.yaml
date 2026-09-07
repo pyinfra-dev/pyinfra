@@ -4,6 +4,7 @@ kwargs:
   reloaded: true
 facts:
   s6.S6LiveStatus:
-    tipidee: true
+    livedir=None:
+      tipidee: true
 commands:
   - s6 process kill -s SIGHUP tipidee

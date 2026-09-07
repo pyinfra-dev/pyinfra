@@ -14,6 +14,7 @@ facts:
     path=/etc/init.d: false
     path=/etc/rc.d: false
   s6.S6LiveStatus:
-    tipidee: false
+    livedir=None:
+      tipidee: false
 commands:
   - s6 live start tipidee

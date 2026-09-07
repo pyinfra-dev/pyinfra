@@ -1,7 +1,6 @@
+# TODO remote command fails and exception raised, but should not halt execution of entire deploy
 arg:
-  repository: /etc/s6/repo
-command: "s6-rc-set-status -r /etc/s6/repo current; echo EXIT CODE: $?"
+  repodir: /etc/s6/repo
+command: "s6-rc-set-status -r /etc/s6/repo current"
 requires_command: s6-rc-set-status
-output: |
-  EXIT CODE: 3
 fact: null

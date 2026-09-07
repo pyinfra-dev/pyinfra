@@ -4,8 +4,9 @@ kwargs:
   running: true
 facts:
   s6.S6LiveStatus:
-    nftables: false
-    mysqld: false
-    tipidee: false
+    livedir=None:
+      nftables: false
+      mysqld: false
+      tipidee: false
 commands:
   - s6 live start nftables mysqld tipidee

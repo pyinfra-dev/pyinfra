@@ -4,6 +4,7 @@ kwargs:
   restarted: true
 facts:
   s6.S6LiveStatus:
+    livedir=None:
       nftables: true
       mysqld: false
       tipidee: true

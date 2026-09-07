@@ -11,13 +11,13 @@ facts:
   files.FileContents:
     path=/etc/s6.conf: null
   s6.S6RepositoryList:
-    repository=None:
+    repodir=None:
       - current
       - default
       - desktop
       - kiosk
   s6.S6SetStatus:
-    repository=None, the_set=default:
+    repodir=None, the_set=default:
       nftables: "active"
       mysqld: "active"
       tipidee: "active"

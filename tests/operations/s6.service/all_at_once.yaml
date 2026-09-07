@@ -13,20 +13,21 @@ facts:
   files.FileContents:
     path=/etc/s6.conf: null
   s6.S6RepositoryList:
-    repository=None:
+    repodir=None:
       - current
       - webserver
   s6.S6SetStatus:
-    repository=None, the_set=webserver:
+    repodir=None, the_set=webserver:
       nftables: always
       mysqld: active
       php-fpm: masked
       tipidee: usable
   s6.S6LiveStatus:
-    nftables: true
-    mysqld: false
-    php-fpm: false
-    tipidee: false
+    livedir=None:
+      nftables: true
+      mysqld: false
+      php-fpm: false
+      tipidee: false
 commands:
   - s6 live start mysqld php-fpm tipidee
   - s6 live restart nftables

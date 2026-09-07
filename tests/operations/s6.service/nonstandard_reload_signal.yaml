@@ -5,6 +5,7 @@ kwargs:
   reload_signal: SIGUSR1
 facts:
   s6.S6LiveStatus:
-    tipidee: true
+    livedir=None:
+      tipidee: true
 commands:
   - s6 process kill -s SIGUSR1 tipidee

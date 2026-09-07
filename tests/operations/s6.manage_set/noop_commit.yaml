@@ -8,7 +8,7 @@ facts:
   files.FileContents:
     path=/etc/s6.conf: null
   s6.S6RepositoryList:
-    repository=None:
+    repodir=None:
       - current
       - default
 commands: []
