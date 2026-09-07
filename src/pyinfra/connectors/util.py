@@ -8,6 +8,11 @@ from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterable
 
 import gevent
+import subprocess
+import threading
+import time
+
+from gevent.monkey import get_original
 
 from pyinfra import logger
 from pyinfra.api.output import echo, format_text
@@ -45,6 +50,14 @@ echo "$temp"
 """
 
 
+def _on_default_gevent_loop() -> bool:
+    # gevent's subprocess child watchers only exist on the default event loop.
+    # The default loop backs the main thread (including its greenlets); worker
+    # threads get their own loop, where gevent's Popen cannot fork processes,
+    # eg when embedded via `pyinfra.async_api`.
+    return bool(gevent.get_hub().loop.default)
+
+
 def run_local_process(
     command: str,
     stdin=None,
@@ -52,7 +65,19 @@ def run_local_process(
     print_output: bool = False,
     print_prefix: str = "",
 ) -> tuple[int, CommandOutput]:
-    process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+    if _on_default_gevent_loop():
+        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+    else:
+        # `get_original` bypasses any gevent monkey-patching of the subprocess
+        # module.
+        stdlib_popen = get_original("subprocess", "Popen")
+        process = stdlib_popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
 
     assert process.stdout is not None
     assert process.stderr is not None
@@ -161,6 +186,40 @@ def read_output_buffers(
     print_prefix: str,
 ) -> CommandOutput:
     output_queue: Queue[OutputLine] = Queue()
+
+    reader_kwargs = (
+        ("stdout", stdout_buffer, lambda line: f"{print_prefix}{line}"),
+        ("stderr", stderr_buffer, lambda line: f"{print_prefix}{format_text(line, 'red')}"),
+    )
+
+    # Off the default gevent loop (worker threads, see run_local_process)
+    # blocking reads would starve the other greenlet reader, so use plain
+    # threads and a stdlib queue instead (`get_original` bypasses any gevent
+    # monkey-patching).
+    if not _on_default_gevent_loop():
+        stdlib_queue = get_original("queue", "Queue")
+        output_queue = stdlib_queue()
+        readers = [
+            threading.Thread(
+                target=read_buffer,
+                args=(name, buffer, output_queue),
+                kwargs={"print_output": print_output, "print_func": print_func},
+                daemon=True,
+            )
+            for name, buffer, print_func in reader_kwargs
+        ]
+        for reader in readers:
+            reader.start()
+
+        deadline = None if timeout is None else time.monotonic() + timeout
+        for reader in readers:
+            remaining = None if deadline is None else max(0, deadline - time.monotonic())
+            reader.join(remaining)
+
+        if any(reader.is_alive() for reader in readers):
+            raise TimeoutError()
+
+        return CommandOutput(list(output_queue.queue))
 
     # Iterate through outputs to get an exit status and generate desired list
     # output, done in two greenlets so stdout isn't printed before stderr. Not
