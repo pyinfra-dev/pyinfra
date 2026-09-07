@@ -114,3 +114,59 @@ class TestAsyncPyinfra(TestCase):
         )
         assert result.returncode == 0, result.stderr
         assert "ASYNC_PYINFRA_OK" in result.stdout
+
+    def test_failing_operation_raises(self):
+        result = run_async_script(
+            """
+            import asyncio
+
+            from pyinfra.api import Config, Inventory, State
+            from pyinfra.api.exceptions import NestedOperationError
+            from pyinfra.async_api import AsyncPyinfra
+            from pyinfra.operations import server
+
+            async def main():
+                state = State(Inventory((["@local"], {})), Config())
+                host = state.inventory.get_host("@local")
+                async with AsyncPyinfra(state, host=host) as async_pyinfra:
+                    await async_pyinfra.connect()
+                    try:
+                        await async_pyinfra.run_operation(
+                            server.shell,
+                            commands=["exit 1"],
+                        )
+                    except NestedOperationError:
+                        print("ASYNC_PYINFRA_OK")
+                    else:
+                        raise AssertionError("expected NestedOperationError")
+
+            asyncio.run(main())
+            """
+        )
+        assert result.returncode == 0, result.stderr
+        assert "ASYNC_PYINFRA_OK" in result.stdout
+
+    def test_connect_disconnect_all_hosts(self):
+        result = run_async_script(
+            """
+            import asyncio
+
+            from pyinfra.api import Config, Inventory, State
+            from pyinfra.async_api import AsyncPyinfra
+
+            async def main():
+                state = State(Inventory((["@local"], {})), Config())
+                host = state.inventory.get_host("@local")
+                async with AsyncPyinfra(state) as async_pyinfra:
+                    await async_pyinfra.connect()
+                    assert host.connected
+                    assert host in state.active_hosts
+                    await async_pyinfra.disconnect()
+                    assert not host.connected
+                print("ASYNC_PYINFRA_OK")
+
+            asyncio.run(main())
+            """
+        )
+        assert result.returncode == 0, result.stderr
+        assert "ASYNC_PYINFRA_OK" in result.stdout

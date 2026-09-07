@@ -1,3 +1,7 @@
+import subprocess
+import sys
+from io import BytesIO
+from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -6,6 +10,7 @@ from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
     _ensure_askpass_set_for_host,
+    _read_output_buffers_threaded,
     make_unix_command,
     make_unix_command_for_host,
     remove_any_sudo_askpass_file,
@@ -457,3 +462,56 @@ class TestEnsureAskpassTempDir(TestCase):
             )
 
         assert "${TMPDIR:=/op/tmp}" in captured["command"]
+
+
+class TestThreadedReadOutputBuffers(TestCase):
+    def test_collects_output(self):
+        output = _read_output_buffers_threaded(
+            BytesIO(b"out1\nout2\n"),
+            BytesIO(b"err1\n"),
+            timeout=None,
+            print_output=False,
+            print_prefix="",
+        )
+        assert output.stdout_lines == ["out1", "out2"]
+        assert output.stderr_lines == ["err1"]
+
+    def test_timeout(self):
+        # In a gevent monkey-patched process (which pytest is, via
+        # pyinfra_testing -> pyinfra_cli), joining a thread blocked in a pipe
+        # read hangs inside gevent's patched lock, so run this in a clean
+        # subprocess - which is where the threaded path is meant to run anyway.
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                dedent(
+                    """
+                    import os
+                    from io import BytesIO
+
+                    from pyinfra.connectors.util import _read_output_buffers_threaded
+
+                    read_fd, write_fd = os.pipe()
+                    read_end = os.fdopen(read_fd, "rb", buffering=0)
+                    try:
+                        _read_output_buffers_threaded(
+                            read_end,
+                            BytesIO(b""),
+                            timeout=1,
+                            print_output=False,
+                            print_prefix="",
+                        )
+                    except TimeoutError:
+                        print("THREADED_TIMEOUT_OK")
+                    else:
+                        raise AssertionError("expected TimeoutError")
+                    """
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "THREADED_TIMEOUT_OK" in result.stdout
