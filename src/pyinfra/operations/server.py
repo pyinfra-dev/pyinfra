@@ -186,7 +186,9 @@ def shell(commands: str | list[str]):
     """
     Run raw shell code on server during a deploy. If the command would
     modify data that would be in a fact, the fact would not be updated
-    since facts are only run at the start of a deploy.
+    since facts are only run at the start of a deploy. Commands run via the
+    configured shell, which defaults to ``sh``; use the ``_shell_executable``
+    global argument when a command needs Bash or another shell.
 
     + commands: command or list of commands to execute on the remote server
 
@@ -197,6 +199,12 @@ def shell(commands: str | list[str]):
         server.shell(
             name="Run lxd auto init",
             commands=["lxd init --auto"],
+        )
+
+        server.shell(
+            name="Source a Bash environment before building",
+            commands=["source /opt/example/setupvars.sh && make"],
+            _shell_executable="bash",
         )
     """
 

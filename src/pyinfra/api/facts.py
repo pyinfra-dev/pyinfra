@@ -168,16 +168,17 @@ def _handle_fact_kwargs(state: State, host: Host, fact, args, kwargs):
         cast(dict[str, Any], host.current_op_global_arguments) or {}
     ).copy()
 
-    # Facts which don't require root should never inherit privilege escalation from the operation.
-    if not fact.requires_root:
-        for arg in _FACT_PRIVILEGE_ARGUMENTS:
-            ctx_kwargs.pop(arg, None)
-
     # Update with the input kwargs (overrides)
     ctx_kwargs.update(kwargs)
 
     # Pop executor kwargs, pass remaining
-    global_kwargs, _ = pop_global_arguments(state, host, cast(dict[str, Any], ctx_kwargs))
+    all_global_kwargs, _ = pop_global_arguments(state, host, cast(dict[str, Any], ctx_kwargs))
+
+    global_kwargs: dict[str, Any] = dict(all_global_kwargs)
+    # Facts which don't require root should never inherit privilege escalation from the operation.
+    if not fact.requires_root:
+        for arg in _FACT_PRIVILEGE_ARGUMENTS:
+            global_kwargs.pop(arg, None)
 
     fact_kwargs = {key: value for key, value in kwargs.items() if key not in global_kwargs}
 
