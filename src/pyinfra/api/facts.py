@@ -43,6 +43,22 @@ if TYPE_CHECKING:
 
 # Sentinel output line emitted when skip_unless_command binary is absent on the remote host.
 _MISSING_COMMAND_MARKER = "##PYINFRA_NOCMD##"
+_FACT_PRIVILEGE_ARGUMENTS = (
+    "_sudo",
+    "_sudo_user",
+    "_use_sudo_login",
+    "_sudo_password",
+    "_preserve_sudo_env",
+    "_su_user",
+    "_use_su_login",
+    "_preserve_su_env",
+    "_su_shell",
+    "_su_password",
+    "_doas",
+    "_doas_user",
+    "_dzdo",
+    "_dzdo_user",
+)
 
 SUDO_REGEX = r"^sudo: unknown user"
 SU_REGEXES = (
@@ -62,6 +78,8 @@ class FactBase(Generic[T]):
     shell_executable: str | None = None
 
     command: Callable[..., str | StringCommand]
+
+    requires_root: bool = True
 
     def requires_command(self, *args, **kwargs) -> str | None:
         """Return the binary name that must exist on the remote host for this fact to run.
@@ -141,7 +159,7 @@ def _make_command(command_attribute, host_args):
     return command_attribute
 
 
-def _handle_fact_kwargs(state: State, host: Host, cls, args, kwargs):
+def _handle_fact_kwargs(state: State, host: Host, fact, args, kwargs):
     args = args or []
     kwargs = kwargs or {}
 
@@ -149,6 +167,12 @@ def _handle_fact_kwargs(state: State, host: Host, cls, args, kwargs):
     ctx_kwargs: dict[str, Any] = (
         cast(dict[str, Any], host.current_op_global_arguments) or {}
     ).copy()
+
+    # Facts which don't require root should never inherit privilege escalation from the operation.
+    if not fact.requires_root:
+        for arg in _FACT_PRIVILEGE_ARGUMENTS:
+            ctx_kwargs.pop(arg, None)
+
     # Update with the input kwargs (overrides)
     ctx_kwargs.update(kwargs)
 
@@ -159,7 +183,7 @@ def _handle_fact_kwargs(state: State, host: Host, cls, args, kwargs):
 
     if args or fact_kwargs:
         # Merges args & kwargs into a single kwargs dictionary
-        fact_kwargs = getcallargs(cls().command, *args, **fact_kwargs)
+        fact_kwargs = getcallargs(fact.command, *args, **fact_kwargs)
 
     return fact_kwargs, global_kwargs
 
@@ -265,7 +289,7 @@ def _get_fact(
     fact = cls()
     name = fact.name
 
-    fact_kwargs, global_kwargs = _handle_fact_kwargs(state, host, cls, args, kwargs)
+    fact_kwargs, global_kwargs = _handle_fact_kwargs(state, host, fact, args, kwargs)
 
     kwargs_str = get_kwargs_str(fact_kwargs)
     logger.debug(

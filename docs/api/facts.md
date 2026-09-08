@@ -108,6 +108,28 @@ FactError
 
 All three are exported from `pyinfra.api`.
 
+## Fact privileges
+
+Facts inherit privilege escalation arguments from the operation that requested them by default.
+
+For facts that do not require root privileges, set `requires_root` to `False`:
+
+```python
+from pyinfra.api import FactBase
+
+class MyFact(FactBase):
+    requires_root = False
+
+    def command(self):
+        return "some-read-only-command"
+```
+
+When `requires_root` is `False`, privilege escalation arguments such as `_sudo`, `_su_user`, `_doas`, and `_dzdo` are not inherited from the enclosing operation.
+
+Explicit privilege escalation arguments passed directly to the fact still take precedence.
+
+`requires_root` defaults to `True`, preserving the existing behaviour.
+
 ## Importing & Using Facts
 
 Like operations, facts are imported from Python modules and executed by calling `Host.get_fact`. For example:
