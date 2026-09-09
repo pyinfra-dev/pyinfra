@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterable
 
 import gevent
+import os
+import signal
 import subprocess
 import threading
 import time
@@ -67,8 +69,18 @@ def run_local_process(
     print_output: bool = False,
     print_prefix: str = "",
 ) -> tuple[int, CommandOutput]:
+    popen_kwargs: dict[str, bool] = {}
+    if timeout is not None and os.name == "posix":
+        # Run the shell in its own session (its PGID is the child PID) so a
+        # timeout can kill the whole process group: kill() alone only reaches
+        # the shell, and shells that fork rather than exec (eg dash) leave a
+        # child holding the pipes open, which blocks the output readers
+        # forever. Scoped to timed commands as a new session detaches the
+        # child from the controlling terminal and terminal signal delivery.
+        popen_kwargs["start_new_session"] = True
+
     if _on_default_gevent_loop():
-        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE, **popen_kwargs)
     else:
         # `get_original` bypasses any gevent monkey-patching of the subprocess
         # module.
@@ -79,6 +91,7 @@ def run_local_process(
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
+            **popen_kwargs,
         )
 
     assert process.stdout is not None
@@ -99,11 +112,17 @@ def run_local_process(
             print_prefix=print_prefix,
         )
     except TimeoutError:
-        # A timed-out process may still be running with its pipes held open,
-        # which leaks the child and leaves the threaded readers (non-default
-        # gevent loop) blocked on read forever. Kill it so the readers see
-        # EOF and exit, then reap it and close the pipes.
-        process.kill()
+        # Kill the whole process group (see start_new_session above) so the
+        # output readers see EOF and exit, then reap and close the pipes.
+        # Without this a timeout leaks the child, its pipe fds and (off the
+        # default gevent loop) the daemon reader threads.
+        if popen_kwargs:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass  # already exited between the timeout and the kill
+        else:
+            process.kill()
         process.wait()
         process.stdout.close()
         process.stderr.close()
