@@ -90,7 +90,7 @@ class AsyncPyinfra:
             with ExitStack() as stack:
                 if self.host is not None:
                     self._enter_context(stack, self.host)
-                    self.host.connect()
+                    self.host.connect(raise_exceptions=True)
                     self.state.activate_host(self.host)
                 else:
                     self._enter_context(stack, None)

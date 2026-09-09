@@ -170,3 +170,35 @@ class TestAsyncPyinfra(TestCase):
         )
         assert result.returncode == 0, result.stderr
         assert "ASYNC_PYINFRA_OK" in result.stdout
+
+    def test_failed_connect_raises(self):
+        result = run_async_script(
+            """
+            import asyncio
+
+            from pyinfra.api import Config, Inventory, State
+            from pyinfra.api.exceptions import ConnectError
+            from pyinfra.async_api import AsyncPyinfra
+
+            async def main():
+                state = State(
+                    Inventory(([("127.0.0.1", {"ssh_port": 1, "ssh_connect_retries": 1})], {})),
+                    Config(),
+                )
+                host = state.inventory.get_host("127.0.0.1")
+                async with AsyncPyinfra(state, host=host) as async_pyinfra:
+                    try:
+                        await async_pyinfra.connect()
+                    except ConnectError:
+                        pass
+                    else:
+                        raise AssertionError("expected ConnectError")
+                    assert not host.connected
+                    assert host not in state.active_hosts
+                print("ASYNC_PYINFRA_OK")
+
+            asyncio.run(main())
+            """
+        )
+        assert result.returncode == 0, result.stderr
+        assert "ASYNC_PYINFRA_OK" in result.stdout
