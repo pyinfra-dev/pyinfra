@@ -90,13 +90,24 @@ def run_local_process(
         write_stdin(stdin, process.stdin)
     process.stdin.close()
 
-    combined_output = read_output_buffers(
-        process.stdout,
-        process.stderr,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=print_prefix,
-    )
+    try:
+        combined_output = read_output_buffers(
+            process.stdout,
+            process.stderr,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+        )
+    except TimeoutError:
+        # A timed-out process may still be running with its pipes held open,
+        # which leaks the child and leaves the threaded readers (non-default
+        # gevent loop) blocked on read forever. Kill it so the readers see
+        # EOF and exit, then reap it and close the pipes.
+        process.kill()
+        process.wait()
+        process.stdout.close()
+        process.stderr.close()
+        raise
 
     logger.debug("--> Waiting for exit status...")
     process.wait()

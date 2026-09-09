@@ -5,6 +5,8 @@ from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from pyinfra.api import Config, State, HiddenValue
 from pyinfra.connectors.util import (
     CommandOutput,
@@ -515,3 +517,93 @@ class TestThreadedReadOutputBuffers(TestCase):
         )
         assert result.returncode == 0, result.stderr
         assert "THREADED_TIMEOUT_OK" in result.stdout
+
+
+class TestRunLocalProcessTimeout(TestCase):
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"),
+        reason="Uses Unix commands (sleep, pgrep)",
+    )
+    def test_timeout_kills_process_and_reader_threads(self):
+        # Regression test: when a command outlives its timeout, the child must
+        # be killed and reaped and (off the default gevent loop) the daemon
+        # reader threads must exit. Previously the TimeoutError propagated
+        # leaving the child running and the readers blocked on the pipes, so
+        # repeated timeouts leaked processes, fds and threads. Runs in a clean
+        # subprocess because pytest is gevent monkey-patched (see above).
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                dedent(
+                    """
+                    import os
+                    import subprocess
+                    import threading
+                    import time
+
+                    from pyinfra.connectors.util import run_local_process
+
+
+                    def check_no_children(where):
+                        children = subprocess.run(
+                            ["pgrep", "-P", str(os.getpid())],
+                            capture_output=True,
+                            text=True,
+                        ).stdout.split()
+                        assert not children, f"{where}: leaked child processes: {children}"
+
+
+                    def check_no_extra_threads(where):
+                        deadline = time.monotonic() + 10
+                        while time.monotonic() < deadline:
+                            extra = [
+                                t.name
+                                for t in threading.enumerate()
+                                if t is not threading.main_thread()
+                            ]
+                            if not extra:
+                                return
+                            time.sleep(0.05)
+                        raise AssertionError(f"{where}: reader threads still alive: {extra}")
+
+
+                    # Threaded path: a worker thread gets a non-default gevent
+                    # loop, so run_local_process uses the threaded readers.
+                    errors = []
+
+                    def run_on_worker():
+                        try:
+                            run_local_process("sleep 60", timeout=1)
+                        except TimeoutError:
+                            pass
+                        else:
+                            errors.append("expected TimeoutError")
+
+                    worker = threading.Thread(target=run_on_worker)
+                    worker.start()
+                    worker.join(30)
+                    assert not worker.is_alive(), "run_local_process did not time out"
+                    assert not errors, errors
+                    check_no_children("threaded path")
+                    check_no_extra_threads("threaded path")
+
+                    # gevent path: the main thread has the default loop.
+                    try:
+                        run_local_process("sleep 60", timeout=1)
+                    except TimeoutError:
+                        pass
+                    else:
+                        raise AssertionError("expected TimeoutError")
+                    check_no_children("gevent path")
+
+                    print("TIMEOUT_CLEANUP_OK")
+                    """
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "TIMEOUT_CLEANUP_OK" in result.stdout
