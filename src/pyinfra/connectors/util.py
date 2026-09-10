@@ -79,7 +79,8 @@ def run_local_process(
         # child from the controlling terminal and terminal signal delivery.
         popen_kwargs["start_new_session"] = True
 
-    if _on_default_gevent_loop():
+    on_default_loop = _on_default_gevent_loop()
+    if on_default_loop:
         process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE, **popen_kwargs)
     else:
         # `get_original` bypasses any gevent monkey-patching of the subprocess
@@ -129,7 +130,14 @@ def run_local_process(
         raise
 
     logger.debug("--> Waiting for exit status...")
-    process.wait()
+    if on_default_loop:
+        process.wait()
+    else:
+        # Poll cooperatively rather than blocking in wait(): this runs on the
+        # single worker thread of an embedded deploy, where a blocking wait
+        # would freeze the gevent hub and serialise greenlets for other hosts.
+        while process.poll() is None:
+            gevent.sleep(0.05)
     logger.debug("--> Command exit status: %i", process.returncode)
 
     # Close any open file descriptors
@@ -239,12 +247,13 @@ def _read_output_buffers_threaded(
         reader.start()
 
     deadline = None if timeout is None else time.monotonic() + timeout
-    for reader in readers:
-        remaining = None if deadline is None else max(0, deadline - time.monotonic())
-        reader.join(remaining)
-
-    if any(reader.is_alive() for reader in readers):
-        raise TimeoutError()
+    while any(reader.is_alive() for reader in readers):
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError()
+        # Poll cooperatively rather than blocking in join(): on the single
+        # worker thread of an embedded (asyncio) deploy a blocking join would
+        # freeze the gevent hub and serialise greenlets running other hosts.
+        gevent.sleep(0.05)
 
     return CommandOutput(list(output_queue.queue))
 

@@ -5,6 +5,8 @@ from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
+import pytest
+
 
 def run_async_script(script: str) -> subprocess.CompletedProcess:
     # The pytest process itself is gevent monkey-patched (pyinfra_testing
@@ -195,6 +197,63 @@ class TestAsyncPyinfra(TestCase):
                         raise AssertionError("expected ConnectError")
                     assert not host.connected
                     assert host not in state.active_hosts
+                print("ASYNC_PYINFRA_OK")
+
+            asyncio.run(main())
+            """
+        )
+        assert result.returncode == 0, result.stderr
+        assert "ASYNC_PYINFRA_OK" in result.stdout
+
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"),
+        reason="Uses Unix commands (sleep)",
+    )
+    def test_cross_host_concurrency(self):
+        # Regression test: on the worker thread run_local_process must wait
+        # cooperatively (gevent.sleep) rather than blocking in join()/wait(),
+        # which froze the gevent hub and serialised hosts despite PARALLEL=2.
+        result = run_async_script(
+            """
+            import asyncio
+            import time
+
+            from pyinfra.api import Config, Inventory, State
+            from pyinfra.async_api import AsyncPyinfra
+            from pyinfra.connectors.util import run_local_process
+
+            async def main():
+                state = State(
+                    Inventory((["host1", "host2"], {})),
+                    Config(PARALLEL=2),
+                )
+
+                active = 0
+                max_active = 0
+
+                def make_connect(host):
+                    def connect(*args, **kwargs):
+                        nonlocal active, max_active
+                        active += 1
+                        max_active = max(max_active, active)
+                        run_local_process("sleep 2")
+                        active -= 1
+                        host.connected = True
+
+                    return connect
+
+                host1 = state.inventory.get_host("host1")
+                host2 = state.inventory.get_host("host2")
+                host1.connect = make_connect(host1)
+                host2.connect = make_connect(host2)
+
+                started = time.monotonic()
+                async with AsyncPyinfra(state) as async_pyinfra:
+                    await async_pyinfra.connect()
+                elapsed = time.monotonic() - started
+
+                assert max_active == 2, f"hosts ran sequentially: max_active={max_active}"
+                assert elapsed < 3.5, f"hosts serialised: elapsed={elapsed}"
                 print("ASYNC_PYINFRA_OK")
 
             asyncio.run(main())
