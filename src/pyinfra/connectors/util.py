@@ -104,6 +104,11 @@ def run_local_process(
         write_stdin(stdin, process.stdin)
     process.stdin.close()
 
+    # The timeout covers the whole command lifetime: reading its output and
+    # waiting for it to exit - a command can close its pipes and keep running
+    # (eg `exec >/dev/null 2>&1; sleep 5`), which must still time out.
+    deadline = None if timeout is None else time.monotonic() + timeout
+
     try:
         combined_output = read_output_buffers(
             process.stdout,
@@ -112,6 +117,21 @@ def run_local_process(
             print_output=print_output,
             print_prefix=print_prefix,
         )
+
+        logger.debug("--> Waiting for exit status...")
+        remaining = None if deadline is None else max(0, deadline - time.monotonic())
+        if on_default_loop:
+            with gevent.Timeout(remaining, TimeoutError):
+                process.wait()
+        else:
+            # Poll cooperatively rather than blocking in wait(): this runs on
+            # the single worker thread of an embedded deploy, where a blocking
+            # wait would freeze the gevent hub and serialise other hosts.
+            while process.poll() is None:
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise TimeoutError()
+                gevent.sleep(0.05)
+        logger.debug("--> Command exit status: %i", process.returncode)
     except TimeoutError:
         # Kill the whole process group (see start_new_session above) so the
         # output readers see EOF and exit, then reap and close the pipes.
@@ -128,17 +148,6 @@ def run_local_process(
         process.stdout.close()
         process.stderr.close()
         raise
-
-    logger.debug("--> Waiting for exit status...")
-    if on_default_loop:
-        process.wait()
-    else:
-        # Poll cooperatively rather than blocking in wait(): this runs on the
-        # single worker thread of an embedded deploy, where a blocking wait
-        # would freeze the gevent hub and serialise greenlets for other hosts.
-        while process.poll() is None:
-            gevent.sleep(0.05)
-    logger.debug("--> Command exit status: %i", process.returncode)
 
     # Close any open file descriptors
     process.stdout.close()

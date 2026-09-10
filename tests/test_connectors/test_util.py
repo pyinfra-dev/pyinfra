@@ -607,3 +607,71 @@ class TestRunLocalProcessTimeout(TestCase):
         )
         assert result.returncode == 0, result.stderr
         assert "TIMEOUT_CLEANUP_OK" in result.stdout
+
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"),
+        reason="Uses Unix commands (sleep, pgrep)",
+    )
+    def test_timeout_covers_process_lifetime_after_pipes_close(self):
+        # Regression test: a command that closes its pipes and keeps running
+        # (`exec >/dev/null 2>&1; sleep 30`) must still time out - the readers
+        # finish on EOF immediately and previously the final wait had no
+        # timeout, so the call returned only when the command exited.
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                dedent(
+                    """
+                    import os
+                    import subprocess
+                    import threading
+                    import time
+
+                    from pyinfra.connectors.util import run_local_process
+
+
+                    def run_and_check(where):
+                        started = time.monotonic()
+                        try:
+                            run_local_process("exec >/dev/null 2>&1; sleep 30", timeout=1)
+                        except TimeoutError:
+                            pass
+                        else:
+                            raise AssertionError(f"{where}: expected TimeoutError")
+                        elapsed = time.monotonic() - started
+                        assert elapsed < 10, f"{where}: timed out after {elapsed}s"
+                        children = subprocess.run(
+                            ["pgrep", "-P", str(os.getpid())],
+                            capture_output=True,
+                            text=True,
+                        ).stdout.split()
+                        assert not children, f"{where}: leaked child processes: {children}"
+
+
+                    errors = []
+
+                    def run_on_worker():
+                        try:
+                            run_and_check("threaded path")
+                        except AssertionError as e:
+                            errors.append(str(e))
+
+                    worker = threading.Thread(target=run_on_worker)
+                    worker.start()
+                    worker.join(30)
+                    assert not worker.is_alive(), "run_local_process did not time out"
+                    assert not errors, errors
+
+                    run_and_check("gevent path")
+
+                    print("LIFETIME_TIMEOUT_OK")
+                    """
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=90,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "LIFETIME_TIMEOUT_OK" in result.stdout
