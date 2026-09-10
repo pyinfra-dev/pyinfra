@@ -1,267 +1,62 @@
 """
-Gather the information provided by ``opkg`` on OpenWrt systems:
-    + ``opkg`` configuration
-    + feeds configuration
-    + list of installed packages
-    + list of packages with available upgrades
+.. warning::
+    This module is deprecated and will be removed in future version of pyinfra.
+    Use [openwrt.opkg](../operations/openwrt.md) or [openwrt.packages](../operations/openwrt.md)
+    instead.
 
-See https://openwrt.org/docs/guide-user/additional-software/opkg
-
-**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
-
-.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
+Gather the information provided by
+[opkg](https://openwrt.org/docs/guide-user/additional-software/opkg) on OpenWrt systems:
 """
 
-import re
-from typing import NamedTuple
-
-from typing_extensions import override
-
-from pyinfra import logger
-from pyinfra.api import FactBase
-from pyinfra.facts.util.packaging import parse_packages
-
-# TODO - change NamedTuple to dataclass Opkgbut need to figure out how to get json serialization
-#        to work without changing core code
+from pyinfra.facts.openwrt.opkg import (
+    OpkgConf as OpenWrtConf,
+    OpkgFeeds as OpenWrtFeeds,
+    OpkgInstallableArchitectures as OpenWrtInstallableArchitectures,
+    OpkgPackages as OpenWrtPackages,
+    OpkgUpgradeablePackages as OpenWrtUpgradeablePackages,
+)
 
 
-class OpkgPkgUpgradeInfo(NamedTuple):
-    installed: str
-    available: str
-
-
-class OpkgConfInfo(NamedTuple):
-    paths: dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
-    list_dir: str  # where package lists are stored, e.g. /var/opkg-lists
-    options: dict[str, str | bool]  # mapping from option to value, e.g. {'check_signature': True}
-    arch_cfg: dict[str, int]  # priorities for architectures
-
-
-class OpkgFeedInfo(NamedTuple):
-    url: str  # url for the feed
-    fmt: str  # format of the feed, e.g. "src/gz"
-    kind: str  # whether it comes from the 'distribution' or is 'custom'
-
-
-class OpkgConf(FactBase):
+class OpkgConf(OpenWrtConf):
     """
-    Returns a NamedTuple with the current configuration:
-
-    .. code:: python
-
-        ConfInfo(
-            paths = {
-                "root": "/",
-                "ram": "/tmp",
-            },
-            list_dir = "/opt/opkg-lists",
-            options = {
-                "overlay_root": "/overlay"
-            },
-            arch_cfg = {
-                "all": 1,
-                "noarch": 1,
-                "i386_pentium": 10
-            }
-        )
-
+    See [openwrt.opkg.OpkgConf](../facts/openwrt.md#openwrt-opkg.OpkgConf) for details.
     """
 
-    @override
-    def requires_command(self) -> str:
-        return "opkg"
-
-    regex = re.compile(
-        r"""
-                       ^(?:\s*)
-                       (?:
-                       (?:arch\s+(?P<arch>\w+)\s+(?P<priority>\d+))|
-                       (?:dest\s+(?P<dest>\w+)\s+(?P<dest_path>[\w/\-]+))|
-                       (?:lists_dir\s+(?P<lists_dir>ext)\s+(?P<list_path>[\w/\-]+))|
-                       (?:option\s+(?P<option>\w+)(?:\s+(?P<value>[^#]+))?)
-                       )?
-                       (?:\s*\#.*)?
-                       $
-                       """,
-        re.X,
-    )
-
-    @override
-    @staticmethod
-    def default():
-        return OpkgConfInfo({}, "", {}, {})
-
-    @override
-    def command(self) -> str:
-        return "cat /etc/opkg.conf"
-
-    @override
-    def process(self, output):
-        dest, lists_dir, options, arch_cfg = {}, "", {}, {}
-        for line in output:
-            match = self.regex.match(line)
-
-            if match is None:
-                logger.warning(f"Opkg: could not parse opkg.conf line '{line}'")
-            elif match.group("arch") is not None:
-                arch_cfg[match.group("arch")] = int(match.group("priority"))
-            elif match.group("dest") is not None:
-                dest[match.group("dest")] = match.group("dest_path")
-            elif match.group("lists_dir") is not None:
-                lists_dir = match.group("list_path")
-            elif match.group("option") is not None:
-                options[match.group("option")] = match.group("value") or True
-
-        return OpkgConfInfo(dest, lists_dir, options, arch_cfg)
+    is_deprecated = True
+    deprecated_for = "openwrt.opkg.OpkgConf"
 
 
-class OpkgFeeds(FactBase):
+class OpkgFeeds(OpenWrtFeeds):
     """
-    Returns a dictionary containing the information for the distribution-provided and
-    custom opkg feeds:
-
-    .. code:: python
-
-        {
-         'openwrt_base': FeedInfo(url='http://downloads ... /i386_pentium/base', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_core': FeedInfo(url='http://downloads ... /x86/geode/packages', fmt='src/gz', kind='distribution'), # noqa: E501
-         'openwrt_luci': FeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'),# noqa: E501
-         'openwrt_packages': FeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'),# noqa: E501
-         'openwrt_routing': FeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'),# noqa: E501
-         'openwrt_telephony': FeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution') # noqa: E501
-        }
+    See [openwrt.opkg.OpkgFeeds](../facts/openwrt.md#openwrt-opkg.OpkgFeeds) for details.
     """
 
-    regex = re.compile(
-        r"^(CUSTOM)|(?:\s*(?P<fmt>[\w/]+)\s+(?P<name>[\w]+)\s+(?P<url>[\w./:]+))?(?:\s*#.*)?$"
-    )
-    default = dict
-
-    @override
-    def requires_command(self) -> str:
-        return "opkg"
-
-    @override
-    def command(self) -> str:
-        return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
-
-    @override
-    def process(self, output):
-        feeds, kind = {}, "distribution"
-        for line in output:
-            match = self.regex.match(line)
-
-            if match is None:
-                logger.warning(f"Opkg: could not parse /etc/opkg/*feeds.conf line '{line}'")
-            elif match.group(0) == "CUSTOM":
-                kind = "custom"
-            elif match.group("name") is not None:
-                feeds[match.group("name")] = OpkgFeedInfo(
-                    match.group("url"), match.group("fmt"), kind
-                )
-
-        return feeds
+    is_deprecated = True
+    deprecated_for = "openwrt.opkg.OpkgFeeds"
 
 
-class OpkgInstallableArchitectures(FactBase):
+class OpkgInstallableArchitectures(OpenWrtInstallableArchitectures):
     """
-    Returns a dictionary containing the currently installable architectures for this system along
-    with their priority:
-
-    .. code:: python
-
-       {
-         'all': 1,
-         'i386_pentium': 10,
-         'noarch': 1
-        }
+    See [openwrt.opkg.OpkgInstallableArchitectures](../facts/openwrt.md#openwrt-opkg.OpkgInstallableArchitectures) for details.
     """
 
-    regex = re.compile(r"^(?:\s*arch\s+(?P<arch>[\w]+)\s+(?P<prio>\d+))?(\s*#.*)?$")
-    default = dict
-
-    @override
-    def requires_command(self) -> str:
-        return "opkg"
-
-    @override
-    def command(self) -> str:
-        return "opkg print-architecture"
-
-    @override
-    def process(self, output):
-        arch_list = {}
-        for line in output:
-            match = self.regex.match(line)
-
-            if match is None:
-                logger.warning(f"could not parse arch line '{line}'")
-            elif match.group("arch") is not None:
-                arch_list[match.group("arch")] = int(match.group("prio"))
-
-        return arch_list
+    is_deprecated = True
+    deprecated_for = "openwrt.opkg.OpkgInstallableArchitectures"
 
 
-class OpkgPackages(FactBase):
+class OpkgPackages(OpenWrtPackages):
     """
-    Returns a dict of installed opkg packages:
-
-    .. code:: python
-
-       {
-         'package_name': ['version'],
-         ...
-       }
+    See [openwrt.opkg.OpkgPackages](../facts/openwrt.md#openwrt-opkg.OpkgPackages) for details.
     """
 
-    regex = r"^([a-zA-Z0-9][\w\-\.]*)\s-\s([\w\-\.]+)"
-    default = dict
-
-    @override
-    def requires_command(self) -> str:
-        return "opkg"
-
-    @override
-    def command(self) -> str:
-        return "opkg list-installed"
-
-    @override
-    def process(self, output):
-        return parse_packages(self.regex, sorted(output))
+    is_deprecated = True
+    deprecated_for = "openwrt.opkg.OpkgPackages"
 
 
-class OpkgUpgradeablePackages(FactBase):
+class OpkgUpgradeablePackages(OpenWrtUpgradeablePackages):
     """
-    Returns a dict of installed and upgradable opkg packages:
-
-    .. code:: python
-
-        {
-          'package_name': (installed='1.2.3', available='1.2.8')
-          ...
-        }
+    See [openwrt.opkg.OpkgUpgradeablePackages](../facts/openwrt.md#openwrt-opkg.OpkgUpgradeablePackages) for details.
     """
 
-    regex = re.compile(r"^([a-zA-Z0-9][\w\-.]*)\s-\s([\w\-.]+)\s-\s([\w\-.]+)")
-    default = dict
-    use_default_on_error = True
-
-    @override
-    def requires_command(self) -> str:
-        return "opkg"
-
-    @override
-    def command(self) -> str:
-        return "opkg list-upgradable"  # yes, really spelled that way
-
-    @override
-    def process(self, output):
-        result = {}
-        for line in output:
-            match = self.regex.match(line)
-            if match and len(match.groups()) == 3:
-                result[match.group(1)] = OpkgPkgUpgradeInfo(match.group(2), match.group(3))
-            else:
-                logger.warning(f"Opkg: could not list-upgradable line '{line}'")
-
-        return result
+    is_deprecated = True
+    deprecated_for = "openwrt.opkg.OpkgUpgradeablePackages"

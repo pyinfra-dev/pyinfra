@@ -1,92 +1,37 @@
 """
-Manage packages on OpenWrt using opkg
-    + ``update`` - update local copy of package information
-    + ``packages`` -  install and remove packages
+.. warning::
+    This module is deprecated and will be removed in future version of pyinfra.
+    Use [openwrt.opkg](../operations/openwrt.md) or
+    [openwrt.packages](../operations/openwrt.md) instead.
 
-See https://openwrt.org/docs/guide-user/additional-software/opkg
-
-OpenWrt recommends against upgrading all packages  thus there is no ``opkg.upgrade`` function
-
-**Note:** as of OpenWrt Release `2025.12`_, OpenWrt uses ``apk``.
-
-.. _2025.12: https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk
+Manage packages on OpenWrt using ``opkg``.
 """
 
-from pyinfra import host
-from pyinfra.api import StringCommand, operation
-from pyinfra.facts.opkg import OpkgPackages
-from pyinfra.operations.util.packaging import ensure_packages
-
-EQUALS = "="
+from pyinfra.api import operation
+from pyinfra.operations.openwrt.opkg import packages as openwrt_packages, update as openwrt_update
 
 
-@operation(is_idempotent=False)
-def update():
-    """
-    Update the local opkg information.
-    """
-
-    yield StringCommand("opkg update")
-
-
-_update = update
-
-
-@operation()
+@operation(is_deprecated=True, deprecated_for="openwrt.opkg.packages or openwrt.packages")
 def packages(
-    packages: str | list[str] = "",
+    packages: str | list[str] | None = None,
     present: bool = True,
     latest: bool = False,
     update: bool = True,
 ):
     """
-    Add/remove/update opkg packages.
-
-    + packages: package or list of packages to that must/must not be present
-    + present: whether the package(s) should be installed (default True) or removed
-    + latest: whether to attempt to upgrade the specified package(s) (default False)
-    + update: run ``opkg update`` before installing packages (default True)
-
-    Not Supported:
-        Opkg does not support version pinning, i.e. ``<pkg>=<version>`` is not allowed
-        and will cause an exception.
-
-    **Examples:**
-
-    .. code:: python
-
-        from pyinfra.operations import opkg
-        # Ensure packages are installed (will not force package upgrade)
-        opkg.packages(['asterisk', 'vim'], name="Install Asterisk and Vim")
-
-        # Install the latest versions of packages (always check)
-        opkg.packages(
-            'vim',
-            latest=True,
-            name="Ensure we have the latest version of Vim"
-        )
+    Install, update or remove the specified packages.
+    See [openwrt.opkg.packages](../operations/openwrt.md) for details.
     """
-    if str(packages) == "" or (
-        isinstance(packages, list) and (len(packages) < 1 or all(len(p) < 1 for p in packages))
-    ):
-        host.noop("empty or invalid package list provided to opkg.packages")
-        return
-
-    pkg_list = packages if isinstance(packages, list) else [packages]
-    have_equals = ",".join([pkg.split(EQUALS)[0] for pkg in pkg_list if EQUALS in pkg])
-    if len(have_equals) > 0:
-        raise ValueError(f"opkg does not support version pinning but found for: '{have_equals}'")
-
-    if update:
-        yield from _update._inner()
-
-    yield from ensure_packages(
-        host,
-        pkg_list,
-        host.get_fact(OpkgPackages),
-        present,
-        install_command="opkg install",
-        upgrade_command="opkg upgrade",
-        uninstall_command="opkg remove",
-        latest=latest,
+    yield from openwrt_packages._inner(  # noqa: SLF001
+        packages=packages, present=present, latest=latest, update=update
     )
+
+
+@operation(is_idempotent=False, deprecated_for="openwrt.opkg.update or openwrt.update")
+def update():
+    """
+    Update the local package information.
+    See [openwrt.opkg.update](../operations/openwrt.md) for details.
+    """
+
+    yield from openwrt_update._inner()  # noqa: SLF001

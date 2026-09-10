@@ -1,0 +1,303 @@
+"""
+Gather the information provided by ``opkg`` on OpenWrt systems:
+    + ``opkg`` configuration
+    + feeds configuration
+    + list of installed packages
+    + list of packages with available upgrades
+
+See https://openwrt.org/docs/guide-user/additional-software/opkg
+
+.. note::
+    as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+    OpenWrt uses [apk](../facts/apk.md)
+
+note: this does _not_ show up in the online documentation; the file header in __init__.py does
+and thus the note above is repeated in each fact.
+"""
+
+from __future__ import annotations
+
+import re
+from typing import NamedTuple
+
+from typing_extensions import override
+
+from pyinfra import logger
+from pyinfra.api import FactBase
+from pyinfra.facts.util.packaging import PackageVersionDict, parse_packages
+
+OpkgArchInstallInfo = dict[str, int]
+
+
+class OpkgPkgUpgradeInfo(NamedTuple):
+    installed: str
+    available: str
+
+
+OpkgPkgUpgradeMap = dict[str, OpkgPkgUpgradeInfo]
+
+
+class OpkgConfInfo(NamedTuple):
+    paths: dict[str, str]  # list of paths, e.g. {'root':'/', 'ram':'/tmp}
+    list_dir: str  # where package lists are stored, e.g. /var/opkg-lists
+    options: dict[str, str | bool]  # mapping from option to value, e.g. {'check_signature': True}
+    arch_cfg: dict[str, int]  # priorities for architectures
+
+
+class OpkgFeedInfo(NamedTuple):
+    url: str  # url for the feed
+    fmt: str  # format of the feed, e.g. "src/gz"
+    kind: str  # whether it comes from the 'distribution' or is 'custom'
+
+
+OpkgFeedMap = dict[str, OpkgFeedInfo]
+
+
+class OpkgConf(FactBase[OpkgConfInfo]):
+    """
+    Returns a ``NamedTuple`` with the current ``opkg`` configuration:
+
+    .. code:: python
+
+        OpkgConfInfo(
+            paths = {
+                "root": "/",
+                "ram": "/tmp",
+            },
+            list_dir = "/opt/opkg-lists",
+            options = {
+                "overlay_root": "/overlay"
+            },
+            arch_cfg = {
+                "all": 1,
+                "noarch": 1,
+                "i386_pentium": 10
+            }
+        )
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
+    """
+
+    @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    regex = re.compile(
+        r"""
+                       ^(?:\s*)
+                       (?:
+                       (?:arch\s+(?P<arch>\w+)\s+(?P<priority>\d+))|
+                       (?:dest\s+(?P<dest>\w+)\s+(?P<dest_path>[\w/\-]+))|
+                       (?:lists_dir\s+(?P<lists_dir>ext)\s+(?P<list_path>[\w/\-]+))|
+                       (?:option\s+(?P<option>\w+)(?:\s+(?P<value>[^#]+))?)
+                       )?
+                       (?:\s*\#.*)?
+                       $
+                       """,
+        re.VERBOSE,
+    )
+
+    @override
+    @staticmethod
+    def default() -> OpkgConfInfo:
+        return OpkgConfInfo({}, "", {}, {})
+
+    @override
+    def command(self) -> str:
+        return "cat /etc/opkg.conf"
+
+    @override
+    def process(self, output: list[str]) -> OpkgConfInfo:
+        dest, lists_dir, options, arch_cfg = {}, "", {}, {}
+        for line in output:
+            match = self.regex.match(line)
+
+            if match is None:
+                logger.warning(f"Opkg: could not parse opkg.conf line '{line}'")
+            elif match.group("arch") is not None:
+                arch_cfg[match.group("arch")] = int(match.group("priority"))
+            elif match.group("dest") is not None:
+                dest[match.group("dest")] = match.group("dest_path")
+            elif match.group("lists_dir") is not None:
+                lists_dir = match.group("list_path")
+            elif match.group("option") is not None:
+                options[match.group("option")] = match.group("value") or True
+
+        return OpkgConfInfo(dest, lists_dir, options, arch_cfg)
+
+
+class OpkgFeeds(FactBase[OpkgFeedMap]):
+    """
+    Returns a dictionary containing the information for the distribution-provided and
+    custom `opkg` feeds:
+
+    .. code:: python
+
+        {
+         'openwrt_base': OpkgFeedInfo(url='http://downloads ... /i386_pentium/base', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_core': OpkgFeedInfo(url='http://downloads ... /x86/geode/packages', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_luci': OpkgFeedInfo(url='http://downloads ... /i386_pentium/luci', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_packages': OpkgFeedInfo(url='http://downloads ... /i386_pentium/packages', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_routing': OpkgFeedInfo(url='http://downloads ... /i386_pentium/routing', fmt='src/gz', kind='distribution'), # noqa: E501
+         'openwrt_telephony': OpkgFeedInfo(url='http://downloads ... /i386_pentium/telephony', fmt='src/gz', kind='distribution') # noqa: E501
+        }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
+    """
+
+    regex = re.compile(
+        r"^(CUSTOM)|(?:\s*(?P<fmt>[\w/]+)\s+(?P<name>[\w]+)\s+(?P<url>[\w./:]+))?(?:\s*#.*)?$"
+    )
+
+    @override
+    @staticmethod
+    def default() -> OpkgFeedMap:
+        return OpkgFeedMap({})
+
+    @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
+    def command(self) -> str:
+        return "cat /etc/opkg/distfeeds.conf; echo CUSTOM; cat /etc/opkg/customfeeds.conf"
+
+    @override
+    def process(self, output: list[str]) -> OpkgFeedMap:
+        feeds, kind = {}, "distribution"
+        for line in output:
+            match = self.regex.match(line)
+
+            if match is None:
+                logger.warning(f"Opkg: could not parse /etc/opkg/*feeds.conf line '{line}'")
+            elif match.group(0) == "CUSTOM":
+                kind = "custom"
+            elif match.group("name") is not None:
+                feeds[match.group("name")] = OpkgFeedInfo(
+                    match.group("url"), match.group("fmt"), kind
+                )
+
+        return feeds
+
+
+class OpkgInstallableArchitectures(FactBase[OpkgArchInstallInfo]):
+    """
+    Returns a dictionary containing the currently installable architectures for this system along
+    with their priority:
+
+    .. code:: python
+
+       {
+         'all': 1,
+         'i386_pentium': 10,
+         'noarch': 1
+        }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
+    """
+
+    regex = re.compile(r"^(?:\s*arch\s+(?P<arch>[\w]+)\s+(?P<prio>\d+))?(\s*#.*)?$")
+    default = dict
+
+    @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
+    def command(self) -> str:
+        return "opkg print-architecture"
+
+    @override
+    def process(self, output: list[str]) -> OpkgArchInstallInfo:
+        arch_list = {}
+        for line in output:
+            match = self.regex.match(line)
+
+            if match is None:
+                logger.warning(f"could not parse arch line '{line}'")
+            elif match.group("arch") is not None:
+                arch_list[match.group("arch")] = int(match.group("prio"))
+
+        return arch_list
+
+
+class OpkgPackages(FactBase[PackageVersionDict]):
+    """
+    Returns a dictionary of installed `opkg` packages:
+
+    .. code:: python
+
+       {
+         'package_name': ['version'],
+         ...
+       }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
+    """
+
+    regex = r"^([a-zA-Z0-9][\w\-\.]*)\s-\s([\w\-\.]+)"
+    default = dict
+
+    @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
+    def command(self) -> str:
+        return "opkg list-installed"
+
+    @override
+    def process(self, output: list[str]) -> PackageVersionDict:
+        return parse_packages(self.regex, sorted(output))
+
+
+class OpkgUpgradeablePackages(FactBase[OpkgPkgUpgradeMap]):
+    """
+    Returns a dict of installed and upgradable `opkg` packages:
+
+    .. code:: python
+
+        {
+          'package_name': (installed='1.2.3', available='1.2.8')
+          ...
+        }
+
+    .. note::
+        as of OpenWrt [Release 25.12](https://openwrt.org/releases/25.12/notes-25.12.0#switch_package_manager_from_opkg_to_apk)
+        OpenWrt uses [apk](../facts/apk.md)
+    """
+
+    regex = re.compile(r"^([a-zA-Z0-9][\w\-.]*)\s-\s([\w\-.]+)\s-\s([\w\-.]+)")
+
+    @override
+    @staticmethod
+    def default() -> OpkgPkgUpgradeMap:
+        return OpkgPkgUpgradeMap({})
+
+    @override
+    def requires_command(self) -> str:
+        return "opkg"
+
+    @override
+    def command(self) -> str:
+        return "opkg list-upgradable"  # yes, really spelled that way
+
+    @override
+    def process(self, output: list[str]) -> OpkgPkgUpgradeMap:
+        result = {}
+        for line in output:
+            match = self.regex.match(line)
+            if match and len(match.groups()) == 3:
+                result[match.group(1)] = OpkgPkgUpgradeInfo(match.group(2), match.group(3))
+            else:
+                logger.warning(f"Opkg: could not list-upgradable line '{line}'")
+
+        return result
