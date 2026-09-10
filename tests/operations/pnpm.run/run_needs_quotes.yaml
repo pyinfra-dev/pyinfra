@@ -1,0 +1,7 @@
+args:
+  - "build; rm -rf /"
+  - "/app dir; rm -rf /"
+kwargs:
+  args: ["--out", "/tmp/dist dir; reboot"]
+commands:
+  - "cd '/app dir; rm -rf /' && pnpm run 'build; rm -rf /' --out '/tmp/dist dir; reboot'"

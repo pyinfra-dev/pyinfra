@@ -1810,6 +1810,7 @@ def directory(
             path="/web",
             user="myweb",
             group="myweb",
+            mode="750",
         )
 
         # Multiple directories

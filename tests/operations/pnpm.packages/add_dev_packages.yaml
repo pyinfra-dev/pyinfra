@@ -1,0 +1,10 @@
+args:
+  - ["typescript@5.4.5"]
+kwargs:
+  directory: /opt/app
+  dev: true
+facts:
+  pnpm.PnpmPackages:
+    directory=/opt/app: {}
+commands:
+  - cd /opt/app && pnpm add --save-dev typescript@5.4.5

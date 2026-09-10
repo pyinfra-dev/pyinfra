@@ -193,7 +193,7 @@ ssh_key = "~/.ssh/some_key"
 ssh_key_password = "password for key"
 ```
 
-The [Connectors Index](connectors/index.md) contains full details of which data keys are available in each connector.
+The [Connectors Index](connectors.md) contains full details of which data keys are available in each connector.
 
 ## Global Arguments with Data
 

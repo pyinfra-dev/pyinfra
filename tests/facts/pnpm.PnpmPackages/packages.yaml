@@ -1,0 +1,24 @@
+command: pnpm --global list --depth=0 --json
+requires_command: pnpm
+output: |
+  [
+    {
+      "path": "/root/.local/share/pnpm/global/5",
+      "private": true,
+      "dependencies": {
+        "@types/node": {
+          "from": "@types/node",
+          "version": "22.10.2",
+          "path": "/root/.local/share/pnpm/global/5/node_modules/@types/node"
+        },
+        "typescript": {
+          "from": "typescript",
+          "version": "5.7.2",
+          "path": "/root/.local/share/pnpm/global/5/node_modules/typescript"
+        }
+      }
+    }
+  ]
+fact:
+  "@types/node": ["22.10.2"]
+  typescript: ["5.7.2"]

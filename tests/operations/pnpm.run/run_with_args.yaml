@@ -1,0 +1,7 @@
+args:
+  - build
+  - /opt/app
+kwargs:
+  args: ["--mode", "production"]
+commands:
+  - cd /opt/app && pnpm run build --mode production
