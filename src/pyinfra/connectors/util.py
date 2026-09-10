@@ -8,6 +8,13 @@ from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterable
 
 import gevent
+import os
+import signal
+import subprocess
+import threading
+import time
+
+from gevent.monkey import get_original
 
 from pyinfra import logger
 from pyinfra.api.output import echo, format_text
@@ -45,6 +52,16 @@ echo "$temp"
 """
 
 
+def _on_default_gevent_loop() -> bool:
+    # gevent's subprocess child watchers only exist on the default event loop.
+    # The default loop backs the main thread (including its greenlets); worker
+    # threads get their own loop, where gevent's Popen cannot fork processes,
+    # eg when embedded via `pyinfra.async_api`. Note in a monkey-patched
+    # process worker threads share the main hub, so this returns True there -
+    # but patching and asyncio conflict anyway, so that is unsupported.
+    return bool(gevent.get_hub().loop.default)
+
+
 def run_local_process(
     command: str,
     stdin=None,
@@ -52,7 +69,31 @@ def run_local_process(
     print_output: bool = False,
     print_prefix: str = "",
 ) -> tuple[int, CommandOutput]:
-    process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+    popen_kwargs: dict[str, bool] = {}
+    if timeout is not None and os.name == "posix":
+        # Run the shell in its own session (its PGID is the child PID) so a
+        # timeout can kill the whole process group: kill() alone only reaches
+        # the shell, and shells that fork rather than exec (eg dash) leave a
+        # child holding the pipes open, which blocks the output readers
+        # forever. Scoped to timed commands as a new session detaches the
+        # child from the controlling terminal and terminal signal delivery.
+        popen_kwargs["start_new_session"] = True
+
+    on_default_loop = _on_default_gevent_loop()
+    if on_default_loop:
+        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE, **popen_kwargs)
+    else:
+        # `get_original` bypasses any gevent monkey-patching of the subprocess
+        # module.
+        stdlib_popen = get_original("subprocess", "Popen")
+        process = stdlib_popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            **popen_kwargs,
+        )
 
     assert process.stdout is not None
     assert process.stderr is not None
@@ -63,17 +104,50 @@ def run_local_process(
         write_stdin(stdin, process.stdin)
     process.stdin.close()
 
-    combined_output = read_output_buffers(
-        process.stdout,
-        process.stderr,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=print_prefix,
-    )
+    # The timeout covers the whole command lifetime: reading its output and
+    # waiting for it to exit - a command can close its pipes and keep running
+    # (eg `exec >/dev/null 2>&1; sleep 5`), which must still time out.
+    deadline = None if timeout is None else time.monotonic() + timeout
 
-    logger.debug("--> Waiting for exit status...")
-    process.wait()
-    logger.debug("--> Command exit status: %i", process.returncode)
+    try:
+        combined_output = read_output_buffers(
+            process.stdout,
+            process.stderr,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+        )
+
+        logger.debug("--> Waiting for exit status...")
+        remaining = None if deadline is None else max(0, deadline - time.monotonic())
+        if on_default_loop:
+            with gevent.Timeout(remaining, TimeoutError):
+                process.wait()
+        else:
+            # Poll cooperatively rather than blocking in wait(): this runs on
+            # the single worker thread of an embedded deploy, where a blocking
+            # wait would freeze the gevent hub and serialise other hosts.
+            while process.poll() is None:
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise TimeoutError()
+                gevent.sleep(0.05)
+        logger.debug("--> Command exit status: %i", process.returncode)
+    except TimeoutError:
+        # Kill the whole process group (see start_new_session above) so the
+        # output readers see EOF and exit, then reap and close the pipes.
+        # Without this a timeout leaks the child, its pipe fds and (off the
+        # default gevent loop) the daemon reader threads.
+        if popen_kwargs:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass  # already exited between the timeout and the kill
+        else:
+            process.kill()
+        process.wait()
+        process.stdout.close()
+        process.stderr.close()
+        raise
 
     # Close any open file descriptors
     process.stdout.close()
@@ -153,6 +227,46 @@ def read_buffer(
             _print(line)
 
 
+def _read_output_buffers_threaded(
+    stdout_buffer: Iterable,
+    stderr_buffer: Iterable,
+    timeout: int | None,
+    print_output: bool,
+    print_prefix: str,
+) -> CommandOutput:
+    # Off the default gevent loop (worker threads, see run_local_process)
+    # blocking reads would starve the other greenlet reader, so use plain
+    # threads and a stdlib queue instead (`get_original` bypasses any gevent
+    # monkey-patching).
+    output_queue: Queue[OutputLine] = get_original("queue", "Queue")()
+
+    readers = [
+        threading.Thread(
+            target=read_buffer,
+            args=(name, buffer, output_queue),
+            kwargs={"print_output": print_output, "print_func": print_func},
+            daemon=True,
+        )
+        for name, buffer, print_func in (
+            ("stdout", stdout_buffer, lambda line: f"{print_prefix}{line}"),
+            ("stderr", stderr_buffer, lambda line: f"{print_prefix}{format_text(line, 'red')}"),
+        )
+    ]
+    for reader in readers:
+        reader.start()
+
+    deadline = None if timeout is None else time.monotonic() + timeout
+    while any(reader.is_alive() for reader in readers):
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError()
+        # Poll cooperatively rather than blocking in join(): on the single
+        # worker thread of an embedded (asyncio) deploy a blocking join would
+        # freeze the gevent hub and serialise greenlets running other hosts.
+        gevent.sleep(0.05)
+
+    return CommandOutput(list(output_queue.queue))
+
+
 def read_output_buffers(
     stdout_buffer: Iterable,
     stderr_buffer: Iterable,
@@ -161,6 +275,15 @@ def read_output_buffers(
     print_prefix: str,
 ) -> CommandOutput:
     output_queue: Queue[OutputLine] = Queue()
+
+    if not _on_default_gevent_loop():
+        return _read_output_buffers_threaded(
+            stdout_buffer,
+            stderr_buffer,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+        )
 
     # Iterate through outputs to get an exit status and generate desired list
     # output, done in two greenlets so stdout isn't printed before stderr. Not

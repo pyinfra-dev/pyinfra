@@ -105,3 +105,46 @@ run_ops(state)
 ```
 
 The available hooks are defined on `BaseStateCallback` — subclass it and override only the ones you care about. The current set covers host connect/disconnect, operation start/end, and per-host operation start/success/error/retry. See [`pyinfra.api.state.BaseStateCallback`](reference.md) for the full signature list.
+
+
+## Embedding in asyncio applications
+
+pyinfra's core is synchronous (gevent-based), which conflicts with an asyncio event loop running in the same thread. `pyinfra.async_api.AsyncPyinfra` runs all pyinfra work on a dedicated worker thread, so deploys can be driven from async applications (web frameworks, GUIs, and similar):
+
+```python
+import asyncio
+
+from pyinfra.api import Config, Inventory, State
+from pyinfra.async_api import AsyncPyinfra
+from pyinfra.facts.server import Os
+from pyinfra.operations import server
+
+inventory = Inventory((["@local"], {}))
+state = State(inventory=inventory, config=Config())
+host = inventory.get_host("@local")
+
+
+async def main():
+    async with AsyncPyinfra(state, host=host) as async_pyinfra:
+        await async_pyinfra.connect()
+
+        op_meta = await async_pyinfra.run_operation(
+            server.shell,
+            commands=["echo hello"],
+        )
+        print(op_meta.did_change())
+
+        print(await async_pyinfra.get_fact(Os))
+
+        await async_pyinfra.disconnect()
+
+
+asyncio.run(main())
+```
+
+A few things worth knowing:
+
+- **All calls are serialised onto one worker thread.** `State` and the gevent hub are bound to the thread that uses them, so `AsyncPyinfra` funnels every call through a single-thread executor. Concurrent `asyncio.gather` calls are safe, they just execute one after another.
+- **The process is not gevent monkey-patched.** Patching would break the host asyncio loop. pyinfra's internal cross-host concurrency (`run_ops` and friends) is unaffected when used inside the worker.
+- **The `host` is optional per call.** Pass a default host to `AsyncPyinfra(state, host=host)` or per call with `host=...` on `run_operation` / `get_fact`. Without a host, `connect()` / `disconnect()` apply to the whole inventory via `connect_all` / `disconnect_all`.
+- **`run_operation` executes immediately.** The operation runs on the target host as soon as the call is awaited, and the returned `OperationMeta` is complete (`did_change()`, `did_succeed()`, output, and so on are available right away).
