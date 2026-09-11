@@ -412,13 +412,13 @@ class Host:
         """
         self._check_state()
 
+        # TODO: consider whether this should be here!
+        remove_any_sudo_askpass_file(self)
+
         # Disconnect is an optional function for connectors if needed
         disconnect_func = getattr(self.connector, "disconnect", None)
         if disconnect_func:
             disconnect_func()
-
-        # TODO: consider whether this should be here!
-        remove_any_sudo_askpass_file(self)
 
         self.state.trigger_callbacks("host_disconnect", self)
         self.connected = False

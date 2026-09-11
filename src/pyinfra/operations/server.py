@@ -5,11 +5,11 @@ Linux/BSD.
 
 from __future__ import annotations
 
+import asyncio
 import os
 from io import StringIO
 from itertools import filterfalse, tee
 from pathlib import Path
-from time import sleep
 from typing import TYPE_CHECKING
 
 from pyinfra import host, logger, state
@@ -62,7 +62,7 @@ if TYPE_CHECKING:
 
 
 @operation(is_idempotent=False)
-def reboot(delay=10, interval=1, reboot_timeout=300):
+async def reboot(delay=10, interval=1, reboot_timeout=300):
     """
     Reboot the server and wait for reconnection.
 
@@ -97,15 +97,15 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
     yield FunctionCommand(capture_uptime, (), {})
 
     # Detach the reboot from the SSH session so the channel closes immediately.
-    # When the reboot is run inline, paramiko blocks on `recv_exit_status` for
-    # the remote process - that never returns when the connection goes through
-    # a still-alive ProxyCommand (#1708).
+    # When the reboot is run inline, waiting for the exit status of the remote
+    # process never returns when the connection goes through a still-alive
+    # ProxyCommand (#1708).
     yield StringCommand(
         "( sleep 1 && reboot ) </dev/null >/dev/null 2>&1 &",
     )
 
-    def wait_and_reconnect(state, host):  # pragma: no cover
-        sleep(delay)
+    async def wait_and_reconnect(state, host):  # pragma: no cover
+        await asyncio.sleep(delay)
         max_retries = round(reboot_timeout / interval)
 
         # The remote askpass files (if any) live on a host that has just
@@ -143,7 +143,7 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
                     (f"Server did not reboot in time (reboot_timeout={reboot_timeout}s)"),
                 )
 
-            sleep(interval)
+            await asyncio.sleep(interval)
             retries += 1
 
     yield FunctionCommand(wait_and_reconnect, (), {})

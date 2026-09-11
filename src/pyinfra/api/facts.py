@@ -16,8 +16,7 @@ from inspect import getcallargs
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 from collections.abc import Callable
 
-import gevent
-from paramiko import SSHException
+from asyncssh import Error as SSHError
 from typing_extensions import override
 
 from pyinfra import logger
@@ -35,6 +34,7 @@ from pyinfra.connectors.util import CommandOutput
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
+from .concurrency import run_for_hosts
 from .arguments import CONNECTOR_ARGUMENT_KEYS
 from .state import StateStage
 
@@ -164,26 +164,21 @@ def _handle_fact_kwargs(state: State, host: Host, cls, args, kwargs):
     return fact_kwargs, global_kwargs
 
 
-def get_facts(state, *args, **kwargs):
-    def get_host_fact(host, *args, **kwargs):
+async def get_facts(state, *args, **kwargs):
+    def get_host_fact(host):
         with ctx_host.use(host):
             return get_fact(state, host, *args, **kwargs)
 
+    hosts = list(state.inventory.get_active_hosts())
+
     with ctx_state.use(state):
-        greenlet_to_host = {
-            state.pool.spawn(get_host_fact, host, *args, **kwargs): host
-            for host in state.inventory.get_active_hosts()
-        }
-
-    results = {}
-
-    with progress_spinner(greenlet_to_host.values()) as progress:
-        for greenlet in gevent.iwait(greenlet_to_host.keys()):
-            host = greenlet_to_host[greenlet]
-            results[host] = greenlet.get()
-            progress(host)
-
-    return results
+        with progress_spinner(hosts) as progress:
+            return await run_for_hosts(
+                hosts,
+                get_host_fact,
+                parallel=state.config.PARALLEL,
+                progress=progress,
+            )
 
 
 def get_fact(
@@ -325,7 +320,7 @@ def _get_fact(
             print_input=state.print_fact_input,
             **executor_kwargs,
         )
-    except (TimeoutError, OSError, SSHException) as e:
+    except (TimeoutError, OSError, SSHError) as e:
         log_host_command_error(
             host,
             e,
