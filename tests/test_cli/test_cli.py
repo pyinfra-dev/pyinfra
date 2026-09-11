@@ -1,3 +1,4 @@
+import asyncio
 import json
 from os import path
 from unittest import TestCase
@@ -5,8 +6,12 @@ from unittest import TestCase
 from pyinfra.api import Host, Inventory
 from pyinfra_cli.cli import _apply_inventory_exclude, _apply_inventory_limit, _main
 
-from ..paramiko_util import PatchSSHTestCase
+from ..fake_ssh import PatchSSHTestCase
 from .util import run_cli
+
+
+def run_main(**kwargs):
+    return asyncio.run(_main(**kwargs))
 
 
 class TestCliEagerFlags(TestCase):
@@ -337,7 +342,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
 
     def test_deploy_operation_direct(self):
         with self.assertRaises(SystemExit) as e:
-            _main(
+            run_main(
                 inventory=path.join("tests", "test_deploy", "inventories", "inventory.py"),
                 operations=["server.shell", "echo hi"],
                 chdir=None,

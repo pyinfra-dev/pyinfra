@@ -5,12 +5,12 @@ from pyinfra.api.operations import run_ops
 from pyinfra.api.state import StateStage
 from pyinfra.operations import server
 
-from ..paramiko_util import PatchSSHTestCase
+from ..fake_ssh import AsyncPatchSSHTestCase
 from ..util import make_inventory
 
 
-class TestDeploysApi(PatchSSHTestCase):
-    def test_deploy(self):
+class TestDeploysApi(AsyncPatchSSHTestCase):
+    async def test_deploy(self):
         inventory = make_inventory()
         somehost = inventory.get_host("somehost")
         anotherhost = inventory.get_host("anotherhost")
@@ -24,14 +24,14 @@ class TestDeploysApi(PatchSSHTestCase):
         state.print_fact_info = True
         state.print_noop_info = True
 
-        connect_all(state)
+        await connect_all(state)
 
         @deploy()
         def test_deploy(state=None, host=None):
             server.shell(commands=["echo first command"])
             server.shell(commands=["echo second command"])
 
-        add_deploy(state, test_deploy)
+        await add_deploy(state, test_deploy)
 
         op_order = state.get_op_order()
 
@@ -39,7 +39,7 @@ class TestDeploysApi(PatchSSHTestCase):
         assert len(op_order) == 2
 
         # Ensure run ops works
-        run_ops(state)
+        await run_ops(state)
 
         first_op_hash = op_order[0]
         assert state.op_meta[first_op_hash].names == {"test_deploy | server.shell"}
@@ -69,9 +69,9 @@ class TestDeploysApi(PatchSSHTestCase):
         assert state.results[somehost].error_ops == 0
         assert state.results[anotherhost].error_ops == 0
 
-        disconnect_all(state)
+        await disconnect_all(state)
 
-    def test_nested_deploy(self):
+    async def test_nested_deploy(self):
         inventory = make_inventory()
         somehost = inventory.get_host("somehost")
 
@@ -84,7 +84,7 @@ class TestDeploysApi(PatchSSHTestCase):
         state.print_fact_info = True
         state.print_noop_info = True
 
-        connect_all(state)
+        await connect_all(state)
 
         @deploy()
         def test_nested_deploy():
@@ -96,7 +96,7 @@ class TestDeploysApi(PatchSSHTestCase):
             test_nested_deploy()
             server.shell(commands=["echo second command"])
 
-        add_deploy(state, test_deploy)
+        await add_deploy(state, test_deploy)
 
         op_order = state.get_op_order()
 
@@ -104,7 +104,7 @@ class TestDeploysApi(PatchSSHTestCase):
         assert len(op_order) == 3
 
         # Ensure run ops works
-        run_ops(state)
+        await run_ops(state)
 
         first_op_hash = op_order[0]
         assert state.op_meta[first_op_hash].names == {"test_deploy | server.shell"}

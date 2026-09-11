@@ -6,27 +6,28 @@ import pytest
 
 from pyinfra.connectors.ssh_util import get_private_key, load_key_with_certificate
 
-CERT_KEY_TYPE = "ssh-ed25519-cert-v01@openssh.com"
+CERT_KEY_TYPE = b"ssh-ed25519-cert-v01@openssh.com"
 
 
 def test_load_key_with_certificate_attaches_adjacent_cert(ssh_ca_keypair):
-    key = load_key_with_certificate(str(ssh_ca_keypair["user_key"]))
+    key, certificate = load_key_with_certificate(str(ssh_ca_keypair["user_key"]))
 
-    assert key.public_blob is not None
-    assert key.public_blob.key_type == CERT_KEY_TYPE
+    assert key.get_algorithm() == "ssh-ed25519"
+    assert certificate is not None
+    assert certificate.algorithm == CERT_KEY_TYPE
 
 
 def test_load_key_with_certificate_honours_explicit_cert(ssh_ca_keypair, tmp_path):
     other_cert = tmp_path / "elsewhere-cert.pub"
     other_cert.write_bytes(ssh_ca_keypair["user_cert"].read_bytes())
 
-    key = load_key_with_certificate(
+    _, certificate = load_key_with_certificate(
         str(ssh_ca_keypair["user_key"]),
         certificate_filename=str(other_cert),
     )
 
-    assert key.public_blob is not None
-    assert key.public_blob.key_type == CERT_KEY_TYPE
+    assert certificate is not None
+    assert certificate.algorithm == CERT_KEY_TYPE
 
 
 def test_load_key_with_certificate_no_cert_returns_bare_key(ssh_ca_keypair, tmp_path):
@@ -34,9 +35,9 @@ def test_load_key_with_certificate_no_cert_returns_bare_key(ssh_ca_keypair, tmp_
     bare = tmp_path / "bare_ed25519"
     bare.write_bytes(ssh_ca_keypair["user_key"].read_bytes())
 
-    key = load_key_with_certificate(str(bare))
+    _, certificate = load_key_with_certificate(str(bare))
 
-    assert key.public_blob is None
+    assert certificate is None
 
 
 def test_get_private_key_expands_tilde_for_cert(ssh_ca_keypair, monkeypatch):
@@ -49,14 +50,14 @@ def test_get_private_key_expands_tilde_for_cert(ssh_ca_keypair, monkeypatch):
 
     state = mock.MagicMock(cwd=None, private_keys={})
 
-    key = get_private_key(
+    _, certificate = get_private_key(
         state,
         key_filename="~/" + ssh_ca_keypair["user_key"].name,
         key_password="",
     )
 
-    assert key.public_blob is not None
-    assert key.public_blob.key_type == CERT_KEY_TYPE
+    assert certificate is not None
+    assert certificate.algorithm == CERT_KEY_TYPE
 
 
 def test_load_key_with_certificate_missing_key_raises(tmp_path):
