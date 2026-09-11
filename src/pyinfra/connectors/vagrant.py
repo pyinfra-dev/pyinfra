@@ -1,11 +1,11 @@
+import asyncio
 import json
 from pathlib import Path
-from queue import Queue
-from threading import Thread
 
 from typing_extensions import override
 
 from pyinfra import local, logger
+from pyinfra.api.concurrency import async_def, run_sync
 from pyinfra.api.exceptions import InventoryError
 from pyinfra.api.util import memoize
 from pyinfra.progress import progress_spinner
@@ -13,17 +13,16 @@ from pyinfra.progress import progress_spinner
 from .base import BaseConnector
 
 
-def _get_vagrant_ssh_config(queue, progress, target):
+def _get_vagrant_ssh_config(progress, target):
     logger.debug("Loading SSH config for %s", target)
 
-    queue.put(
-        local.shell(
-            f"vagrant ssh-config {target}",
-            splitlines=True,
-        ),
+    output = local.shell(
+        f"vagrant ssh-config {target}",
+        splitlines=True,
     )
 
     progress(target)
+    return output
 
 
 @memoize
@@ -50,30 +49,21 @@ def get_vagrant_config(limit=None):
         if limit is not None and target not in limit:
             continue
 
-        # For each running container - fetch it's SSH config in a thread - this
+        # For each running container - fetch it's SSH config concurrently - this
         # is because Vagrant *really* slow to run each command.
         if type_ == "state" and data == "running":
             targets.append(target)
 
-    threads = []
-    config_queue = Queue()  # type: ignore
+    async def get_all_ssh_configs(progress):
+        return await asyncio.gather(
+            *(async_def(_get_vagrant_ssh_config, progress, target) for target in targets),
+        )
 
     with progress_spinner(targets) as progress:
-        for target in targets:
-            thread = Thread(
-                target=_get_vagrant_ssh_config,
-                args=(config_queue, progress, target),
-            )
-            threads.append(thread)
-            thread.start()
-
-    for thread in threads:
-        thread.join()
-
-    queue_items = list(config_queue.queue)
+        outputs = run_sync(get_all_ssh_configs(progress))
 
     lines = []
-    for output in queue_items:
+    for output in outputs:
         lines.extend([ln.strip() for ln in output])
 
     return lines
