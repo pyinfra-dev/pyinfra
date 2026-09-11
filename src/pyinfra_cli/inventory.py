@@ -8,7 +8,7 @@ from collections.abc import Callable
 
 from pyinfra import logger
 from pyinfra.api.inventory import Inventory
-from pyinfra.connectors.sshuserclient.client import get_ssh_config
+import asyncssh
 from pyinfra.context import ctx_inventory
 
 from .exceptions import CliError
@@ -157,16 +157,19 @@ def _get_ssh_alias(maybe_host: str) -> str | None:
     logger.debug('Checking if "%s" is an SSH alias', maybe_host)
 
     # Note this does not cover the case where `host.data.ssh_config_file` is used
-    ssh_config = get_ssh_config()
-
-    if ssh_config is None:
-        logger.debug("Could not load SSH config")
+    try:
+        options = asyncssh.SSHClientConnectionOptions(
+            host=maybe_host,
+            client_keys=[],
+            agent_path=None,
+        )
+    except Exception as e:
+        logger.debug("Could not load SSH config: %s", e)
         return None
 
-    options = ssh_config.lookup(maybe_host)
-    alias = options.get("hostname")
+    alias = options.host
 
-    if alias is None or maybe_host == alias:
+    if not alias or maybe_host == alias:
         return None
 
     return alias
