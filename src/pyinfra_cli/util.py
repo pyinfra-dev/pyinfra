@@ -10,9 +10,9 @@ from types import CodeType, FunctionType, ModuleType
 from collections.abc import Callable
 
 import click
-import gevent
 
 from pyinfra import logger, state
+from pyinfra.api.concurrency import run_for_hosts
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
@@ -214,35 +214,30 @@ def try_import_module_attribute(path, prefix=None, raise_for_none=True):
     raise CliError(f"No such attribute in module {possible_modules[0]}: {attr_name}")
 
 
-def _parallel_load_hosts(state: State, callback: Callable, name: str):
+async def _parallel_load_hosts(state: State, callback: Callable, name: str):
     def load_file(local_host):
-        try:
-            with ctx_config.use(state.config.copy()):
-                with ctx_host.use(local_host):
-                    callback()
-                    logger.info(
-                        f"{local_host.print_prefix}{click.style('Ready:', 'green')} {click.style(name, bold=True)}",
-                    )
-        except Exception as e:
-            return e
+        with ctx_config.use(state.config.copy()):
+            with ctx_host.use(local_host):
+                callback()
+                logger.info(
+                    f"{local_host.print_prefix}{click.style('Ready:', 'green')} {click.style(name, bold=True)}",
+                )
 
-    greenlet_to_host = {
-        state.pool.spawn(load_file, host): host for host in state.inventory.get_active_hosts()
-    }
+    hosts = list(state.inventory.get_active_hosts())
 
-    with progress_spinner(greenlet_to_host.values()) as progress:
-        for greenlet in gevent.iwait(greenlet_to_host.keys()):
-            host = greenlet_to_host[greenlet]
-            result = greenlet.get()
-            if isinstance(result, Exception):
-                raise result
-            progress(host)
+    with progress_spinner(hosts) as progress:
+        await run_for_hosts(
+            hosts,
+            load_file,
+            parallel=state.config.PARALLEL,
+            progress=progress,
+        )
 
 
-def load_deploy_file(state: State, filename):
+async def load_deploy_file(state: State, filename):
     state.current_deploy_filename = filename
-    _parallel_load_hosts(state, lambda: exec_file(filename), filename)
+    await _parallel_load_hosts(state, lambda: exec_file(filename), filename)
 
 
-def load_func(state: State, op_func, *args, **kwargs):
-    _parallel_load_hosts(state, lambda: op_func(*args, **kwargs), op_func.__name__)
+async def load_func(state: State, op_func, *args, **kwargs):
+    await _parallel_load_hosts(state, lambda: op_func(*args, **kwargs), op_func.__name__)
