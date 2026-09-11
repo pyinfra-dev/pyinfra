@@ -1,9 +1,8 @@
 from os import path
 
-from pyinfra import inventory
 from pyinfra.context import ctx_inventory, ctx_state
 
-from ..paramiko_util import PatchSSHTestCase
+from ..fake_ssh import PatchSSHTestCase
 from .util import run_cli
 
 
@@ -21,6 +20,9 @@ class TestCliInventory(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stdout
 
+        assert ctx_state.get() is None
+        assert ctx_inventory.get() is None
+        inventory = result.inventory
         assert inventory.data.get("hello") == "world"
         assert "leftover_data" in inventory.group_data
         assert inventory.group_data["leftover_data"].get("still_parsed") == "never_used"
@@ -40,6 +42,7 @@ class TestCliInventory(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stdout
 
+        inventory = result.inventory
         assert inventory.data.get("hello") == "world"
         assert "leftover_data" in inventory.group_data
         assert inventory.group_data["leftover_data"].get("still_parsed") == "never_used"
@@ -64,7 +67,7 @@ class TestCliInventory(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stdout
 
-        leaked = inventory.group_data["imports_leak"]
+        leaked = result.inventory.group_data["imports_leak"]
         assert "os" not in leaked
         assert "inventory" not in leaked
         assert "path_join" not in leaked
@@ -85,6 +88,7 @@ class TestCliInventory(PatchSSHTestCase):
         )
         assert result.exit_code == 0, result.stdout
 
+        inventory = result.inventory
         assert "hello" not in inventory.data
         assert "leftover_data" in inventory.group_data
         assert inventory.group_data["leftover_data"].get("still_parsed") == "never_used"
@@ -107,7 +111,7 @@ class TestCliInventory(PatchSSHTestCase):
             'Ignoring variable "_hosts" in inventory file since it starts with a leading underscore'
             in result.stderr
         )
-        assert inventory.hosts == {}
+        assert result.inventory.hosts == {}
 
     def test_only_supports_list_and_tuples(self):
         ctx_state.reset()
@@ -126,7 +130,7 @@ class TestCliInventory(PatchSSHTestCase):
         assert 'Ignoring variable "generator_hosts" in inventory file' in result.stderr, (
             result.stdout
         )
-        assert inventory.hosts == {}
+        assert result.inventory.hosts == {}
 
     def test_host_groups_may_only_contain_strings_or_tuples(self):
         ctx_state.reset()
@@ -141,4 +145,4 @@ class TestCliInventory(PatchSSHTestCase):
 
         assert result.exit_code == 0, result.stdout
         assert 'Ignoring host group "issue_662"' in result.stderr, result.stdout
-        assert inventory.hosts == {}
+        assert result.inventory.hosts == {}

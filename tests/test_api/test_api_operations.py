@@ -1,8 +1,8 @@
 from collections import defaultdict
 from os import path
 from unittest import TestCase
-from unittest.mock import mock_open, patch
-import time
+from unittest.mock import AsyncMock, mock_open, patch
+import asyncio
 
 import pyinfra
 from pyinfra.api import (
@@ -15,6 +15,7 @@ from pyinfra.api import (
     State,
     StringCommand,
 )
+from pyinfra.api.concurrency import async_def
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.operation import OperationMeta, add_op
@@ -24,7 +25,7 @@ from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.operations import files, python, server
 
-from ..paramiko_util import FakeBuffer, FakeChannel, PatchSSHTestCase
+from ..fake_ssh import AsyncPatchSSHTestCase
 from ..util import make_inventory
 
 
@@ -38,8 +39,8 @@ class TestOperationMeta(TestCase):
         assert repr(op_meta) == "OperationMeta(executed=False, maybeChange=True, hash=hash)"
 
 
-class TestOperationsApi(PatchSSHTestCase):
-    def test_op(self):
+class TestOperationsApi(AsyncPatchSSHTestCase):
+    async def test_op(self):
         inventory = make_inventory()
         somehost = inventory.get_host("somehost")
         anotherhost = inventory.get_host("anotherhost")
@@ -54,9 +55,9 @@ class TestOperationsApi(PatchSSHTestCase):
         state.print_fact_info = True
         state.print_noop_info = True
 
-        connect_all(state)
+        await connect_all(state)
 
-        add_op(
+        await add_op(
             state,
             files.file,
             "/var/log/pyinfra.log",
@@ -97,7 +98,7 @@ class TestOperationsApi(PatchSSHTestCase):
         assert anotherhost_global_arguments["_ignore_errors"] is True
 
         # Ensure run ops works
-        run_ops(state)
+        await run_ops(state)
 
         # Ensure the commands
         assert state.ops[somehost][first_op_hash].operation_meta._commands == [
@@ -116,9 +117,9 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.results[somehost].error_ops == 0
         assert state.results[anotherhost].error_ops == 0
 
-        disconnect_all(state)
+        await disconnect_all(state)
 
-    def test_op_per_host_data_no_hash_collision(self):
+    async def test_op_per_host_data_no_hash_collision(self):
         inventory = make_inventory(
             hosts=(
                 ("somehost", {"users": ["user-1"]}),
@@ -135,7 +136,7 @@ class TestOperationsApi(PatchSSHTestCase):
         # arguments - these must not collapse into a single operation hash (#1370).
         for host in inventory:
             for user in host.data.users:
-                add_op(
+                await add_op(
                     state,
                     server.shell,
                     commands=[f"echo {user}"],
@@ -158,13 +159,13 @@ class TestOperationsApi(PatchSSHTestCase):
         }
 
         # Identical operations on both hosts must still share a single hash
-        add_op(state, server.shell, commands=["echo same"], host=[somehost, anotherhost])
+        await add_op(state, server.shell, commands=["echo same"], host=[somehost, anotherhost])
 
         shared_op_hash = state.get_op_order()[-1]
         assert shared_op_hash in state.ops[somehost]
         assert shared_op_hash in state.ops[anotherhost]
 
-    def test_op_per_host_args_no_name_no_hash_collision(self):
+    async def test_op_per_host_args_no_name_no_hash_collision(self):
         inventory = make_inventory(
             hosts=(
                 ("somehost", {"users": ["user-1"]}),
@@ -181,7 +182,7 @@ class TestOperationsApi(PatchSSHTestCase):
         # name - these must not collapse into a single operation hash (#1370).
         for host in inventory:
             for user in host.data.users:
-                add_op(state, server.shell, commands=[f"echo {user}"], host=host)
+                await add_op(state, server.shell, commands=[f"echo {user}"], host=host)
 
         op_order = state.get_op_order()
         assert len(op_order) == 2
@@ -196,7 +197,7 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.op_meta[somehost_op_hash].args == ["commands=['echo user-1']"]
         assert state.op_meta[anotherhost_op_hash].args == ["commands=['echo user-5']"]
 
-    def test_op_per_host_data_different_execution_kwargs(self):
+    async def test_op_per_host_data_different_execution_kwargs(self):
         inventory = make_inventory()
         somehost = inventory.get_host("somehost")
         anotherhost = inventory.get_host("anotherhost")
@@ -206,7 +207,7 @@ class TestOperationsApi(PatchSSHTestCase):
 
         # Distinct operations at the same position with different execution kwargs
         # must not raise - they only shared a hash by accident before #1370.
-        add_op(
+        await add_op(
             state,
             server.shell,
             commands=["echo somehost"],
@@ -214,7 +215,7 @@ class TestOperationsApi(PatchSSHTestCase):
             _parallel=1,
             host=somehost,
         )
-        add_op(
+        await add_op(
             state,
             server.shell,
             commands=["echo anotherhost"],
@@ -233,15 +234,15 @@ class TestOperationsApi(PatchSSHTestCase):
 
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
     @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)
-    def test_file_upload_op(self):
+    async def test_file_upload_op(self):
         inventory = make_inventory()
 
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         # Test normal
-        add_op(
+        await add_op(
             state,
             files.put,
             name="First op name",
@@ -250,7 +251,7 @@ class TestOperationsApi(PatchSSHTestCase):
         )
 
         # And with sudo
-        add_op(
+        await add_op(
             state,
             files.put,
             src="files/file.txt",
@@ -260,7 +261,7 @@ class TestOperationsApi(PatchSSHTestCase):
         )
 
         # And with su
-        add_op(
+        await add_op(
             state,
             files.put,
             src="files/file.txt",
@@ -291,7 +292,7 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.ops[somehost][op_order[2]].global_arguments["_su_user"] == "pyinfra"
 
         # Check run ops works
-        run_ops(state)
+        await run_ops(state)
 
         # Ensure first op used the right (upload) command
         assert state.ops[somehost][first_op_hash].operation_meta._commands == [
@@ -309,15 +310,15 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.results[somehost].error_ops == 0
         assert state.results[anotherhost].error_ops == 0
 
-    def test_file_download_op(self):
+    async def test_file_download_op(self):
         inventory = make_inventory()
 
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True):
-            add_op(
+            await add_op(
                 state,
                 files.get,
                 name="First op name",
@@ -336,7 +337,7 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost = inventory.get_host("anotherhost")
 
         with patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True):
-            run_ops(state)
+            await run_ops(state)
 
         # Ensure first op has the right (upload) command
         assert state.ops[somehost][first_op_hash].operation_meta._commands == [
@@ -350,11 +351,11 @@ class TestOperationsApi(PatchSSHTestCase):
         assert state.results[somehost].error_ops == 0
         assert state.results[anotherhost].error_ops == 0
 
-    def test_function_call_op(self):
+    async def test_function_call_op(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         is_called = []
 
@@ -363,40 +364,40 @@ class TestOperationsApi(PatchSSHTestCase):
             return None
 
         # Add op to both hosts
-        add_op(state, python.call, mocked_function)
+        await add_op(state, python.call, mocked_function)
 
         # Ensure there is one op
         assert len(state.get_op_order()) == 1
 
-        run_ops(state)
+        await run_ops(state)
 
         assert is_called
 
-    def test_function_call_op_timeout(self):
+    async def test_function_call_op_timeout(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         timeout = 1
 
-        def mocked_function(*args, **kwargs):
-            time.sleep(timeout + 1)
+        async def mocked_function(*args, **kwargs):
+            await asyncio.sleep(timeout + 1)
 
-        add_op(state, python.call, mocked_function, _timeout=timeout)
+        await add_op(state, python.call, mocked_function, _timeout=timeout)
 
         # Timeout should cause the operation to fail and hosts to be removed
         with self.assertRaises(PyinfraError):
-            run_ops(state)
+            await run_ops(state)
 
-    def test_run_once_serial_op(self):
+    async def test_run_once_serial_op(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         # Add a run once op
-        add_op(state, server.shell, 'echo "hi"', _run_once=True, _serial=True)
+        await add_op(state, server.shell, 'echo "hi"', _run_once=True, _serial=True)
 
         # Ensure it's added to op_order
         assert len(state.get_op_order()) == 1
@@ -408,24 +409,24 @@ class TestOperationsApi(PatchSSHTestCase):
         assert len(state.ops[somehost]) + len(state.ops[anotherhost]) == 1
 
         # Check run works
-        run_ops(state)
+        await run_ops(state)
 
         assert (state.results[somehost].success_ops + state.results[anotherhost].success_ops) == 1
 
     @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
-    def test_rsync_op(self):
+    async def test_rsync_op(self):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
-        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        await add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
         with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
             fake_run_local_process.return_value = 0, []
-            run_ops(state)
+            await run_ops(state)
 
         fake_run_local_process.assert_called_with(
             (
@@ -438,19 +439,19 @@ class TestOperationsApi(PatchSSHTestCase):
         )
 
     @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
-    def test_rsync_op_with_strict_host_key_checking_disabled(self):
+    async def test_rsync_op_with_strict_host_key_checking_disabled(self):
         inventory = make_inventory(hosts=(("somehost", {"ssh_strict_host_key_checking": "no"}),))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
-        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        await add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
         with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
             fake_run_local_process.return_value = 0, []
-            run_ops(state)
+            await run_ops(state)
 
         fake_run_local_process.assert_called_with(
             (
@@ -463,7 +464,7 @@ class TestOperationsApi(PatchSSHTestCase):
         )
 
     @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
-    def test_rsync_op_with_strict_host_key_checking_disabled_and_custom_config_file(self):
+    async def test_rsync_op_with_strict_host_key_checking_disabled_and_custom_config_file(self):
         inventory = make_inventory(
             hosts=(
                 (
@@ -477,15 +478,15 @@ class TestOperationsApi(PatchSSHTestCase):
         )
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
-        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        await add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
         with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
             fake_run_local_process.return_value = 0, []
-            run_ops(state)
+            await run_ops(state)
 
         fake_run_local_process.assert_called_with(
             (
@@ -499,21 +500,21 @@ class TestOperationsApi(PatchSSHTestCase):
         )
 
     @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
-    def test_rsync_op_with_sanitized_custom_config_file(self):
+    async def test_rsync_op_with_sanitized_custom_config_file(self):
         inventory = make_inventory(
             hosts=(("somehost", {"ssh_config_file": "/home/me/ssh_test_config && echo hi"}),)
         )
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
-        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+        await add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
 
         assert len(state.get_op_order()) == 1
 
         with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
             fake_run_local_process.return_value = 0, []
-            run_ops(state)
+            await run_ops(state)
 
         fake_run_local_process.assert_called_with(
             (
@@ -526,19 +527,19 @@ class TestOperationsApi(PatchSSHTestCase):
             print_prefix=inventory.get_host("somehost").print_prefix,
         )
 
-    def test_rsync_op_failure(self):
+    async def test_rsync_op_failure(self):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.which", lambda x: None):
             with self.assertRaises(OperationError) as context:
-                add_op(state, files.rsync, "src", "dest")
+                await add_op(state, files.rsync, "src", "dest")
 
         assert context.exception.args[0] == "The `rsync` binary is not available on this system."
 
-    def test_op_cannot_change_execution_kwargs(self):
+    async def test_op_cannot_change_execution_kwargs(self):
         inventory = make_inventory()
 
         state = State(inventory, Config())
@@ -552,21 +553,21 @@ class TestOperationsApi(PatchSSHTestCase):
         op_meta_item.global_arguments = {"_serial": True}
         state.op_meta = NoSetDefaultDict(lambda: op_meta_item)
 
-        connect_all(state)
+        await connect_all(state)
 
         with self.assertRaises(OperationValueError) as context:
-            add_op(state, files.file, "/var/log/pyinfra.log", _serial=False)
+            await add_op(state, files.file, "/var/log/pyinfra.log", _serial=False)
 
         assert context.exception.args[0] == "Cannot have different values for `_serial`."
 
 
-class TestNestedOperationsApi(PatchSSHTestCase):
-    def test_nested_op_api(self):
+class TestNestedOperationsApi(AsyncPatchSSHTestCase):
+    async def test_nested_op_api(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
 
-        connect_all(state)
+        await connect_all(state)
 
         somehost = inventory.get_host("somehost")
 
@@ -586,17 +587,17 @@ class TestNestedOperationsApi(PatchSSHTestCase):
 
                     assert len(state.get_op_order()) == 2
 
-                    run_ops(state)
+                    await run_ops(state)
 
                     assert len(state.get_op_order()) == 3
                     assert state.results[somehost].success_ops == 3
                     assert outer_result._combined_output is not None
 
-                    disconnect_all(state)
+                    await disconnect_all(state)
                 finally:
                     pyinfra.is_cli = False
 
-    def test_nested_op_failure_propagates_to_host(self):
+    async def test_nested_op_failure_propagates_to_host(self):
         """
         Test that when an operation inside python.call fails,
         the host is properly marked as failed.
@@ -605,7 +606,7 @@ class TestNestedOperationsApi(PatchSSHTestCase):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         somehost = inventory.get_host("somehost")
         pyinfra.is_cli = True
@@ -620,11 +621,10 @@ class TestNestedOperationsApi(PatchSSHTestCase):
                     python.call(function=callback_with_failing_op)
 
             with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-                fake_channel = FakeChannel(1)
-                fake_run_command.return_value = (False, FakeBuffer("", fake_channel))
+                fake_run_command.return_value = (False, CommandOutput([]))
 
                 with self.assertRaises(PyinfraError) as e:
-                    run_ops(state)
+                    await run_ops(state)
 
                 self.assertEqual(e.exception.args[0], "No hosts remaining!")
 
@@ -635,9 +635,9 @@ class TestNestedOperationsApi(PatchSSHTestCase):
             self.assertEqual(state.results[somehost].success_ops, 0)
         finally:
             pyinfra.is_cli = False
-            disconnect_all(state)
+            await disconnect_all(state)
 
-    def test_nested_op_failure_with_ignore_errors(self):
+    async def test_nested_op_failure_with_ignore_errors(self):
         """
         Test that _ignore_errors=True on python.call properly ignores
         errors from nested operations.
@@ -645,7 +645,7 @@ class TestNestedOperationsApi(PatchSSHTestCase):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         somehost = inventory.get_host("somehost")
         pyinfra.is_cli = True
@@ -660,11 +660,10 @@ class TestNestedOperationsApi(PatchSSHTestCase):
                     python.call(function=callback_with_failing_op, _ignore_errors=True)
 
             with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-                fake_channel = FakeChannel(1)
-                fake_run_command.return_value = (False, FakeBuffer("", fake_channel))
+                fake_run_command.return_value = (False, CommandOutput([]))
 
                 # Should NOT raise - error is ignored
-                run_ops(state)
+                await run_ops(state)
 
             # Host should NOT be in failed_hosts
             self.assertNotIn(somehost, state.failed_hosts)
@@ -673,9 +672,9 @@ class TestNestedOperationsApi(PatchSSHTestCase):
             self.assertEqual(state.results[somehost].success_ops, 0)
         finally:
             pyinfra.is_cli = False
-            disconnect_all(state)
+            await disconnect_all(state)
 
-    def test_nested_op_partial_failure(self):
+    async def test_nested_op_partial_failure(self):
         """
         Test that when a callback has multiple operations and one fails,
         the failure is properly tracked.
@@ -683,7 +682,7 @@ class TestNestedOperationsApi(PatchSSHTestCase):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         somehost = inventory.get_host("somehost")
         pyinfra.is_cli = True
@@ -705,14 +704,14 @@ class TestNestedOperationsApi(PatchSSHTestCase):
                 nonlocal call_count
                 call_count += 1
                 if call_count == 2:  # Second command fails
-                    return (False, FakeBuffer("", FakeChannel(1)))
-                return (True, FakeBuffer("output", FakeChannel(0)))
+                    return (False, CommandOutput([]))
+                return (True, CommandOutput([OutputLine("stdout", "output")]))
 
             with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
                 fake_run_command.side_effect = side_effect
 
                 with self.assertRaises(PyinfraError):
-                    run_ops(state)
+                    await run_ops(state)
 
             # Host should be marked as failed
             self.assertIn(somehost, state.failed_hosts)
@@ -721,9 +720,9 @@ class TestNestedOperationsApi(PatchSSHTestCase):
             self.assertEqual(state.results[somehost].error_ops, 2)
         finally:
             pyinfra.is_cli = False
-            disconnect_all(state)
+            await disconnect_all(state)
 
-    def test_deeply_nested_op_failure(self):
+    async def test_deeply_nested_op_failure(self):
         """
         Test that failures in deeply nested operations (callbacks within callbacks)
         are properly propagated.
@@ -731,7 +730,7 @@ class TestNestedOperationsApi(PatchSSHTestCase):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         somehost = inventory.get_host("somehost")
         pyinfra.is_cli = True
@@ -755,41 +754,40 @@ class TestNestedOperationsApi(PatchSSHTestCase):
                 nonlocal call_count
                 call_count += 1
                 if call_count == 2:  # Inner shell fails
-                    return (False, FakeBuffer("", FakeChannel(1)))
-                return (True, FakeBuffer("output", FakeChannel(0)))
+                    return (False, CommandOutput([]))
+                return (True, CommandOutput([OutputLine("stdout", "output")]))
 
             with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
                 fake_run_command.side_effect = side_effect
 
                 with self.assertRaises(PyinfraError):
-                    run_ops(state)
+                    await run_ops(state)
 
             # Host should be marked as failed
             self.assertIn(somehost, state.failed_hosts)
             self.assertGreater(state.results[somehost].error_ops, 0)
         finally:
             pyinfra.is_cli = False
-            disconnect_all(state)
+            await disconnect_all(state)
 
 
-class TestOperationFailures(PatchSSHTestCase):
-    def test_full_op_fail(self):
+class TestOperationFailures(AsyncPatchSSHTestCase):
+    async def test_full_op_fail(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
-        add_op(state, server.shell, 'echo "hi"')
+        await add_op(state, server.shell, 'echo "hi"')
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
-                FakeBuffer("", fake_channel),
+                CommandOutput([]),
             )
 
             with self.assertRaises(PyinfraError) as e:
-                run_ops(state)
+                await run_ops(state)
 
             assert e.exception.args[0] == "No hosts remaining!"
 
@@ -800,23 +798,22 @@ class TestOperationFailures(PatchSSHTestCase):
             # And was flagged asn an error
             assert state.results[somehost].error_ops == 1
 
-    def test_ignore_errors_op_fail(self):
+    async def test_ignore_errors_op_fail(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
-        add_op(state, server.shell, 'echo "hi"', _ignore_errors=True)
+        await add_op(state, server.shell, 'echo "hi"', _ignore_errors=True)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
-            fake_channel = FakeChannel(1)
             fake_run_command.return_value = (
                 False,
-                FakeBuffer("", fake_channel),
+                CommandOutput([]),
             )
 
             # This should run OK
-            run_ops(state)
+            await run_ops(state)
 
         somehost = inventory.get_host("somehost")
 
@@ -827,41 +824,49 @@ class TestOperationFailures(PatchSSHTestCase):
         assert state.results[somehost].success_ops == 0
 
 
-class TestOperationOrdering(PatchSSHTestCase):
+class TestOperationOrdering(AsyncPatchSSHTestCase):
     # In CLI mode, pyinfra uses *line numbers* to order operations as defined by
     # the user. This makes reasoning about user-written deploys simple and easy
     # to understand.
-    def test_cli_op_line_numbers(self):
+    async def test_cli_op_line_numbers(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         state.current_deploy_filename = __file__
 
         pyinfra.is_cli = True
 
-        with ctx_state.use(state):
-            # Add op to both hosts
-            for name in ("anotherhost", "somehost"):
-                with ctx_host.use(inventory.get_host(name)):
-                    server.shell("echo hi")  # note this is called twice but on *the same line*
+        def add_ops():
+            with ctx_state.use(state):
+                # Add op to both hosts
+                for name in ("anotherhost", "somehost"):
+                    with ctx_host.use(inventory.get_host(name)):
+                        server.shell("echo hi")  # note this is called twice but on *the same line*
 
-            # Add op to just the second host - using the context modules such that
-            # it replicates a deploy file.
-            ctx_host.set(inventory.get_host("anotherhost"))
-            first_context_hash = server.user("anotherhost_user")._hash
+                # Add op to just the second host - using the context modules such that
+                # it replicates a deploy file.
+                ctx_host.set(inventory.get_host("anotherhost"))
+                first_context_hash = server.user("anotherhost_user")._hash
 
-            # Add op to just the first host - using the context modules such that
-            # it replicates a deploy file.
-            ctx_host.set(inventory.get_host("somehost"))
-            second_context_hash = server.user("somehost_user")._hash
+                # Add op to just the first host - using the context modules such that
+                # it replicates a deploy file.
+                ctx_host.set(inventory.get_host("somehost"))
+                second_context_hash = server.user("somehost_user")._hash
 
-            ctx_state.reset()
-            ctx_host.reset()
+                ctx_state.reset()
+                ctx_host.reset()
 
+                return first_context_hash, second_context_hash
+
+        try:
+            # Operations run facts through the connector, so generate them inside a greenlet
+            first_context_hash, second_context_hash = await async_def(add_ops)
+        finally:
             pyinfra.is_cli = False
 
+        with ctx_state.use(state):
             print(state.ops)
             # Ensure there are two ops
             op_order = state.get_op_order()
@@ -878,7 +883,7 @@ class TestOperationOrdering(PatchSSHTestCase):
     # Operations called in a plain loop share the same stack position, so their
     # hash must come from the name & arguments - otherwise per-host data makes
     # different operations collapse into one (#1370).
-    def test_cli_op_loop_per_host_data_no_hash_collision(self):
+    async def test_cli_op_loop_per_host_data_no_hash_collision(self):
         inventory = make_inventory(
             hosts=(
                 ("somehost", {"users": ["user-1", "user-2"]}),
@@ -890,7 +895,7 @@ class TestOperationOrdering(PatchSSHTestCase):
 
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         state.current_deploy_filename = __file__
 
@@ -927,12 +932,12 @@ class TestOperationOrdering(PatchSSHTestCase):
 
     # Identical operations called in a loop (same position, same name & arguments)
     # must still be deduplicated by appending a counter to the hash.
-    def test_cli_op_loop_identical_ops_dedupe(self):
+    async def test_cli_op_loop_identical_ops_dedupe(self):
         inventory = make_inventory(hosts=("somehost",))
 
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         state.current_deploy_filename = __file__
 
@@ -956,19 +961,19 @@ class TestOperationOrdering(PatchSSHTestCase):
     # In API mode, pyinfra *overrides* the line numbers such that whenever an
     # operation or deploy is added it is simply appended. This makes sense as
     # the user writing the API calls has full control over execution order.
-    def test_api_op_line_numbers(self):
+    async def test_api_op_line_numbers(self):
         inventory = make_inventory()
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         another_host = inventory.get_host("anotherhost")
 
-        def add_another_op():
-            return add_op(state, server.shell, "echo second-op")[another_host]._hash
+        async def add_another_op():
+            return (await add_op(state, server.shell, "echo second-op"))[another_host]._hash
 
-        first_op_hash = add_op(state, server.shell, "echo first-op")[another_host]._hash
-        second_op_hash = add_another_op()  # note `add_op` will be called on an earlier line
+        first_op_hash = (await add_op(state, server.shell, "echo first-op"))[another_host]._hash
+        second_op_hash = await add_another_op()  # note `add_op` is called on an earlier line
 
         op_order = state.get_op_order()
         assert len(op_order) == 2
@@ -977,13 +982,13 @@ class TestOperationOrdering(PatchSSHTestCase):
         assert op_order[1] == second_op_hash
 
 
-class TestOperationRetry(PatchSSHTestCase):
+class TestOperationRetry(AsyncPatchSSHTestCase):
     """
     Tests for the retry functionality in operations.
     """
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
-    def test_basic_retry_behavior(self, fake_run_command):
+    async def test_basic_retry_behavior(self, fake_run_command):
         """
         Test that operations retry the correct number of times on failure.
         """
@@ -991,10 +996,10 @@ class TestOperationRetry(PatchSSHTestCase):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         # Add operation with retry settings
-        add_op(
+        await add_op(
             state,
             server.shell,
             'echo "testing retries"',
@@ -1011,17 +1016,15 @@ class TestOperationRetry(PatchSSHTestCase):
             call_count += 1
             if call_count == 1:
                 # First call fails
-                fake_channel = FakeChannel(1)
-                return (False, FakeBuffer("", fake_channel))
+                return (False, CommandOutput([]))
             else:
                 # Second call succeeds
-                fake_channel = FakeChannel(0)
-                return (True, FakeBuffer("success", fake_channel))
+                return (True, CommandOutput([OutputLine("stdout", "success")]))
 
         fake_run_command.side_effect = side_effect
 
         # Run the operation
-        run_ops(state)
+        await run_ops(state)
 
         # Check that run_shell_command was called twice (original + 1 retry)
         self.assertEqual(call_count, 2)
@@ -1044,17 +1047,17 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertTrue(op_meta.retry_succeeded)
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
-    def test_retry_max_attempts_failure(self, fake_run_command):
+    async def test_retry_max_attempts_failure(self, fake_run_command):
         """
         Test that operations stop retrying after max attempts and report failure.
         """
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         # Add operation with retry settings
-        add_op(
+        await add_op(
             state,
             server.shell,
             'echo "testing max retries"',
@@ -1063,12 +1066,11 @@ class TestOperationRetry(PatchSSHTestCase):
         )
 
         # Make all attempts fail
-        fake_channel = FakeChannel(1)
-        fake_run_command.return_value = (False, FakeBuffer("", fake_channel))
+        fake_run_command.return_value = (False, CommandOutput([]))
 
         # This should fail after all retries
         with self.assertRaises(PyinfraError) as e:
-            run_ops(state)
+            await run_ops(state)
 
         self.assertEqual(e.exception.args[0], "No hosts remaining!")
 
@@ -1092,8 +1094,8 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertFalse(op_meta.retry_succeeded)
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
-    @patch("time.sleep")
-    def test_retry_until_condition(self, fake_sleep, fake_run_command):
+    @patch("pyinfra.api.operations.asyncio.sleep", new_callable=AsyncMock)
+    async def test_retry_until_condition(self, fake_sleep, fake_run_command):
         """
         Test that operations retry based on the retry_until callable condition.
         """
@@ -1101,7 +1103,7 @@ class TestOperationRetry(PatchSSHTestCase):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         # Create a counter to track retry_until calls
         call_counter = [0]
@@ -1112,7 +1114,7 @@ class TestOperationRetry(PatchSSHTestCase):
             return call_counter[0] < 3  # Retry twice, then stop
 
         # Add operation with retry_until
-        add_op(
+        await add_op(
             state,
             server.shell,
             'echo "test retry_until"',
@@ -1133,7 +1135,7 @@ class TestOperationRetry(PatchSSHTestCase):
         fake_run_command.side_effect = command_side_effect
 
         # Run the operations
-        run_ops(state)
+        await run_ops(state)
 
         # The command should be called 3 times total (initial + 2 retries)
         self.assertEqual(fake_run_command.call_count, 3)
@@ -1153,20 +1155,20 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertTrue(op_meta.retry_succeeded)
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
-    @patch("time.sleep")
-    def test_retry_delay(self, fake_sleep, fake_run_command):
+    @patch("pyinfra.api.operations.asyncio.sleep", new_callable=AsyncMock)
+    async def test_retry_delay(self, fake_sleep, fake_run_command):
         """
         Test that retry delay is properly applied between attempts.
         """
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         retry_delay = 5
 
         # Add operation with retry settings
-        add_op(
+        await add_op(
             state,
             server.shell,
             'echo "testing retry delay"',
@@ -1181,37 +1183,35 @@ class TestOperationRetry(PatchSSHTestCase):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                fake_channel = FakeChannel(1)
-                return (False, FakeBuffer("", fake_channel))
+                return (False, CommandOutput([]))
             else:
-                fake_channel = FakeChannel(0)
-                return (True, FakeBuffer("", fake_channel))
+                return (True, CommandOutput([]))
 
         fake_run_command.side_effect = side_effect
 
         # Run the operation
-        run_ops(state)
+        await run_ops(state)
 
         # Check that sleep was called with the correct delay
         fake_sleep.assert_called_once_with(retry_delay)
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
-    @patch("time.sleep")
-    def test_retry_until_with_error_handling(self, fake_sleep, fake_run_command):
+    @patch("pyinfra.api.operations.asyncio.sleep", new_callable=AsyncMock)
+    async def test_retry_until_with_error_handling(self, fake_sleep, fake_run_command):
         """
         Test that operations handle errors in retry_until functions gracefully.
         """
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         # Create a retry_until function that raises an exception
         def failing_retry_until_func(output_data):
             raise ValueError("Test error in retry_until function")
 
         # Add operation with failing retry_until
-        add_op(
+        await add_op(
             state,
             server.shell,
             'echo "test failing retry_until"',
@@ -1229,7 +1229,7 @@ class TestOperationRetry(PatchSSHTestCase):
         fake_run_command.side_effect = command_side_effect
 
         # Run the operations - should succeed despite retry_until error
-        run_ops(state)
+        await run_ops(state)
 
         # The command should be called only once (no retries due to error)
         self.assertEqual(fake_run_command.call_count, 1)
@@ -1240,15 +1240,15 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertEqual(state.results[somehost].error_ops, 0)
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
-    @patch("time.sleep")
-    def test_retry_until_with_complex_output_parsing(self, fake_sleep, fake_run_command):
+    @patch("pyinfra.api.operations.asyncio.sleep", new_callable=AsyncMock)
+    async def test_retry_until_with_complex_output_parsing(self, fake_sleep, fake_run_command):
         """
         Test retry_until with complex output parsing scenarios.
         """
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
-        connect_all(state)
+        await connect_all(state)
 
         # Track what output we've seen
         outputs_seen = []
@@ -1264,7 +1264,7 @@ class TestOperationRetry(PatchSSHTestCase):
             return "READY" not in stdout_text
 
         # Add operation with complex retry_until
-        add_op(
+        await add_op(
             state,
             server.shell,
             'echo "service status check"',
@@ -1302,7 +1302,7 @@ class TestOperationRetry(PatchSSHTestCase):
         fake_run_command.side_effect = command_side_effect
 
         # Run the operations
-        run_ops(state)
+        await run_ops(state)
 
         # The command should be called 3 times
         self.assertEqual(fake_run_command.call_count, 3)

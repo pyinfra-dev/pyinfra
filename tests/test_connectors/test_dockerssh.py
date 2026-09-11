@@ -1,3 +1,4 @@
+import asyncio
 import shlex
 from unittest import TestCase
 from unittest.mock import MagicMock, mock_open, patch
@@ -120,7 +121,7 @@ class TestDockerSSHConnector(TestCase):
     def test_connect_all(self):
         inventory = make_inventory(hosts=("@dockerssh/somehost:not-an-image",))
         state = State(inventory, Config())
-        connect_all(state)
+        asyncio.run(connect_all(state))
         assert len(state.active_hosts) == 1
 
     def test_user_provided_container_id(self):
@@ -137,7 +138,7 @@ class TestDockerSSHConnector(TestCase):
         state = State(inventory, Config())
 
         with self.assertRaises(PyinfraError):
-            connect_all(state)
+            asyncio.run(connect_all(state))
 
     def test_connect_disconnect_host(self):
         inventory = make_inventory(hosts=("@dockerssh/somehost:not-an-image",))
@@ -318,7 +319,7 @@ class TestPodmanSSHConnector(TestCase):
     def test_connect_all(self):
         inventory = make_inventory(hosts=("@podmanssh/somehost:not-an-image",))
         state = State(inventory, Config())
-        connect_all(state)
+        asyncio.run(connect_all(state))
         assert len(state.active_hosts) == 1
 
     def test_user_provided_container_id(self):
@@ -335,7 +336,7 @@ class TestPodmanSSHConnector(TestCase):
         state = State(inventory, Config())
 
         with self.assertRaises(PyinfraError):
-            connect_all(state)
+            asyncio.run(connect_all(state))
 
     def test_connect_disconnect_host(self):
         inventory = make_inventory(hosts=("@podmanssh/somehost:not-an-image",))

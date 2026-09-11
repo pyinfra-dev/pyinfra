@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os.path
 import sys
@@ -14,6 +15,7 @@ from cyclopts import App, Group, Parameter
 
 from pyinfra import __version__, logger, state
 from pyinfra.api import Config, Host, Inventory, State
+from pyinfra.api.concurrency import async_def
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import NoGroupError, PyinfraError
 from pyinfra.api.facts import get_facts
@@ -286,45 +288,47 @@ def cli(
         )
 
     try:
-        _main(
-            inventory=inventory,
-            operations=list(operations),
-            verbosity=len(verbose),
-            chdir=chdir,
-            ssh_user=ssh_user,
-            ssh_port=ssh_port,
-            ssh_key=ssh_key,
-            ssh_key_password=ssh_key_password,
-            ssh_password=ssh_password,
-            ssh_password_prompt=ssh_password_prompt,
-            same_sudo_password=same_sudo_password,
-            shell_executable=shell_executable,
-            sudo=sudo,
-            sudo_user=sudo_user,
-            use_sudo_password=use_sudo_password,
-            use_sudo_login=use_sudo_login,
-            su_user=su_user,
-            dzdo=dzdo,
-            dzdo_user=dzdo_user,
-            parallel=parallel,
-            fail_percent=fail_percent,
-            data=data,
-            group_data=group_data,
-            config_filename=config_filename,
-            dry=dry,
-            diff=diff,
-            yes=yes,
-            limit=limit,
-            exclude=exclude,
-            no_wait=no_wait,
-            serial=serial,
-            retry=retry,
-            retry_delay=retry_delay,
-            debug=debug,
-            debug_all=debug_all,
-            debug_facts=debug_facts,
-            debug_operations=debug_operations,
-            json_output=json_output,
+        asyncio.run(
+            _main_and_disconnect(
+                inventory=inventory,
+                operations=list(operations),
+                verbosity=len(verbose),
+                chdir=chdir,
+                ssh_user=ssh_user,
+                ssh_port=ssh_port,
+                ssh_key=ssh_key,
+                ssh_key_password=ssh_key_password,
+                ssh_password=ssh_password,
+                ssh_password_prompt=ssh_password_prompt,
+                same_sudo_password=same_sudo_password,
+                shell_executable=shell_executable,
+                sudo=sudo,
+                sudo_user=sudo_user,
+                use_sudo_password=use_sudo_password,
+                use_sudo_login=use_sudo_login,
+                su_user=su_user,
+                dzdo=dzdo,
+                dzdo_user=dzdo_user,
+                parallel=parallel,
+                fail_percent=fail_percent,
+                data=data,
+                group_data=group_data,
+                config_filename=config_filename,
+                dry=dry,
+                diff=diff,
+                yes=yes,
+                limit=limit,
+                exclude=exclude,
+                no_wait=no_wait,
+                serial=serial,
+                retry=retry,
+                retry_delay=retry_delay,
+                debug=debug,
+                debug_all=debug_all,
+                debug_facts=debug_facts,
+                debug_operations=debug_operations,
+                json_output=json_output,
+            ),
         )
     except (CliError, UnexpectedExternalError):
         raise
@@ -334,14 +338,19 @@ def cli(
     except Exception as e:
         # Re-raise any unexpected internal exceptions as UnexpectedInternalError
         raise UnexpectedInternalError(e)
+
+
+async def _main_and_disconnect(**kwargs) -> None:
+    try:
+        await _main(**kwargs)
     finally:
         if ctx_state.isset() and state.initialised:
             logger.info("--> Disconnecting from hosts...")
             # Triggers any executor disconnect requirements
-            disconnect_all(state)
+            await disconnect_all(state)
 
 
-def _main(
+async def _main(
     inventory,
     operations: list | tuple,
     verbosity: int,
@@ -409,7 +418,8 @@ def _main(
 
     # Update Config & Override Data
     #
-    config = _set_config(
+    config = await async_def(
+        _set_config,
         config,
         config_filename,
         sudo,
@@ -448,7 +458,8 @@ def _main(
     # Load up the inventory from the filesystem
     #
     logger.info("--> Loading inventory...")
-    inventory = make_inventory(
+    inventory = await async_def(
+        make_inventory,
         inventory,
         cwd=state.cwd,
         override_data=override_data,
@@ -474,10 +485,10 @@ def _main(
     #
     logger.info("--> Connecting to hosts...")
     state.set_stage(StateStage.Connect)
-    connect_all(state)
+    await connect_all(state)
 
     state.set_stage(StateStage.Prepare)
-    can_diff, state, config = _handle_commands(
+    can_diff, state, config = await _handle_commands(
         state, config, command, original_operations, operations, json_output=json_output
     )
 
@@ -524,7 +535,7 @@ def _main(
 
     logger.info("--> Beginning operation run...")
     state.set_stage(StateStage.Execute)
-    run_ops(state, serial=serial, no_wait=no_wait)
+    await run_ops(state, serial=serial, no_wait=no_wait)
 
     logger.info("--> Results:")
     state.set_stage(StateStage.Disconnect)
@@ -835,10 +846,12 @@ def _apply_inventory_exclude(
 
 # Operations Execution
 #
-def _handle_commands(state, config, command, original_operations, operations, json_output=False):
+async def _handle_commands(
+    state, config, command, original_operations, operations, json_output=False
+):
     if command is CliCommands.FACT:
         logger.info("--> Gathering facts...")
-        state, fact_data = _run_fact_operations(state, config, operations)
+        state, fact_data = await _run_fact_operations(state, config, operations)
         if json_output:
             print_facts_json(fact_data)
         else:
@@ -849,16 +862,16 @@ def _handle_commands(state, config, command, original_operations, operations, js
 
     if command == CliCommands.SHELL:
         logger.info("--> Preparing exec operation...")
-        state = _prepare_exec_operations(state, config, operations)
+        state = await _prepare_exec_operations(state, config, operations)
         can_diff = False
 
     elif command == CliCommands.DEPLOY_FILES:
         logger.info("--> Preparing operation files...")
-        state, config, operations = _prepare_deploy_operations(state, config, operations)
+        state, config, operations = await _prepare_deploy_operations(state, config, operations)
 
     elif command == CliCommands.FUNC:
         logger.info("--> Preparing operation func...")
-        state, kwargs = _prepare_func_operations(
+        state, kwargs = await _prepare_func_operations(
             state,
             config,
             operations,
@@ -868,7 +881,7 @@ def _handle_commands(state, config, command, original_operations, operations, js
     return can_diff, state, config
 
 
-def _run_fact_operations(state, config, operations):
+async def _run_fact_operations(state, config, operations):
     state.print_fact_info = True
     fact_data = {}
 
@@ -882,7 +895,7 @@ def _run_fact_operations(state, config, operations):
             fact_key = f"{fact_cls.name}{_fact_args}{_fact_details}"
 
         try:
-            fact_data[fact_key] = get_facts(
+            fact_data[fact_key] = await get_facts(
                 state,
                 fact_cls,
                 args=args,
@@ -895,10 +908,10 @@ def _run_fact_operations(state, config, operations):
     return state, fact_data
 
 
-def _prepare_exec_operations(state, config, operations):
+async def _prepare_exec_operations(state, config, operations):
     state.print_output = True
     # Pass the retry settings from config to the shell operation
-    load_func(
+    await load_func(
         state,
         server.shell,
         " ".join(operations),
@@ -908,7 +921,7 @@ def _prepare_exec_operations(state, config, operations):
     return state
 
 
-def _prepare_deploy_operations(state, config, operations):
+async def _prepare_deploy_operations(state, config, operations):
     # Number of "steps" to make = number of files * number of hosts
     for i, filename in enumerate(operations):
         config.lock_current_state()
@@ -917,7 +930,7 @@ def _prepare_deploy_operations(state, config, operations):
         logger.info(f"Loading: {_log_styled_msg}")
 
         state.current_op_file_number = i
-        load_deploy_file(state, filename)
+        await load_deploy_file(state, filename)
 
         # Remove any config changes introduced by the deploy file & any includes
         config.reset_locked_state()
@@ -925,10 +938,10 @@ def _prepare_deploy_operations(state, config, operations):
     return state, config, operations
 
 
-def _prepare_func_operations(state, config, operations, original_operations):
+async def _prepare_func_operations(state, config, operations, original_operations):
     op, args = operations
     args, kwargs = args
 
-    load_func(state, op, *args, **kwargs)
+    await load_func(state, op, *args, **kwargs)
 
     return state, kwargs

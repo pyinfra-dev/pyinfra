@@ -1,17 +1,15 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from getpass import getpass
-from queue import Queue
-from gevent.subprocess import PIPE, Popen
 from typing import TYPE_CHECKING
-from collections.abc import Callable, Iterable
-
-import gevent
+from collections.abc import AsyncIterable, Callable
 
 from pyinfra import logger
 from pyinfra.api.output import echo, format_text
 from pyinfra.api import HiddenValue, QuoteString, StringCommand
+from pyinfra.api.concurrency import run_sync
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
@@ -33,6 +31,9 @@ SUDO_PASSWORD_REQUIRED_LINES = (
     "sudo-rs: interactive authentication is required",
 )
 
+# Longest single output line we will buffer from a local subprocess.
+LOCAL_PROCESS_LINE_LIMIT = 64 * 1024 * 1024
+
 
 ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
@@ -45,6 +46,48 @@ echo "$temp"
 """
 
 
+async def run_local_process_async(
+    command: str,
+    stdin=None,
+    timeout: int | None = None,
+    print_output: bool = False,
+    print_prefix: str = "",
+) -> tuple[int, CommandOutput]:
+    process = await asyncio.create_subprocess_shell(
+        command,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        limit=LOCAL_PROCESS_LINE_LIMIT,
+    )
+
+    assert process.stdin is not None
+    assert process.stdout is not None
+    assert process.stderr is not None
+
+    # Write any stdin and then close it
+    await write_stdin(stdin, process.stdin)
+
+    try:
+        combined_output = await read_output_buffers(
+            process.stdout,
+            process.stderr,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+        )
+    except TimeoutError:
+        process.kill()
+        raise
+
+    logger.debug("--> Waiting for exit status...")
+    await process.wait()
+    logger.debug("--> Command exit status: %i", process.returncode)
+
+    assert process.returncode is not None
+    return process.returncode, combined_output
+
+
 def run_local_process(
     command: str,
     stdin=None,
@@ -52,34 +95,15 @@ def run_local_process(
     print_output: bool = False,
     print_prefix: str = "",
 ) -> tuple[int, CommandOutput]:
-    process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
-
-    assert process.stdout is not None
-    assert process.stderr is not None
-    assert process.stdin is not None
-
-    # Write any stdin and then close it
-    if stdin:
-        write_stdin(stdin, process.stdin)
-    process.stdin.close()
-
-    combined_output = read_output_buffers(
-        process.stdout,
-        process.stderr,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=print_prefix,
+    return run_sync(
+        run_local_process_async(
+            command,
+            stdin=stdin,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+        ),
     )
-
-    logger.debug("--> Waiting for exit status...")
-    process.wait()
-    logger.debug("--> Command exit status: %i", process.returncode)
-
-    # Close any open file descriptors
-    process.stdout.close()
-    process.stderr.close()
-
-    return process.returncode, combined_output
 
 
 # Command output buffer handling
@@ -124,15 +148,15 @@ class CommandOutput:
         return "\n".join(self.stderr_lines)
 
 
-def read_buffer(
+async def read_buffer(
     name: str,
-    io: Iterable,
-    output_queue: Queue[OutputLine],
+    reader: AsyncIterable[bytes | str],
+    output_lines: list[OutputLine],
     print_output=False,
     print_func=None,
 ) -> None:
     """
-    Reads a file-like buffer object into lines and optionally prints the output.
+    Reads a stream of lines into the shared output list and optionally prints them.
     """
 
     def _print(line):
@@ -141,60 +165,55 @@ def read_buffer(
 
         echo(line, err=True)
 
-    for line in io:
-        # Handle local Popen shells returning list of bytes, not strings
+    async for line in reader:
+        # asyncssh yields one empty chunk at EOF, which is not a line
+        if not line:
+            continue
+
         if not isinstance(line, str):
             line = line.decode("utf-8")
 
         line = line.rstrip("\n")
-        output_queue.put(OutputLine(name, line))
+        output_lines.append(OutputLine(name, line))
 
         if print_output:
             _print(line)
 
 
-def read_output_buffers(
-    stdout_buffer: Iterable,
-    stderr_buffer: Iterable,
+async def read_output_buffers(
+    stdout_buffer: AsyncIterable[bytes | str],
+    stderr_buffer: AsyncIterable[bytes | str],
     timeout: int | None,
     print_output: bool,
     print_prefix: str,
 ) -> CommandOutput:
-    output_queue: Queue[OutputLine] = Queue()
+    output_lines: list[OutputLine] = []
 
-    # Iterate through outputs to get an exit status and generate desired list
-    # output, done in two greenlets so stdout isn't printed before stderr. Not
-    # attached to state.pool to avoid blocking it with 2x n-hosts greenlets.
-    stdout_reader = gevent.spawn(
-        read_buffer,
-        "stdout",
-        stdout_buffer,
-        output_queue,
-        print_output=print_output,
-        print_func=lambda line: f"{print_prefix}{line}",
+    # Read both streams concurrently so stdout isn't printed before stderr and
+    # neither pipe fills up while we wait on the other.
+    readers = asyncio.gather(
+        read_buffer(
+            "stdout",
+            stdout_buffer,
+            output_lines,
+            print_output=print_output,
+            print_func=lambda line: f"{print_prefix}{line}",
+        ),
+        read_buffer(
+            "stderr",
+            stderr_buffer,
+            output_lines,
+            print_output=print_output,
+            print_func=lambda line: f"{print_prefix}{format_text(line, 'red')}",
+        ),
     )
-    stderr_reader = gevent.spawn(
-        read_buffer,
-        "stderr",
-        stderr_buffer,
-        output_queue,
-        print_output=print_output,
-        print_func=lambda line: f"{print_prefix}{format_text(line, 'red')}",
-    )
 
-    # Wait on output, with our timeout (or None)
-    greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
-
-    # Timeout doesn't raise an exception, but gevent.wait returns the greenlets
-    # which did complete. So if both haven't completed, we kill them and fail
-    # with a timeout.
-    if len(greenlets) != 2:
-        stdout_reader.kill()
-        stderr_reader.kill()
-
+    try:
+        await asyncio.wait_for(readers, timeout=timeout or None)
+    except asyncio.TimeoutError:
         raise TimeoutError()
 
-    return CommandOutput(list(output_queue.queue))
+    return CommandOutput(output_lines)
 
 
 # Connector execution control
@@ -224,18 +243,24 @@ def execute_command_with_sudo_retry(
     return return_code, output
 
 
-def write_stdin(stdin, buffer):
-    if hasattr(stdin, "readlines"):
-        stdin = stdin.readlines()
-    if not isinstance(stdin, (list, tuple)):
-        stdin = [stdin]
+async def write_stdin(stdin, writer) -> None:
+    """
+    Write any stdin lines to a stream writer and then close it.
+    """
 
-    for line in stdin:
-        if not line.endswith("\n"):
-            line = f"{line}\n"
-        line = line.encode()
-        buffer.write(line)
-    buffer.close()
+    if stdin:
+        if hasattr(stdin, "readlines"):
+            stdin = stdin.readlines()
+        if not isinstance(stdin, (list, tuple)):
+            stdin = [stdin]
+
+        for line in stdin:
+            if not line.endswith("\n"):
+                line = f"{line}\n"
+            writer.write(line.encode())
+        await writer.drain()
+
+    writer.write_eof()
 
 
 ASKPASS_PATH_KEYS = ("sudo_askpass_path", "su_askpass_path")

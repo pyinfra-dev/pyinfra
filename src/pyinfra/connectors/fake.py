@@ -10,15 +10,16 @@ empty output by default.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import random
 import re
 from typing import TYPE_CHECKING, Any
 
-import gevent
 from typing_extensions import Unpack, override
 
 from pyinfra import logger
+from pyinfra.api.concurrency import awaitlet
 from pyinfra.api.output import echo
 from pyinfra.connectors.base import BaseConnector, ConnectorData, DataMeta
 from pyinfra.connectors.util import CommandOutput, OutputLine
@@ -189,8 +190,8 @@ class FakeConnector(BaseConnector):
     def _sleep(self) -> None:
         """Simulate a realistic, non-instant task duration.
 
-        Uses ``gevent.sleep`` so other host greenlets and the progress bar
-        continue to run cooperatively while this "command" is in flight.
+        Uses ``asyncio.sleep`` so other hosts and the progress bar continue to
+        run cooperatively while this "command" is in flight.
         """
         delay = self.data.get("fake_delay")
         if delay is None:
@@ -201,7 +202,7 @@ class FakeConnector(BaseConnector):
 
         duration = float(delay) + random.uniform(0, max(0.0, float(jitter)))
         if duration > 0:
-            gevent.sleep(duration)
+            awaitlet(asyncio.sleep(duration))
 
     @override
     def run_shell_command(
