@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 import shlex
-from inspect import getfullargspec
-from string import Formatter
-from typing import IO, TYPE_CHECKING
 from collections.abc import Callable
-import gevent
+from contextvars import copy_context
+from inspect import getfullargspec, iscoroutine
+from string import Formatter
+from typing import IO, TYPE_CHECKING, Any
+
 from typing_extensions import Unpack, override
 
-from pyinfra.context import LocalContextObject, ctx_config, ctx_host
 from pyinfra import logger
-from .hiddenvalue import HiddenValue
+from pyinfra.context import LocalContextObject, ctx_config, ctx_host
 
 from .arguments import ConnectorArguments
+from .concurrency import run_coroutine
+from .hiddenvalue import HiddenValue
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -235,31 +237,30 @@ class FunctionCommand(PyinfraCommand):
     def __repr__(self):
         return f"FunctionCommand({self.function.__name__}, {self.args}, {self.kwargs})"
 
+    def _call(self, *args, **kwargs) -> Any:
+        result = self.function(*args, **kwargs)
+        if iscoroutine(result):
+            result = run_coroutine(result)
+        return result
+
     @override
     def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):
         argspec = getfullargspec(self.function)
         if "state" in argspec.args and "host" in argspec.args:
-            return self.function(state, host, *self.args, **self.kwargs)
+            return self._call(state, host, *self.args, **self.kwargs)
 
-        # If we're already running inside a greenlet (ie a nested callback) just execute the func
-        # without any gevent.spawn which will break the local host object.
+        # If we're already running inside a host context (ie a nested callback) just execute
+        # the function directly, replacing the context would break the local host object.
         if isinstance(host, LocalContextObject):
-            self.function(*self.args, **self.kwargs)
+            self._call(*self.args, **self.kwargs)
             return
 
-        def execute_function() -> None | Exception:
+        def execute_function() -> None:
             with ctx_config.use(state.config.copy()):
                 with ctx_host.use(host):
-                    try:
-                        self.function(*self.args, **self.kwargs)
-                    except Exception as e:
-                        return e
-            return None
+                    self._call(*self.args, **self.kwargs)
 
-        greenlet = gevent.spawn(execute_function)
-        exception = greenlet.get()
-        if exception is not None:
-            raise exception
+        copy_context().run(execute_function)
 
 
 class RsyncCommand(PyinfraCommand):
