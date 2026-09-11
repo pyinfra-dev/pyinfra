@@ -14,6 +14,7 @@ import pyinfra
 from pyinfra import context
 from pyinfra.context import ctx_host, ctx_state
 
+from .concurrency import async_def
 from .arguments import pop_global_arguments
 from .arguments_typed import PyinfraOperation
 from .exceptions import PyinfraError
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs) -> None:
+async def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs) -> None:
     """
     Prepare & add an deploy to pyinfra.state by executing it on all hosts.
 
@@ -47,9 +48,11 @@ def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs)
         hosts = [hosts]
 
     with ctx_state.use(state):
+        # As in add_op, parallel preparation needs _run_once host reservation before
+        # fact I/O, or deduplication of prepared operations before execution.
         for deploy_host in hosts:
             with ctx_host.use(deploy_host):
-                deploy_func(*args, **kwargs)
+                await async_def(deploy_func, *args, **kwargs)
 
 
 P = ParamSpec("P")

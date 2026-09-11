@@ -8,11 +8,11 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import annotations
 
 from functools import wraps
-from inspect import signature
+from inspect import isasyncgenfunction, signature
 from io import StringIO
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, cast
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import AsyncGenerator, Callable, Generator, Iterator
 
 from typing_extensions import ParamSpec, override
 
@@ -20,6 +20,7 @@ import pyinfra
 from pyinfra import context, logger
 from pyinfra.context import ctx_host, ctx_state
 
+from .concurrency import async_def, iterate_async_generator
 from .arguments import EXECUTION_KWARG_KEYS, AllArguments, pop_global_arguments
 from .arguments_typed import PyinfraOperation
 from .command import PyinfraCommand, StringCommand
@@ -204,7 +205,7 @@ class OperationMeta:
         }
 
 
-def add_op(state: State, op_func, *args, **kwargs):
+async def add_op(state: State, op_func, *args, **kwargs):
     """
     Prepare & add an operation to ``pyinfra.state`` by executing it on all hosts.
 
@@ -227,15 +228,19 @@ def add_op(state: State, op_func, *args, **kwargs):
         hosts = [hosts]
 
     with ctx_state.use(state):
-        results = {}
+        results: dict[Host, OperationMeta] = {}
+        # Parallel preparation could speed up fact loading, but _run_once must first
+        # reserve its host before fact I/O, or deduplicate prepared operations before execution.
         for op_host in hosts:
             with ctx_host.use(op_host):
-                results[op_host] = op_func(*args, **kwargs)
-
-    return results
+                results[op_host] = await async_def(op_func, *args, **kwargs)
+        return results
 
 
 P = ParamSpec("P")
+
+
+OperationFunction = Callable[P, Generator | AsyncGenerator]
 
 
 def operation(
@@ -244,14 +249,16 @@ def operation(
     is_deprecated: bool = False,
     deprecated_for: str | None = None,
     _set_in_op: bool = True,
-) -> Callable[[Callable[P, Generator]], PyinfraOperation[P]]:
+) -> Callable[[OperationFunction[P]], PyinfraOperation[P]]:
     """
     Decorator that takes a simple module function and turn it into the internal
     operation representation that consists of a list of commands + options
-    (sudo, (sudo|su)_user, env).
+    (sudo, (sudo|su)_user, env). The function may be a generator or an async
+    generator; async operations run inside the host greenlet so they can both
+    ``await`` and call the synchronous host APIs.
     """
 
-    def decorator(f: Callable[P, Generator]) -> PyinfraOperation[P]:
+    def decorator(f: OperationFunction[P]) -> PyinfraOperation[P]:
         f.is_idempotent = is_idempotent  # type: ignore[attr-defined]
         f.idempotent_notice = idempotent_notice  # type: ignore[attr-defined]
         f.is_deprecated = is_deprecated  # type: ignore[attr-defined]
@@ -261,7 +268,14 @@ def operation(
     return decorator
 
 
-def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> PyinfraOperation[P]:
+def _wrap_operation(func: OperationFunction[P], _set_in_op: bool = True) -> PyinfraOperation[P]:
+    def generate_async_commands(*args: P.args, **kwargs: P.kwargs) -> Generator:
+        return iterate_async_generator(func(*args, **kwargs))  # type: ignore[arg-type]
+
+    generate_commands: Callable[P, Generator] = (
+        generate_async_commands if isasyncgenfunction(func) else cast(Callable[P, Generator], func)
+    )
+
     @wraps(func)
     def decorated_func(*args: P.args, **kwargs: P.kwargs) -> OperationMeta:
         state = context.state
@@ -338,7 +352,7 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
             host.current_op_deploy_data = current_deploy_data
 
             try:
-                for command in func(*args, **kwargs):
+                for command in generate_commands(*args, **kwargs):
                     if isinstance(command, str):
                         command = StringCommand(command.strip())
                     yield command
@@ -380,7 +394,7 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         # Return result meta for use in deploy scripts
         return operation_meta
 
-    decorated_func._inner = func  # type: ignore[attr-defined]
+    decorated_func._inner = generate_commands  # type: ignore[attr-defined]
     return cast(PyinfraOperation[P], decorated_func)
 
 
