@@ -1,13 +1,11 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from paramiko import SSHException
-
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import NoGroupError, NoHostError, PyinfraError
 
-from ..paramiko_util import PatchSSHTestCase
+from ..fake_ssh import AsyncPatchSSHTestCase
 from ..util import make_inventory
 
 
@@ -60,13 +58,13 @@ class TestInventoryApi(TestCase):
             inventory.get_group("i-dont-exist")
 
 
-class TestStateApi(PatchSSHTestCase):
+class TestStateApi(AsyncPatchSSHTestCase):
     @patch("pyinfra.connectors.base.raise_if_bad_type", lambda *args, **kwargs: None)
-    def test_fail_percent(self):
+    async def test_fail_percent(self):
         inventory = make_inventory(
             (
                 "somehost",
-                ("thinghost", {"ssh_hostname": SSHException}),
+                ("thinghost", {"ssh_hostname": ConnectionRefusedError}),
                 "anotherhost",
             ),
         )
@@ -74,7 +72,7 @@ class TestStateApi(PatchSSHTestCase):
 
         # Ensure we would fail at this point
         with self.assertRaises(PyinfraError) as context:
-            connect_all(state)
+            await connect_all(state)
 
         assert context.exception.args[0] == "Over 1% of hosts failed (33%)"
 
