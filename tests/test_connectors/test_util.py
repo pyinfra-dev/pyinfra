@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import IsolatedAsyncioTestCase, TestCase
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State, HiddenValue
@@ -13,6 +13,7 @@ from pyinfra.connectors.util import (
     remove_any_sudo_askpass_file,
 )
 
+from ..fake_ssh import FakeReader
 from ..util import make_inventory
 
 
@@ -751,15 +752,15 @@ class TestUseSudoPassword(TestCase):
         fake_getpass.assert_not_called()
 
 
-class TestReadOutputBuffers(TestCase):
-    def test_defaults(self):
+class TestReadOutputBuffers(IsolatedAsyncioTestCase):
+    async def test_defaults(self):
         # Third-party connectors call this with just the buffers (issue #1303),
         # so timeout, print_output and print_prefix must be optional.
-        output = read_output_buffers([b"hello\n"], [])
+        output = await read_output_buffers(FakeReader([b"hello\n"]), FakeReader())
         assert output.stdout_lines == ["hello"]
         assert output.stderr_lines == []
 
-    def test_stderr(self):
-        output = read_output_buffers([], [b"oops\n"])
+    async def test_stderr(self):
+        output = await read_output_buffers(FakeReader(), FakeReader([b"oops\n"]))
         assert output.stdout_lines == []
         assert output.stderr_lines == ["oops"]

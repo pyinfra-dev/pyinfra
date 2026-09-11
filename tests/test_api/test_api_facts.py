@@ -10,7 +10,7 @@ from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.facts.server import Arch, Command
 
-from ..paramiko_util import PatchSSHTestCase
+from ..fake_ssh import AsyncPatchSSHTestCase
 from ..util import make_inventory
 
 
@@ -25,21 +25,21 @@ def _get_executor_defaults(state, host):
     }
 
 
-class TestFactsApi(PatchSSHTestCase):
-    def test_get_fact(self):
+class TestFactsApi(AsyncPatchSSHTestCase):
+    async def test_get_fact(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
                 True,
                 CommandOutput([OutputLine("stdout", "some-output")]),
             )
-            fact_data = get_facts(state, Command, ("yes",))
+            fact_data = await get_facts(state, Command, ("yes",))
 
         assert fact_data == {anotherhost: "some-output"}
 
@@ -50,30 +50,30 @@ class TestFactsApi(PatchSSHTestCase):
             **_get_executor_defaults(state, anotherhost),
         )
 
-    def test_get_fact_missing_command_returns_the_default(self):
+    async def test_get_fact_missing_command_returns_the_default(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
                 True,
                 CommandOutput([]),
             )
-            fact_data = get_facts(state, Command, ("nonexistent_command",))
+            fact_data = await get_facts(state, Command, ("nonexistent_command",))
 
         assert fact_data == {anotherhost: None}
 
-    def test_get_fact_current_op_global_arguments(self):
+    async def test_get_fact_current_op_global_arguments(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
 
-        connect_all(state)
+        await connect_all(state)
         anotherhost.current_op_global_arguments = cast(
             AllArguments,
             {
@@ -90,7 +90,7 @@ class TestFactsApi(PatchSSHTestCase):
                 True,
                 CommandOutput([OutputLine("stdout", "some-output")]),
             )
-            fact_data = get_facts(state, Command, ("yes",))
+            fact_data = await get_facts(state, Command, ("yes",))
 
         assert fact_data == {anotherhost: "some-output"}
 
@@ -106,14 +106,14 @@ class TestFactsApi(PatchSSHTestCase):
             **defaults,
         )
 
-    def test_get_fact_strips_freebsd_su_password_prompt_from_stdout(self):
+    async def test_get_fact_strips_freebsd_su_password_prompt_from_stdout(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
         anotherhost.data._su_user = "root"
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
@@ -124,37 +124,37 @@ class TestFactsApi(PatchSSHTestCase):
                     ],
                 ),
             )
-            fact_data = get_facts(state, Command, ("echo some-output",))
+            fact_data = await get_facts(state, Command, ("echo some-output",))
 
         assert fact_data == {anotherhost: "some-output"}
         assert "##PYINFRA_SU_READY##" in str(fake_run_command.call_args.args[0])
 
-    def test_get_fact_preserves_real_output_starting_with_password(self):
+    async def test_get_fact_preserves_real_output_starting_with_password(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
         anotherhost.data._su_user = "root"
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
                 True,
                 CommandOutput([OutputLine("stdout", "Password:some-output")]),
             )
-            fact_data = get_facts(state, Command, ("echo Password:some-output",))
+            fact_data = await get_facts(state, Command, ("echo Password:some-output",))
 
         assert fact_data == {anotherhost: "Password:some-output"}
 
-    def test_get_fact_preserves_leading_newline_after_su_password_prompt(self):
+    async def test_get_fact_preserves_leading_newline_after_su_password_prompt(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
         anotherhost.data._su_user = "root"
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
@@ -166,23 +166,23 @@ class TestFactsApi(PatchSSHTestCase):
                     ],
                 ),
             )
-            fact_data = get_facts(state, Command, ("printf '\\nsome-output\\n'",))
+            fact_data = await get_facts(state, Command, ("printf '\\nsome-output\\n'",))
 
         assert fact_data == {anotherhost: "\nsome-output"}
 
-    def test_get_fact_error(self):
+    async def test_get_fact_error(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = False, MagicMock()
 
             with self.assertRaises(PyinfraError) as context:
-                get_facts(state, Command, ("fail command",))
+                await get_facts(state, Command, ("fail command",))
 
         assert context.exception.args[0] == "No hosts remaining!"
 
@@ -193,13 +193,13 @@ class TestFactsApi(PatchSSHTestCase):
             **_get_executor_defaults(state, anotherhost),
         )
 
-    def test_get_fact_error_ignore(self):
+    async def test_get_fact_error_ignore(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
 
-        connect_all(state)
+        await connect_all(state)
         anotherhost.in_op = True
         anotherhost.current_op_global_arguments = cast(
             AllArguments,
@@ -210,7 +210,7 @@ class TestFactsApi(PatchSSHTestCase):
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = False, MagicMock()
-            fact_data = get_facts(state, Command, ("fail command",))
+            fact_data = await get_facts(state, Command, ("fail command",))
 
         assert fact_data == {anotherhost: None}
 
@@ -221,20 +221,20 @@ class TestFactsApi(PatchSSHTestCase):
             **_get_executor_defaults(state, anotherhost),
         )
 
-    def test_get_fact_executor_override_arguments(self):
+    async def test_get_fact_executor_override_arguments(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
                 MagicMock(),
                 CommandOutput([OutputLine("stdout", "some-output")]),
             )
-            fact_data = get_facts(state, Command, ("yes",), {"_sudo": True})
+            fact_data = await get_facts(state, Command, ("yes",), {"_sudo": True})
 
         assert fact_data == {anotherhost: "some-output"}
 
@@ -248,21 +248,21 @@ class TestFactsApi(PatchSSHTestCase):
             **defaults,
         )
 
-    def test_get_fact_executor_host_data_arguments(self):
+    async def test_get_fact_executor_host_data_arguments(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
         anotherhost = inventory.get_host("anotherhost")
         anotherhost.data._sudo = True
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
                 True,
                 CommandOutput([OutputLine("stdout", "some-output")]),
             )
-            fact_data = get_facts(state, Command, ("yes",))
+            fact_data = await get_facts(state, Command, ("yes",))
 
         assert fact_data == {anotherhost: "some-output"}
 
@@ -276,7 +276,7 @@ class TestFactsApi(PatchSSHTestCase):
             **defaults,
         )
 
-    def test_get_fact_executor_mixed_arguments(self):
+    async def test_get_fact_executor_mixed_arguments(self):
         inventory = make_inventory(hosts=("anotherhost",))
         state = State(inventory, Config())
 
@@ -292,14 +292,14 @@ class TestFactsApi(PatchSSHTestCase):
             },
         )
 
-        connect_all(state)
+        await connect_all(state)
 
         with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
             fake_run_command.return_value = (
                 True,
                 CommandOutput([OutputLine("stdout", "some-output")]),
             )
-            fact_data = get_facts(
+            fact_data = await get_facts(
                 state,
                 Command,
                 args=("yes",),
@@ -322,11 +322,11 @@ class TestFactsApi(PatchSSHTestCase):
             **defaults,
         )
 
-    def test_get_fact_no_args(self):
+    async def test_get_fact_no_args(self):
         inventory = make_inventory(hosts=("host-1",))
         state = State(inventory, Config())
 
-        connect_all(state)
+        await connect_all(state)
 
         host_1 = inventory.get_host("host-1")
         defaults = _get_executor_defaults(state, host_1)
@@ -336,7 +336,7 @@ class TestFactsApi(PatchSSHTestCase):
                 MagicMock(),
                 CommandOutput([OutputLine("stdout", "some-output")]),
             )
-            fact_data = get_facts(state, Arch)
+            fact_data = await get_facts(state, Arch)
 
         assert fact_data == {host_1: "some-output"}
         fake_run_command.assert_called_with(
@@ -347,12 +347,12 @@ class TestFactsApi(PatchSSHTestCase):
         )
 
 
-class TestHostFactsApi(PatchSSHTestCase):
-    def test_get_host_fact(self):
+class TestHostFactsApi(AsyncPatchSSHTestCase):
+    async def test_get_host_fact(self):
         inventory = make_inventory(hosts=("host-1",))
         state = State(inventory, Config())
 
-        connect_all(state)
+        await connect_all(state)
 
         host_1 = inventory.get_host("host-1")
         defaults = _get_executor_defaults(state, host_1)
@@ -372,11 +372,11 @@ class TestHostFactsApi(PatchSSHTestCase):
             **defaults,
         )
 
-    def test_get_host_fact_sudo(self):
+    async def test_get_host_fact_sudo(self):
         inventory = make_inventory(hosts=("host-1",))
         state = State(inventory, Config())
 
-        connect_all(state)
+        await connect_all(state)
 
         host_1 = inventory.get_host("host-1")
         defaults = _get_executor_defaults(state, host_1)
@@ -397,11 +397,11 @@ class TestHostFactsApi(PatchSSHTestCase):
             **defaults,
         )
 
-    def test_get_host_fact_sudo_no_args(self):
+    async def test_get_host_fact_sudo_no_args(self):
         inventory = make_inventory(hosts=("host-1",))
         state = State(inventory, Config())
 
-        connect_all(state)
+        await connect_all(state)
 
         host_1 = inventory.get_host("host-1")
         defaults = _get_executor_defaults(state, host_1)

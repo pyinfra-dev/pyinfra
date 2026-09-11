@@ -1,6 +1,6 @@
 # Using the API
 
-In addition to [the pyinfra CLI](../cli.md), pyinfra provides a full Python API. As of `v3` this API can be considered mostly stable. See [the API reference](reference.md).
+In addition to [the pyinfra CLI](../cli.md), pyinfra provides a full Python API. As of `v4` the API is built on asyncio: the functions that connect to hosts, schedule operations and execute them are coroutines, so you drive them from your own event loop (typically with `asyncio.run`). Operations, facts and deploy code stay synchronous. See [the API reference](reference.md).
 
 You can also reference [pyinfra's own main.py](https://github.com/pyinfra-dev/pyinfra/blob/3.x/src/pyinfra_cli/main.py), and the [pyinfra API source code](https://github.com/pyinfra-dev/pyinfra/tree/3.x/src/pyinfra/api).
 
@@ -11,69 +11,80 @@ A programmatic pyinfra run does the same five stages described in [How pyinfra W
 1. **Build the inventory** — `Inventory((hosts_list, group_data_dict))`.
 2. **Build the config** — `Config(SUDO=True, ...)` (any [global argument](../arguments.md) defaults).
 3. **Build the state** — `State(inventory=inventory, config=config)`. This is the object passed through everything else.
-4. **Connect** — `connect_all(state)` opens connections to every host in the inventory.
-5. **Schedule operations** — call `add_op(state, op_func, **kwargs)` once per operation. Each call runs the operation function across all hosts in the prepare phase and returns a dict of `{host: OperationMeta}`.
-6. **Execute** — `run_ops(state)` ships the scheduled commands to the hosts and returns when they've finished.
-7. (Optional) **Read facts** — `get_facts(state, FactClass)` runs a fact on every host and returns a dict of `{host: value}`.
+4. **Connect** — `await connect_all(state)` opens connections to every host in the inventory.
+5. **Schedule operations** — call `await add_op(state, op_func, **kwargs)` once per operation. Each call runs the operation function across all hosts in the prepare phase and returns a dict of `{host: OperationMeta}`.
+6. **Execute** — `await run_ops(state)` ships the scheduled commands to the hosts and returns when they've finished.
+7. (Optional) **Read facts** — `await get_facts(state, FactClass)` runs a fact on every host and returns a dict of `{host: value}`.
+8. **Disconnect** — `await disconnect_all(state)` closes the connections.
 
 A few things worth knowing:
 
 - **`add_op` is API-mode only.** It raises if called inside a CLI deploy. Inside a CLI deploy you just call the operation directly — `apt.packages(...)` — and pyinfra's wrapper takes care of the same scheduling internally.
 - **You don't have to set `state.current_stage` manually.** The flag `pyinfra.is_cli` is `False` by default (only the CLI flips it to `True`), and the stage-transition guards on operations only fire when `is_cli` is true. `add_op` handles the `ctx_state` / `ctx_host` context-manager bookkeeping for you.
 - **Look up hosts via the inventory**, not via `state`. The handle you keep is `inventory` — use `inventory.get_host(name)` to fetch the `Host` object you need to index into an `add_op` result.
+- **Keep to one event loop.** SSH connections are bound to the loop they were opened on, so connect, schedule, execute and disconnect within the same `asyncio.run` (or the same running loop).
 
 ## Basic Localhost Example
 
 ```python
+import asyncio
+
 from pyinfra.api import Config, Inventory, State
-from pyinfra.api.connect import connect_all
+from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.operation import add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.facts import get_facts
 from pyinfra.facts.server import Os
 from pyinfra.operations import server
 
-# Define your inventory (@local means execute on localhost using subprocess)
-# https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.inventory.html
-inventory = Inventory((["@local"], {}))
 
-# Define any config you need
-# https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.config.html
-config = Config(SUDO=True)
+async def main():
+    # Define your inventory (@local means execute on localhost using subprocess)
+    # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.inventory.html
+    inventory = Inventory((["@local"], {}))
 
-# Set up the state object
-# https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.state.html
-state = State(inventory=inventory, config=config)
+    # Define any config you need
+    # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.config.html
+    config = Config(SUDO=True)
 
-# Connect to all the hosts
-connect_all(state)
+    # Set up the state object
+    # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.state.html
+    state = State(inventory=inventory, config=config)
 
-# Start adding operations
-result1 = add_op(
-    state,
-    server.user,
-    user="pyinfra",
-    home="/home/pyinfra",
-    shell="/bin/bash",
-)
-result2 = add_op(
-    state,
-    server.shell,
-    name="Run some shell commands",
-    commands=["whoami", "echo $PATH", "bash --version"]
-)
+    # Connect to all the hosts
+    await connect_all(state)
 
-# And finally we run the ops
-run_ops(state)
+    # Start adding operations
+    result1 = await add_op(
+        state,
+        server.user,
+        user="pyinfra",
+        home="/home/pyinfra",
+        shell="/bin/bash",
+    )
+    result2 = await add_op(
+        state,
+        server.shell,
+        name="Run some shell commands",
+        commands=["whoami", "echo $PATH", "bash --version"]
+    )
 
-# add_op returns {host: OperationMeta}, letting you access stdout, stderr, etc. after they run
-host = inventory.get_host('@local')
-print(result1[host].did_change, result1[host].stdout, result1[host].stderr)
-print(result2[host].did_change, result2[host].stdout, result2[host].stderr)
+    # And finally we run the ops
+    await run_ops(state)
 
-# We can also get facts for all the hosts
-# https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.facts.html
-print(get_facts(state, Os))
+    # add_op returns {host: OperationMeta}, letting you access stdout, stderr, etc. after they run
+    host = inventory.get_host('@local')
+    print(result1[host].did_change, result1[host].stdout, result1[host].stderr)
+    print(result2[host].did_change, result2[host].stdout, result2[host].stderr)
+
+    # We can also get facts for all the hosts
+    # https://docs.pyinfra.com/en/3.x/apidoc/pyinfra.api.facts.html
+    print(await get_facts(state, Os))
+
+    await disconnect_all(state)
+
+
+asyncio.run(main())
 ```
 
 ## Observing a run with callbacks
@@ -100,7 +111,7 @@ class TimingCallback(BaseStateCallback):
 timings = TimingCallback()
 state.add_callback_handler(timings)
 
-run_ops(state)
+await run_ops(state)
 # timings.timings now holds per-host start/end times for every operation
 ```
 
