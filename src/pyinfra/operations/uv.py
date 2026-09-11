@@ -20,9 +20,11 @@ from pyinfra.facts.uv import (
     MANAGED_PYTHON,
     UV_CMD,
     UvInstalledPythonsByVersion,
+    UvPipInstallDryRun,
     UvPipPackages,
     UvToolDir,
     UvTools,
+    UvToolVenvDryRun,
 )
 from pyinfra.operations import files
 from pyinfra.operations.util.packaging import PkgInfo, ensure_packages
@@ -59,6 +61,10 @@ def packages(
         Package versions can be specified in the `usual manner`_, e.g. ``<pkg>==<version>``.
 
     .. _usual manner: https://pip.pypa.io/en/stable/reference/requirement-specifiers/
+
+    Extras:
+        Packages may request extras (e.g. ``foo[bar]``). When the bare package is already
+        installed, whether the extras are satisfied is checked via ``uv pip install --dry-run``.
 
     **Example:**
 
@@ -99,6 +105,7 @@ def packages(
             uninstall_command=uninstall_command,
             upgrade_command=upgrade_command,
             latest=latest,
+            extras_satisfied=lambda pkg: host.get_fact(UvPipInstallDryRun, spec=pkg.spec),
         )
 
     if (not requirements) and (not packages):
@@ -172,6 +179,11 @@ def tools(
         Tool versions may be, but are not required to be, specified in the
         `usual manner`_: ``<pkg>==<version>``.
 
+    Extras:
+        Tools may request extras (e.g. ``foo[bar]``). When the bare tool is already installed,
+        whether the extras are satisfied is checked by probing the tool's venv; if not, the tool
+        is reinstalled with ``uv tool install --force``.
+
     **Example:**
 
     .. code:: python
@@ -186,6 +198,9 @@ def tools(
     install_command = f"{UV_CMD} tool install --no-progress{extras}"
     uninstall_command = f"{UV_CMD} tool uninstall --no-progress{extras}"
     upgrade_command = f"{UV_CMD} tool install --upgrade --no-progress{extras}"
+    # uv tool install has no --dry-run; an already-installed tool whose extras are missing is
+    # reinstalled with --force (probed via the tool's own venv - see UvToolVenvDryRun).
+    force_reinstall_command = f"{UV_CMD} tool install --force --no-progress{extras}"
 
     already_installed = {pkg.lower(): version for pkg, version in host.get_fact(UvTools).items()}
 
@@ -203,6 +218,10 @@ def tools(
                 uninstall_command=uninstall_command,
                 upgrade_command=upgrade_command,
                 latest=latest,
+                extras_satisfied=lambda pkg: host.get_fact(
+                    UvToolVenvDryRun, tool=pkg.name, spec=pkg.spec
+                ),
+                force_reinstall_command=force_reinstall_command,
             )
     else:
         host.noop("no tools requested to be (un)installed")

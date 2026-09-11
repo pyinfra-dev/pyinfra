@@ -5,13 +5,19 @@ a virtualenv (virtual environment).
 
 from __future__ import annotations
 
+from packaging.version import InvalidVersion, Version
+
 from pyinfra import host
-from pyinfra.api import QuoteString, StringCommand, operation
+from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.files import File
-from pyinfra.facts.pip import PipPackages
+from pyinfra.facts.pip import PipInstallDryRun, PipPackages, PipVersion
 
 from . import files
 from .util.packaging import PkgInfo, ensure_packages
+
+# Minimum pip version that supports ``install --dry-run`` / ``--report``, required to check whether
+# a spec carrying extras (e.g. foo[bar]) is already satisfied for an installed package.
+MIN_PIP_EXTRAS_VERSION = Version("22.2")
 
 
 @operation()
@@ -149,6 +155,11 @@ def packages(
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``.
 
+    Extras:
+        Packages may request extras (e.g. ``foo[bar]``). When the bare package is already
+        installed, whether the extras are satisfied is checked via ``pip install --dry-run``,
+        which requires pip >= 22.2 (an ``OperationError`` is raised otherwise).
+
     **Example:**
 
     .. code:: python
@@ -193,16 +204,36 @@ def packages(
             packages = [packages]
         # PEP-0426 states that Python packages should be compared using lowercase, so lowercase the
         # current packages. PkgInfo.from_pep508 takes care of the package name
+        pkg_infos = list(filter(None, (PkgInfo.from_pep508(package) for package in packages)))
+
+        # Checking whether extras (e.g. foo[bar]) are already satisfied relies on pip's dry-run.
+        if present and any(pkg.has_extras for pkg in pkg_infos):
+            _require_pip_extras_support(pip)
+
         current_packages = host.get_fact(PipPackages, pip=pip)
         current_packages = {pkg.lower(): versions for pkg, versions in current_packages.items()}
 
         yield from ensure_packages(
             host,
-            list(filter(None, (PkgInfo.from_pep508(package) for package in packages))),
+            pkg_infos,
             current_packages,
             present,
             install_command=install_command,
             uninstall_command=uninstall_command,
             upgrade_command=upgrade_command,
             latest=latest,
+            extras_satisfied=lambda pkg: host.get_fact(PipInstallDryRun, spec=pkg.spec, pip=pip),
+        )
+
+
+def _require_pip_extras_support(pip: str) -> None:
+    pip_version = host.get_fact(PipVersion, pip=pip)
+    try:
+        too_old = pip_version is None or Version(pip_version) < MIN_PIP_EXTRAS_VERSION
+    except InvalidVersion:
+        too_old = True
+    if too_old:
+        raise OperationError(
+            f"pip >= {MIN_PIP_EXTRAS_VERSION} is required to install packages with extras "
+            f"(e.g. foo[bar]); found {pip_version or 'unknown'}"
         )
