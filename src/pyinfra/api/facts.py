@@ -22,7 +22,7 @@ from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api.output import format_text
-from pyinfra.api import StringCommand
+from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
 from pyinfra.api.exceptions import FactPreconditionError, FactProcessError, MissingCommandError
 from pyinfra.api.util import (
@@ -43,6 +43,7 @@ if TYPE_CHECKING:
 
 # Sentinel output line emitted when skip_unless_command binary is absent on the remote host.
 _MISSING_COMMAND_MARKER = "##PYINFRA_NOCMD##"
+_SU_OUTPUT_MARKER = "##PYINFRA_SU_READY##"
 
 SUDO_REGEX = r"^sudo: unknown user"
 SU_REGEXES = (
@@ -318,6 +319,9 @@ def _get_fact(
         key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS
     }
 
+    if executor_kwargs["_su_user"]:
+        command = StringCommand("printf", QuoteString(_SU_OUTPUT_MARKER), "&&", command)
+
     try:
         status, output = host.run_shell_command(
             command,
@@ -333,6 +337,12 @@ def _get_fact(
         )
 
     stdout_lines, stderr_lines = output.stdout_lines, output.stderr_lines
+    if executor_kwargs["_su_user"]:
+        for index, line in enumerate(stdout_lines):
+            if _SU_OUTPUT_MARKER in line:
+                stdout_lines = stdout_lines[index:].copy()
+                stdout_lines[0] = line.split(_SU_OUTPUT_MARKER, 1)[1]
+                break
 
     # Detect the "binary absent" sentinel from the if/then/else shell guard.
     if status and stdout_lines == [_MISSING_COMMAND_MARKER]:
