@@ -6,7 +6,7 @@ from shutil import copyfileobj, which
 from socket import gaierror
 from tempfile import SpooledTemporaryFile
 from time import sleep
-from typing import IO, TYPE_CHECKING, Any, Protocol
+from typing import IO, TYPE_CHECKING, Any, Protocol, cast
 from collections.abc import Iterable
 
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
@@ -682,6 +682,17 @@ class SSHConnector(BaseConnector):
     ):
         _sudo = arguments.pop("_sudo", False)
         _sudo_user = arguments.pop("_sudo_user", False)
+        sudo_arguments = cast(
+            "ConnectorArguments",
+            {
+                "_sudo": _sudo,
+                "_sudo_user": _sudo_user,
+                "_sudo_password": arguments.pop("_sudo_password", None),
+                "_shell_executable": None,
+            },
+        )
+        if "_temp_dir" in arguments:
+            sudo_arguments["_temp_dir"] = arguments.pop("_temp_dir")
 
         hostname = self.data["ssh_hostname"] or self.host.name
         user = self.data["ssh_user"]
@@ -726,34 +737,46 @@ class SSHConnector(BaseConnector):
         if ssh_key:
             ssh_flags.append(f"-i {ssh_key}")
 
-        remote_rsync_command = "rsync"
-        if _sudo:
-            remote_rsync_command = "sudo rsync"
-            if _sudo_user:
-                remote_rsync_command = f"sudo -u {_sudo_user} rsync"
+        def run_rsync() -> tuple[int, CommandOutput]:
+            remote_rsync_command = StringCommand("rsync")
+            if _sudo:
+                remote_rsync_command = make_unix_command_for_host(
+                    self.state,
+                    self.host,
+                    remote_rsync_command,
+                    **sudo_arguments,
+                )
 
-        rsync_command = (
-            "rsync {rsync_flags} "
-            '--rsh "ssh {ssh_flags}" '
-            "--rsync-path '{remote_rsync_command}' "
-            "{src} {user}{hostname}:{dest}"
-        ).format(
-            rsync_flags=" ".join(flags),
-            ssh_flags=" ".join(ssh_flags),
-            remote_rsync_command=remote_rsync_command,
-            user=user or "",
-            hostname=hostname,
-            src=src,
-            dest=dest,
-        )
+            rsync_command = (
+                "rsync {rsync_flags} "
+                '--rsh "ssh {ssh_flags}" '
+                "--rsync-path {remote_rsync_command} "
+                "{src} {user}{hostname}:{dest}"
+            ).format(
+                rsync_flags=" ".join(flags),
+                ssh_flags=" ".join(ssh_flags),
+                remote_rsync_command=StringCommand(
+                    QuoteString(remote_rsync_command)
+                ).get_raw_value(),
+                user=user or "",
+                hostname=hostname,
+                src=src,
+                dest=dest,
+            )
 
-        if print_input:
-            echo(f"{self.host.print_prefix}>>> {rsync_command}", err=True)
+            if print_input:
+                echo(f"{self.host.print_prefix}>>> {rsync_command}", err=True)
 
-        return_code, output = run_local_process(
-            rsync_command,
-            print_output=print_output,
-            print_prefix=self.host.print_prefix,
+            return run_local_process(
+                rsync_command,
+                print_output=print_output,
+                print_prefix=self.host.print_prefix,
+            )
+
+        return_code, output = execute_command_with_sudo_retry(
+            self.host,
+            sudo_arguments,
+            run_rsync,
         )
 
         status = return_code == 0
