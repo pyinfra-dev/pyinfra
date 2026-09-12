@@ -36,7 +36,6 @@ from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .arguments import CONNECTOR_ARGUMENT_KEYS
-from .state import StateStage
 
 if TYPE_CHECKING:
     from pyinfra.api import Host, State
@@ -220,7 +219,7 @@ def get_fact(
         # During the prepare phase the binary might not yet be installed (a prior
         # operation will install it).  Silently return the default so change
         # detection can proceed normally.
-        if state.current_stage != StateStage.Execute:
+        if not state.is_executing:
             logger.debug(
                 "Fact %s skipped on %s during prepare: %s",
                 cls.__name__,
@@ -242,7 +241,7 @@ def get_fact(
         # Same phase-aware logic: a precondition not satisfied during prepare
         # is normal (e.g. kernel module not yet loaded); during execute it is an
         # ordering error in the deploy.
-        if state.current_stage != StateStage.Execute:
+        if not state.is_executing:
             logger.debug(
                 "Fact %s skipped on %s during prepare: %s",
                 cls.__name__,
