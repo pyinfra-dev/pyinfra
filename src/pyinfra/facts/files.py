@@ -398,15 +398,21 @@ class HashFileFactBase(FactBaseOptionalStr):
 
     @override
     def command(self, path):
-        self.path = path
-        return make_formatted_string_command(self._raw_cmd, QuoteString(path))
+        if path.startswith("~/"):
+            # Insert .* to take into account string expansion
+            self.escaped_path = ".*" + re.escape(path.removeprefix("~"))
+            # Do not quote leading tilde to ensure that it gets properly expanded by the shell
+            path = StringCommand("~/", QuoteString(path.removeprefix("~/")), _separator="")
+        else:
+            self.escaped_path = re.escape(path)
+            path = QuoteString(path)
+        return make_formatted_string_command(self._raw_cmd, path)
 
     @override
     def process(self, output) -> str | None:
         output = output[0]
-        escaped_path = re.escape(self.path)
         for regex in self._regexes:
-            matches = re.match(regex % escaped_path, output)
+            matches = re.match(regex % self.escaped_path, output)
             if matches:
                 return matches.group(1)
         return None
