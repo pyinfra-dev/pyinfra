@@ -1,0 +1,15 @@
+{
+    "args": ["x; reboot"],
+    "kwargs": {
+        "policy": "DROP"
+    },
+    "facts": {
+        "iptables.IptablesChains": {
+            "table=filter": {}
+        }
+    },
+    "commands": [
+        "iptables -t filter -N 'x; reboot'",
+        "iptables -t filter -P 'x; reboot' DROP"
+    ]
+}
