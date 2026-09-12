@@ -1,12 +1,13 @@
-import abc
 import sys
 from inspect import getframeinfo
-from traceback import format_exception, format_tb, walk_tb
-from types import TracebackType
+from traceback import walk_tb
+from types import ModuleType, TracebackType
 
-import click
+from rich.console import Console
+from rich.traceback import Traceback
 from typing_extensions import override
 
+import pyinfra
 from pyinfra import logger
 from pyinfra.api.exceptions import (
     ArgumentTypeError,
@@ -15,6 +16,29 @@ from pyinfra.api.exceptions import (
     PyinfraError,
 )
 from pyinfra.api.util import PYINFRA_INSTALL_DIR
+
+from .console import console, format_text
+
+# Modules whose frames are collapsed in rendered tracebacks so the user's deploy
+# code stands out rather than pyinfra/gevent/cyclopts internals.
+_TRACEBACK_SUPPRESS: list[str | ModuleType] = ["gevent", "cyclopts", pyinfra]
+
+
+def _rich_traceback(exc: BaseException) -> Traceback:
+    """Build a Rich ``Traceback`` for a wrapped exception.
+
+    The wrapping ``CliException`` stashes the live traceback on the original
+    exception as ``_traceback``; fall back to ``__traceback__`` just in case.
+    """
+    tb = getattr(exc, "_traceback", None) or exc.__traceback__
+    return Traceback.from_exception(
+        type(exc),
+        exc,
+        tb,
+        suppress=_TRACEBACK_SUPPRESS,
+        show_locals=False,
+        word_wrap=True,
+    )
 
 
 def get_frame_line_from_tb(tb: TracebackType):
@@ -27,7 +51,24 @@ def get_frame_line_from_tb(tb: TracebackType):
         return info
 
 
-class WrappedError(click.ClickException):
+class CliException(Exception):
+    """Base for pyinfra CLI errors, carrying a user-facing ``message``."""
+
+    message: str
+
+    def __init__(self, message: str = ""):
+        self.message = message
+        super().__init__(message)
+
+    @override
+    def __str__(self) -> str:
+        return self.message
+
+    def show(self) -> None:
+        raise NotImplementedError
+
+
+class WrappedError(CliException):
     def __init__(self, e: Exception):
         self.traceback = e.__traceback__
         self.exception = e
@@ -36,10 +77,10 @@ class WrappedError(click.ClickException):
         message = getattr(e, "message", e.args[0])
         if not isinstance(message, str):
             message = repr(message)
-        self.message = message
+        super().__init__(message)
 
     @override
-    def show(self, file=None):
+    def show(self) -> None:
         name = "unknown error"
 
         if isinstance(self.exception, ConnectorDataTypeError):
@@ -59,45 +100,31 @@ class WrappedError(click.ClickException):
                 name = f"{name} in {info.filename} line {info.lineno}"
 
         logger.warning(
-            f"--> {click.style(name, 'red', bold=True)}: {self}",
+            f"{format_text(name, 'red', bold=True)}: {self}",
         )
 
 
-class CliError(click.ClickException):
+class CliError(CliException):
     @override
-    def show(self, file=None):
+    def show(self) -> None:
         logger.warning(
-            f"--> {click.style('pyinfra error', 'red', bold=True)}: {self}",
+            f"{format_text('pyinfra error', 'red', bold=True)}: {self}",
         )
 
 
-class UnexpectedMixin(abc.ABC):
-    exception: Exception
-    traceback: TracebackType
-
-    def get_traceback_lines(self):
-        traceback = getattr(self.exception, "_traceback")
-        return format_tb(traceback)
-
-    def get_traceback(self):
-        return "".join(self.get_traceback_lines())
-
-    def get_exception(self):
-        return "".join(format_exception(self.exception.__class__, self.exception, None))
-
-
-class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
+class UnexpectedExternalError(CliException):
     def __init__(self, e, filename):
         _, _, traceback = sys.exc_info()
         e._traceback = traceback
         self.exception = e
         self.filename = filename
+        super().__init__(str(e))
 
     @override
-    def show(self, file=None):
+    def show(self) -> None:
         logger.warning(
-            "--> {}:\n".format(
-                click.style(
+            "{}:\n".format(
+                format_text(
                     f"An exception occurred in: {self.filename}",
                     "red",
                     bold=True,
@@ -105,56 +132,42 @@ class UnexpectedExternalError(click.ClickException, UnexpectedMixin):
             ),
         )
 
-        click.echo("Traceback (most recent call last):", err=True)
-        click.echo(self.get_traceback(), err=True, nl=False)
-        click.echo(self.get_exception(), err=True)
+        console.print(_rich_traceback(self.exception))
 
 
-class UnexpectedInternalError(click.ClickException, UnexpectedMixin):
+class UnexpectedInternalError(CliException):
     def __init__(self, e):
         _, _, traceback = sys.exc_info()
         e._traceback = traceback
         self.exception = e
+        super().__init__(str(e))
 
     @override
-    def show(self, file=None):
-        click.echo(
-            "--> {}:\n".format(
-                click.style(
+    def show(self) -> None:
+        console.print(
+            "{}:\n".format(
+                format_text(
                     "An internal exception occurred",
                     "red",
                     bold=True,
                 ),
             ),
-            err=True,
         )
 
-        traceback_lines = self.get_traceback_lines()
-        traceback = self.get_traceback()
+        traceback = _rich_traceback(self.exception)
+        console.print(traceback)
 
-        # Syntax errors contain the filename/line/etc, but other exceptions
-        # don't, so print the *last* call to stderr.
-        if not isinstance(self.exception, SyntaxError):
-            sys.stderr.write(traceback_lines[-1])
-
-        exception = self.get_exception()
-        click.echo(exception, err=True)
-
+        # Persist an uncoloured copy of the same traceback for bug reports.
         with open("pyinfra-debug.log", "w", encoding="utf-8") as f:
-            f.write(traceback)
-            f.write(exception)
+            file_console = Console(file=f, width=100, force_terminal=False, no_color=True)
+            file_console.print(traceback)
 
-        logger.debug(traceback)
-        logger.debug(exception)
+        logger.debug(str(self.exception))
 
-        click.echo(
-            f"--> The full traceback has been written to {click.style('pyinfra-debug.log', bold=True)}",
-            err=True,
+        console.print(
+            f"The full traceback has been written to {format_text('pyinfra-debug.log', bold=True)}",
         )
-        click.echo(
-            (
-                "--> If this is unexpected please consider submitting a bug report "
-                "on GitHub, for more information run `pyinfra --support`."
-            ),
-            err=True,
+        console.print(
+            "If this is unexpected please consider submitting a bug report "
+            "on GitHub, for more information run `pyinfra --support`."
         )

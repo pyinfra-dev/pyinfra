@@ -177,7 +177,12 @@ def get_facts(state, *args, **kwargs):
 
     results = {}
 
-    with progress_spinner(greenlet_to_host.values()) as progress:
+    fact_cls = args[0] if args else None
+    fact_name = getattr(fact_cls, "name", None) or getattr(fact_cls, "__name__", "facts")
+
+    with progress_spinner(
+        greenlet_to_host.values(), prefix_message=f"Gathering {fact_name}"
+    ) as progress:
         for greenlet in gevent.iwait(greenlet_to_host.keys()):
             host = greenlet_to_host[greenlet]
             results[host] = greenlet.get()
