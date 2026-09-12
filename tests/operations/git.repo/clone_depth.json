@@ -1,0 +1,19 @@
+{
+    "args": ["myrepo", "/home/myrepo"],
+    "kwargs": {
+        "branch": "mybranch",
+        "user": "myuser",
+        "depth": 1,
+        "pull": false
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null
+        }
+    },
+    "commands": [
+        "cd /home/myrepo && git clone myrepo --depth 1 --branch mybranch .",
+        "chown -R myuser /home/myrepo"
+    ]
+}
