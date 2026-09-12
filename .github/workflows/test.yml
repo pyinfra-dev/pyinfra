@@ -16,17 +16,17 @@ jobs:
   lint:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.14"
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
-      - uses: astral-sh/ruff-action@v3
+        uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
+      - uses: astral-sh/ruff-action@146cd51f235777a9bc491eead18e0d5a4b05406a # v3
         with:
           version-file: "pyproject.toml"
           args: "check --diff --unsafe-fixes"
-      - uses: astral-sh/ruff-action@v3
+      - uses: astral-sh/ruff-action@146cd51f235777a9bc491eead18e0d5a4b05406a # v3
         with:
           version-file: "pyproject.toml"
           args: "format --diff"
@@ -34,12 +34,12 @@ jobs:
   type-check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.14"
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - run: uv sync --group test --no-default-groups
       - run: uv run mypy
       - run: uv run python scripts/lint_arguments_sync.py
@@ -47,9 +47,9 @@ jobs:
   spell-check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - name: Check spelling
-        uses: crate-ci/typos@v1.30.3
+        uses: crate-ci/typos@1a147222170e0f3959b904705f1f7f52187599d5 # v1.30.3
 
   unit-test:
     needs:
@@ -73,17 +73,17 @@ jobs:
             python-version: "3.10"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - run: uv sync --group test --no-default-groups --python=${{ matrix.python-version }}
       - run: uv run pytest --cov --disable-warnings
       - name: Upload coverage report to codecov
         if: ${{ matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.14' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
 
   # End-to-end tests
   #
@@ -106,12 +106,12 @@ jobs:
             test-name: local
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.14"
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - run: uv sync --group test --no-default-groups --python=${{ matrix.python-version }}
       - run: uv run pytest -m end_to_end_${{ matrix.test-name }}
 
@@ -122,14 +122,14 @@ jobs:
       - spell-check
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - name: Fetch git tags
         run: git fetch --tags origin
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.14"
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - name: Install
         run: |
           uv sync --group docs --no-default-groups
@@ -152,6 +152,6 @@ jobs:
       - docs-build
     runs-on: ubuntu-latest
     steps:
-      - uses: matrix-org/done-action@v3
+      - uses: matrix-org/done-action@3409aa904e8a2aaf2220f09bc954d3d0b0a2ee67 # v3
         with:
           needs: ${{ toJSON(needs) }}

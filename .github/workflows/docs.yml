@@ -15,24 +15,24 @@ jobs:
     if: github.repository == 'pyinfra-dev/pyinfra'
     steps:
       - name: Clone Source Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Fetch git tags
         run: git fetch --tags origin
 
       - name: Clone Generated Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           repository: pyinfra-dev/docs.pyinfra.com
           path: docs-public/
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.14"
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - name: Install
         run: uv sync --group docs --no-default-groups
 
