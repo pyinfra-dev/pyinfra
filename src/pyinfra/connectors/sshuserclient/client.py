@@ -4,7 +4,12 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import os
+from base64 import b64decode
+from binascii import Error as BinasciiError
+from collections.abc import Iterator
+from fnmatch import fnmatchcase
 from pathlib import Path
+from time import time
 
 from gevent.lock import BoundedSemaphore
 from paramiko import (
@@ -16,6 +21,8 @@ from paramiko import (
 )
 from paramiko.agent import AgentRequestHandler
 from paramiko.hostkeys import HostKeyEntry
+from paramiko.message import Message
+from paramiko.pkey import PKey, UnknownKeyType
 from typing_extensions import override
 
 from pyinfra import logger
@@ -30,10 +37,15 @@ from .config import SSHConfig
 
 HOST_KEYS_LOCK = BoundedSemaphore()
 
+CertAuthority = tuple[tuple[str, ...], PKey]
+
 
 class StrictPolicy(MissingHostKeyPolicy):
     @override
     def missing_host_key(self, client, hostname, key):
+        if _host_certificate_is_trusted(client, hostname, key):
+            return
+
         logger.error("No host key for %s found in known_hosts", hostname)
         raise SSHException(f"StrictPolicy: No host key for {hostname} found in known_hosts")
 
@@ -65,6 +77,9 @@ def append_hostkey(client, hostname, key):
 class AcceptNewPolicy(MissingHostKeyPolicy):
     @override
     def missing_host_key(self, client, hostname, key):
+        if _host_certificate_is_trusted(client, hostname, key):
+            return
+
         logger.warning(
             (
                 f"No host key for {hostname} found in known_hosts, "
@@ -79,6 +94,9 @@ class AcceptNewPolicy(MissingHostKeyPolicy):
 class AskPolicy(MissingHostKeyPolicy):
     @override
     def missing_host_key(self, client, hostname, key):
+        if _host_certificate_is_trusted(client, hostname, key):
+            return
+
         should_continue = input(
             f"No host key for {hostname} found in known_hosts, do you want to continue [y/n] ",
         )
@@ -160,6 +178,122 @@ def get_ssh_config(user_config_file=None):
             return ssh_config
 
 
+def _get_cert_authorities(host_keys: HostKeys) -> list[CertAuthority]:
+    return getattr(host_keys, "_pyinfra_cert_authorities", [])
+
+
+def _add_cert_authority(
+    host_keys: HostKeys, host_patterns: str, key_type: str, key_data: str
+) -> None:
+    key = PKey.from_type_string(key_type, b64decode(key_data))
+    cert_authorities = _get_cert_authorities(host_keys)
+    cert_authorities.append((tuple(host_patterns.split(",")), key))
+    setattr(host_keys, "_pyinfra_cert_authorities", cert_authorities)
+
+
+def _hostname_matches(patterns: tuple[str, ...], hostname: str) -> bool:
+    matched = False
+
+    for pattern in patterns:
+        if pattern.startswith("!"):
+            if fnmatchcase(hostname, pattern[1:]):
+                return False
+            continue
+
+        if fnmatchcase(hostname, pattern):
+            matched = True
+
+    return matched
+
+
+def _key_from_blob(key_blob: bytes) -> PKey:
+    message = Message(key_blob)
+    key_type = message.get_text()
+    return PKey.from_type_string(key_type, key_blob)
+
+
+def _consume_certificate_key(message: Message, key_type: str) -> bool:
+    if key_type.startswith(("ssh-rsa-cert-", "rsa-sha2-256-cert-", "rsa-sha2-512-cert-")):
+        message.get_mpint()
+        message.get_mpint()
+        return True
+
+    if key_type == "ssh-ed25519-cert-v01@openssh.com":
+        message.get_string()
+        return True
+
+    if key_type.startswith("ecdsa-sha2-") and key_type.endswith("-cert-v01@openssh.com"):
+        message.get_text()
+        message.get_string()
+        return True
+
+    return False
+
+
+def _host_certificate_is_trusted(client, hostname: str, key: PKey) -> bool:
+    host_keys = getattr(client, "_host_keys", None)
+    if host_keys is None:
+        return False
+
+    cert_authorities = _get_cert_authorities(host_keys)
+    if not cert_authorities:
+        return False
+
+    public_blob = getattr(key, "public_blob", None)
+    if public_blob is None or not public_blob.key_type.endswith("-cert-v01@openssh.com"):
+        return False
+
+    message = Message(public_blob.key_blob)
+    cert_key_type = message.get_text()
+    message.get_string()  # nonce
+    if not _consume_certificate_key(message, cert_key_type):
+        return False
+
+    message.get_int64()  # serial
+    cert_type = message.get_int()
+    if cert_type != 2:  # SSH2_CERT_TYPE_HOST
+        return False
+
+    message.get_text()  # key id
+    principals = Message(message.get_string())
+    valid_after = message.get_int64()
+    valid_before = message.get_int64()
+    message.get_string()  # critical options
+    message.get_string()  # extensions
+    message.get_string()  # reserved
+    signature_key = message.get_string()
+    signature = message.get_string()
+
+    now = int(time())
+    if now < valid_after or now > valid_before:
+        return False
+
+    if not any(principal == hostname for principal in _iter_certificate_principals(principals)):
+        return False
+
+    try:
+        signing_key = _key_from_blob(signature_key)
+    except (SSHException, UnknownKeyType):
+        return False
+
+    signed_data = public_blob.key_blob[: len(public_blob.key_blob) - len(signature) - 4]
+
+    for patterns, ca_key in cert_authorities:
+        if not _hostname_matches(patterns, hostname):
+            continue
+        if ca_key.asbytes() != signing_key.asbytes():
+            continue
+        if ca_key.verify_ssh_sig(signed_data, Message(signature)):
+            return True
+
+    return False
+
+
+def _iter_certificate_principals(principals: Message) -> Iterator[str]:
+    while principals.get_remainder():
+        yield principals.get_text()
+
+
 def _load_host_keys_file(host_keys: HostKeys, filename: str) -> None:
     """
     Load a single known_hosts file, skipping any line paramiko cannot parse.
@@ -175,6 +309,14 @@ def _load_host_keys_file(host_keys: HostKeys, filename: str) -> None:
         for lineno, line in enumerate(f, 1):
             line = line.strip()
             if not line or line.startswith("#"):
+                continue
+
+            if line.startswith("@cert-authority "):
+                try:
+                    _, host_patterns, key_type, key_data, *_ = line.split(None, 4)
+                    _add_cert_authority(host_keys, host_patterns, key_type, key_data)
+                except (BinasciiError, SSHException, UnknownKeyType, ValueError) as e:
+                    logger.warning("Skipping bad host CA line %s:%i: %s", filename, lineno, e)
                 continue
 
             try:
