@@ -1,0 +1,13 @@
+require_platform:
+  - Darwin
+  - Linux
+args:
+  - tmp/testdir
+  - tmp/renamedir
+facts:
+  files.File:
+    path=tmp/testdir:
+      mode: 700
+    path=tmp/renamedir:
+commands:
+  - mv tmp/testdir tmp/renamedir
