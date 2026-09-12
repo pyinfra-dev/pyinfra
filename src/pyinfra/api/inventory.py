@@ -31,6 +31,7 @@ class Inventory:
     Args:
         names_data: tuple of ``(names, data)``
         override_data: dictionary of data overrides
+        limit: Iterable, restrict host data loading by name and group name
         ssh_*: deprecated, use ``override_data.ssh_*``
         winrm_*: deprecated, use ``override_data.winrm_*``
         **groups: map of group name -> ``(names, data)``
@@ -43,7 +44,7 @@ class Inventory:
     def empty():
         return Inventory(([], {}))
 
-    def __init__(self, names_data, override_data=None, **groups):
+    def __init__(self, names_data, override_data=None, limit=None, **groups):
         # Setup basics
         self.groups = defaultdict(list)  # lists of Host objects
         self.host_data: dict[str, dict] = defaultdict(dict)  # dict of name -> data
@@ -56,14 +57,16 @@ class Inventory:
         self.data = data
 
         # Create the actual host instances and groups
-        self.make_hosts_and_groups(names, groups)
+        self.make_hosts_and_groups(names, groups, limit=limit)
 
-    def make_hosts_and_groups(self, names, groups) -> None:
+    def make_hosts_and_groups(self, names, groups, limit=None) -> None:
         all_connectors = get_all_connectors()
         execution_connectors = get_execution_connectors()
 
+        # Map name -> group name -> data (before merging)
+        name_to_group_data: dict[str, dict[str, dict]] = defaultdict(dict)
         # Map name -> data
-        name_to_data: dict[str, dict] = defaultdict(dict)
+        name_to_merged_data: dict[str, dict] = defaultdict(dict)
         # Map name -> group names
         name_to_group_names = defaultdict(list)
 
@@ -71,21 +74,41 @@ class Inventory:
             # Assign group data
             self.group_data[group_name] = group_data
 
-            # For any hosts in the group, assign mappings
+            # Store per-group host data without merging so that limit
+            # filtering can be applied later in the host_data build step.
             for name, data in extract_name_data(group_names):
-                name_to_data[name].update(data)
+                name_to_group_data[name][group_name] = data
                 name_to_group_names[name].append(group_name)
 
+        # Merge per-group/per-host data, respecting limit so that hosts
+        # only get data from the limited groups/hosts.
+        if limit is None:
+            # If there is no limit, merge all data
+            for name, _ in extract_name_data(names):
+                for group_name in groups.keys():
+                    name_to_merged_data[name].update(name_to_group_data[name].get(group_name, {}))
+        else:
+            for limiter in limit:
+                # If the limiter matches a group name, try to merge data from that group
+                if limiter in groups.keys():
+                    for name, _ in extract_name_data(names):
+                        name_to_merged_data[name].update(name_to_group_data[name].get(limiter, {}))
+                else:
+                    # Else, try to merge data from all groups containing a host named `limiter`
+                    for group_data in name_to_group_data.get(limiter, {}).values():
+                        name_to_merged_data[limiter].update(group_data)
+
         # Build all/top-level host data - *before* we expand any inventory
-        # connectors.
+        # connectors. Top-level (all) data is merged last so it can override
+        # group-level data.
         for name, data in extract_name_data(names):
-            name_to_data[name].update(data)
+            name_to_merged_data[name].update(data)
 
         # Now, use the above to fill self.host_data and populate names_connectors
         names_connectors = []
 
         for name, _ in extract_name_data(names):
-            host_data = name_to_data[name]
+            host_data = name_to_merged_data[name]
 
             # Default to executing commands with the ssh connector
             connector_cls = execution_connectors["ssh"]

@@ -177,6 +177,7 @@ def make_inventory(
     override_data=None,
     cwd: str | None = None,
     group_data_directories=None,
+    limit=None,
 ):
     # (Un)fortunately the CLI is pretty flexible for inventory inputs; we support inventory files, a
     # single hostname, list of hosts, connectors, and python module.function or module:function
@@ -205,7 +206,9 @@ def make_inventory(
 
     if is_path_or_host_list_or_connector:
         # The inventory is either an inventory file or a (list of) hosts
-        return make_inventory_from_files(inventory, override_data, cwd, group_data_directories)
+        return make_inventory_from_files(
+            inventory, override_data, cwd, group_data_directories, limit=limit
+        )
     elif inventory_func is None:
         logger.warning(
             f"{inventory} is neither an inventory file, a (list of) hosts or connectors "
@@ -300,6 +303,7 @@ def make_inventory_from_files(
     override_data=None,
     cwd: str | None = None,
     group_data_directories=None,
+    limit=None,
 ):
     """
     Builds a ``pyinfra.api.Inventory`` from the filesystem. If the file does not exist
@@ -361,7 +365,7 @@ def make_inventory_from_files(
         name: group if isinstance(group, tuple) else (group, {})
         for name, group in groups.items()
     }
-    fake_inventory = Inventory((all_hosts, all_data), **fake_groups)
+    fake_inventory = Inventory((all_hosts, all_data), limit=limit, **fake_groups)
 
     possible_group_data_folders = []
     if cwd:
@@ -400,4 +404,9 @@ def make_inventory_from_files(
     for name, data in group_data.items():
         groups[name] = ([], data)
 
-    return Inventory(groups.pop("all"), override_data=override_data, **groups)
+    return Inventory(
+        groups.pop("all"),
+        override_data=override_data,
+        limit=limit,
+        **groups,
+    )

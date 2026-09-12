@@ -453,6 +453,7 @@ def _main(
         cwd=state.cwd,
         override_data=override_data,
         group_data_directories=group_data,
+        limit=limit,
     )
     ctx_inventory.set(inventory)
 
