@@ -615,6 +615,18 @@ class SSHConnector(BaseConnector):
                     **noauth_arguments,
                 )
 
+                if (
+                    status is False
+                    and "branding mismatch" in output.stderr
+                    and "existing ACL is NFSv4" in output.stderr
+                ):
+                    status, output = self.run_shell_command(
+                        StringCommand("setfacl", "-m", f"u:{other_user}:r::allow", temp_file),
+                        print_output=print_output,
+                        print_input=print_input,
+                        **noauth_arguments,
+                    )
+
                 if status is False:
                     logger.error(f"Error on handover to sudo/su user: {output.stderr}")
                     return False

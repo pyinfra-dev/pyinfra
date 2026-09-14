@@ -15,13 +15,12 @@ from unittest.mock import MagicMock, patch
 
 from pyinfra.api.exceptions import FactError, FactNotCollected, FactPreconditionError
 from pyinfra.api.facts import get_fact
-from pyinfra.api.state import StateStage
 from pyinfra.facts.zfs import ZfsPools
 
 
-def _make_state(stage: StateStage) -> MagicMock:
+def _make_state(is_executing: bool) -> MagicMock:
     state = MagicMock()
-    state.current_stage = stage
+    state.is_executing = is_executing
     return state
 
 
@@ -30,7 +29,7 @@ class TestFactPreconditionError(TestCase):
 
     def test_prepare_phase_returns_default(self):
         """Precondition not satisfied during prepare → fact returns default() silently."""
-        state = _make_state(StateStage.Prepare)
+        state = _make_state(is_executing=False)
         host = MagicMock()
 
         with patch(
@@ -43,7 +42,7 @@ class TestFactPreconditionError(TestCase):
 
     def test_execute_phase_raises(self):
         """Precondition not satisfied during execute → FactPreconditionError propagates."""
-        state = _make_state(StateStage.Execute)
+        state = _make_state(is_executing=True)
         host = MagicMock()
 
         with patch(

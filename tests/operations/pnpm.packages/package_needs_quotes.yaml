@@ -1,0 +1,7 @@
+args:
+  - ["react; rm -rf /"]
+facts:
+  pnpm.PnpmPackages:
+    directory=None: {}
+commands:
+  - "pnpm --global add 'react; rm -rf /'"

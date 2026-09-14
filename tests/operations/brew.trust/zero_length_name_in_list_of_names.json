@@ -1,9 +1,0 @@
-{
-    "args": [["a", "", "c"], "taps", true],
-    "facts": {"brew.BrewTrusted": {"casks": [], "commands": [], "formulae": [], "taps": []}},
-    "commands": [],
-    "exception": {
-        "names": "OperationValueError",
-        "message": "all items must have non-zero length names"
-    }
-}

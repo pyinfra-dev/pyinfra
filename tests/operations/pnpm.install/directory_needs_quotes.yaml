@@ -1,0 +1,7 @@
+args:
+  - "/app dir; rm -rf /"
+facts:
+  pnpm.PnpmModulesUpToDate:
+    "directory=/app dir; rm -rf /": false
+commands:
+  - "cd '/app dir; rm -rf /' && pnpm install"

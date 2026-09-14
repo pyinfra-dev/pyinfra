@@ -1,0 +1,9 @@
+args:
+  - python@3.12
+facts:
+  brew.BrewPackages:
+    python@3.12:
+      - 'set:'
+      - 3.12.7
+commands: []
+noop_description: package python@3.12 is installed (3.12.7)

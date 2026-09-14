@@ -1,0 +1,29 @@
+command: podman pod ps --format=json
+requires_command: podman
+output: |
+  [
+    {
+      "Cgroup": "user.slice",
+      "Containers": [],
+      "Created": "2026-05-08T14:29:50.634923891+02:00",
+      "Id": "1c8e9eccfbea565c5ad34d6f79e8abe482b6cf4a6ebcea63d20fc2b71bddecf5",
+      "InfraId": "",
+      "Name": "pod_test",
+      "Namespace": "",
+      "Networks": [],
+      "Status": "Created",
+      "Labels": {
+      }
+    }
+  ]
+fact:
+  - Cgroup: user.slice
+    Containers: []
+    Created: "2026-05-08T14:29:50.634923891+02:00"
+    Id: 1c8e9eccfbea565c5ad34d6f79e8abe482b6cf4a6ebcea63d20fc2b71bddecf5
+    InfraId: ""
+    Name: pod_test
+    Namespace: ""
+    Networks: []
+    Status: Created
+    Labels: {}

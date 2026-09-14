@@ -1,0 +1,24 @@
+{
+  "command": "LANG=C ps -p 742 -o pid,user,stat,%cpu,%mem,args -ww && echo ===PYINFRA-PROCESSES-COMM=== && LANG=C ps -p 742 -o pid,comm -ww",
+  "arg": 742,
+  "facts": {
+    "server.Kernel": "Darwin"
+  },
+  "output": [
+    "  PID USER     STAT  %CPU %MEM ARGS",
+    "  742 root     Ss    0.0  0.2 /usr/sbin/sshd -D",
+    "===PYINFRA-PROCESSES-COMM===",
+    "  PID COMM",
+    "  742 /usr/sbin/sshd"
+  ],
+  "fact": {
+    "742": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.2,
+      "command": "/usr/sbin/sshd",
+      "args": "/usr/sbin/sshd -D"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+args:
+  - ["typescript", "cowsay@1.6.0"]
+kwargs:
+  latest: true
+facts:
+  pnpm.PnpmPackages:
+    directory=None:
+      typescript: ["5.7.2"]
+      cowsay: ["1.6.0"]
+commands:
+  - pnpm --global update --latest typescript

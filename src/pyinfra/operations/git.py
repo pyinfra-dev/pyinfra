@@ -103,6 +103,7 @@ def repo(
     depth: int | None = None,
     *,
     fetch_tags: bool = False,
+    force: bool = False,
 ):
     """
     Clone/pull git repositories.
@@ -117,8 +118,10 @@ def repo(
     + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
-    + depth: create a shallow clone with a history truncated to the specified number of commits
-    + fetch_tags: Whether all tags should be fetched prior to attempting to check out the specified revision
+    + depth: truncate clone, fetch and pull history to the specified number of commits
+    + fetch_tags: Whether all tags should be fetched prior to attempting to
+      check out the specified revision.
+    + force: Execute ``fetch``, ``pull`` and ``checkout`` commands with ``--force``.
 
     **Example:**
 
@@ -130,6 +133,8 @@ def repo(
             dest="/usr/local/src/pyinfra",
         )
     """
+
+    force_flag_list = ["--force"] if force else []
 
     # Ensure our target directory exists
     yield from files.directory._inner(dest)
@@ -151,15 +156,20 @@ def repo(
     git_dir = unix_path_join(dest, ".git")
     is_repo = host.get_fact(Directory, path=git_dir)
 
+    # The depth argument can be passed to clone, fetch and pull operations.
+    # We prepare the argument list to reuse it later on
+    depth_options: list[str | QuoteString] = []
+    if depth is not None:
+        depth_options.extend(["--depth", QuoteString(str(depth))])
+
     # Cloning new repo?
     if not is_repo:
-        options: list[str | QuoteString] = []
-        if depth is not None:
-            options.extend(["--depth", str(depth)])
+        clone_options: list[str | QuoteString] = []
+        clone_options.extend(depth_options)
         if branch:
-            options.extend(["--branch", QuoteString(branch)])
+            clone_options.extend(["--branch", QuoteString(branch)])
 
-        git_commands.append(StringCommand("clone", QuoteString(src), *options, "."))
+        git_commands.append(StringCommand("clone", QuoteString(src), *clone_options, "."))
 
     # Ensuring existing repo
     else:
@@ -177,14 +187,15 @@ def repo(
         current_branch = host.get_fact(GitBranch, repo=dest)
         if branch is not None and current_branch != branch:
             # fetch to ensure we have the branch/tag locally
+            fetch_options: list[str | QuoteString] = []
+            fetch_options.extend(depth_options)
             if fetch_tags:
-                git_commands.append(StringCommand("fetch", "--tags"))
-            else:
-                git_commands.append(StringCommand("fetch"))
+                fetch_options.append("--tags")
+            git_commands.append(StringCommand("fetch", *fetch_options, *force_flag_list))
 
-            git_commands.append(StringCommand("checkout", QuoteString(branch)))
+            git_commands.append(StringCommand("checkout", QuoteString(branch), *force_flag_list))
         if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
-            git_commands.append(StringCommand("checkout", QuoteString(branch)))
+            git_commands.append(StringCommand("checkout", QuoteString(branch), *force_flag_list))
             is_tag = True
         if pull and not is_tag:
             skip_pull = False
@@ -209,16 +220,18 @@ def repo(
                 host.noop(
                     f"git repository {dest} is already up to date",
                 )
-            elif rebase:
-                git_commands.append("pull --rebase")
             else:
-                git_commands.append("pull")
+                pull_options: list[str | QuoteString] = []
+                pull_options.extend(depth_options)
+                if rebase:
+                    pull_options.append("--rebase")
+                git_commands.append(StringCommand("pull", *pull_options, *force_flag_list))
 
     if update_submodules:
         if recursive_submodules:
-            git_commands.append("submodule update --init --recursive")
+            git_commands.append(StringCommand("submodule", "update", "--init", "--recursive"))
         else:
-            git_commands.append("submodule update --init")
+            git_commands.append(StringCommand("submodule", "update", "--init"))
 
     # Attach prefixes for directory
     command_prefix = StringCommand("cd", QuoteString(dest), "&&", "git")

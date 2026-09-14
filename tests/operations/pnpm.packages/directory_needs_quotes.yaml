@@ -1,0 +1,9 @@
+args:
+  - ["react"]
+kwargs:
+  directory: "/app dir; rm -rf /"
+facts:
+  pnpm.PnpmPackages:
+    "directory=/app dir; rm -rf /": {}
+commands:
+  - "cd '/app dir; rm -rf /' && pnpm add react"

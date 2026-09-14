@@ -1,0 +1,15 @@
+#
+# Brew will generate an error as the formula for python are only python@X.Y but it varies by
+# package (e.g. node is just node@X) so we can not generate the correct removal command.
+#
+args:
+  - python@3.10.17
+kwargs:
+  present: false
+facts:
+  brew.BrewPackages:
+    python@3.10:
+      - 'set:'
+      - 3.10.17
+commands: []
+noop_description: package python@3.10.17 is not installed

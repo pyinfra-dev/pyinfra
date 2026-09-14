@@ -1,0 +1,7 @@
+args:
+  - build
+  - /opt/app
+kwargs:
+  args: "--prod"
+commands:
+  - cd /opt/app && pnpm run build --prod

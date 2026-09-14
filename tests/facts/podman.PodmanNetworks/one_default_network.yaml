@@ -1,0 +1,38 @@
+command: podman network ls --format=json
+requires_command: podman
+output: |
+  [
+    {
+      "name": "podman",
+      "id": "2f259bab93aaaaa2542ba43ef33eb990d0999ee1b9924b557b7be53c0b7a1bb9",
+      "driver": "bridge",
+      "network_interface": "podman0",
+      "created": "2026-07-25T20:07:46.543753153+02:00",
+      "subnets": [
+        {
+          "subnet": "[IP_ADDRESS]/16",
+          "gateway": "[IP_ADDRESS]"
+        }
+      ],
+      "ipv6_enabled": false,
+      "internal": false,
+      "dns_enabled": false,
+      "ipam_options": {
+        "driver": "host-local"
+      }
+    }
+  ]
+fact:
+  - name: podman
+    id: 2f259bab93aaaaa2542ba43ef33eb990d0999ee1b9924b557b7be53c0b7a1bb9
+    driver: bridge
+    network_interface: podman0
+    created: "2026-07-25T20:07:46.543753153+02:00"
+    subnets:
+      - subnet: "[IP_ADDRESS]/16"
+        gateway: "[IP_ADDRESS]"
+    ipv6_enabled: false
+    internal: false
+    dns_enabled: false
+    ipam_options:
+      driver: host-local

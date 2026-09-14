@@ -28,7 +28,7 @@ files.file(
 )
 ```
 
-Uses [`operations.files`](operations/files.md) and [`operations.server`](operations/server.md). You can see all available operations in the [Operations Index](operations/index.md). If you save the file as `deploy.py` you can test it out using Docker:
+Uses [`operations.files`](operations/files.md) and [`operations.server`](operations/server.md). You can see all available operations in the [Operations Index](operations.md). If you save the file as `deploy.py` you can test it out using Docker:
 
 ```sh
 pyinfra @docker/ubuntu:20.04 deploy.py
@@ -157,7 +157,7 @@ if host.get_fact(LinuxName) == "Ubuntu":
 pyinfra inventory.py nano.py
 ```
 
-See [Facts Index](facts/index.md) for a full list of available facts and arguments.
+See [Facts Index](facts.md) for a full list of available facts and arguments.
 
 !!! important
     Only use **immutable** facts in deploy code — facts whose value cannot change *over the course of the deploy*. OS family, distribution, architecture and kernel version are immutable in this sense; "is this package installed", "does this file exist" and "is this service running" are **not**, because an earlier operation in the same deploy could flip them. Facts are read during prepare, before any operation runs, so a mutable fact branched on in Python sees pre-deploy state — not the state at the point of the branch in source order. Use `_if` (see [Change Detection](#change-detection) below) for conditions that need execute-time evaluation. More detail: [using host facts](deploy-process.md#using-host-facts).

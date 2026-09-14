@@ -1,0 +1,10 @@
+args:
+  - ["typescript@5.7.2"]
+kwargs:
+  present: false
+facts:
+  pnpm.PnpmPackages:
+    directory=None:
+      typescript: ["5.0.0"]
+commands: []
+noop_description: "package typescript is not installed"

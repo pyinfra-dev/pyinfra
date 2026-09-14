@@ -1,0 +1,11 @@
+args:
+  - /opt/app
+kwargs:
+  frozen_lockfile: true
+  ignore_scripts: true
+  package_import_method: copy
+facts:
+  pnpm.PnpmModulesUpToDate:
+    directory=/opt/app: false
+commands:
+  - cd /opt/app && pnpm install --frozen-lockfile --ignore-scripts --package-import-method copy

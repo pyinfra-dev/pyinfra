@@ -1,0 +1,5 @@
+command: pnpm --version
+requires_command: pnpm
+output: |
+  10.15.1
+fact: "10.15.1"

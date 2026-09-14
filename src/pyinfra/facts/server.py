@@ -1305,6 +1305,10 @@ echo "no_reboot_required"
         return list(output)[0].strip() == "reboot_required"
 
 
+_DARWIN_ARGS_FIELDS = "pid,user,stat,%cpu,%mem,args"
+_DARWIN_COMM_MARKER = "===PYINFRA-PROCESSES-COMM==="
+
+
 class Processes(FactBase[dict[int, ProcessDict]]):
     """
     Returns a dictionary of running processes keyed by PID.
@@ -1328,7 +1332,9 @@ class Processes(FactBase[dict[int, ProcessDict]]):
     @override
     def command(self, pid: int | None = None) -> str | StringCommand:
         self._kernel = host.get_fact(Kernel)
-        is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
+        kernel = self._kernel.strip()
+        self._is_darwin = kernel == "Darwin"
+        is_bsd = kernel in ("FreeBSD", "Darwin")
 
         # BusyBox ps (Alpine) only supports limited columns.
         # Detect by checking if busybox exists on the system.
@@ -1336,6 +1342,26 @@ class Processes(FactBase[dict[int, ProcessDict]]):
             self._is_busybox = bool(host.get_fact(Which, "busybox"))
         else:
             self._is_busybox = False
+
+        if self._is_darwin:
+            # macOS ps truncates any non-last text column (comm to 16 bytes, args to 64),
+            # so run ps twice with each of those columns last and join by pid.
+            if pid is not None:
+                return StringCommand(
+                    "LANG=C ps -p",
+                    QuoteString(str(pid)),
+                    f"-o {_DARWIN_ARGS_FIELDS} -ww &&",
+                    "echo",
+                    f"{_DARWIN_COMM_MARKER} &&",
+                    "LANG=C ps -p",
+                    QuoteString(str(pid)),
+                    "-o pid,comm -ww",
+                )
+            return (
+                f"LANG=C ps -eo {_DARWIN_ARGS_FIELDS} -ww && "
+                f"echo {_DARWIN_COMM_MARKER} && "
+                "LANG=C ps -eo pid,comm -ww"
+            )
 
         if not self._is_busybox:
             fields = "pid,user,stat,%cpu,%mem,comm,args"
@@ -1357,8 +1383,70 @@ class Processes(FactBase[dict[int, ProcessDict]]):
         else:
             return f"LANG=C ps -eo {fields} --no-headers"
 
+    def _process_darwin(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        args_lines: list[str] = []
+        comm_lines: list[str] = []
+        current = args_lines
+        marker_seen = False
+
+        for line in output:
+            if line.strip() == _DARWIN_COMM_MARKER:
+                marker_seen = True
+                current = comm_lines
+                continue
+            current.append(line)
+
+        if not marker_seen:
+            raise Exception(
+                f"server.Processes: did not find the {_DARWIN_COMM_MARKER!r} marker in "
+                "the ps output; the ps -eo/-p pipeline may have produced unexpected output"
+            )
+
+        processes: dict[int, ProcessDict] = {}
+
+        for line in args_lines:
+            line = line.strip()
+            if not line or line.startswith("PID"):
+                continue
+            parts = line.split(None, 5)
+            if len(parts) < 6:
+                continue
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+            processes[pid] = {
+                "user": parts[1],
+                "state": parts[2],
+                "cpu_percent": float(parts[3]),
+                "mem_percent": float(parts[4]),
+                "command": "",
+                "args": parts[5],
+            }
+
+        for line in comm_lines:
+            line = line.strip()
+            if not line or line.startswith("PID"):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) < 2:
+                continue
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+            if pid in processes:
+                processes[pid]["command"] = parts[1]
+
+        # A pid without a matched `comm` row means it vanished between the two `ps`
+        # snapshots: drop it rather than return a record with an empty command.
+        return {pid: proc for pid, proc in processes.items() if proc["command"]}
+
     @override
     def process(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        if self._is_darwin:
+            return self._process_darwin(output)
+
         processes: dict[int, ProcessDict] = {}
 
         for line in output:

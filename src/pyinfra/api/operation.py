@@ -293,7 +293,7 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         global_arguments, global_argument_keys = pop_global_arguments(state, host, kwargs)
 
         names, add_args = generate_operation_name(func, host, kwargs, global_arguments)
-        op_order, op_hash = solve_operation_consistency(names, state, host)
+        op_order, op_hash = solve_operation_consistency(names, args, kwargs, state, host)
 
         # Ensure shared (between servers) operation meta, mutates state
         op_meta = ensure_shared_op_meta(state, op_hash, op_order, global_arguments, names)
@@ -410,7 +410,7 @@ def generate_operation_name(func, host, kwargs, global_arguments):
     return names, add_args
 
 
-def solve_operation_consistency(names, state, host):
+def solve_operation_consistency(names, args, kwargs, state, host):
     # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
     # we use stack call order so this matches as defined by the user deploy code.
     if pyinfra.is_cli:
@@ -422,8 +422,18 @@ def solve_operation_consistency(names, state, host):
     if host.loop_position:
         op_order.extend(host.loop_position)
 
-    # Make a hash from the call stack lines
-    op_hash = make_hash(op_order)
+    # Make a hash from the call stack lines, operation names and arguments. Names and
+    # arguments are included so that different operations at the same position (eg calls
+    # in a plain loop with per-host data) do not collide into one hash, while identical
+    # operations across hosts still share a hash.
+    op_hash = make_hash(
+        (
+            op_order,
+            sorted(names),
+            [_get_arg_value(arg) for arg in args],
+            {key: _get_arg_value(value) for key, value in kwargs.items()},
+        )
+    )
 
     # Avoid adding duplicates! This happens if an operation is called within
     # a loop - such that the filename/lineno/code _are_ the same, but the
