@@ -1,0 +1,8 @@
+command: rcctl ls on
+requires_command: rcctl
+output: |
+  cron
+  rad
+fact:
+  cron: true
+  rad: true
