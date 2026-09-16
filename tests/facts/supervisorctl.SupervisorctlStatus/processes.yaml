@@ -1,0 +1,21 @@
+command: supervisorctl status || true
+requires_command: supervisorctl
+output: |
+  web                              RUNNING   pid 1001, uptime 1:23:45
+  starting_proc                    STARTING
+  workers:worker_0                 STOPPED   Not started
+  workers:worker_1                 EXITED    Sep 28 01:00 PM
+  stopping_proc                    STOPPING
+  backoff_proc                     BACKOFF   Exited too quickly (process log may have details)
+  fatal_proc                       FATAL     Exited too quickly (process log may have details)
+  unknown_proc                     UNKNOWN
+  unix:///var/run/supervisor.sock no such file
+fact:
+  web: true
+  starting_proc: true
+  "workers:worker_0": false
+  "workers:worker_1": false
+  stopping_proc: false
+  backoff_proc: null
+  fatal_proc: null
+  unknown_proc: null
