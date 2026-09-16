@@ -65,7 +65,13 @@ def keyscan(hostname: str, force=False, port=22):
 
 
 @operation(is_idempotent=False)
-def command(hostname: str, command: str, user: str | None = None, port=22):
+def command(
+    hostname: str,
+    command: str,
+    user: str | None = None,
+    port=22,
+    ssh_keyscan: bool = False,
+):
     """
     Execute commands on other servers over SSH.
 
@@ -73,6 +79,7 @@ def command(hostname: str, command: str, user: str | None = None, port=22):
     + command: the command to execute
     + user: connect with this user
     + port: connect to this port
+    + ssh_keyscan: execute ``ssh.keyscan`` before running the command
 
     **Example:**
 
@@ -89,6 +96,12 @@ def command(hostname: str, command: str, user: str | None = None, port=22):
     connection_target = hostname
     if user:
         connection_target = "@".join((user, hostname))
+
+    if ssh_keyscan:
+        yield from keyscan._inner(
+            hostname,
+            port=port,
+        )
 
     yield StringCommand(
         "ssh", "-p", str(port), QuoteString(connection_target), QuoteString(command)
