@@ -1,10 +1,12 @@
 import logging
 
-import click
+from rich.text import Text
 from typing_extensions import override
 
 from pyinfra import logger, state
 from pyinfra.context import ctx_state
+
+from .console import console, format_text
 
 
 class LogHandler(logging.Handler):
@@ -12,7 +14,8 @@ class LogHandler(logging.Handler):
     def emit(self, record):
         try:
             message = self.format(record)
-            click.echo(message, err=True)
+            # ``message`` may already contain ANSI escape codes (from format_text).
+            console.print(Text.from_ansi(message))
         except Exception:
             self.handleError(record)
 
@@ -21,10 +24,10 @@ class LogFormatter(logging.Formatter):
     previous_was_header = True
 
     level_to_format = {
-        logging.DEBUG: lambda s: click.style(s, "green"),
-        logging.WARNING: lambda s: click.style(s, "yellow"),
-        logging.ERROR: lambda s: click.style(s, "red"),
-        logging.CRITICAL: lambda s: click.style(s, "red", bold=True),
+        logging.DEBUG: lambda s: format_text(s, "green"),
+        logging.WARNING: lambda s: format_text(s, "yellow"),
+        logging.ERROR: lambda s: format_text(s, "red"),
+        logging.CRITICAL: lambda s: format_text(s, "red", bold=True),
     }
 
     @override
@@ -50,7 +53,7 @@ class LogFormatter(logging.Formatter):
 
             if "-->" in message:
                 if not self.previous_was_header:
-                    click.echo(err=True)
+                    console.print()
             else:
                 message = f"    {message}"
 
