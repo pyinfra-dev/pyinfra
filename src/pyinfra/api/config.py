@@ -47,6 +47,8 @@ class ConfigDefaults:
     PRESERVE_SUDO_ENV: bool = False
     USE_SUDO_LOGIN: bool = False
     SUDO_PASSWORD: str | None = None
+    # Prompt for the sudo password before the first sudo command (if SUDO_PASSWORD isn't set)
+    USE_SUDO_PASSWORD: bool = False
     # Use doas and optional user
     DOAS: bool = False
     DOAS_USER: str | None = None
