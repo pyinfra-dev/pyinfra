@@ -390,7 +390,10 @@ class SSHClient(ParamikoClient):
             strict_host_key_checking=_pyinfra_ssh_strict_host_key_checking,
         )
         self.set_missing_host_key_policy(missing_host_key_policy)
+        proxyjump_sock = config.get("sock")
         config.update(kwargs)
+        if proxyjump_sock is not None:
+            config["sock"] = proxyjump_sock
 
         if _pyinfra_ssh_known_hosts_file:
             host_keys_files = (os.path.expanduser(_pyinfra_ssh_known_hosts_file),)
