@@ -431,10 +431,85 @@ class TestOperationsApi(PatchSSHTestCase):
             (
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_with_sudo_password(self):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        host = inventory.get_host("somehost")
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass"
+
+        add_op(
+            state,
+            files.rsync,
+            "src",
+            "dest",
+            _sudo=True,
+            _sudo_user="root",
+            _sudo_password="PASSWORD",
+        )
+
+        assert len(state.get_op_order()) == 1
+
+        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
+                " --rsync-path 'env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass "
+                "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k -u root rsync' "
+                "src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=host.print_prefix,
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_retries_with_prompted_sudo_password(self):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        host = inventory.get_host("somehost")
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass"
+
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+
+        assert len(state.get_op_order()) == 1
+
+        with (
+            patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process,
+            patch("pyinfra.connectors.util.getpass", return_value="PASSWORD"),
+        ):
+            fake_run_local_process.side_effect = [
+                (1, CommandOutput([OutputLine("stderr", "sudo: a password is required")])),
+                (0, CommandOutput([])),
+            ]
+            run_ops(state)
+
+        assert fake_run_local_process.call_args_list[0].args[0] == (
+            "rsync -ax --delete --rsh "
+            '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
+            " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
+        )
+        assert fake_run_local_process.call_args_list[1].args[0] == (
+            "rsync -ax --delete --rsh "
+            '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
+            " --rsync-path 'env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass "
+            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k -u root rsync' "
+            "src vagrant@somehost:dest"
         )
 
     @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
@@ -456,7 +531,7 @@ class TestOperationsApi(PatchSSHTestCase):
             (
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=no\\""'
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -492,7 +567,7 @@ class TestOperationsApi(PatchSSHTestCase):
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes '
                 '-o \\"StrictHostKeyChecking=no\\" -F /home/me/ssh_test_config"'
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -520,7 +595,7 @@ class TestOperationsApi(PatchSSHTestCase):
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" '
                 "-F '/home/me/ssh_test_config && echo hi'\""
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
