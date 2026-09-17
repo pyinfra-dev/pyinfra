@@ -1,0 +1,7 @@
+arg:
+- foo[bar]
+- pip
+command: pip install --dry-run --quiet --report - 'foo[bar]' 2> /dev/null
+requires_command: pip
+output: []
+fact: false

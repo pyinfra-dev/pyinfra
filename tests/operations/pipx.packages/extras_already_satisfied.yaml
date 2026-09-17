@@ -1,0 +1,9 @@
+args:
+- ["foo[bar]"]
+facts:
+  pipx.PipxPackages:
+    foo: ["1.0"]
+  pipx.PipxRunpipDryRun:
+    app=foo, spec=foo[bar]: true
+commands: []
+noop_description: package foo extras already satisfied
