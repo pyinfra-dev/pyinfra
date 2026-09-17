@@ -1,0 +1,7 @@
+args:
+  - "work_mem = 0; DROP DATABASE prod"
+kwargs:
+  value: "8MB"
+exception:
+  name: OperationError
+  message: "invalid PostgreSQL setting name: work_mem = 0; DROP DATABASE prod"
