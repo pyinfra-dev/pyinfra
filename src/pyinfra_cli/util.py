@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 from datetime import datetime
 from importlib import import_module
@@ -150,6 +151,14 @@ def parse_cli_arg(arg):
         return json.loads(arg)
     except ValueError:
         pass
+
+    try:
+        parsed_arg = ast.literal_eval(arg)
+    except (SyntaxError, ValueError):
+        pass
+    else:
+        if isinstance(parsed_arg, (dict, list, tuple)):
+            return parsed_arg
 
     return arg
 
