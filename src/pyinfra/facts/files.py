@@ -369,6 +369,25 @@ class Socket(File):
     type = "socket"
 
 
+class SameFile(FactBase[bool]):
+    """
+    Returns ``True`` if ``path`` and ``target`` refer to the same file (same device and
+    inode, ie one is a hard link to the other), otherwise ``False``.
+    """
+
+    @override
+    def command(self, path: str, target: str) -> StringCommand:
+        return make_formatted_string_command(
+            "test {0} -ef {1} && echo true || echo false",
+            QuoteString(path),
+            QuoteString(target),
+        )
+
+    @override
+    def process(self, output: list[str]) -> bool:
+        return output == ["true"]
+
+
 if TYPE_CHECKING:
     FactBaseOptionalStr = FactBase[str | None]
 else:

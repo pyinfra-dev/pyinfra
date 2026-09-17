@@ -55,6 +55,7 @@ from pyinfra.facts.files import (
     Flags,
     Link,
     Md5File,
+    SameFile,
     Sha1File,
     Sha256File,
     Sha384File,
@@ -1647,6 +1648,13 @@ def link(
         raise OperationError("If present is True target must be provided")
 
     info = host.get_fact(Link, path=path)
+
+    if info is False and not symbolic and target is not None:
+        # The path exists but is not a symlink - it may already be a hard link to the target
+        file_info = host.get_fact(File, path=path)
+        same_file = host.get_fact(SameFile, path=path, target=target)
+        if file_info and same_file:
+            info = {**file_info, "link_target": target}
 
     if info is False:  # not a link
         yield from _raise_or_remove_invalid_path(
