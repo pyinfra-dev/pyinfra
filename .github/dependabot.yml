@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    allow:
+      - dependency-type: "all"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 10
+    groups:
+      production:
+        dependency-type: "production"
+      test:
+        dependency-type: "development"
+        patterns:
+          - "pytest*"
+          - "coverage*"
+          - "ruff"
+          - "mypy"
+          - "types-*"
+          - "pyinfra-testgen"
+          - "pyyaml"
+      docs:
+        dependency-type: "development"
+        patterns:
+          - "sphinx*"
+          - "myst-parser*"
+          - "pyinfra-guzzle*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"
