@@ -5,11 +5,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
 from multiprocessing import cpu_count
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from collections.abc import Callable, Iterator
-
-from gevent.pool import Pool
-from paramiko import PKey
 
 from pyinfra import logger
 
@@ -154,9 +151,6 @@ class State:
     # A pyinfra.api.Config
     config: Config
 
-    # Main gevent pool
-    pool: Pool
-
     # Current stage this state is in
     current_stage: StateStage = StateStage.Setup
     # Warning counters by stage
@@ -238,12 +232,8 @@ class State:
 
         self.callback_handlers: list[BaseStateCallback] = []
 
-        # Setup greenlet pools
-        self.pool = Pool(config.PARALLEL)
-        self.fact_pool = Pool(config.PARALLEL)
-
         # Private keys
-        self.private_keys: dict[str, PKey] = {}
+        self.private_keys: dict[str, Any] = {}
 
         # Assign inventory/config
         self.inventory = inventory

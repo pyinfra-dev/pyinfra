@@ -17,8 +17,8 @@ pyinfra works on anywhere that runs Python - Mac, Linux & Windows are all suppor
 
 ### Interactive Debuggers
 
-pyinfra executes work concurrently using gevent, so stepping through a deploy in an interactive
-debugger does not reliably represent the order of remote execution. See
+pyinfra executes work for each host concurrently on an asyncio event loop, so stepping through a
+deploy in an interactive debugger does not reliably represent the order of remote execution. See
 [Debugging Deploys](debugging.md) for supported ways to inspect deploy state and execution.
 
 

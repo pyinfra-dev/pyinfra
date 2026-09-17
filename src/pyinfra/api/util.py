@@ -12,8 +12,8 @@ from socket import error as socket_error, timeout as timeout_error
 from typing import IO, TYPE_CHECKING, Any
 from collections.abc import Callable
 
+from asyncssh import Error as SSHError
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
-from paramiko import SSHException
 from typeguard import TypeCheckError, check_type
 
 import pyinfra
@@ -272,7 +272,7 @@ def log_host_command_error(host: Host, e: Exception, timeout: int | None = 0) ->
             ),
         )
 
-    elif isinstance(e, (socket_error, SSHException)):
+    elif isinstance(e, (socket_error, SSHError)):
         logger.error(
             "{}{}".format(
                 host.print_prefix,

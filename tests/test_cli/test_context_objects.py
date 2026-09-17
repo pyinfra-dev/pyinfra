@@ -1,8 +1,9 @@
-from unittest import TestCase
+import asyncio
+from unittest import IsolatedAsyncioTestCase, TestCase
 
 from pyinfra import host, inventory
 from pyinfra.api import Host, Inventory
-from pyinfra.context import ctx_host, ctx_inventory
+from pyinfra.context import ContextManager, LocalContextObject, ctx_host, ctx_inventory
 
 
 def _create_host(name: str = "host"):
@@ -71,3 +72,44 @@ class TestInventoryContextObject(TestCase):
         with ctx_inventory.use(inventory_obj):
             assert ctx_inventory.isset() is True
             assert list(iter(inventory)) == list(iter(inventory_obj))
+
+
+class TestContextManager(IsolatedAsyncioTestCase):
+    def test_use_restores_context_after_exception(self):
+        manager = ContextManager("test", LocalContextObject)
+        original = object()
+
+        for replacement in (original, object()):
+            with self.subTest(same_value=replacement is original):
+                with manager.use(original):
+                    with self.assertRaisesRegex(RuntimeError, "boom"):
+                        with manager.use(replacement):
+                            manager.set(object())
+                            raise RuntimeError("boom")
+                    assert manager.get() is original
+                assert manager.get() is None
+
+    async def test_use_restores_context_after_cancellation(self):
+        manager = ContextManager("test", LocalContextObject)
+        original = object()
+        entered = asyncio.Event()
+        restored = []
+
+        async def worker():
+            try:
+                with manager.use(object()):
+                    entered.set()
+                    await asyncio.Future()
+            except asyncio.CancelledError:
+                restored.append(manager.get())
+                raise
+
+        with manager.use(original):
+            task = asyncio.create_task(worker())
+            await entered.wait()
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+            assert restored == [original]
+            assert manager.get() is original
+        assert manager.get() is None
