@@ -1,0 +1,13 @@
+command: (pkg query '%n %v %k' && echo __pyinfra_pkg_remote__ && (pkg version -vRL= || true)) || pkg_info || true
+output: |
+  nano-3.48 Nano editor
+  py-pip-20.1.1 Python pip
+fact:
+  - name: nano
+    installed_versions: ["3.48"]
+    available_version: null
+    status: installed
+  - name: py-pip
+    installed_versions: ["20.1.1"]
+    available_version: null
+    status: installed

@@ -1,0 +1,3 @@
+command: (pkg query '%n %v %k' && echo __pyinfra_pkg_remote__ && (pkg version -vRL= || true)) || pkg_info || true
+output: []
+fact: []
