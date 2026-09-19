@@ -1,0 +1,10 @@
+args:
+  - tipidee
+kwargs:
+  reloaded: true
+  reload_signal: SIGUSR1
+facts:
+  s6.S6LiveStatus:
+    tipidee: true
+commands:
+  - s6 process kill -s SIGUSR1 tipidee

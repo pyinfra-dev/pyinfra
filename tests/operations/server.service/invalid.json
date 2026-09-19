@@ -6,7 +6,8 @@
             "command=initctl": false,
             "command=rc-service": false,
             "command=sv": false,
-            "command=service": false
+            "command=service": false,
+            "command=s6": false
         },
         "files.Directory": {
             "path=/etc/init.d": false,
@@ -19,6 +20,6 @@
     },
     "exception": {
         "name": "OperationError",
-        "message": "No init system found (no systemctl, initctl, /etc/init.d or /etc/rc.d found)"
+        "message": "No init system found (no systemctl, rc-service, initctl, sv, s6, /etc/init.d or /etc/rc.d found)"
     }
 }

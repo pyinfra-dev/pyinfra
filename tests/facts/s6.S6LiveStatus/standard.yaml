@@ -1,0 +1,13 @@
+command: s6-rc -c list
+requires_command: s6-rc
+output: |
+  NetworkManager-log/longrun//up/explicit
+  NetworkManager-srv/longrun//up/explicit
+  avahi-daemon-srv/longrun//down/
+  avahi-daemon-log/longrun//down/
+fact:
+  NetworkManager-log: true
+  NetworkManager-srv: true
+  avahi-daemon-log: false
+  avahi-daemon-srv: false
+

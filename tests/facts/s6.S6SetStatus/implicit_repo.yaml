@@ -1,0 +1,15 @@
+command: 's6-rc-set-status current; echo EXIT CODE: $?'
+requires_command: s6-rc-set-status
+output: |
+  swap/always
+  NetworkManager-srv/active
+  NetworkManager-log/active
+  avahi-daemon-srv/usable
+  avahi-daemon-log/usable
+  EXIT CODE: 0
+fact:
+  swap: always
+  NetworkManager-srv: active
+  NetworkManager-log: active
+  avahi-daemon-srv: usable
+  avahi-daemon-log: usable
