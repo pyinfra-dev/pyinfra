@@ -1982,6 +1982,7 @@ def block(
     marker: str | None = None,
     begin: str | None = None,
     end: str | None = None,
+    preserve_meta: bool = True,
 ):
     """
     Ensure content, surrounded by the appropriate markers, is present (or not) in the file.
@@ -1999,6 +2000,13 @@ def block(
     + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
     + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
     + end: the value for ``{mark}`` in the marker after the content. Default is ``END``
+    + preserve_meta: whether to restore the file's owner, group and mode after rewriting it.
+      Default ``True`` (today's behaviour on an existing file). Set to ``False`` on a host
+      where the executing user may not ``chown`` the target. Has no effect when the file does
+      not yet exist: there is nothing to restore in that case either way. When ``False`` on an
+      existing file, the rewrite replaces the file rather than editing it in place, so the file
+      is left with the temporary file's mode (``0600``) and the executing user's ownership
+      instead of its original owner, group and mode.
 
     Content appended if ``line`` not found in the file
         If ``content`` is not in the file but is required (``present=True``) and ``line`` is not
@@ -2084,31 +2092,42 @@ def block(
     # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
     # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
     q_path = QuoteString(path)
+    # Nothing to restore when the file doesn't exist yet (there is no prior owner, group or
+    # mode to preserve), and preserve_meta lets the caller decline the restore even when the
+    # file does exist, for hosts where the executing user may not chown the target.
+    restore_meta = preserve_meta and current is not None
     mode_get = (
-        ""
-        if current is None
-        else (
+        (
             'MODE="$(stat -c %a',
             q_path,
             "2>/dev/null || stat -f %Lp",
             q_path,
             '2>/dev/null)" &&',
         )
+        if restore_meta
+        else ""
+    )
+    owner_get = (
+        (
+            'OWNER="$(stat -c "%u:%g"',
+            q_path,
+            '2>/dev/null || stat -f "%u:%g"',
+            q_path,
+            '2>/dev/null || echo $(id -un):$(id -gn))" &&',
+        )
+        if restore_meta
+        else ""
     )
     out_prep = StringCommand(
         f'OUT="$(TMPDIR={tmp_dir} mktemp -t pyinfra.XXXXXX)" && ',
         *mode_get,
-        'OWNER="$(stat -c "%u:%g"',
-        q_path,
-        '2>/dev/null || stat -f "%u:%g"',
-        q_path,
-        '2>/dev/null || echo $(id -un):$(id -gn))" &&',
+        *owner_get,
     )
 
-    mode_change = "" if current is None else ' && chmod "$MODE"'
-    real_out = StringCommand(
-        ' && mv "$OUT"', q_path, ' && chown "$OWNER"', q_path, mode_change, q_path
+    meta_restore = (
+        (' && chown "$OWNER"', q_path, ' && chmod "$MODE"', q_path) if restore_meta else ()
     )
+    real_out = StringCommand(' && mv "$OUT"', q_path, *meta_restore)
 
     if backup and (current is not None):  # can't back up something that doesn't exist
         out_prep = StringCommand(
