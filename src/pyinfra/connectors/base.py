@@ -205,28 +205,6 @@ class BaseConnector(abc.ABC):
             f"{self.__class__.__name__} cannot be used as an inner connector in a chain"
         )
 
-    def wrap_copy_into(self, src_on_parent: str, dest: str, container_id: str) -> StringCommand:
-        """
-        Return a command that, when executed in the *parent* connector's context,
-        copies the file at ``src_on_parent`` (a path already present on the parent)
-        into this connector's target at ``dest``.
-
-        Same conventions as :meth:`wrap_exec_command`.
-        """
-        raise NotImplementedError(
-            f"{self.__class__.__name__} cannot be used as an inner connector in a chain"
-        )
-
-    def wrap_copy_out(self, src: str, dest_on_parent: str, container_id: str) -> StringCommand:
-        """
-        Return a command that, when executed in the *parent* connector's context,
-        copies the file at ``src`` inside this connector's target to
-        ``dest_on_parent`` on the parent.
-        """
-        raise NotImplementedError(
-            f"{self.__class__.__name__} cannot be used as an inner connector in a chain"
-        )
-
     def check_can_rsync(self) -> None:
         raise NotImplementedError("This connector does not support rsync")
 
