@@ -208,24 +208,6 @@ class DockerConnector(BaseConnector):
         )
 
     @override
-    def wrap_copy_into(self, src_on_parent: str, dest: str, container_id: str) -> StringCommand:
-        return StringCommand(
-            self.docker_cmd,
-            "cp",
-            QuoteString(src_on_parent),
-            QuoteString(f"{container_id}:{dest}"),
-        )
-
-    @override
-    def wrap_copy_out(self, src: str, dest_on_parent: str, container_id: str) -> StringCommand:
-        return StringCommand(
-            self.docker_cmd,
-            "cp",
-            QuoteString(f"{container_id}:{src}"),
-            QuoteString(dest_on_parent),
-        )
-
-    @override
     def run_shell_command(
         self,
         command: StringCommand,

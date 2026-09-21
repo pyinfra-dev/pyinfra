@@ -9,13 +9,14 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator
 from io import IOBase
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, Any, cast
 
 from typing_extensions import Unpack, override
 
 from pyinfra.api.exceptions import ConnectError, InventoryError
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.output import echo
+from pyinfra.api.util import get_file_io
 
 from .base import BaseConnector
 from .util import extract_control_arguments, make_unix_command_for_host
@@ -76,26 +77,6 @@ def _parse_chain(full_name: str) -> list[tuple[str, str | None]]:
     return parsed
 
 
-def _without_escalation(arguments: ConnectorArguments) -> ConnectorArguments:
-    """
-    Return ``arguments`` without any privilege escalation, for commands that operate on
-    intermediate temp files owned by the connecting user (mirrors the SSH connector).
-    """
-    noauth = arguments.copy()
-
-    noauth.pop("_sudo", False)
-    noauth.pop("_sudo_user", False)
-    noauth.pop("_doas", False)
-    noauth.pop("_doas_user", False)
-    noauth.pop("_dzdo", False)
-    noauth.pop("_dzdo_user", False)
-    noauth.pop("_su_user", None)
-    # _chdir is the only remaining global argument that could itself require escalation
-    noauth.pop("_chdir", False)
-
-    return noauth
-
-
 class ChainedConnector(BaseConnector):
     """
     Run operations through a stack of connectors, targeting hosts that are only
@@ -111,17 +92,22 @@ class ChainedConnector(BaseConnector):
     The left-most connector is the *outermost* and owns the real network connection;
     the right-most is the *innermost*, closest to the target. Only the outermost
     connector connects - inner layers merely wrap commands, which are composed into a
-    single shell string and executed by the outer connector. File transfers are
-    pipelined through a temporary path on each layer and cleaned up afterwards.
+    single shell string and executed by the outer connector.
+
+    Uploads are streamed into a ``cat`` running in the innermost target, so no layer
+    stores a copy of the payload and chaining through a space constrained hop works
+    whatever the file size. Downloads stage a single temp file on the outermost host,
+    which command output cannot replace as it is decoded as text.
 
     ## Writing a chain compatible connector
 
-    To be usable as an *inner* layer a connector must implement
-    ``wrap_exec_command``, ``wrap_copy_into`` and ``wrap_copy_out``, and expose a
-    runtime identifier via ``get_runtime_id`` - by default read from the data key
-    named by the ``runtime_id_field`` class attribute. Connectors that only work as
-    an outer layer, such as ``@ssh`` which needs paramiko sockets rather than a plain
-    shell string, raise ``NotImplementedError`` and are rejected with a clear error.
+    To be usable as an *inner* layer a connector must implement ``wrap_exec_command``
+    and expose a runtime identifier via ``get_runtime_id`` - by default read from the
+    data key named by the ``runtime_id_field`` class attribute. The wrapped command
+    must forward stdin, as file uploads rely on it (hence ``docker exec -i``).
+    Connectors that only work as an outer layer, such as ``@ssh`` which needs paramiko
+    sockets rather than a plain shell string, raise ``NotImplementedError`` and are
+    rejected with a clear error.
 
     ## Limitations
 
@@ -130,11 +116,10 @@ class ChainedConnector(BaseConnector):
       ``~/.ssh/config`` for ssh-over-ssh.
     - Every segment must resolve to exactly one host, so inventory connectors that
       expand to many hosts (``@terraform``, ``@vagrant``) cannot be chained.
-    - Privilege escalation is applied by the outermost connector. For
-      ``server.shell`` this escalates inside the innermost target, because the
-      wrapped command is built first and escalated last. For ``files.put`` it
-      escalates the layer-to-layer copies; the initial upload into the outer host's
-      temporary path always runs as the connecting user.
+    - Privilege escalation is applied by the outermost connector, to the whole wrapped
+      command. For ``server.shell`` this escalates inside the innermost target, because
+      the command is built first and escalated last; for file transfers it escalates
+      the ``docker exec`` / ``chroot`` invocation on the outer host.
 
     .. caution::
         ``_sudo_password`` does not work for inner layers. pyinfra writes a
@@ -324,32 +309,14 @@ class ChainedConnector(BaseConnector):
     # File transfer
     # ------------------------------------------------------------------
 
-    def _wrap_for_parent_of(self, command: StringCommand, layer: int) -> StringCommand:
+    def _wrap_for_layer(self, command: StringCommand, layer: int) -> StringCommand:
         """
-        Wrap ``command`` so the outermost connector executes it in the context of
-        ``layer``'s parent - the layer that holds the file being copied.
+        Wrap ``command`` so the outermost connector executes it inside ``layer``. Layer 0
+        is the outermost connector itself, which needs no wrapping.
         """
-        for j in range(layer - 1, 0, -1):
-            command = self._connectors[j].wrap_exec_command(command, self._container_ids[j])
+        for i in range(layer, 0, -1):
+            command = self._connectors[i].wrap_exec_command(command, self._container_ids[i])
         return command
-
-    def _remove_temp_file(
-        self,
-        path: str,
-        layer: int,
-        **arguments: Unpack[ConnectorArguments],
-    ) -> None:
-        """Best effort removal of an intermediate temp file living on ``layer``."""
-        rm_command = self._wrap_for_parent_of(
-            StringCommand("rm", "-f", QuoteString(path)),
-            layer,
-        )
-        self._connectors[0].run_shell_command(
-            rm_command,
-            print_output=False,
-            print_input=False,
-            **arguments,
-        )
 
     @override
     def put_file(
@@ -364,79 +331,35 @@ class ChainedConnector(BaseConnector):
         """
         Upload ``filename_or_io`` to ``remote_filename`` inside the innermost target.
 
-        Pipeline for a 2-layer chain (ssh → docker):
-        1. Upload local file → SSH host temp path (via outer connector's put_file).
-        2. ``docker cp <host_tmp> container:<remote_filename>`` (via SSH).
-        3. ``rm <host_tmp>`` (via SSH).
+        The payload is streamed into a ``cat`` running in the innermost target, so no
+        layer stores a copy of it. Chaining through a space constrained hop therefore
+        works whatever the file size.
 
-        Privilege escalation arguments (``_sudo``, ``_su_user``, ...) are applied to the
-        layer-to-layer copies, which the outermost connector executes; the initial upload
-        into the outer temp path always runs as the connecting user.
+        Privilege escalation applies to the whole wrapped command, as run by the
+        outermost connector - see the class docstring.
         """
-        outer = self._connectors[0]
-        depth = len(self._connectors)
-
-        noauth_arguments = _without_escalation(arguments)
-
-        # Step 1: upload onto the outermost layer's filesystem via a temp path. The file
-        # object is streamed straight through - the outer connector owns the buffering.
-        outer_tmp = remote_temp_filename or self.host.get_temp_filename(remote_filename)
-        outer_status = outer.put_file(
-            filename_or_io,
-            outer_tmp,
-            print_output=print_output,
-            print_input=print_input,
-            **noauth_arguments,
+        write_command = self._wrap_for_layer(
+            StringCommand("cat", ">", QuoteString(remote_filename)),
+            len(self._connectors) - 1,
         )
 
-        if not outer_status:
-            raise OSError("@chain: failed to upload file to outer connector")
-
-        # Step 2+: for each subsequent layer, copy from the previous temp path deeper into
-        # the chain. These copies execute via the outer connector (our only real
-        # connection), wrapped through any layers in between.
-        prev_tmp = outer_tmp
-        for i in range(1, depth):
-            connector = self._connectors[i]
-            container_id = self._container_ids[i]
-            is_innermost = i == depth - 1
-
-            # The innermost layer copies to the final destination, others to a temp path.
-            next_tmp = (
-                remote_filename
-                if is_innermost
-                else self.host.get_temp_filename(f"chain-{i}-{remote_filename}")
-            )
-
-            wrapped_copy = self._wrap_for_parent_of(
-                connector.wrap_copy_into(prev_tmp, next_tmp, container_id),
-                i,
-            )
-
-            status, output = outer.run_shell_command(
-                wrapped_copy,
+        # `IOBase` (the base connector signature) and `IO` (what get_file_io takes) do not
+        # overlap for mypy, though every real file object satisfies both.
+        with get_file_io(cast("str | IO[Any]", filename_or_io)) as file_io:
+            # The payload *is* stdin here, overriding anything the caller passed.
+            arguments["_stdin"] = file_io
+            status, output = self._connectors[0].run_shell_command(
+                write_command,
                 print_output=print_output,
                 print_input=print_input,
                 **arguments,
             )
-            if not status:
-                raise OSError(f"@chain: layer {i} copy failed: {output.stderr}")
 
-            # The outer temp is owned by the connecting user, deeper temps by whoever the
-            # escalated copy above ran as.
-            self._remove_temp_file(
-                prev_tmp,
-                i,
-                **(noauth_arguments if i == 1 else arguments),
-            )
-
-            prev_tmp = next_tmp
+        if not status:
+            raise OSError(f"@chain: failed to upload {remote_filename}: {output.stderr}")
 
         if print_output:
-            echo(
-                f"{self.host.print_prefix}file uploaded: {remote_filename}",
-                err=True,
-            )
+            echo(f"{self.host.print_prefix}file uploaded: {remote_filename}", err=True)
 
         return True
 
@@ -453,60 +376,55 @@ class ChainedConnector(BaseConnector):
         """
         Download ``remote_filename`` from the innermost target to ``filename_or_io``.
 
-        Reverse of :meth:`put_file` - copies outward layer by layer, then downloads to
-        local via the outer connector's get_file.
+        The file is piped out of the innermost target in a single hop and staged on the
+        outermost host, whose own ``get_file`` then fetches it. Unlike :meth:`put_file` a
+        temp file cannot be avoided, because command output is decoded as text and so
+        cannot carry arbitrary bytes.
         """
         outer = self._connectors[0]
-        depth = len(self._connectors)
 
-        # Start from innermost, copying out to a temp on the layer above each time.
-        current_src = remote_filename
-        # Temp files created on each parent layer, so they can all be cleaned up after.
-        layer_temps: list[tuple[str, int]] = []
+        # Resolve the temp directory from config rather than the TmpDir fact: that fact is
+        # collected *through* the chain and so reports the innermost target's directory,
+        # which need not exist on the outer host where this path is created.
+        outer_tmp = remote_temp_filename or self.host.get_temp_filename(
+            remote_filename,
+            temp_directory=self.host.get_temp_dir_config(),
+        )
+
+        read_command = self._wrap_for_layer(
+            StringCommand("cat", QuoteString(remote_filename)),
+            len(self._connectors) - 1,
+        )
 
         try:
-            for i in range(depth - 1, 0, -1):
-                connector = self._connectors[i]
-                container_id = self._container_ids[i]
-                dest_tmp = self.host.get_temp_filename(f"chain-out-{i}-{remote_filename}")
+            status, output = outer.run_shell_command(
+                StringCommand(read_command, ">", QuoteString(outer_tmp)),
+                print_output=print_output,
+                print_input=print_input,
+                **arguments,
+            )
+            if not status:
+                raise OSError(f"@chain: failed to read {remote_filename}: {output.stderr}")
 
-                wrapped_copy = self._wrap_for_parent_of(
-                    connector.wrap_copy_out(current_src, dest_tmp, container_id),
-                    i,
-                )
-
-                status, output = outer.run_shell_command(
-                    wrapped_copy,
-                    print_output=print_output,
-                    print_input=print_input,
-                    **arguments,
-                )
-                if not status:
-                    raise OSError(f"@chain: layer {i} copy-out failed: {output.stderr}")
-
-                layer_temps.append((dest_tmp, i))
-                current_src = dest_tmp
-
-            # current_src is now a path on the outer host - download it locally. Pass the
-            # full arguments so the outer connector can handle a privileged source file.
             outer_status = outer.get_file(
-                current_src,
+                outer_tmp,
                 filename_or_io,
                 print_output=print_output,
                 print_input=print_input,
                 **arguments,
             )
         finally:
-            for temp_path, layer in layer_temps:
-                self._remove_temp_file(temp_path, layer, **arguments)
+            outer.run_shell_command(
+                StringCommand("rm", "-f", QuoteString(outer_tmp)),
+                print_output=False,
+                print_input=False,
+                **arguments,
+            )
 
         if not outer_status:
             raise OSError("@chain: failed to download file from outer connector")
 
         if print_output:
-            echo(
-                f"{self.host.print_prefix}file downloaded: {remote_filename}",
-                err=True,
-            )
+            echo(f"{self.host.print_prefix}file downloaded: {remote_filename}", err=True)
 
         return True
