@@ -12,5 +12,5 @@
     },
     "flatpak.FlatpakPackages": ["org.videolan.VLC"]
   },
-  "commands": ["flatpak install --noninteractive tv.kodi.Kodi"]
+  "commands": ["flatpak install --noninteractive --system tv.kodi.Kodi"]
 }
