@@ -97,7 +97,7 @@ def packages(
 
     if install_packages:
         command: list[str | QuoteString] = [
-            f"flatpak install --noninteractive{' --user' if user else ''}"
+            f"flatpak install --noninteractive{' --user' if user else ' --system'}"
         ]
         if remote:
             command.append(QuoteString(remote))
@@ -106,6 +106,6 @@ def packages(
 
     if remove_packages:
         yield StringCommand(
-            f"flatpak uninstall --noninteractive{' --user' if user else ''}",
+            f"flatpak uninstall --noninteractive{' --user' if user else ' --system'}",
             *[QuoteString(package) for package in remove_packages],
         )
