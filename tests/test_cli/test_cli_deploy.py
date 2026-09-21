@@ -1,10 +1,9 @@
 from os import path
 from random import shuffle
 
-from pyinfra import state
 from pyinfra.context import ctx_state
 
-from ..paramiko_util import PatchSSHTestCase
+from ..fake_ssh import PatchSSHTestCase
 from .util import run_cli
 
 
@@ -17,7 +16,7 @@ class TestCliDeployState(PatchSSHTestCase):
             f"--chdir={path.join('tests', 'test_cli', 'deploy')}",
         )
 
-    def _assert_op_data(self, correct_op_name_and_host_names):
+    def _assert_op_data(self, state, correct_op_name_and_host_names):
         op_order = state.get_op_order()
 
         assert len(correct_op_name_and_host_names) == len(
@@ -92,7 +91,7 @@ class TestCliDeployState(PatchSSHTestCase):
             result = self._run_cli(hosts, "deploy.py")
             assert result.exit_code == 0, result.stdout
 
-            self._assert_op_data(correct_op_name_and_host_names)
+            self._assert_op_data(result.state, correct_op_name_and_host_names)
 
     def test_random_deploy(self):
         correct_op_name_and_host_names = [
@@ -117,4 +116,4 @@ class TestCliDeployState(PatchSSHTestCase):
             result = self._run_cli(hosts, "deploy_random.py")
             assert result.exit_code == 0, result.stdout
 
-            self._assert_op_data(correct_op_name_and_host_names)
+            self._assert_op_data(result.state, correct_op_name_and_host_names)

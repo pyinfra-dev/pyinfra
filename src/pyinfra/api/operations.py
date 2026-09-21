@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import time
+import asyncio
 import traceback
 from itertools import product
 from typing import TYPE_CHECKING, cast
 
-import gevent
-from paramiko import SSHException
+from asyncssh import Error as SSHError
 
 from pyinfra import logger
 from pyinfra.api.output import format_text
@@ -14,6 +13,7 @@ from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
+from .concurrency import async_def, awaitlet, run_for_hosts, run_with_timeout
 from .arguments import CONNECTOR_ARGUMENT_KEYS, ConnectorArguments
 from .command import FunctionCommand, PyinfraCommand, StringCommand
 from .exceptions import NestedOperationError, PyinfraError
@@ -102,8 +102,10 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
 
             if isinstance(command, FunctionCommand):
                 try:
-                    with gevent.Timeout(timeout, exception=TimeoutError):
-                        status = command.execute(state, host, connector_arguments)
+                    status = run_with_timeout(
+                        lambda: command.execute(state, host, connector_arguments),
+                        timeout,
+                    )
 
                 except TimeoutError as e:
                     log_host_command_error(host, e, timeout=timeout)
@@ -127,7 +129,7 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
                         host,
                         connector_arguments,
                     )
-                except (TimeoutError, OSError, SSHException) as e:
+                except (TimeoutError, OSError, SSHError) as e:
                     log_host_command_error(host, e, timeout=timeout)
                 all_output_lines.extend(output_lines)
                 # If we failed and have not already printed the stderr, print it
@@ -137,7 +139,7 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
             else:
                 try:
                     status = command.execute(state, host, connector_arguments)
-                except (TimeoutError, OSError, SSHException) as e:
+                except (TimeoutError, OSError, SSHError) as e:
                     log_host_command_error(host, e, timeout=timeout)
 
             # Break the loop to trigger a failure
@@ -187,7 +189,7 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
                 fg="yellow",
                 log_func=logger.info,
             )
-            time.sleep(retry_delay)
+            awaitlet(asyncio.sleep(retry_delay))
             continue
 
         break
@@ -276,7 +278,14 @@ def _run_host_ops(state: State, host: Host, progress=None):
             )
 
 
-def _run_serial_ops(state: State):
+def _run_host_ops_or_fail(state: State, host: Host, progress=None):
+    try:
+        _run_host_ops(state, host, progress=progress)
+    except PyinfraError:
+        state.fail_hosts({host})
+
+
+async def _run_serial_ops(state: State):
     """
     Run all ops for all servers, one server at a time.
     """
@@ -284,39 +293,25 @@ def _run_serial_ops(state: State):
     for host in list(state.inventory.get_active_hosts()):
         host_operations = product([host], state.get_op_order())
         with progress_spinner(host_operations) as progress:
-            try:
-                _run_host_ops(
-                    state,
-                    host,
-                    progress=progress,
-                )
-            except PyinfraError:
-                state.fail_hosts({host})
+            await async_def(_run_host_ops_or_fail, state, host, progress)
 
 
-def _run_no_wait_ops(state: State):
+async def _run_no_wait_ops(state: State):
     """
     Run all ops for all servers at once.
     """
 
-    hosts_operations = product(state.inventory.get_active_hosts(), state.get_op_order())
+    hosts = list(state.inventory.get_active_hosts())
+    hosts_operations = product(hosts, state.get_op_order())
     with progress_spinner(hosts_operations) as progress:
-        # Spawn greenlet for each host to run *all* ops
-        if state.pool is None:
-            raise PyinfraError("No pool found on state.")
-        greenlets = [
-            state.pool.spawn(
-                _run_host_ops,
-                state,
-                host,
-                progress=progress,
-            )
-            for host in state.inventory.get_active_hosts()
-        ]
-        gevent.joinall(greenlets)
+        await run_for_hosts(
+            hosts,
+            lambda host: _run_host_ops_or_fail(state, host, progress),
+            parallel=state.config.PARALLEL,
+        )
 
 
-def _run_single_op(state: State, op_hash: str):
+async def _run_single_op(state: State, op_hash: str):
     """
     Run a single operation for all servers. Can be configured to run in serial.
     """
@@ -332,7 +327,7 @@ def _run_single_op(state: State, op_hash: str):
         with progress_spinner(state.inventory.get_active_hosts()) as progress:
             # For each host, run the op
             for host in state.inventory.get_active_hosts():
-                result = _run_host_op_with_context(state, host, op_hash)
+                result = await async_def(_run_host_op_with_context, state, host, op_hash)
                 progress(host)
 
                 if not result:
@@ -350,23 +345,16 @@ def _run_single_op(state: State, op_hash: str):
 
         for batch in batches:
             with progress_spinner(batch) as progress:
-                # Spawn greenlet for each host
-                if state.pool is None:
-                    raise PyinfraError("No pool found on state.")
-                greenlet_to_host = {
-                    state.pool.spawn(_run_host_op_with_context, state, host, op_hash): host
-                    for host in batch
-                }
+                results = await run_for_hosts(
+                    batch,
+                    lambda host: _run_host_op_with_context(state, host, op_hash),
+                    parallel=state.config.PARALLEL,
+                    progress=progress,
+                )
 
-                # Trigger CLI progress as hosts complete if provided
-                for greenlet in gevent.iwait(greenlet_to_host.keys()):
-                    host = greenlet_to_host[greenlet]
-                    progress(host)
-
-                # Get all the results
-                for greenlet, host in greenlet_to_host.items():
-                    if not greenlet.get():
-                        failed_hosts.add(host)
+            for host, result in results.items():
+                if not result:
+                    failed_hosts.add(host)
 
     # Now all the batches/hosts are complete, fail any failures
     state.fail_hosts(failed_hosts)
@@ -374,7 +362,7 @@ def _run_single_op(state: State, op_hash: str):
     state.trigger_callbacks("operation_end", op_hash)
 
 
-def run_ops(state: State, serial: bool = False, no_wait: bool = False):
+async def run_ops(state: State, serial: bool = False, no_wait: bool = False):
     """
     Runs all operations across all servers in a configurable manner.
 
@@ -390,11 +378,11 @@ def run_ops(state: State, serial: bool = False, no_wait: bool = False):
     with ctx_state.use(state):
         # Run all ops, but server by server
         if serial:
-            _run_serial_ops(state)
+            await _run_serial_ops(state)
         # Run all the ops on each server in parallel (not waiting at each operation)
         elif no_wait:
-            _run_no_wait_ops(state)
+            await _run_no_wait_ops(state)
         # Default: run all ops in order, waiting at each for all servers to complete
         else:
             for op_hash in state.get_op_order():
-                _run_single_op(state, op_hash)
+                await _run_single_op(state, op_hash)

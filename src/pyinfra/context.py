@@ -1,15 +1,16 @@
 """
-The `ContextObject` and `ContextManager` provide context specific variables that
+The `LocalContextObject` and `ContextManager` provide context specific variables that
 are imported and used throughout pyinfra and end user deploy code (CLI mode).
 
 These variables always represent the current executing pyinfra context.
 """
 
 from contextlib import contextmanager
+from contextvars import ContextVar
+from collections.abc import Iterator
 from types import ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from gevent.local import local
 from typing_extensions import override
 
 if TYPE_CHECKING:
@@ -19,17 +20,29 @@ if TYPE_CHECKING:
     from pyinfra.api.state import State
 
 
-class container:
-    module = None
+class contextvar_container:
+    """
+    Holds the module in a ``ContextVar`` so each asyncio task (and therefore
+    each host greenlet) sees its own value.
+    """
+
+    def __init__(self) -> None:
+        self._var: ContextVar[Any] = ContextVar("pyinfra_context", default=None)
+
+    @property
+    def module(self) -> Any:
+        return self._var.get()
+
+    @module.setter
+    def module(self, value: Any) -> None:
+        self._var.set(value)
 
 
-class ContextObject:
-    _container_cls = container
+class LocalContextObject:
     _base_cls: ModuleType
 
     def __init__(self) -> None:
-        self._container = self._container_cls()
-        self._container.module = None
+        self._container = contextvar_container()
 
     def _get_module(self):
         return self._container.module
@@ -82,10 +95,6 @@ class ContextObject:
         return hash(self._get_module())
 
 
-class LocalContextObject(ContextObject):
-    _container_cls = local
-
-
 class ContextManager:
     def __init__(self, key, context_cls):
         self.context = context_cls()
@@ -106,20 +115,20 @@ class ContextManager:
         return self.get() is not None
 
     @contextmanager
-    def use(self, module):
+    def use(self, module: Any) -> Iterator[None]:
         old_module = self.get()
-        if old_module is module:
-            yield  # if we're double-setting, nothing to do
-            return
         self.set(module)
-        yield
-        self.set(old_module)
+        try:
+            yield
+        finally:
+            self.set(old_module)
 
 
-ctx_state = ContextManager("state", ContextObject)
+# All contexts are task-local. Host tasks inherit their deployment's state and inventory.
+ctx_state = ContextManager("state", LocalContextObject)
 state: "State" = ctx_state.context
 
-ctx_inventory = ContextManager("inventory", ContextObject)
+ctx_inventory = ContextManager("inventory", LocalContextObject)
 inventory: "Inventory" = ctx_inventory.context
 
 # Config can be modified mid-deploy, so we use a local object here which
@@ -127,8 +136,8 @@ inventory: "Inventory" = ctx_inventory.context
 ctx_config = ContextManager("config", LocalContextObject)
 config: "Config" = ctx_config.context
 
-# Hosts are prepared in parallel each in a greenlet, so we use a local to
-# point at different host objects in each greenlet.
+# Hosts are prepared in parallel each in their own task, so we use a context
+# variable to point at different host objects in each task.
 ctx_host = ContextManager("host", LocalContextObject)
 host: "Host" = ctx_host.context
 
