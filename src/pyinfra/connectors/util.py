@@ -6,7 +6,7 @@ from getpass import getpass
 from io import BufferedIOBase, RawIOBase
 from queue import Queue
 from shutil import copyfileobj
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, cast
 
 import gevent
 from gevent.subprocess import PIPE, Popen
@@ -137,6 +137,7 @@ def run_local_process(
     timeout: int | None = None,
     print_output: bool = False,
     print_prefix: str = "",
+    stdout_sink: IO[bytes] | None = None,
 ) -> tuple[int, CommandOutput]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
@@ -155,6 +156,7 @@ def run_local_process(
         timeout=timeout,
         print_output=print_output,
         print_prefix=print_prefix,
+        stdout_sink=stdout_sink,
     )
 
     logger.debug("--> Waiting for exit status...")
@@ -245,20 +247,31 @@ def read_output_buffers(
     timeout: int | None = None,
     print_output: bool = False,
     print_prefix: str = "",
+    stdout_sink: IO[bytes] | None = None,
 ) -> CommandOutput:
     output_queue: Queue[OutputLine] = Queue()
 
     # Iterate through outputs to get an exit status and generate desired list
     # output, done in two greenlets so stdout isn't printed before stderr. Not
     # attached to state.pool to avoid blocking it with 2x n-hosts greenlets.
-    stdout_reader = gevent.spawn(
-        read_buffer,
-        "stdout",
-        stdout_buffer,
-        output_queue,
-        print_output=print_output,
-        print_func=lambda line: f"{print_prefix}{line}",
-    )
+    if stdout_sink is not None:
+        # Arbitrary bytes cannot be decoded into lines, so stream stdout out untouched
+        # and leave it out of the returned output. stderr is still captured as text so
+        # that errors remain reportable.
+        stdout_reader = gevent.spawn(
+            copyfileobj,
+            cast("IO[bytes]", stdout_buffer),
+            stdout_sink,
+        )
+    else:
+        stdout_reader = gevent.spawn(
+            read_buffer,
+            "stdout",
+            stdout_buffer,
+            output_queue,
+            print_output=print_output,
+            print_func=lambda line: f"{print_prefix}{line}",
+        )
     stderr_reader = gevent.spawn(
         read_buffer,
         "stderr",
@@ -437,6 +450,8 @@ def extract_control_arguments(arguments: ConnectorArguments) -> ConnectorArgumen
         control_arguments["_get_pty"] = arguments.pop("_get_pty")
     if "_stdin" in arguments:
         control_arguments["_stdin"] = arguments.pop("_stdin")
+    if "_stdout" in arguments:
+        control_arguments["_stdout"] = arguments.pop("_stdout")
 
     return control_arguments
 
