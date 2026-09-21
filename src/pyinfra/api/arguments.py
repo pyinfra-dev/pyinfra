@@ -73,6 +73,7 @@ class ConnectorArguments(TypedDict, total=False):
     _timeout: int
     _get_pty: bool
     _stdin: str | bytes | list[str] | IO[bytes] | Iterable[str]
+    _stdout: IO[bytes]
 
     # Retry arguments
     _retries: int
@@ -183,6 +184,11 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
     "_stdin": ArgumentMeta(
         "String or buffer to send to the stdin of any commands. Text is sent line by "
         "line; ``bytes`` and binary buffers are streamed through unaltered.",
+        default=lambda _: None,
+    ),
+    "_stdout": ArgumentMeta(
+        "Binary buffer to stream the stdout of any commands into. Output sent there is "
+        "not decoded, printed, or included in the command result.",
         default=lambda _: None,
     ),
     "_temp_dir": ArgumentMeta(

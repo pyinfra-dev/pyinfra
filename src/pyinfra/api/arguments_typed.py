@@ -53,6 +53,7 @@ class PyinfraOperation(Generic[P], Protocol):
         _timeout: None | int = None,
         _get_pty: bool = False,
         _stdin: None | str | bytes | list[str] | IO[bytes] | Iterable[str] = None,
+        _stdout: None | IO[bytes] = None,
         # Retry arguments
         _retries: None | int = None,
         _retry_delay: None | int | float = None,
