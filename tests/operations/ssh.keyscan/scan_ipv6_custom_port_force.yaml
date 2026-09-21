@@ -1,0 +1,18 @@
+args:
+  - '2001:db8::1'
+kwargs:
+  port: 2222
+  force: true
+facts:
+  server.Home: /home/pyinfra
+  files.Directory:
+    path=/home/pyinfra/.ssh:
+      mode: 700
+  files.FindInFile:
+    extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=2001:db8::1:
+      - '[2001:db8::1]:2222 ssh-ed25519 AAAA'
+commands:
+  - ssh-keygen -R '[2001:db8::1]:2222'
+  - ssh-keyscan -p 2222 2001:db8::1 >> /home/pyinfra/.ssh/known_hosts
+idempotent: false
+disable_idempotent_warning_reason: forced keyscans are always executed

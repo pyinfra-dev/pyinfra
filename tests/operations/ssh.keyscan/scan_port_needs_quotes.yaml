@@ -1,0 +1,13 @@
+args:
+  - remote-host.net
+kwargs:
+  port: '2222; echo injected'
+facts:
+  server.Home: /home/pyinfra
+  files.Directory:
+    path=/home/pyinfra/.ssh:
+      mode: 700
+  files.FindInFile:
+    extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net: []
+commands:
+  - ssh-keyscan -p '2222; echo injected' remote-host.net >> /home/pyinfra/.ssh/known_hosts
