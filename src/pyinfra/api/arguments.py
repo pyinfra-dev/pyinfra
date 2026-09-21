@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from typing import (
+    IO,
     TYPE_CHECKING,
     Any,
     Generic,
@@ -71,7 +72,7 @@ class ConnectorArguments(TypedDict, total=False):
     _success_exit_codes: Iterable[int]
     _timeout: int
     _get_pty: bool
-    _stdin: str | list[str] | Iterable[str]
+    _stdin: str | bytes | list[str] | IO[bytes] | Iterable[str]
 
     # Retry arguments
     _retries: int
@@ -180,7 +181,8 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
         default=lambda _: False,
     ),
     "_stdin": ArgumentMeta(
-        "String or buffer to send to the stdin of any commands.",
+        "String or buffer to send to the stdin of any commands. Text is sent line by "
+        "line; ``bytes`` and binary buffers are streamed through unaltered.",
         default=lambda _: None,
     ),
     "_temp_dir": ArgumentMeta(

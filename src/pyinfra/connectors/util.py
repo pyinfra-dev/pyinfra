@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from getpass import getpass
+from io import BufferedIOBase, RawIOBase
 from queue import Queue
+from shutil import copyfileobj
 from gevent.subprocess import PIPE, Popen
 from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterable
@@ -224,7 +226,30 @@ def execute_command_with_sudo_retry(
     return return_code, output
 
 
-def write_stdin(stdin, buffer):
+def write_stdin(stdin, buffer) -> None:
+    """
+    Write ``stdin`` to a command's input ``buffer``.
+
+    Text payloads are written line by line, appending a newline to any line missing one.
+    Bytes and binary file objects are streamed through verbatim instead, so file contents
+    survive unaltered.
+
+    .. caution::
+        stdin is fully written before any output is read, so a command that emits more
+        than a pipe buffer of output while consuming a large payload will deadlock.
+    """
+    if isinstance(stdin, bytes):
+        buffer.write(stdin)
+        buffer.close()
+        return
+
+    # Binary streams are copied in chunks rather than read into memory; text streams
+    # (StringIO, open(..., "r"), ...) fall through to the line based handling below.
+    if isinstance(stdin, (RawIOBase, BufferedIOBase)):
+        copyfileobj(stdin, buffer)
+        buffer.close()
+        return
+
     if hasattr(stdin, "readlines"):
         stdin = stdin.readlines()
     if not isinstance(stdin, (list, tuple)):

@@ -1,4 +1,5 @@
 import importlib
+from io import BytesIO
 from pathlib import Path
 from socket import error as socket_error, gaierror
 from tempfile import TemporaryDirectory
@@ -552,6 +553,27 @@ class TestSSHConnector(TestCase):
         assert len(combined_out) == 2
 
         fake_ssh.exec_command.assert_called_with("sh -c 'echo Šablony'", get_pty=False)
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    def test_run_shell_command_binary_stdin(self, fake_ssh_client):
+        fake_ssh = mock.MagicMock()
+        fake_stdin = mock.MagicMock()
+        fake_stdout = mock.MagicMock()
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, mock.MagicMock()
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect()
+
+        fake_stdout.channel.recv_exit_status.return_value = 0
+
+        payload = b"\x00binary\xffwith\nnewlines\n\x1b"
+        status, _ = host.run_shell_command("cat > /dest", _stdin=BytesIO(payload))
+        assert status is True
+        fake_stdin.write.assert_called_with(payload)
 
     @mock.patch("pyinfra.api.output._echo")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")

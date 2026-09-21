@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic
+from typing import IO, TYPE_CHECKING, Generic
 from collections.abc import Callable, Generator, Iterable, Mapping
 
 from typing_extensions import ParamSpec, Protocol
@@ -52,7 +52,7 @@ class PyinfraOperation(Generic[P], Protocol):
         _success_exit_codes: Iterable[int] = (0,),
         _timeout: None | int = None,
         _get_pty: bool = False,
-        _stdin: None | str | list[str] | Iterable[str] = None,
+        _stdin: None | str | bytes | list[str] | IO[bytes] | Iterable[str] = None,
         # Retry arguments
         _retries: None | int = None,
         _retry_delay: None | int | float = None,
