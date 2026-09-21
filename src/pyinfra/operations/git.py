@@ -5,6 +5,7 @@ Manage git repositories and configuration.
 from __future__ import annotations
 
 import re
+from urllib.parse import urlsplit
 
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
@@ -88,6 +89,51 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
         host.noop(f"git config {key} is set to {value}")
 
 
+# scp-like sources: [user@]host:path (git has no port syntax in this form)
+_SCP_LIKE_RE = re.compile(r"^(?:[^@/]+@)?(?P<host>\[[^\]]+\]|[^:@/]+):")
+
+
+def _parse_keyscan_source(src: str) -> tuple[str, int]:
+    """
+    Extract the SSH host and port to keyscan from a git source.
+
+    Only SSH sources can be keyscanned: the scp-like ``[user@]host:path`` syntax and
+    ``ssh://[user@]host[:port]/path`` URLs, bracketed IPv6 included, with the port read
+    from the URL where it really is an sshd port.
+
+    + src: the git source URL
+    """
+    if "://" in src:
+        # Discriminate on "://" rather than on urlsplit's scheme, which treats any word
+        # before a ":" as a scheme, and would thus parse scp-like sources (git@host:path)
+        # as URLs.
+        if src.split("://", 1)[0].lower() != "ssh":
+            raise OperationError(
+                f"ssh_keyscan only applies to SSH sources, not: {src} "
+                "(a clone over any other transport never reads known_hosts)",
+            )
+
+        try:
+            parsed = urlsplit(src)
+            hostname = parsed.hostname
+            port = parsed.port or 22
+        except ValueError:  # invalid IPv6 URL / non-numeric port
+            hostname = None
+
+        if hostname is None:
+            raise OperationError(f"Could not parse domain (to SSH keyscan) from: {src}")
+        return hostname, port
+
+    match = _SCP_LIKE_RE.match(src)
+    if match is None:
+        raise OperationError(f"Could not parse domain (to SSH keyscan) from: {src}")
+
+    hostname = match.group("host")
+    if hostname.startswith("["):  # bracketed IPv6: git@[2001:db8::1]:org/repo.git
+        hostname = hostname[1:-1]
+    return hostname, 22
+
+
 @operation()
 def repo(
     src: str,
@@ -115,7 +161,9 @@ def repo(
     + rebase: when pulling, use ``--rebase``
     + user: chown files to this user after
     + group: chown files to this group after
-    + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull
+    + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull; only
+      SSH sources can be keyscanned (``user@host:path`` or ``ssh://host[:port]/path``),
+      with the host and port read from ``src``
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
     + depth: truncate clone, fetch and pull history to the specified number of commits
@@ -123,7 +171,7 @@ def repo(
       check out the specified revision.
     + force: Execute ``fetch``, ``pull`` and ``checkout`` commands with ``--force``.
 
-    **Example:**
+    **Examples:**
 
     .. code:: python
 
@@ -131,6 +179,13 @@ def repo(
             name="Clone repo",
             src="https://github.com/Fizzadar/pyinfra.git",
             dest="/usr/local/src/pyinfra",
+        )
+
+        git.repo(
+            name="Clone repo with SSH keyscan (non-standard port)",
+            src="ssh://git@git.example.com:2222/org/repo.git",
+            dest="/usr/local/src/repo",
+            ssh_keyscan=True,
         )
     """
 
@@ -141,15 +196,8 @@ def repo(
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
-        # Attempt to parse the domain from the git repository
-        domain = re.match(r"^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)", src)
-
-        if domain:
-            yield from ssh.keyscan._inner(domain.group(1))
-        else:
-            raise OperationError(
-                f"Could not parse domain (to SSH keyscan) from: {src}",
-            )
+        hostname, port = _parse_keyscan_source(src)
+        yield from ssh.keyscan._inner(hostname, port=port)
 
     # Store git commands for directory prefix
     git_commands: list[str | StringCommand] = []
