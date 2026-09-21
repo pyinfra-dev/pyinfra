@@ -253,3 +253,20 @@ class TestLocalConnector(TestCase):
         payload = b"\x00binary\xffwith\nnewlines\n\x1b"
         host.run_shell_command(command, _stdin=BytesIO(payload), print_output=True)
         self.fake_popen_mock().stdin.write.assert_called_with(payload)
+
+    def test_stdout_sink_streams_raw_bytes(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        payload = b"\x00binary\xffwith\nnewlines\n\x1b"
+        self.fake_popen_mock().stdout.read.side_effect = [payload, b""]
+
+        sink = BytesIO()
+        status, output = host.run_shell_command("cat /src", _stdout=sink, print_output=True)
+
+        assert status is True
+        assert sink.getvalue() == payload
+        # Diverted output is not decoded into the command result
+        assert output.stdout_lines == []
