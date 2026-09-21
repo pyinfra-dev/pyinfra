@@ -94,17 +94,17 @@ class ChainedConnector(BaseConnector):
     connector connects - inner layers merely wrap commands, which are composed into a
     single shell string and executed by the outer connector.
 
-    Uploads are streamed into a ``cat`` running in the innermost target, so no layer
-    stores a copy of the payload and chaining through a space constrained hop works
-    whatever the file size. Downloads stage a single temp file on the outermost host,
-    which command output cannot replace as it is decoded as text.
+    Uploads are streamed into a ``cat`` running in the innermost target and downloads
+    stream back out of one, so no layer ever stores a copy of the payload. Chaining
+    through a space constrained hop works whatever the file size.
 
     ## Writing a chain compatible connector
 
     To be usable as an *inner* layer a connector must implement ``wrap_exec_command``
     and expose a runtime identifier via ``get_runtime_id`` - by default read from the
     data key named by the ``runtime_id_field`` class attribute. The wrapped command
-    must forward stdin, as file uploads rely on it (hence ``docker exec -i``).
+    must forward stdin and stdout, as file transfers rely on them (hence
+    ``docker exec -i``).
     Connectors that only work as an outer layer, such as ``@ssh`` which needs paramiko
     sockets rather than a plain shell string, raise ``NotImplementedError`` and are
     rejected with a clear error.
@@ -376,53 +376,27 @@ class ChainedConnector(BaseConnector):
         """
         Download ``remote_filename`` from the innermost target to ``filename_or_io``.
 
-        The file is piped out of the innermost target in a single hop and staged on the
-        outermost host, whose own ``get_file`` then fetches it. Unlike :meth:`put_file` a
-        temp file cannot be avoided, because command output is decoded as text and so
-        cannot carry arbitrary bytes.
+        Mirror of :meth:`put_file`: the file is streamed out of a ``cat`` running in the
+        innermost target straight into the local destination, so no layer stores a copy
+        of it.
         """
-        outer = self._connectors[0]
-
-        # Resolve the temp directory from config rather than the TmpDir fact: that fact is
-        # collected *through* the chain and so reports the innermost target's directory,
-        # which need not exist on the outer host where this path is created.
-        outer_tmp = remote_temp_filename or self.host.get_temp_filename(
-            remote_filename,
-            temp_directory=self.host.get_temp_dir_config(),
-        )
-
         read_command = self._wrap_for_layer(
             StringCommand("cat", QuoteString(remote_filename)),
             len(self._connectors) - 1,
         )
 
-        try:
-            status, output = outer.run_shell_command(
-                StringCommand(read_command, ">", QuoteString(outer_tmp)),
+        with get_file_io(cast("str | IO[Any]", filename_or_io), "wb") as file_io:
+            # The file contents *are* stdout here, overriding anything the caller passed.
+            arguments["_stdout"] = file_io
+            status, output = self._connectors[0].run_shell_command(
+                read_command,
                 print_output=print_output,
                 print_input=print_input,
                 **arguments,
             )
-            if not status:
-                raise OSError(f"@chain: failed to read {remote_filename}: {output.stderr}")
 
-            outer_status = outer.get_file(
-                outer_tmp,
-                filename_or_io,
-                print_output=print_output,
-                print_input=print_input,
-                **arguments,
-            )
-        finally:
-            outer.run_shell_command(
-                StringCommand("rm", "-f", QuoteString(outer_tmp)),
-                print_output=False,
-                print_input=False,
-                **arguments,
-            )
-
-        if not outer_status:
-            raise OSError("@chain: failed to download file from outer connector")
+        if not status:
+            raise OSError(f"@chain: failed to download {remote_filename}: {output.stderr}")
 
         if print_output:
             echo(f"{self.host.print_prefix}file downloaded: {remote_filename}", err=True)
