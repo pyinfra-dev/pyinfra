@@ -280,18 +280,14 @@ available at construction time.
 def wrap_exec_command(self, command: StringCommand, container_id: str) -> StringCommand:
     """Return a command that runs ``command`` inside this connector's target."""
     return StringCommand("my-tool", "exec", container_id, "--", "sh", "-c", QuoteString(command))
-
-def wrap_copy_into(self, src_on_parent: str, dest: str, container_id: str) -> StringCommand:
-    """Return a command that copies from parent into this connector's target."""
-    return StringCommand("my-tool", "cp", src_on_parent, f"{container_id}/{dest}")
-
-def wrap_copy_out(self, src: str, dest_on_parent: str, container_id: str) -> StringCommand:
-    """Return a command that copies from this connector's target to parent."""
-    return StringCommand("my-tool", "cp", f"{container_id}/{src}", dest_on_parent)
 ```
 
 The `container_id` parameter is the value returned by `get_runtime_id()`. The returned
 command will be executed in the *parent* connector's context.
+
+The wrapped command must forward stdin to the target: file uploads through a chain are
+streamed into a `cat` running in the innermost target, rather than staged as a temporary
+copy on each layer. This is why the Docker connector passes `-i` to `docker exec`.
 
 
 ## pyproject.toml
