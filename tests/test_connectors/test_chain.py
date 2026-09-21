@@ -207,27 +207,32 @@ class TestChainFileTransfer(TestCase):
 
         assert outer.run_shell_command.call_args.kwargs["_sudo"] is True
 
-    def test_get_file_stages_a_single_outer_temp(self):
+    def test_get_file_stages_nothing(self):
+        """The file streams straight out of the target, so no layer holds a copy."""
         chain, outer = self._make_chain(depth=3)
 
-        chain.get_file("/tmp/thing.txt", "/local/file.txt")
+        chain.get_file("/tmp/thing.txt", StringIO())
 
-        commands = [call.args[0].get_raw_value() for call in outer.run_shell_command.call_args_list]
-        rm_commands = [command for command in commands if command.startswith("rm -f")]
-        assert len(rm_commands) == 1
+        outer.get_file.assert_not_called()
+        assert outer.run_shell_command.call_count == 1
 
-        # The staged path is what gets downloaded, and what gets removed afterwards
-        outer_tmp = outer.get_file.call_args.args[0]
-        assert commands[0] == f"cat /tmp/thing.txt > {outer_tmp}"
-        assert rm_commands[0] == f"rm -f {outer_tmp}"
+        command = outer.run_shell_command.call_args.args[0].get_raw_value()
+        assert command == "cat /tmp/thing.txt"
+
+    def test_get_file_receives_contents_as_stdout(self):
+        chain, outer = self._make_chain()
+
+        destination = StringIO()
+        chain.get_file("/etc/thing.conf", destination)
+
+        assert outer.run_shell_command.call_args.kwargs["_stdout"] is destination
 
     def test_get_file_propagates_arguments(self):
         chain, outer = self._make_chain()
 
-        chain.get_file("/etc/thing.conf", "/local/file.txt", _sudo=True)
+        chain.get_file("/etc/thing.conf", StringIO(), _sudo=True)
 
-        assert outer.run_shell_command.call_args_list[0].kwargs["_sudo"] is True
-        assert outer.get_file.call_args.kwargs["_sudo"] is True
+        assert outer.run_shell_command.call_args.kwargs["_sudo"] is True
 
 
 class TestChainWrapMethods(TestCase):
