@@ -2,6 +2,7 @@
 Tests for the @chain connector.
 """
 
+from io import StringIO
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -87,6 +88,32 @@ class TestChainMakeNamesData(TestCase):
             with self.assertRaises(InventoryError):
                 list(ChainedConnector.make_names_data("@ssh/host/@unknown/foo"))
 
+    def test_make_names_data_multi_host_connector_raises(self):
+        """Inventory connectors expanding to many hosts cannot be a chain segment."""
+        with patch(
+            "pyinfra.api.connectors.get_all_connectors",
+        ) as mock_connectors:
+            terraform_cls = MagicMock()
+            terraform_cls.make_names_data.return_value = iter(
+                [
+                    ("@ssh/one", {"ssh_hostname": "one"}, ["@terraform"]),
+                    ("@ssh/two", {"ssh_hostname": "two"}, ["@terraform"]),
+                ]
+            )
+            docker_cls = MagicMock()
+            docker_cls.make_names_data.return_value = iter(
+                [("@docker/c", {"docker_identifier": "c"}, ["@docker"])]
+            )
+            mock_connectors.return_value = {
+                "terraform": terraform_cls,
+                "docker": docker_cls,
+            }
+
+            with self.assertRaises(InventoryError) as ctx:
+                list(ChainedConnector.make_names_data("@terraform/out/@docker/c"))
+
+        assert "expands to 2 hosts" in str(ctx.exception)
+
 
 class TestChainInventory(TestCase):
     """Integration tests: chain detection in inventory parsing."""
@@ -105,6 +132,99 @@ class TestChainInventory(TestCase):
         inventory = make_inventory(hosts=("@ssh/somehost",))
         host = inventory.get_host("@ssh/somehost")
         assert host.connector_cls is SSHConnector
+
+    def test_chain_detected_without_outer_argument(self):
+        """The outer connector may take no argument at all (@local)."""
+        inventory = make_inventory(hosts=("@local/@docker/mycontainer",))
+        host = inventory.get_host("@local/@docker/mycontainer")
+        assert host is not None
+        assert host.connector_cls is ChainedConnector
+        assert host.host_data["chain_segments"] == [("local", None), ("docker", "mycontainer")]
+
+
+class TestChainFileTransfer(TestCase):
+    """Tests for argument propagation & temp file cleanup in put_file/get_file."""
+
+    def _make_chain(self, depth=2):
+        from pyinfra.api import Config, State, StringCommand
+
+        inventory = make_inventory(hosts=("@ssh/somehost",))
+        State(inventory, Config(TEMP_DIR="/tmp"))
+        host = inventory.get_host("@ssh/somehost")
+
+        chain = ChainedConnector.__new__(ChainedConnector)
+        chain.state = host.state
+        chain.host = host
+
+        outer = MagicMock()
+        outer.put_file.return_value = True
+        outer.get_file.return_value = True
+        outer.run_shell_command.return_value = (True, MagicMock())
+
+        chain._connectors = [outer]
+        chain._container_ids = {}
+
+        for i in range(1, depth):
+            inner = MagicMock()
+            inner.wrap_exec_command.side_effect = lambda command, _: command
+            inner.wrap_copy_into.side_effect = lambda src, dest, _: StringCommand("cp", src, dest)
+            inner.wrap_copy_out.side_effect = lambda src, dest, _: StringCommand("cp", src, dest)
+            chain._connectors.append(inner)
+            chain._container_ids[i] = f"layer-{i}"
+
+        return chain, outer
+
+    def test_put_file_escalates_only_the_inner_copy(self):
+        chain, outer = self._make_chain()
+
+        chain.put_file("/local/file.txt", "/etc/thing.conf", _sudo=True)
+
+        # The upload into the outer temp path must run as the connecting user
+        assert outer.put_file.call_args.kwargs.get("_sudo") is None
+        # ...but the copy into the innermost target must escalate
+        copy_call = outer.run_shell_command.call_args_list[0]
+        assert copy_call.kwargs["_sudo"] is True
+
+    def test_put_file_streams_io_through_outer_connector(self):
+        """In-memory files are handed to the outer connector, not spooled locally."""
+        chain, outer = self._make_chain()
+        file_io = StringIO("hello")
+
+        chain.put_file(file_io, "/tmp/thing.txt")
+
+        assert outer.put_file.call_args.args[0] is file_io
+
+    def test_put_file_removes_every_layer_temp(self):
+        chain, outer = self._make_chain(depth=3)
+
+        chain.put_file("/local/file.txt", "/tmp/thing.txt")
+
+        rm_commands = [
+            call.args[0].get_raw_value()
+            for call in outer.run_shell_command.call_args_list
+            if call.args[0].get_raw_value().startswith("rm -f")
+        ]
+        assert len(rm_commands) == 2
+
+    def test_get_file_removes_every_layer_temp(self):
+        chain, outer = self._make_chain(depth=3)
+
+        chain.get_file("/tmp/thing.txt", "/local/file.txt")
+
+        rm_commands = [
+            call.args[0].get_raw_value()
+            for call in outer.run_shell_command.call_args_list
+            if call.args[0].get_raw_value().startswith("rm -f")
+        ]
+        assert len(rm_commands) == 2
+
+    def test_get_file_propagates_arguments(self):
+        chain, outer = self._make_chain()
+
+        chain.get_file("/etc/thing.conf", "/local/file.txt", _sudo=True)
+
+        assert outer.run_shell_command.call_args_list[0].kwargs["_sudo"] is True
+        assert outer.get_file.call_args.kwargs["_sudo"] is True
 
 
 class TestChainWrapMethods(TestCase):
