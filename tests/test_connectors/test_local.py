@@ -1,4 +1,4 @@
-from io import StringIO
+from io import BytesIO, StringIO
 from subprocess import PIPE
 from unittest import TestCase
 from unittest.mock import MagicMock, call, mock_open, patch
@@ -230,3 +230,26 @@ class TestLocalConnector(TestCase):
                 call(b"abc\n"),
             ],
         )
+
+    def test_write_stdin_bytes(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        command = "cat > /dest"
+        self.fake_popen_mock().returncode = 0
+
+        host.run_shell_command(command, _stdin=b"\x00binary\xffno newline", print_output=True)
+        self.fake_popen_mock().stdin.write.assert_called_with(b"\x00binary\xffno newline")
+
+    def test_write_stdin_binary_io_object(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        command = "cat > /dest"
+        self.fake_popen_mock().returncode = 0
+
+        payload = b"\x00binary\xffwith\nnewlines\n\x1b"
+        host.run_shell_command(command, _stdin=BytesIO(payload), print_output=True)
+        self.fake_popen_mock().stdin.write.assert_called_with(payload)
