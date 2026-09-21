@@ -575,6 +575,34 @@ class TestSSHConnector(TestCase):
         assert status is True
         fake_stdin.write.assert_called_with(payload)
 
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    def test_run_shell_command_binary_stdout(self, fake_ssh_client):
+        fake_ssh = mock.MagicMock()
+        fake_stdout = mock.MagicMock()
+        fake_ssh.exec_command.return_value = (
+            mock.MagicMock(),
+            fake_stdout,
+            mock.MagicMock(),
+        )
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect()
+
+        fake_stdout.channel.recv_exit_status.return_value = 0
+        payload = b"\x00binary\xffwith\nnewlines\n\x1b"
+        fake_stdout.read.side_effect = [payload, b""]
+
+        sink = BytesIO()
+        status, output = host.run_shell_command("cat /src", _stdout=sink)
+
+        assert status is True
+        assert sink.getvalue() == payload
+        assert output.stdout_lines == []
+
     @mock.patch("pyinfra.api.output._echo")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     def test_run_shell_command_masked(self, fake_ssh_client, fake_echo):
