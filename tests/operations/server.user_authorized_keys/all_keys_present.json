@@ -4,6 +4,9 @@
         "public_keys": ["ssh-ed25519 AAAAkey1 alice", "ssh-rsa AAAAkey2 bob"]
     },
     "facts": {
+        "files.Link": {
+            "path=/home/someuser/.ssh/authorized_keys": false
+        },
         "server.Home": {
             "user=someuser": "/home/someuser"
         },
