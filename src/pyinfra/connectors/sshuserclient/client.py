@@ -191,19 +191,30 @@ def _add_cert_authority(
     setattr(host_keys, "_pyinfra_cert_authorities", cert_authorities)
 
 
-def _hostname_matches(patterns: tuple[str, ...], hostname: str) -> bool:
+def _hostname_matches(patterns: tuple[str, ...], *hostnames: str) -> bool:
     matched = False
 
     for pattern in patterns:
-        if pattern.startswith("!"):
-            if fnmatchcase(hostname, pattern[1:]):
-                return False
-            continue
+        negated = pattern.startswith("!")
+        if negated:
+            pattern = pattern[1:]
 
-        if fnmatchcase(hostname, pattern):
+        # OpenSSH patterns use square brackets literally, unlike ``fnmatch``.
+        pattern = pattern.replace("[", "[[]")
+        if any(fnmatchcase(hostname, pattern) for hostname in hostnames):
+            if negated:
+                return False
             matched = True
 
     return matched
+
+
+def _hostname_without_port(hostname: str) -> str:
+    if hostname.startswith("["):
+        host, separator, port = hostname[1:].rpartition("]:")
+        if separator and port.isdecimal():
+            return host
+    return hostname
 
 
 def _key_from_blob(key_blob: bytes) -> PKey:
@@ -268,7 +279,10 @@ def _host_certificate_is_trusted(client, hostname: str, key: PKey) -> bool:
     if now < valid_after or now > valid_before:
         return False
 
-    if not any(principal == hostname for principal in _iter_certificate_principals(principals)):
+    certificate_hostname = _hostname_without_port(hostname)
+    if not any(
+        principal == certificate_hostname for principal in _iter_certificate_principals(principals)
+    ):
         return False
 
     try:
@@ -279,7 +293,7 @@ def _host_certificate_is_trusted(client, hostname: str, key: PKey) -> bool:
     signed_data = public_blob.key_blob[: len(public_blob.key_blob) - len(signature) - 4]
 
     for patterns, ca_key in cert_authorities:
-        if not _hostname_matches(patterns, hostname):
+        if not _hostname_matches(patterns, hostname, certificate_hostname):
             continue
         if ca_key.asbytes() != signing_key.asbytes():
             continue

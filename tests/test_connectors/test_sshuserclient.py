@@ -686,6 +686,54 @@ def test_strict_policy_accepts_matching_cert_authority(ssh_ca_keypair, tmp_path)
     StrictPolicy().missing_host_key(client, "192.168.1.236", server_key)
 
 
+def test_strict_policy_accepts_matching_cert_authority_on_nondefault_port(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority 192.168.1.* {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    StrictPolicy().missing_host_key(client, "[192.168.1.236]:2231", server_key)
+
+
+def test_strict_policy_accepts_bracketed_cert_authority_on_nondefault_port(
+    ssh_ca_keypair, tmp_path
+):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority [192.168.1.236]:2231 {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    StrictPolicy().missing_host_key(client, "[192.168.1.236]:2231", server_key)
+
+
+def test_strict_policy_honors_bracketed_cert_authority_negation(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority *,![192.168.1.236]:2231 {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    with pytest.raises(SSHException, match="No host key for"):
+        StrictPolicy().missing_host_key(client, "[192.168.1.236]:2231", server_key)
+
+
 def test_strict_policy_rejects_nonmatching_cert_authority(ssh_ca_keypair, tmp_path):
     known_hosts = tmp_path / "known_hosts"
     ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
