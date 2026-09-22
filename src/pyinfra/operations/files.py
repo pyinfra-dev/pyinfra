@@ -825,8 +825,8 @@ def rsync(src: str, dest: str, flags: list[str] | None = None):
         StrictHostKeyChecking setting, config and known_hosts file (when specified).
 
     .. caution::
-        When using SSH, the ``files.rsync`` operation only supports the ``sudo`` and ``sudo_user``
-        global arguments.
+        When using SSH, the ``files.rsync`` operation only supports the ``sudo``, ``sudo_user``,
+        and ``sudo_password`` global arguments.
     """
 
     if flags is None:
