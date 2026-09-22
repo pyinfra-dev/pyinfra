@@ -364,6 +364,13 @@ def make_unix_command_for_host(
         if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
             command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
 
+        # If we know a password is needed, ask for it up front rather than first trying
+        # passwordless sudo and prompting on failure.
+        if not command_arguments["_sudo_password"] and state.config.USE_SUDO_PASSWORD:
+            sudo_password = getpass(f"{host.print_prefix}sudo password: ")
+            host.connector_data["prompted_sudo_password"] = sudo_password
+            command_arguments["_sudo_password"] = sudo_password
+
         if command_arguments.get("_sudo_password"):
             command_arguments["_sudo_askpass_path"] = _ensure_sudo_askpass_set_for_host(
                 host, temp_dir=op_temp_dir
