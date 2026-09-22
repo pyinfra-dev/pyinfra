@@ -152,13 +152,14 @@ def parse_cli_arg(arg):
     except ValueError:
         pass
 
-    try:
-        parsed_arg = ast.literal_eval(arg)
-    except (SyntaxError, ValueError):
-        pass
-    else:
-        if isinstance(parsed_arg, (dict, list, tuple)):
-            return parsed_arg
+    if len(arg) >= 2 and (arg[0], arg[-1]) in (("[", "]"), ("{", "}"), ("(", ")")):
+        try:
+            parsed_arg = ast.literal_eval(arg)
+        except (SyntaxError, ValueError):
+            pass
+        else:
+            if isinstance(parsed_arg, (dict, list, tuple)):
+                return parsed_arg
 
     return arg
 
