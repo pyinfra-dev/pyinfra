@@ -16,7 +16,7 @@ class MetadataTimeField(Enum):
 
 
 def unix_path_join(*parts) -> str:
-    part_list = list(parts)
+    part_list = [str(part) for part in parts]
     part_list[0:-1] = [part.rstrip("/") for part in part_list[0:-1]]
     return "/".join(part_list)
 
