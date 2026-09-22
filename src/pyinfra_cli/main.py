@@ -1,37 +1,36 @@
 import signal
 import sys
 
-import click
 import gevent
 
 import pyinfra
 from pyinfra.api.output import set_echo, set_formatter
 
+from . import renderables  # noqa: F401  (registers built-in descriptor renderers)
 from .cli import app
+from .console import console, echo, format_text
+from .exceptions import CliException
 
 
 def main():
     # Set CLI mode
     pyinfra.is_cli = True
 
-    # Wire click's styling/echo into the API output layer
-    set_formatter(click.style)
-    set_echo(click.echo)
+    # Wire Rich-backed styling/echo into the API output layer
+    set_formatter(format_text)
+    set_echo(echo)
 
     # Don't write out deploy.pyc/config.pyc etc
     sys.dont_write_bytecode = True
 
     sys.path.append(".")
 
-    # Shut it click
-    click.disable_unicode_literals_warning = True  # type: ignore
-
     # Force line buffering
     sys.stdout.reconfigure(line_buffering=True)  # type: ignore
     sys.stderr.reconfigure(line_buffering=True)  # type: ignore
 
     def _handle_interrupt(signum, frame):
-        click.echo("Exiting upon user request!")
+        console.print("Exiting upon user request!")
         sys.exit(0)
 
     try:
@@ -45,6 +44,6 @@ def main():
 
     try:
         app()
-    except click.ClickException as e:
+    except CliException as e:
         e.show()
-        sys.exit(e.exit_code)
+        sys.exit(1)

@@ -9,8 +9,8 @@ from collections.abc import Iterable
 from os import chdir as os_chdir, environ, getcwd
 from pathlib import Path
 
-import click
 from cyclopts import App, Group, Parameter
+from rich.prompt import Confirm
 
 from pyinfra import __version__, logger, state
 from pyinfra.api import Config, Host, Inventory, State
@@ -26,6 +26,9 @@ from pyinfra.operations import server
 from pyinfra.api.output import format_text
 
 from .commands import get_facts_and_args, get_func_and_args
+from . import routing
+from .console import console, stdout_console
+from .progress import DeployProgress, is_tree_active, step
 from .exceptions import CliError, UnexpectedExternalError, UnexpectedInternalError, WrappedError
 from .inventory import make_inventory
 from .log import setup_logging
@@ -65,11 +68,71 @@ def _lenient_bool(type_, tokens) -> bool:
     raise ValueError(f"invalid boolean value: {tokens[0].value!r}")
 
 
+_EXAMPLES = """\
+# Run one or more deploys against the inventory
+pyinfra INVENTORY deploy_web.py [deploy_db.py]...
+
+# Run a single operation against the inventory
+pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
+
+# Execute an arbitrary command against the inventory
+pyinfra INVENTORY exec -- echo "hello world"
+
+# Run one or more facts against the inventory
+pyinfra INVENTORY fact server.LinuxName [server.Users]...
+pyinfra INVENTORY fact files.File path=/path/to/file...
+
+# Debug the inventory hosts and data
+pyinfra INVENTORY debug-inventory"""
+
+
+def _build_examples_epilogue() -> str:
+    """Render the CLI examples as syntax-highlighted (bash) ANSI text.
+
+    Used as a ``help_format="rich"`` epilogue so the examples show up
+    colourised on the help page.
+    """
+    from rich.syntax import Syntax
+
+    syntax = Syntax(_EXAMPLES, "bash", background_color="default", word_wrap=True)
+    with stdout_console.capture() as capture:
+        stdout_console.print("[bold]Examples:[/bold]\n")
+        stdout_console.print(syntax)
+    return capture.get()
+
+
+def _build_usage() -> str:
+    """Colourised usage line: required args in cyan, optionals dimmed.
+
+    Rendered to an ANSI string because Cyclopts concatenates ``usage`` as a
+    plain string; the ``Usage:`` label is added by the help formatter.  Colour
+    is only emitted when stdout is a terminal so piped output stays plain.
+    """
+    from rich.text import Text
+
+    line = Text.assemble(
+        ("pyinfra ", "bold"),
+        ("[OPTIONS] ", "dim"),
+        ("INVENTORY ", "bold cyan"),
+        ("[OPERATIONS...]", "cyan"),
+    )
+    if not stdout_console.is_terminal:
+        return line.plain
+    with stdout_console.capture() as capture:
+        stdout_console.print(line, end="")
+    return capture.get()
+
+
 app = App(
     name="pyinfra",
     version=f"pyinfra: v{__version__}",
     version_flags=["--version"],
     help_flags=["-h", "--help"],
+    help_format="rich",
+    usage=_build_usage(),
+    console=stdout_console,
+    error_console=console,
+    help_epilogue=_build_examples_epilogue(),
 )
 
 # Enable ``pyinfra --install-completion`` for shell autocompletion.
@@ -169,30 +232,14 @@ def cli(
     """pyinfra manages the state of one or more servers.
 
     It can be used for app/service deployment, config management and ad-hoc
-    command execution. Documentation: docs.pyinfra.com
+    command execution.
 
-    INVENTORY is a file (inventory.py), a hostname (host.net) or comma separated
-    hostnames (host-1.net,host-2.net,@local).
+    Documentation: [cyan][link=https://docs.pyinfra.com]docs.pyinfra.com[/link][/cyan]
 
-    Examples:
-
-    ```
-    # Run one or more deploys against the inventory
-    pyinfra INVENTORY deploy_web.py [deploy_db.py]...
-
-    # Run a single operation against the inventory
-    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
-
-    # Execute an arbitrary command against the inventory
-    pyinfra INVENTORY exec -- echo "hello world"
-
-    # Run one or more facts against the inventory
-    pyinfra INVENTORY fact server.LinuxName [server.Users]...
-    pyinfra INVENTORY fact files.File path=/path/to/file...
-
-    # Debug the inventory hosts and data
-    pyinfra INVENTORY debug-inventory
-    ```
+    INVENTORY can be:
+    - a file ([cyan]inventory.py[/cyan])
+    - a hostname ([cyan]host.net[/cyan])
+    - comma separated hostnames ([cyan]host-1.net,host-2.net,@local[/cyan])
 
     Parameters
     ----------
@@ -335,8 +382,11 @@ def cli(
         # Re-raise any unexpected internal exceptions as UnexpectedInternalError
         raise UnexpectedInternalError(e)
     finally:
+        # Stop routing host output into the (stopped) live tree: disconnect
+        # notices (e.g. docker image IDs) must reach the console.
+        routing.set_tree(None)
         if ctx_state.isset() and state.initialised:
-            logger.info("--> Disconnecting from hosts...")
+            logger.info("Disconnecting from hosts...")
             # Triggers any executor disconnect requirements
             disconnect_all(state)
 
@@ -381,12 +431,6 @@ def _main(
     debug_operations: bool,
     json_output: bool = False,
 ):
-    # In JSON mode keep the spinner quiet so stdout stays pure JSON. Do not
-    # force --yes: a JSON run must be able to diff a host without mutating
-    # it. Applying still requires an explicit --yes; without it the proposed
-    # changes are emitted as JSON instead of blocking on a confirm prompt.
-    if json_output:
-        environ.setdefault("PYINFRA_PROGRESS", "off")
     # Setup working directory
     #
     if chdir:
@@ -407,27 +451,45 @@ def _main(
     config = Config()
     ctx_config.set(config)
 
+    # Decide whether to use the hierarchical live tree (TTY, not JSON, not
+    # --debug). It renders at every verbosity level: host log/echo lines are
+    # routed into the host's tree node (see pyinfra_cli.routing) so nothing
+    # interleaves with the live region; verbosity only controls how much
+    # detail the core emits. In other modes (piped, JSON, --debug) we fall
+    # back to plain flat logs. The low-level progress bars are disabled unless
+    # the user explicitly exports PYINFRA_PROGRESS: the tree replaces them, in
+    # flat modes they'd fight the log stream, and in JSON mode stdout must
+    # stay pure JSON.
+    environ.setdefault("PYINFRA_PROGRESS", "off")
+    routing.reset_host_errors()
+    tree = None
+    if is_tree_active(json_output) and not (debug or debug_all):
+        tree = DeployProgress(state, verbose=verbosity > 0)
+        # NOTE: registered as a state callback after state.init() below.
+    routing.set_tree(tree)
+
     # Update Config & Override Data
     #
-    config = _set_config(
-        config,
-        config_filename,
-        sudo,
-        sudo_user,
-        use_sudo_password,
-        use_sudo_login,
-        same_sudo_password,
-        su_user,
-        dzdo,
-        dzdo_user,
-        parallel,
-        shell_executable,
-        fail_percent,
-        yes,
-        diff,
-        retry,
-        retry_delay,
-    )
+    with step(tree, "Loading config"):
+        config = _set_config(
+            config,
+            config_filename,
+            sudo,
+            sudo_user,
+            use_sudo_password,
+            use_sudo_login,
+            same_sudo_password,
+            su_user,
+            dzdo,
+            dzdo_user,
+            parallel,
+            shell_executable,
+            fail_percent,
+            yes,
+            diff,
+            retry,
+            retry_delay,
+        )
     if ssh_password_prompt:
         ssh_password = getpass("SSH password: ")
 
@@ -447,21 +509,29 @@ def _main(
 
     # Load up the inventory from the filesystem
     #
-    logger.info("--> Loading inventory...")
-    inventory = make_inventory(
-        inventory,
-        cwd=state.cwd,
-        override_data=override_data,
-        group_data_directories=group_data,
-    )
-    ctx_inventory.set(inventory)
+    with step(tree, "Loading inventory"):
+        logger.info("Loading inventory...")
+        inventory = make_inventory(
+            inventory,
+            cwd=state.cwd,
+            override_data=override_data,
+            group_data_directories=group_data,
+        )
+        ctx_inventory.set(inventory)
 
-    # Now that we have inventory, apply --limit/--exclude config override
-    initial_limit = _apply_inventory_limit(inventory, limit)
-    initial_limit = _apply_inventory_exclude(inventory, initial_limit, exclude)
+        # Now that we have inventory, apply --limit/--exclude config override
+        initial_limit = _apply_inventory_limit(inventory, limit)
+        initial_limit = _apply_inventory_exclude(inventory, initial_limit, exclude)
 
-    # Initialise the state
-    state.init(inventory, config, initial_limit=initial_limit)
+        # Initialise the state
+        state.init(inventory, config, initial_limit=initial_limit)
+
+    # Register the inventory host names for log/echo host attribution.
+    routing.set_host_names(host.name for host in inventory)
+
+    # Now that state is initialised, register the live-tree callback handler.
+    if tree is not None:
+        state.add_callback_handler(tree)
 
     if command == CliCommands.DEBUG_INVENTORY:
         if json_output:
@@ -472,30 +542,52 @@ def _main(
 
     # Connect to the hosts & start handling the user commands
     #
-    logger.info("--> Connecting to hosts...")
+    logger.info("Connecting to hosts...")
     state.set_stage(StateStage.Connect)
-    connect_all(state)
+    if tree is not None:
+        with tree:
+            connect_all(state)
+    else:
+        connect_all(state)
 
     state.set_stage(StateStage.Prepare)
-    can_diff, state, config = _handle_commands(
-        state, config, command, original_operations, operations, json_output=json_output
-    )
+    try:
+        if tree is not None:
+            with tree:
+                can_diff, state, config = _handle_commands(
+                    state, config, command, original_operations, operations, json_output=json_output
+                )
+        else:
+            can_diff, state, config = _handle_commands(
+                state, config, command, original_operations, operations, json_output=json_output
+            )
+    except PyinfraError:
+        # e.g. "No hosts remaining!" when every host failed during prepare:
+        # show what failed before the error propagates.
+        if state.failed_hosts and not json_output:
+            _print_failed_hosts(state)
+        raise
+
+    # Failure prompts are deferred during Prepare (hosts evaluate the deploy
+    # in parallel; prompting mid-phase interleaves with other hosts' output).
+    # Now the phase is complete, show what failed and ask once.
+    if state.failed_hosts and yes is False and not json_output:
+        if not _confirm_failed_hosts(state, "One or more hosts failed, continue?"):
+            _exit()
 
     # Print proposed changes, execute unless --dry, and exit
     #
     if can_diff and not json_output:
         if yes:
-            logger.info("--> Skipping change detection")
+            logger.info("Skipping change detection")
         else:
-            logger.info("--> Detected changes:")
             print_meta(state)
-            click.echo(
+            console.print(
                 """
     Detected changes may not include every change pyinfra will execute.
     Hidden side effects of operations may alter behaviour of future operations,
     this will be shown in the results. The remote state will always be updated
     to reflect the state defined by the input operations.""",
-                err=True,
             )
 
     # If --debug-facts or --debug-operations, print and exit
@@ -522,11 +614,17 @@ def _main(
         if not _do_confirm("Detected changes displayed above, skip this step with -y"):
             _exit()
 
-    logger.info("--> Beginning operation run...")
+    logger.info("Beginning operation run...")
     state.set_stage(StateStage.Execute)
-    run_ops(state, serial=serial, no_wait=no_wait)
+    if tree is not None:
+        with tree:
+            run_ops(state, serial=serial, no_wait=no_wait)
+        # The live display is over; host output from now on (results,
+        # disconnect notices) streams straight to the console.
+        routing.set_tree(None)
+    else:
+        run_ops(state, serial=serial, no_wait=no_wait)
 
-    logger.info("--> Results:")
     state.set_stage(StateStage.Disconnect)
     if json_output:
         print_run_json(state, dry=False)
@@ -536,29 +634,44 @@ def _main(
 
 
 def _do_confirm(msg: str) -> bool:
-    click.echo(err=True)
-    click.echo(f"    {msg}", err=True)
+    console.print()
+    console.print(f"    {msg}")
     warning_count = state.get_warning_counter()
     if warning_count > 0:
-        click.secho(
+        console.print(
             f"    {warning_count} warnings shown during change detection, see above",
-            fg="yellow",
-            err=True,
+            style="yellow",
         )
-    confirm_msg = "    Press enter to execute..."
-    click.echo(confirm_msg, err=True, nl=False)
-    v = input()
-    if v:
-        click.echo(f"    Unexpected user input: {v}", err=True)
-        return False
-    # Go up, clear the line, go up again - as if the confirmation statement was never here!
-    click.echo(
-        "\033[1A{}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
-        err=True,
-        nl=False,
-    )
-    click.echo(err=True)
-    return True
+    return Confirm.ask("    Execute?", console=console, default=True)
+
+
+def _print_failed_hosts(state: State) -> None:
+    """List the failed hosts with their first recorded error message."""
+    console.print()
+    console.print("Failed hosts:", style="bold red")
+    host_errors = routing.get_host_errors()
+    for host in sorted(state.failed_hosts, key=lambda h: h.name):
+        errors = host_errors.get(host.name) or []
+        label = routing.host_label(host.name, base_style="red", prefix="  ✗ ")
+        if errors:
+            label.append(f" — {errors[0]}", style="red")
+        console.print(label)
+
+
+def _confirm_failed_hosts(state: State, msg: str) -> bool:
+    """Show which hosts failed (and why) then ask whether to continue.
+
+    Pauses the live progress tree (if running) around the prompt so it doesn't
+    fight the interactive input, and resumes it afterwards.
+    """
+    tree = routing.get_tree()
+    paused = tree.pause() if tree is not None else False
+    try:
+        _print_failed_hosts(state)
+        return _do_confirm(msg)
+    finally:
+        if paused and tree is not None:
+            tree.resume()
 
 
 # Setup
@@ -689,7 +802,7 @@ def _set_config(
     retry,
     retry_delay,
 ):
-    logger.info("--> Loading config...")
+    logger.info("Loading config...")
 
     # Load up any config.py from the filesystem
     if state.cwd:
@@ -781,9 +894,16 @@ def _set_fail_prompts(state: State, config: Config) -> None:
     config.FAIL_PERCENT = 0
 
     def should_raise_failed_hosts(state: State) -> bool:
+        if state.current_stage == StateStage.Prepare:
+            # Hosts prepare in parallel: prompting now would interleave with
+            # the other hosts' output. Continue silently; one aggregated
+            # prompt is shown after the phase completes (see _main).
+            return False
         if state.current_stage == StateStage.Connect:
-            return not _do_confirm("One of more hosts failed to connect, continue?")
-        return not _do_confirm("One of more hosts failed, continue?")
+            return not _confirm_failed_hosts(
+                state, "One or more hosts failed to connect, continue?"
+            )
+        return not _confirm_failed_hosts(state, "One or more hosts failed, continue?")
 
     state.should_raise_failed_hosts = should_raise_failed_hosts
 
@@ -837,7 +957,7 @@ def _apply_inventory_exclude(
 #
 def _handle_commands(state, config, command, original_operations, operations, json_output=False):
     if command is CliCommands.FACT:
-        logger.info("--> Gathering facts...")
+        logger.info("Gathering facts...")
         state, fact_data = _run_fact_operations(state, config, operations)
         if json_output:
             print_facts_json(fact_data)
@@ -848,16 +968,16 @@ def _handle_commands(state, config, command, original_operations, operations, js
     can_diff = True
 
     if command == CliCommands.SHELL:
-        logger.info("--> Preparing exec operation...")
+        logger.info("Preparing exec operation...")
         state = _prepare_exec_operations(state, config, operations)
         can_diff = False
 
     elif command == CliCommands.DEPLOY_FILES:
-        logger.info("--> Preparing operation files...")
+        logger.info("Preparing operation files...")
         state, config, operations = _prepare_deploy_operations(state, config, operations)
 
     elif command == CliCommands.FUNC:
-        logger.info("--> Preparing operation func...")
+        logger.info("Preparing operation func...")
         state, kwargs = _prepare_func_operations(
             state,
             config,
