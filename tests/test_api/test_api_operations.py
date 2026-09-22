@@ -329,6 +329,7 @@ class TestOperationsApi(PatchSSHTestCase):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
         state.current_stage = StateStage.Prepare
+        state.print_input = True
         connect_all(state)
 
         host = inventory.get_host("somehost")
@@ -346,9 +347,16 @@ class TestOperationsApi(PatchSSHTestCase):
 
         assert len(state.get_op_order()) == 1
 
-        with patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process:
+        with (
+            patch("pyinfra.connectors.ssh.echo") as fake_echo,
+            patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process,
+        ):
             fake_run_local_process.return_value = 0, []
             run_ops(state)
+
+        printed_command = fake_echo.call_args.args[0]
+        assert "PYINFRA_SUDO_PASSWORD=PASSWORD" not in printed_command
+        assert "*MASKED*" in printed_command
 
         fake_run_local_process.assert_called_with(
             (

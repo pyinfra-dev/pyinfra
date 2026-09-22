@@ -747,25 +747,32 @@ class SSHConnector(BaseConnector):
                     **sudo_arguments,
                 )
 
-            rsync_command = (
+            rsync_command_template = (
                 "rsync {rsync_flags} "
                 '--rsh "ssh {ssh_flags}" '
                 "--rsync-path {remote_rsync_command} "
                 "{src} {user}{hostname}:{dest}"
-            ).format(
+            )
+            remote_rsync_command = StringCommand(QuoteString(remote_rsync_command))
+            rsync_command_arguments = dict(
                 rsync_flags=" ".join(flags),
                 ssh_flags=" ".join(ssh_flags),
-                remote_rsync_command=StringCommand(
-                    QuoteString(remote_rsync_command)
-                ).get_raw_value(),
                 user=user or "",
                 hostname=hostname,
                 src=src,
                 dest=dest,
             )
+            rsync_command = rsync_command_template.format(
+                remote_rsync_command=remote_rsync_command.get_raw_value(),
+                **rsync_command_arguments,
+            )
 
             if print_input:
-                echo(f"{self.host.print_prefix}>>> {rsync_command}", err=True)
+                display_command = rsync_command_template.format(
+                    remote_rsync_command=remote_rsync_command,
+                    **rsync_command_arguments,
+                )
+                echo(f"{self.host.print_prefix}>>> {display_command}", err=True)
 
             return run_local_process(
                 rsync_command,
