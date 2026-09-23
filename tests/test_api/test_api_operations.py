@@ -1,4 +1,5 @@
 from collections import defaultdict
+from io import StringIO
 from os import path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
@@ -230,6 +231,29 @@ class TestOperationsApi(PatchSSHTestCase):
         anotherhost_op_hash = next(iter(state.ops[anotherhost]))
         assert state.op_meta[somehost_op_hash].global_arguments["_parallel"] == 1
         assert state.op_meta[anotherhost_op_hash].global_arguments["_parallel"] == 2
+
+    def test_template_op_auto_name_does_not_include_data_kwargs(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(
+            state,
+            files.template,
+            StringIO("password={{ password }}"),
+            "/etc/config.toml",
+            password="!CLEARTEXTPASSWORD",
+        )
+
+        [op_hash] = state.get_op_order()
+        op_args = state.op_meta[op_hash].args
+
+        assert any(arg.startswith("StringIO(hash=") for arg in op_args)
+        assert "/etc/config.toml" in op_args
+        assert "password=!CLEARTEXTPASSWORD" not in op_args
+
+        disconnect_all(state)
 
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
     @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)
