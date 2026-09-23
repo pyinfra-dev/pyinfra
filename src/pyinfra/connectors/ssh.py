@@ -276,7 +276,7 @@ class SSHConnector(BaseConnector):
 
         except BadHostKeyException as e:
             remove_entry = e.hostname
-            port = self.client._ssh_config.get("port", 22)
+            port = getattr(self.client, "_ssh_config", {}).get("port", 22)
             if port != 22:
                 remove_entry = f"[{e.hostname}]:{port}"
 
