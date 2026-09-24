@@ -1,0 +1,14 @@
+args:
+  - search_path
+kwargs:
+  value: "a'b"
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      search_path:
+        value: "\"$user\", public"
+        unit: null
+        source: default
+        context: user
+commands:
+  - "psql -Ac 'ALTER SYSTEM SET search_path = '\"'\"'a'\"'\"''\"'\"'b'\"'\"''"
