@@ -1,0 +1,11 @@
+kwargs:
+  source: current
+  dest: myset
+facts:
+  s6.S6SetStatus:
+    repository=None, the_set=current:
+      tipidee: true
+    repository=None, the_set=myset:
+      tipidee: true
+commands: []
+noop_description: the set "myset" exists and is identical to "current"

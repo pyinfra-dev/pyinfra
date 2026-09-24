@@ -1,0 +1,13 @@
+args:
+  - myset
+kwargs:
+  source: current
+  force: true
+facts:
+  s6.S6SetStatus:
+    repository=None, the_set=current:
+      tipidee: true
+    repository=None, the_set=myset:
+      tipidee: false
+commands:
+  - s6-rc-set-copy -f current myset

@@ -1,0 +1,38 @@
+args:
+  - [ nftables, mysqld, php-fpm, tipidee ]
+kwargs:
+  running: true
+  restarted: true
+  reloaded: true
+  enabled: true
+  the_set: webserver
+  enabled_rx: active
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repository=None:
+      - current
+      - webserver
+  s6.S6SetStatus:
+    repository=None, the_set=webserver:
+      nftables: always
+      mysqld: active
+      php-fpm: masked
+      tipidee: usable
+  s6.S6LiveStatus:
+    nftables: true
+    mysqld: false
+    php-fpm: false
+    tipidee: false
+commands:
+  - s6 live start mysqld php-fpm tipidee
+  - s6 live restart nftables
+  - s6 process kill -s SIGHUP nftables
+  # enabled argument applies enabled_rx to all services, hence why nftables is here, despite having
+  # "always" rx
+  - s6-rc-set-change webserver active nftables php-fpm tipidee
+  - s6-rc-set-fix webserver
+  - s6-rc-set-commit webserver
