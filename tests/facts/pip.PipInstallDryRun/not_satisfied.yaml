@@ -1,0 +1,8 @@
+arg:
+- foo[bar]
+- pip
+command: pip install --dry-run --quiet --report - 'foo[bar]' 2> /dev/null
+requires_command: pip
+output:
+- '{"version": "1", "install": [{"metadata": {"name": "bar-dep"}}]}'
+fact: false

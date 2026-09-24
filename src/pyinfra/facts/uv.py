@@ -18,9 +18,10 @@ from typing import cast
 from typing_extensions import override
 
 from pyinfra import logger
-from pyinfra.api import StringCommand
+from pyinfra.api import QuoteString, StringCommand
+from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.facts import FactBase
-from pyinfra.facts.util.packaging import PackageVersionDict
+from pyinfra.facts.util.packaging import PackageVersionDict, uv_dry_run_is_satisfied
 
 UV_CMD = "uv"
 MANAGED_PYTHON = "--managed-python"
@@ -69,6 +70,61 @@ class UvPipPackages(FactBase[PackageVersionDict]):
     @override
     def process(self, output: Iterable[str]) -> PackageVersionDict:
         return process_json(str(self.command()), output, "name", "version")
+
+
+class UvPipInstallDryRun(FactBase[bool]):
+    """
+    Whether ``uv pip install <spec>`` would change nothing in the current environment, using
+    uv's own resolver via ``--dry-run``. Used to decide whether a spec carrying extras
+    (e.g. ``foo[bar]``) is already satisfied when the bare package is installed.
+    """
+
+    default = bool  # False == not satisfied == install
+
+    @override
+    def requires_command(self, spec) -> str:
+        return UV_CMD
+
+    @override
+    def command(self, spec) -> StringCommand:
+        # uv logs to stderr, so fold it into stdout for parsing.
+        return make_formatted_string_command(
+            f"{UV_CMD} pip install --dry-run {{0}} 2>&1",
+            QuoteString(spec),
+        )
+
+    @override
+    def process(self, output: Iterable[str]) -> bool:
+        return uv_dry_run_is_satisfied(output)
+
+
+class UvToolVenvDryRun(FactBase[bool]):
+    """
+    Whether ``spec`` is already satisfied inside an installed ``uv tool`` app's venv.
+
+    ``uv tool install`` has no ``--dry-run``, so this probes the tool's venv directly with
+    ``uv pip install --dry-run --python <tool dir>/<name>/bin/python``. Used to decide whether
+    an extra (e.g. ``foo[bar]``) is already present for an installed tool.
+    """
+
+    default = bool  # False == not satisfied == (re)install
+
+    @override
+    def requires_command(self, tool, spec) -> str:
+        return UV_CMD
+
+    @override
+    def command(self, tool, spec) -> StringCommand:
+        return make_formatted_string_command(
+            f'{UV_CMD} pip install --dry-run --python "$({UV_CMD} tool dir)/{{0}}/bin/python" '
+            "{1} 2>&1",
+            QuoteString(tool),
+            QuoteString(spec),
+        )
+
+    @override
+    def process(self, output: Iterable[str]) -> bool:
+        return uv_dry_run_is_satisfied(output)
 
 
 class UvAvailablePythonsByImplementation(FactBase[PackageVersionDict]):

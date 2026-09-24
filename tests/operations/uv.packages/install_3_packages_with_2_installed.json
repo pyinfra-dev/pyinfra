@@ -1,6 +1,6 @@
 {
-    "args": [["ruff", "mypy", "pyrefly"]],
-    "kwargs": {"present": true, "extra_args": "--no-cache"},
-    "facts": {"uv.UvPipPackages": {"ruff": ["1.2.3"], "mypy": ["4.5.6"]}},
-    "commands": ["uv pip install --no-progress --no-cache pyrefly"],
+    "args": [["ruff", "mypy", "pyrefly", "foo[bar]>=1.2"]],
+    "kwargs": { "present": true, "extra_args": "--no-cache" },
+    "facts": { "uv.UvPipPackages": { "ruff": ["1.2.3"], "mypy": ["4.5.6"] } },
+    "commands": ["uv pip install --no-progress --no-cache pyrefly 'foo[bar]>=1.2'"]
 }
