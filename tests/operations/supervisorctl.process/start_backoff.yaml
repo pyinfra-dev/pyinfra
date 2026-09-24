@@ -1,0 +1,8 @@
+args:
+  - web
+facts:
+  supervisorctl.SupervisorctlStatus:
+    "config_file=None, password=None, server_url=None, username=None":
+      web: null
+commands:
+  - supervisorctl start web

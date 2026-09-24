@@ -1,0 +1,4 @@
+command: supervisorctl status || true
+requires_command: supervisorctl
+output: []
+fact: {}
