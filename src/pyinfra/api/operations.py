@@ -10,7 +10,12 @@ from paramiko import SSHException
 
 from pyinfra import logger
 from pyinfra.api.output import format_text
-from pyinfra.connectors.util import CommandOutput, OutputLine
+from pyinfra.connectors.util import (
+    CommandOutput,
+    OutputLine,
+    reset_stdout_for_retry,
+    rewind_stdin_for_retry,
+)
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
@@ -90,6 +95,13 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
         executed_commands = 0
         commands = []
         all_output_lines = []
+
+        if retry_attempt:
+            # The previous attempt consumed the `_stdin` payload and filled the `_stdout`
+            # sink: put both back, or the retry sends an empty stdin and appends its output
+            # to the previous attempt's.
+            rewind_stdin_for_retry(base_connector_arguments.get("_stdin"))
+            reset_stdout_for_retry(base_connector_arguments.get("_stdout"))
 
         for command in op_data.command_generator():
             commands.append(command)
