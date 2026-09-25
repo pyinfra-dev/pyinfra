@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import IO, TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic
 from collections.abc import Callable, Generator, Iterable, Mapping
 
 from typing_extensions import ParamSpec, Protocol
 
+from pyinfra.api.arguments import StdinPayload, StdoutSink
 from pyinfra.api.hiddenvalue import HiddenValue
 
 if TYPE_CHECKING:
@@ -52,10 +53,8 @@ class PyinfraOperation(Generic[P], Protocol):
         _success_exit_codes: Iterable[int] = (0,),
         _timeout: None | int = None,
         _get_pty: bool = False,
-        _stdin: (
-            None | str | bytes | bytearray | memoryview | list[str] | IO[bytes] | Iterable[str]
-        ) = None,
-        _stdout: None | IO[bytes] | Iterable[bytes] = None,
+        _stdin: None | StdinPayload = None,
+        _stdout: None | StdoutSink = None,
         # Retry arguments
         _retries: None | int = None,
         _retry_delay: None | int | float = None,

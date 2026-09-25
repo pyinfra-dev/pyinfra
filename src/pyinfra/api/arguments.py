@@ -27,6 +27,15 @@ default_sentinel = object()
 
 EnvValue = str | HiddenValue
 
+# Payload accepted by ``_stdin``: text written line by line, or bytes and binary file objects
+# streamed through to the command's stdin unaltered.
+StdinPayload = str | bytes | bytearray | memoryview | list[str] | IO[bytes] | Iterable[str]
+
+# Sink accepted by ``_stdout``: a binary buffer receiving the command's raw stdout. The
+# ``Iterable`` member is what the runtime type check accepts for duck typed binary buffers,
+# which are not ``IO[bytes]`` - tempfile's wrappers, for instance.
+StdoutSink = IO[bytes] | Iterable[bytes]
+
 
 class ArgumentMeta(Generic[T]):
     description: str
@@ -74,8 +83,8 @@ class ConnectorArguments(TypedDict, total=False):
     _success_exit_codes: Iterable[int]
     _timeout: int
     _get_pty: bool
-    _stdin: str | bytes | bytearray | memoryview | list[str] | IO[bytes] | Iterable[str]
-    _stdout: IO[bytes] | Iterable[bytes]
+    _stdin: StdinPayload
+    _stdout: StdoutSink
 
     # Retry arguments
     _retries: int
