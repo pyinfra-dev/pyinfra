@@ -1,4 +1,5 @@
 import tempfile
+from array import array
 from io import BytesIO, StringIO
 from subprocess import PIPE
 from unittest import TestCase
@@ -8,6 +9,7 @@ import gevent
 
 from pyinfra.api import Config, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
@@ -409,3 +411,42 @@ class TestLocalConnector(TestCase):
         self.fake_popen_mock().stdin.write.reset_mock()
         host.run_shell_command("cat > /dest", _stdin="", print_output=True)
         self.fake_popen_mock().stdin.write.assert_not_called()
+
+    def test_write_stdin_generator_of_lines(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+
+        # An iterable of lines is iterated: a generator used to be wrapped in a list and have
+        # `endswith` called on the generator itself.
+        host.run_shell_command(
+            "cat > /dest",
+            _stdin=(line for line in ["hello", "abc"]),
+            print_output=True,
+        )
+        self.fake_popen_mock().stdin.write.assert_has_calls(
+            [
+                call(b"hello\n"),
+                call(b"abc\n"),
+            ],
+        )
+
+    def test_write_stdin_rejects_a_non_text_iterable(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+
+        # A buffer of non-text items is neither text nor one of the binary forms this argument
+        # accepts, and must say so rather than fail on `endswith`.
+        with self.assertRaises(PyinfraError) as context:
+            host.run_shell_command(
+                "cat > /dest",
+                _stdin=array("B", b"hi"),
+                print_output=True,
+            )
+
+        assert "must be text or bytes" in str(context.exception)
