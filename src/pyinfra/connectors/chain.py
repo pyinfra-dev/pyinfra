@@ -13,7 +13,7 @@ from typing import IO, TYPE_CHECKING, Any, cast
 
 from typing_extensions import Unpack, override
 
-from pyinfra.api.exceptions import ConnectError, InventoryError
+from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.output import echo
 from pyinfra.api.util import get_file_io
@@ -318,6 +318,22 @@ class ChainedConnector(BaseConnector):
             command = self._connectors[i].wrap_exec_command(command, self._container_ids[i])
         return command
 
+    def _check_no_pty(self, arguments: ConnectorArguments) -> None:
+        """
+        Refuse ``_get_pty`` on a file transfer.
+
+        The payload is streamed over stdin and stdout, and a pseudoTTY merges stderr into
+        stdout, echoes the payload back into the output and can deadlock a large transfer.
+        Checked here rather than in each connector, so that it holds whatever the outermost
+        connector is - only ``@ssh`` refuses the combination on its own initiative.
+        """
+        if arguments.get("_get_pty"):
+            raise PyinfraError(
+                "`_get_pty` cannot be used with a file transfer through a chain: the payload "
+                "is streamed over stdin/stdout, and a pseudoTTY merges stderr into stdout and "
+                "echoes the input back.",
+            )
+
     @override
     def put_file(
         self,
@@ -338,6 +354,8 @@ class ChainedConnector(BaseConnector):
         Privilege escalation applies to the whole wrapped command, as run by the
         outermost connector - see the class docstring.
         """
+        self._check_no_pty(arguments)
+
         write_command = self._wrap_for_layer(
             StringCommand("cat", ">", QuoteString(remote_filename)),
             len(self._connectors) - 1,
@@ -380,6 +398,8 @@ class ChainedConnector(BaseConnector):
         innermost target straight into the local destination, so no layer stores a copy
         of it.
         """
+        self._check_no_pty(arguments)
+
         read_command = self._wrap_for_layer(
             StringCommand("cat", QuoteString(remote_filename)),
             len(self._connectors) - 1,

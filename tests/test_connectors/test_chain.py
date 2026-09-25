@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from pyinfra.api.exceptions import ConnectError, InventoryError
+from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.connectors.chain import ChainedConnector, _parse_chain
 
 from ..util import make_inventory
@@ -172,6 +172,24 @@ class TestChainFileTransfer(TestCase):
             chain._container_ids[i] = f"layer-{i}"
 
         return chain, outer
+
+    def test_put_file_refuses_a_pty(self):
+        """A transfer streams over stdin/stdout, so a pseudoTTY would corrupt it."""
+        chain, outer = self._make_chain()
+
+        with self.assertRaises(PyinfraError):
+            chain.put_file(StringIO("payload"), "/etc/thing.conf", _get_pty=True)
+
+        outer.run_shell_command.assert_not_called()
+
+    def test_get_file_refuses_a_pty(self):
+        """Same for downloads: the sink would collect error output and echoed input."""
+        chain, outer = self._make_chain()
+
+        with self.assertRaises(PyinfraError):
+            chain.get_file("/etc/thing.conf", StringIO(), _get_pty=True)
+
+        outer.run_shell_command.assert_not_called()
 
     def test_put_file_stages_nothing(self):
         """The payload is piped straight into the target, so no layer holds a copy."""
