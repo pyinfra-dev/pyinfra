@@ -1,13 +1,28 @@
-from io import StringIO
+import tempfile
+from array import array
+from io import BytesIO, StringIO
 from subprocess import PIPE
 from unittest import TestCase
 from unittest.mock import MagicMock, call, mock_open, patch
 
+import gevent
+
 from pyinfra.api import Config, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
+
+
+class FailingSink:
+    """Binary sink whose writes always fail, mimicking a full disk."""
+
+    def write(self, data):
+        raise OSError(28, "No space left on device")
+
+    def seekable(self):
+        return False
 
 
 @patch("pyinfra.connectors.local.mkstemp", lambda: (None, "__tempfile__"))
@@ -230,3 +245,208 @@ class TestLocalConnector(TestCase):
                 call(b"abc\n"),
             ],
         )
+
+    def test_write_stdin_bytes(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        command = "cat > /dest"
+        self.fake_popen_mock().returncode = 0
+
+        host.run_shell_command(command, _stdin=b"\x00binary\xffno newline", print_output=True)
+        self.fake_popen_mock().stdin.write.assert_called_with(b"\x00binary\xffno newline")
+
+    def test_write_stdin_binary_io_object(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        command = "cat > /dest"
+        self.fake_popen_mock().returncode = 0
+
+        payload = b"\x00binary\xffwith\nnewlines\n\x1b"
+        host.run_shell_command(command, _stdin=BytesIO(payload), print_output=True)
+        self.fake_popen_mock().stdin.write.assert_called_with(payload)
+
+    def test_stdout_sink_streams_raw_bytes(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        payload = b"\x00binary\xffwith\nnewlines\n\x1b"
+        self.fake_popen_mock().stdout.read.side_effect = [payload, b""]
+
+        sink = BytesIO()
+        status, output = host.run_shell_command("cat /src", _stdout=sink, print_output=True)
+
+        assert status is True
+        assert sink.getvalue() == payload
+        # Diverted output is not decoded into the command result
+        assert output.stdout_lines == []
+
+    def test_stdout_sink_write_error_is_raised(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        self.fake_popen_mock().stdout.read.side_effect = [b"payload", b""]
+
+        # A sink that cannot be written to must fail the command, not report success with a
+        # truncated sink.
+        with self.assertRaises(OSError):
+            host.run_shell_command("cat /src", _stdout=FailingSink(), print_output=True)
+
+    def test_stdout_sink_write_error_is_not_reported_as_a_timeout(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        self.fake_popen_mock().stdout.read.side_effect = [b"payload", b""]
+
+        with self.assertRaises(OSError):
+            host.run_shell_command(
+                "cat /src",
+                _stdout=FailingSink(),
+                _timeout=5,
+                print_output=True,
+            )
+
+    def test_stdout_sink_write_error_does_not_hang_on_a_blocked_reader(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        self.fake_popen_mock().stdout.read.side_effect = [b"payload", b""]
+
+        def _blocking_iter():
+            gevent.sleep(30)
+            return iter([])
+
+        # A failed sink stops draining stdout, so the stderr reader stays blocked on a
+        # command that keeps writing: without killing it the call would hang here.
+        self.fake_popen_mock().stderr.__iter__.side_effect = _blocking_iter
+
+        with gevent.Timeout(10):
+            with self.assertRaises(OSError):
+                host.run_shell_command("cat /src", _stdout=FailingSink(), print_output=True)
+
+    def test_write_stdin_binary_tempfile(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        payload = b"\x00binary\xffwith\nnewlines\n\x1b"
+
+        # Tempfile wrappers are not RawIOBase/BufferedIOBase, but they are binary streams.
+        with tempfile.SpooledTemporaryFile(mode="w+b") as spooled:
+            spooled.write(payload)
+            spooled.seek(0)
+            host.run_shell_command("cat > /dest", _stdin=spooled, print_output=True)
+
+        self.fake_popen_mock().stdin.write.assert_called_with(payload)
+
+    def test_write_stdin_named_tempfile(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        payload = b"\x00binary\xffpayload"
+
+        with tempfile.NamedTemporaryFile() as named:
+            named.write(payload)
+            named.seek(0)
+            host.run_shell_command("cat > /dest", _stdin=named, print_output=True)
+
+        self.fake_popen_mock().stdin.write.assert_called_with(payload)
+
+    def test_write_stdin_text_tempfile_keeps_line_handling(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+
+        # Text mode tempfiles have an `encoding` and must keep the line based handling.
+        with tempfile.SpooledTemporaryFile(mode="w+") as spooled:
+            spooled.write("hello")
+            spooled.seek(0)
+            host.run_shell_command("cat > /dest", _stdin=spooled, print_output=True)
+
+        self.fake_popen_mock().stdin.write.assert_called_with(b"hello\n")
+
+    def test_write_stdin_bytearray_and_memoryview(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+        payload = b"\x00binary\xffpayload"
+
+        host.run_shell_command("cat > /dest", _stdin=bytearray(payload), print_output=True)
+        self.fake_popen_mock().stdin.write.assert_called_with(payload)
+
+        self.fake_popen_mock().stdin.write.reset_mock()
+        host.run_shell_command("cat > /dest", _stdin=memoryview(payload), print_output=True)
+        self.fake_popen_mock().stdin.write.assert_called_with(payload)
+
+    def test_write_stdin_empty_payloads(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+
+        # Empty bytes are a real payload, e.g. truncating a remote file.
+        host.run_shell_command("cat > /dest", _stdin=b"", print_output=True)
+        self.fake_popen_mock().stdin.write.assert_called_with(b"")
+
+        # The empty *text* payload keeps its historical no-op behaviour.
+        self.fake_popen_mock().stdin.write.reset_mock()
+        host.run_shell_command("cat > /dest", _stdin="", print_output=True)
+        self.fake_popen_mock().stdin.write.assert_not_called()
+
+    def test_write_stdin_generator_of_lines(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+
+        # An iterable of lines is iterated: a generator used to be wrapped in a list and have
+        # `endswith` called on the generator itself.
+        host.run_shell_command(
+            "cat > /dest",
+            _stdin=(line for line in ["hello", "abc"]),
+            print_output=True,
+        )
+        self.fake_popen_mock().stdin.write.assert_has_calls(
+            [
+                call(b"hello\n"),
+                call(b"abc\n"),
+            ],
+        )
+
+    def test_write_stdin_rejects_a_non_text_iterable(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        self.fake_popen_mock().returncode = 0
+
+        # A buffer of non-text items is neither text nor one of the binary forms this argument
+        # accepts, and must say so rather than fail on `endswith`.
+        with self.assertRaises(PyinfraError) as context:
+            host.run_shell_command(
+                "cat > /dest",
+                _stdin=array("B", b"hi"),
+                print_output=True,
+            )
+
+        assert "must be text or bytes" in str(context.exception)

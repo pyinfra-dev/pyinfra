@@ -16,7 +16,7 @@ from typing_extensions import TypedDict, Unpack, override
 from pyinfra import logger
 from pyinfra.api.output import echo
 from pyinfra.api.command import QuoteString, StringCommand
-from pyinfra.api.exceptions import ConnectError
+from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.api.util import get_file_io, memoize
 
 from .base import BaseConnector, DataMeta
@@ -393,7 +393,15 @@ class SSHConnector(BaseConnector):
         _get_pty = arguments.pop("_get_pty", False)
         _timeout = arguments.pop("_timeout", None)
         _stdin = arguments.pop("_stdin", None)
+        _stdout = arguments.pop("_stdout", None)
         _success_exit_codes = arguments.pop("_success_exit_codes", None)
+
+        if _stdout is not None and _get_pty:
+            raise PyinfraError(
+                "`_stdout` cannot be combined with `_get_pty`: a pseudoTTY merges stderr "
+                "into stdout, so the sink would receive error output and prompts as well "
+                "as the command's own output, and errors would stop being reportable."
+            )
 
         def execute_command() -> tuple[int, CommandOutput]:
             unix_command = make_unix_command_for_host(self.state, self.host, command, **arguments)
@@ -417,7 +425,7 @@ class SSHConnector(BaseConnector):
             )
 
             # Write any stdin and then close it
-            if _stdin:
+            if _stdin is not None:
                 write_stdin(_stdin, stdin_buffer)
             stdin_buffer.close()
 
@@ -427,6 +435,7 @@ class SSHConnector(BaseConnector):
                 timeout=_timeout,
                 print_output=print_output,
                 print_prefix=self.host.print_prefix,
+                stdout_sink=_stdout,
             )
 
             logger.debug("Waiting for exit status...")
@@ -439,6 +448,8 @@ class SSHConnector(BaseConnector):
             self.host,
             arguments,
             execute_command,
+            stdin=_stdin,
+            stdout=_stdout,
         )
 
         if _success_exit_codes:

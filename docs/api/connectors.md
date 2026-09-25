@@ -197,7 +197,7 @@ screen.
 
 When implementing `run_shell_command`, connectors should use pyinfra's command wrapping utilities rather than manually constructing commands. The `make_unix_command_for_host()` function from `pyinfra.connectors.util` handles shell wrapping, sudo elevation, environment variables, working directory changes, command retries and shell executable selection.
 
-Its worth being aware that when passing `arguments` to `make_unix_command_for_host()`, connector control parameters must be filtered out. These parameters (`_success_exit_codes`, `_timeout`, `_get_pty`, `_stdin`) are defined in `pyinfra.api.arguments.ConnectorArguments` and are meant for the connector's internal logic after command generation, not for command construction itself.
+Its worth being aware that when passing `arguments` to `make_unix_command_for_host()`, connector control parameters must be filtered out. These parameters (`_success_exit_codes`, `_timeout`, `_get_pty`, `_stdin`, `_stdout`) are defined in `pyinfra.api.arguments.ConnectorArguments` and are meant for the connector's internal logic after command generation, not for command construction itself.
 
 The recommended approach is to use `extract_control_arguments()` from `pyinfra.connectors.util` which handles this filtering for you:
 
