@@ -4,14 +4,20 @@ import json
 import platform
 import re
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from collections.abc import Callable, Iterator
 
-import click
+from rich.console import Group
+from rich.json import JSON
+from rich.padding import Padding
+from rich.table import Table
+from rich.text import Text
 
 from pyinfra import __version__, logger
 from pyinfra.api.host import Host
+from pyinfra.api.output import format_text
 
+from .console import console, stdout_console
 from .util import json_encode
 
 if TYPE_CHECKING:
@@ -53,8 +59,50 @@ def jsonify(data, *args, **kwargs):
     return json.dumps(data, *args, **kwargs)
 
 
+def _safe_encode(obj: Any) -> Any:
+    """``json_encode`` fallback that never raises (for values).
+
+    Used for the human ``debug-inventory`` rendering, where a value that is
+    neither natively JSON-serialisable nor handled by ``json_encode`` (e.g. a
+    compiled ``re.Pattern``) should degrade to its ``str()`` rather than
+    aborting the whole command. The ``--json`` path keeps using the strict
+    ``json_encode`` so machine output stays valid JSON.
+    """
+    try:
+        return json_encode(obj)
+    except TypeError:
+        return str(obj)
+
+
+def _json_safe_keys(value: Any) -> Any:
+    """Recursively coerce non-primitive mapping keys to ``str``.
+
+    ``json.dumps`` rejects dict keys that are not ``str``/``int``/``float``/
+    ``bool``/``None`` *before* the ``default`` hook runs, so a ``re.Pattern``
+    used as a ``fake_responses`` matcher key would still raise. This makes the
+    human ``debug-inventory`` rendering robust against such keys.
+    """
+    if isinstance(value, dict):
+        return {
+            (key if isinstance(key, (str, int, float, bool)) or key is None else str(key)): (
+                _json_safe_keys(val)
+            )
+            for key, val in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_json_safe_keys(item) for item in value]
+    return value
+
+
 def print_json(payload) -> None:
-    click.echo(jsonify(payload, default=json_encode))
+    json_str = jsonify(payload, default=json_encode)
+
+    # When stdout is a real terminal, pretty-print + syntax-highlight the JSON.
+    # When piped/redirected, emit plain JSON so it stays machine-parseable.
+    if stdout_console.is_terminal:
+        stdout_console.print(JSON(json_str))
+    else:
+        print(json_str)
 
 
 def _host_to_dict(host: Host) -> dict:
@@ -192,23 +240,22 @@ def print_run_json(state: State, dry: bool) -> None:
 def print_state_operations(state: State):
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
 
-    click.echo(err=True)
-    click.echo("--> Operations:", err=True)
-    click.echo(jsonify(state_ops, indent=4, default=json_encode), err=True)
-    click.echo(err=True)
-    click.echo("--> Operation meta:", err=True)
-    click.echo(jsonify(state.op_meta, indent=4, default=json_encode), err=True)
+    console.print()
+    console.print("--> Operations:")
+    console.print(jsonify(state_ops, indent=4, default=json_encode))
+    console.print()
+    console.print("--> Operation meta:")
+    console.print(jsonify(state.op_meta, indent=4, default=json_encode))
 
-    click.echo(err=True)
-    click.echo("--> Operation order:", err=True)
-    click.echo(err=True)
+    console.print()
+    console.print("--> Operation order:")
+    console.print()
     for op_hash in state.get_op_order():
         meta = state.op_meta[op_hash]
         hosts = set(host for host, operations in state.ops.items() if op_hash in operations)
 
-        click.echo(
+        console.print(
             f"    {op_hash} (names={meta.names}, hosts={hosts})",
-            err=True,
         )
 
 
@@ -222,9 +269,8 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
             items.append(name)
 
         else:
-            click.echo(
-                f"    {', '.join(click.style(name, bold=True) for name in items)}",
-                err=True,
+            console.print(
+                f"    {', '.join(format_text(name, bold=True) for name in items)}",
             )
 
             items = [name]
@@ -232,31 +278,94 @@ def print_groups_by_comparison(print_items, comparator=lambda item: item[0]):
         last_name = name
 
     if items:
-        click.echo(
-            f"    {', '.join(click.style(name, bold=True) for name in items)}",
-            err=True,
+        console.print(
+            f"    {', '.join(format_text(name, bold=True) for name in items)}",
         )
 
 
 def print_fact(fact_data):
-    click.echo(jsonify(fact_data, indent=4, default=json_encode), err=True)
+    console.print(jsonify(fact_data, indent=4, default=json_encode))
+
+
+def _scalar_style(value: Any) -> str:
+    """Rich style for a scalar, matching the JSON highlighter's type colours.
+
+    Non-JSON scalars (datetime, Path, ``re.Pattern``, arbitrary objects) render
+    unstyled, since they are shown via ``str()`` rather than as JSON values.
+    """
+    # NOTE: bool is a subclass of int, so it must be checked first.
+    if isinstance(value, bool):
+        return "json.bool_true" if value else "json.bool_false"
+    if value is None:
+        return "json.null"
+    if isinstance(value, (int, float)):
+        return "json.number"
+    if isinstance(value, str):
+        return "json.str"
+    return ""
+
+
+def _format_host_data(data: dict) -> Group:
+    """Render host data as one ``key: value`` line per top-level key.
+
+    Scalars are shown inline; nested ``dict``/``list``/``tuple`` values are
+    rendered as indented JSON (syntax-highlighted). Any other value (datetime,
+    Path, ``re.Pattern``, arbitrary objects) falls back to ``str()`` so the
+    display never fails on non-JSON-serialisable data. Insertion order is
+    preserved.
+    """
+    if not data:
+        return Group(Text("(no data)", style="dim"))
+
+    lines: list[Any] = []
+    for key, value in data.items():
+        label = Text(f"{key}: ", style="bold blue")
+        if isinstance(value, (dict, list, tuple)):
+            # Nested structures: header line + indented JSON below it.
+            lines.append(Text.assemble(label))
+            value_json = jsonify(_json_safe_keys(value), indent=2, default=_safe_encode)
+            lines.append(Padding(JSON(value_json), (0, 0, 0, 2)))
+        else:
+            # Scalars inline, coloured to match Rich's JSON highlighter (booleans
+            # green/red, numbers cyan, null magenta, strings green). Other values
+            # (datetime, Path, re.Pattern, arbitrary objects) fall back to an
+            # unstyled str() so the display never fails on non-JSON data.
+            lines.append(Text.assemble(label, (str(value), _scalar_style(value))))
+
+    return Group(*lines)
 
 
 def print_inventory(state: State):
+    table = Table(
+        title="Inventory",
+        title_style="bold",
+        header_style="bold",
+        expand=True,
+        leading=1,
+    )
+    # Only the data column flexes; host/groups stay as narrow as their content.
+    table.add_column("Host", style="cyan", no_wrap=True, ratio=None)
+    table.add_column("Groups", style="green", no_wrap=True, ratio=None)
+    table.add_column("Data", ratio=1)
+
     for host in state.inventory:
-        click.echo(err=True)
-        click.echo(host.print_prefix, err=True)
-        click.echo(f"--> Groups: {', '.join(host.groups)}", err=True)
-        click.echo("--> Data:", err=True)
-        click.echo(jsonify(host.data, indent=4, default=json_encode), err=True)
+        # A host may appear in the same group more than once (e.g. connector +
+        # inventory group); de-duplicate for display while preserving order.
+        groups = list(dict.fromkeys(host.groups))
+        table.add_row(
+            host.name,
+            "\n".join(groups),
+            _format_host_data(host.data.dict()),
+        )
+
+    console.print(table)
 
 
 def print_facts(facts):
     for name, data in facts.items():
-        click.echo(err=True)
-        click.echo(
-            f"--> Fact data for: {click.style(name, bold=True)}",
-            err=True,
+        console.print()
+        console.print(
+            f"--> Fact data for: {format_text(name, bold=True)}",
         )
         print_fact(data)
 
@@ -266,7 +375,7 @@ def print_support_info() -> None:
 
     from packaging.requirements import Requirement
 
-    click.echo(
+    console.print(
         """
     If you are having issues with pyinfra or wish to make feature requests, please
     check out the GitHub issues at https://github.com/Fizzadar/pyinfra/issues .
@@ -274,11 +383,11 @@ def print_support_info() -> None:
 """,
     )
 
-    click.echo(f"    System: {platform.system()}", err=True)
-    click.echo(f"      Platform: {platform.platform()}", err=True)
-    click.echo(f"      Release: {platform.uname()[2]}", err=True)
-    click.echo(f"      Machine: {platform.uname()[4]}", err=True)
-    click.echo(f"    pyinfra: v{__version__}", err=True)
+    console.print(f"    System: {platform.system()}")
+    console.print(f"      Platform: {platform.platform()}")
+    console.print(f"      Release: {platform.uname()[2]}")
+    console.print(f"      Machine: {platform.uname()[4]}")
+    console.print(f"    pyinfra: v{__version__}")
 
     seen_reqs: set[str] = set()
     for requirement_string in sorted(requires("pyinfra") or []):
@@ -287,18 +396,16 @@ def print_support_info() -> None:
             continue
         seen_reqs.add(requirement.name)
         try:
-            click.echo(
+            console.print(
                 f"      {requirement.name}: v{version(requirement.name)}",
-                err=True,
             )
         except PackageNotFoundError:
             # package not installed in this environment
             continue
 
-    click.echo(f"    Executable: {sys.argv[0]}", err=True)
-    click.echo(
+    console.print(f"    Executable: {sys.argv[0]}")
+    console.print(
         f"    Python: {platform.python_version()} ({platform.python_implementation()}, {platform.python_compiler()})",
-        err=True,
     )
 
 
