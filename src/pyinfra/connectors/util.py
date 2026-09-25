@@ -310,9 +310,9 @@ def write_stdin(stdin: Any, buffer: Any) -> None:
     """
     Write ``stdin`` to a command's input ``buffer``.
 
-    Text payloads are written line by line, appending a newline to any line missing one.
-    Bytes and binary file objects are streamed through verbatim instead, so file contents
-    survive unaltered.
+    Text payloads are written line by line, appending a newline to any line missing one; any
+    iterable of lines is iterated, so a generator is consumed as it is written. Bytes and binary
+    file objects are streamed through verbatim instead, so file contents survive unaltered.
 
     + param stdin: the payload: text, bytes, bytes-like, or a text/binary file object.
     + param buffer: the binary buffer the command reads stdin from, closed by this function.
@@ -345,16 +345,28 @@ def write_stdin(stdin: Any, buffer: Any) -> None:
             # behaviour, made explicit here so that ``b""`` still writes above.
             return
 
+        # Text: a file-like is read through, a bare string is a single line, and anything else
+        # iterable is iterated as lines - wrapping the iterable itself would call `endswith` on
+        # a generator.
         if hasattr(stdin, "readlines"):
             stdin = stdin.readlines()
-        if not isinstance(stdin, (list, tuple)):
+        elif isinstance(stdin, str) or not isinstance(stdin, Iterable):
             stdin = [stdin]
 
         for line in stdin:
+            if not isinstance(line, str):
+                # Enforced here rather than by the argument type check, which cannot see inside
+                # an arbitrary iterable: a buffer such as `array('B')` passes it, and used to
+                # fail here with "no attribute 'endswith'".
+                raise PyinfraError(
+                    "`_stdin` must be text or bytes: got "
+                    f"{type(line).__name__} in the payload. Pass `bytes`, a binary file object, "
+                    "or wrap other buffers (eg `array`) in `memoryview()`.",
+                )
+
             if not line.endswith("\n"):
                 line = f"{line}\n"
-            line = line.encode()
-            buffer.write(line)
+            buffer.write(line.encode())
     finally:
         buffer.close()
 
