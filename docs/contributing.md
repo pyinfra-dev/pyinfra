@@ -33,6 +33,15 @@ cd pyinfra
 uv sync
 ```
 
+Re-run `uv sync` every time you switch branches. The editable install records the connector entry
+points in the virtualenv metadata at install time, while the modules themselves are read from the
+checked out tree, and `uv` does not notice a checkout: its staleness marker is the modification
+time of `src/`, which `git checkout` leaves alone. A branch that adds or removes a connector can
+therefore leave a registry entry pointing at a module that is not there.
+
+A plain `uv sync` also drops the `docs` dependency group, so pass `--group docs` when you want to
+build the documentation.
+
 If you will use pyinfra as a module, and want to be able to edit its code as you go, make sure you add it as an editable dependency to your project instead:
 
 ```

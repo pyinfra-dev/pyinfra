@@ -4,8 +4,8 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 from collections.abc import Iterator
 
-from .connectors import get_all_connectors, get_execution_connectors
-from .exceptions import NoConnectorError, NoGroupError, NoHostError
+from .connectors import get_all_connectors, get_execution_connectors, invalid_connector_error
+from .exceptions import NoGroupError, NoHostError
 from .host import Host
 
 if TYPE_CHECKING:
@@ -98,9 +98,7 @@ class Inventory:
                     connector_name, arg_string = connector_name.split("/", 1)
 
                 if connector_name not in get_all_connectors():
-                    raise NoConnectorError(
-                        f"Invalid connector: {connector_name}",
-                    )
+                    raise invalid_connector_error(connector_name)
 
                 # Execution connector? Simple, just set it for their host
                 if connector_name in execution_connectors:

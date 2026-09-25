@@ -14,6 +14,10 @@ instead of YAML, and much faster. It supports SSH, local machine, Docker, and mo
 uv sync  # Install all dependencies into managed venv
 ```
 
+Re-run `uv sync` after switching branches, or the connector registry can point at a module the
+checked-out branch does not have - see [Dev Setup](docs/contributing.md#dev-setup) in the
+contributing guide.
+
 ## Common Commands
 
 ```bash
