@@ -18,7 +18,7 @@ from pyinfra.api.output import echo, format_text
 from pyinfra.api.util import memoize
 
 if TYPE_CHECKING:
-    from pyinfra.api.arguments import ConnectorArguments
+    from pyinfra.api.arguments import ConnectorArguments, StdinPayload, StdoutSink
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
 
@@ -133,13 +133,11 @@ def _is_sudo_incorrect_password(line: str) -> bool:
 
 def run_local_process(
     command: str,
-    stdin: Any | None = None,
+    stdin: StdinPayload | None = None,
     timeout: int | None = None,
     print_output: bool = False,
     print_prefix: str = "",
-    # Binary sink (duck typed, like `_stdout` itself): a binary file object or any buffer
-    # that exposes `write`.
-    stdout_sink: Any | None = None,
+    stdout_sink: StdoutSink | None = None,
 ) -> tuple[int, CommandOutput]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
@@ -251,7 +249,7 @@ def read_output_buffers(
     timeout: int | None = None,
     print_output: bool = False,
     print_prefix: str = "",
-    stdout_sink: Any | None = None,
+    stdout_sink: StdoutSink | None = None,
 ) -> CommandOutput:
     output_queue: Queue[OutputLine] = Queue()
 
@@ -317,6 +315,9 @@ def read_output_buffers(
 #
 
 
+# The two retry helpers and `write_stdin` probe their payload at runtime (`hasattr(stdin,
+# "read")` and friends) rather than assuming a shape, so their annotations stay loose. The
+# contract for callers lives on `StdinPayload` and `StdoutSink` in `pyinfra.api.arguments`.
 def rewind_stdin_for_retry(stdin: Any | None) -> None:
     """
     Rewind a stream ``_stdin`` payload so a retried command sends the same bytes again.
@@ -364,8 +365,8 @@ def execute_command_with_sudo_retry(
     host: Host,
     command_arguments: ConnectorArguments,
     execute_command: Callable[..., tuple[int, CommandOutput]],
-    stdin: Any | None = None,
-    stdout: Any | None = None,
+    stdin: StdinPayload | None = None,
+    stdout: StdoutSink | None = None,
 ) -> tuple[int, CommandOutput]:
     return_code, output = execute_command()
 
@@ -418,6 +419,8 @@ def execute_command_with_sudo_retry(
     return return_code, output
 
 
+# Loosely annotated for the same reason: a payload outside `StdinPayload` is diagnosed below,
+# with a message naming the offending type, rather than failing as a type error.
 def write_stdin(stdin: Any, buffer: Any) -> None:
     """
     Write ``stdin`` to a command's input ``buffer``.
