@@ -3,6 +3,7 @@ Tests for the @chain connector.
 """
 
 from io import StringIO
+from tempfile import NamedTemporaryFile
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -233,6 +234,47 @@ class TestChainFileTransfer(TestCase):
         chain.get_file("/etc/thing.conf", StringIO(), _sudo=True)
 
         assert outer.run_shell_command.call_args.kwargs["_sudo"] is True
+
+    def test_put_file_payload_is_rewindable(self):
+        """A file payload is streamed as `_stdin`, which a retry rewinds.
+
+        `rewind_stdin_for_retry` can only re-send a seekable stream, so the object handed
+        to the outer connector must be seekable - and still hold the whole payload.
+        """
+        chain, outer = self._make_chain()
+        seen = {}
+
+        def _capture(command, **kwargs):
+            payload = kwargs["_stdin"]
+            seen["seekable"] = payload.seekable()
+            seen["content"] = payload.read()
+            return True, MagicMock()
+
+        outer.run_shell_command.side_effect = _capture
+
+        with NamedTemporaryFile() as payload:
+            payload.write(b"hello")
+            payload.flush()
+            chain.put_file(payload.name, "/tmp/thing.txt")
+
+        assert seen["seekable"] is True
+        assert seen["content"] == b"hello"
+
+    def test_get_file_sink_is_rewindable(self):
+        """A file destination is streamed as `_stdout`, which a retry resets."""
+        chain, outer = self._make_chain()
+        seen = {}
+
+        def _capture(command, **kwargs):
+            seen["seekable"] = kwargs["_stdout"].seekable()
+            return True, MagicMock()
+
+        outer.run_shell_command.side_effect = _capture
+
+        with NamedTemporaryFile() as destination:
+            chain.get_file("/tmp/thing.txt", destination.name)
+
+        assert seen["seekable"] is True
 
 
 class TestChainWrapMethods(TestCase):
