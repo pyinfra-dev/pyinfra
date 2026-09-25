@@ -603,6 +603,94 @@ class TestSSHConnector(TestCase):
         assert sink.getvalue() == payload
         assert output.stdout_lines == []
 
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    def test_run_shell_command_stdout_sink_with_pty_raises(self, fake_ssh_client):
+        fake_ssh_client.return_value = mock.MagicMock()
+
+        inventory = make_inventory(hosts=("somehost",))
+        State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect()
+
+        # A pseudoTTY merges stderr into stdout, so the sink would capture error output and
+        # prompts instead of the command's own output.
+        with self.assertRaises(PyinfraError):
+            host.run_shell_command("cat /src", _stdout=BytesIO(), _get_pty=True)
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    def test_run_shell_command_pty_without_sink_still_works(self, fake_ssh_client):
+        fake_ssh = mock.MagicMock()
+        fake_stdout = mock.MagicMock()
+        fake_ssh.exec_command.return_value = mock.MagicMock(), fake_stdout, mock.MagicMock()
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect()
+
+        fake_stdout.channel.recv_exit_status.return_value = 0
+        status, _ = host.run_shell_command("echo hi", _get_pty=True)
+
+        assert status is True
+        fake_ssh.exec_command.assert_called_with("sh -c 'echo hi'", get_pty=True)
+
+    @mock.patch("pyinfra.connectors.util.getpass")
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    def test_run_shell_command_sudo_retry_rewinds_stdin_and_sink(
+        self,
+        fake_ssh_client,
+        fake_getpass,
+    ):
+        fake_ssh = mock.MagicMock()
+        first_stdin, second_stdin, third_stdin = (mock.MagicMock() for _ in range(3))
+        first_stdout, second_stdout, third_stdout = (mock.MagicMock() for _ in range(3))
+        first_stderr, second_stderr, third_stderr = (mock.MagicMock() for _ in range(3))
+
+        # The prompt can only reach the sudo detection through stderr here, because stdout
+        # is diverted into the sink.
+        first_stderr.__iter__.return_value = ["sudo: a password is required\r"]
+        second_stdout.__iter__.return_value = ["/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"]
+
+        # Both the first attempt and the retried command write into the sink.
+        first_stdout.read.side_effect = [b"attempt-1", b""]
+        third_stdout.read.side_effect = [b"attempt-2", b""]
+
+        fake_ssh.exec_command.side_effect = [
+            (first_stdin, first_stdout, first_stderr),
+            (second_stdin, second_stdout, second_stderr),
+            (third_stdin, third_stdout, third_stderr),
+        ]
+        fake_ssh_client.return_value = fake_ssh
+        fake_getpass.return_value = "password"
+
+        inventory = make_inventory(hosts=("somehost",))
+        State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect()
+
+        first_stdout.channel.recv_exit_status.return_value = 1
+        second_stdout.channel.recv_exit_status.return_value = 0
+        third_stdout.channel.recv_exit_status.return_value = 0
+
+        payload = b"\x00binary\xffpayload"
+        sink = BytesIO()
+        status, _ = host.run_shell_command(
+            "cat > /dest",
+            _sudo=True,
+            _stdin=BytesIO(payload),
+            _stdout=sink,
+        )
+
+        assert status is True
+
+        # The retried command must send the same payload, not the exhausted stream.
+        first_stdin.write.assert_called_with(payload)
+        third_stdin.write.assert_called_with(payload)
+
+        # The retry must replace the first attempt's output, not append to it.
+        assert sink.getvalue() == b"attempt-2"
+
     @mock.patch("pyinfra.api.output._echo")
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     def test_run_shell_command_masked(self, fake_ssh_client, fake_echo):

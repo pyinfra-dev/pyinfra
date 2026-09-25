@@ -32,11 +32,13 @@ class ArgumentMeta(Generic[T]):
     description: str
     default: Callable[[Config], T]
     handler: Callable[[Config, T], T] | None
+    excluded_from_facts: bool
 
-    def __init__(self, description, default, handler=None) -> None:
+    def __init__(self, description, default, handler=None, excluded_from_facts=False) -> None:
         self.description = description
         self.default = default
         self.handler = handler
+        self.excluded_from_facts = excluded_from_facts
 
 
 # Connector arguments
@@ -72,8 +74,8 @@ class ConnectorArguments(TypedDict, total=False):
     _success_exit_codes: Iterable[int]
     _timeout: int
     _get_pty: bool
-    _stdin: str | bytes | list[str] | IO[bytes] | Iterable[str]
-    _stdout: IO[bytes]
+    _stdin: str | bytes | bytearray | memoryview | list[str] | IO[bytes] | Iterable[str]
+    _stdout: IO[bytes] | Iterable[bytes]
 
     # Retry arguments
     _retries: int
@@ -181,15 +183,20 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
         "Whether to get a pseudoTTY when executing any commands.",
         default=lambda _: False,
     ),
+    # Both are excluded from fact commands: a fact inherits the globals of the operation
+    # that triggered it, and these two consume the command's stdin / divert its stdout, so
+    # the fact would parse an empty output and silently return its default.
     "_stdin": ArgumentMeta(
         "String or buffer to send to the stdin of any commands. Text is sent line by "
         "line; ``bytes`` and binary buffers are streamed through unaltered.",
         default=lambda _: None,
+        excluded_from_facts=True,
     ),
     "_stdout": ArgumentMeta(
         "Binary buffer to stream the stdout of any commands into. Output sent there is "
         "not decoded, printed, or included in the command result.",
         default=lambda _: None,
+        excluded_from_facts=True,
     ),
     "_temp_dir": ArgumentMeta(
         "Temporary directory on the remote host for file operations.",
@@ -303,6 +310,12 @@ all_argument_meta: dict[str, ArgumentMeta] = {
 
 EXECUTION_KWARG_KEYS = list(ExecutionArguments.__annotations__.keys())
 CONNECTOR_ARGUMENT_KEYS = list(ConnectorArguments.__annotations__.keys())
+
+# Connector arguments that must never be forwarded to the commands a fact runs - see the
+# ``excluded_from_facts`` flag where they are defined.
+FACT_EXCLUDED_ARGUMENT_KEYS = frozenset(
+    key for key, meta in all_argument_meta.items() if meta.excluded_from_facts
+)
 
 __argument_docs__ = {
     "Privilege & user escalation": (
