@@ -35,7 +35,7 @@ from pyinfra.connectors.util import CommandOutput
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
-from .arguments import CONNECTOR_ARGUMENT_KEYS
+from .arguments import CONNECTOR_ARGUMENT_KEYS, FACT_EXCLUDED_ARGUMENT_KEYS
 
 if TYPE_CHECKING:
     from pyinfra.api import Host, State
@@ -314,7 +314,9 @@ def _get_fact(
     output = CommandOutput([])
 
     executor_kwargs = {
-        key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS
+        key: value
+        for key, value in global_kwargs.items()
+        if key in CONNECTOR_ARGUMENT_KEYS and key not in FACT_EXCLUDED_ARGUMENT_KEYS
     }
 
     try:

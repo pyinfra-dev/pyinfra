@@ -91,11 +91,19 @@ class Inventory:
             connector_cls = execution_connectors["ssh"]
 
             if name[0] == "@":
-                connector_name = name[1:]
-                arg_string = None
+                # Chain syntax: @outer[/arg]/@inner[/arg][/@deeper[/arg]...]
+                # The sentinel "/@" cannot appear in a hostname, image tag, or container name,
+                # and must be checked before splitting off the outer connector's argument -
+                # the outer connector may have no argument at all (@local/@docker/name).
+                if "/@" in name:
+                    connector_name = "chain"
+                    arg_string = name
+                else:
+                    connector_name = name[1:]
+                    arg_string = None
 
-                if "/" in connector_name:
-                    connector_name, arg_string = connector_name.split("/", 1)
+                    if "/" in connector_name:
+                        connector_name, arg_string = connector_name.split("/", 1)
 
                 if connector_name not in get_all_connectors():
                     raise NoConnectorError(

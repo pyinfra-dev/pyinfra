@@ -1,8 +1,14 @@
+from io import BytesIO
 from typing import cast
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State
-from pyinfra.api.arguments import CONNECTOR_ARGUMENT_KEYS, AllArguments, pop_global_arguments
+from pyinfra.api.arguments import (
+    CONNECTOR_ARGUMENT_KEYS,
+    FACT_EXCLUDED_ARGUMENT_KEYS,
+    AllArguments,
+    pop_global_arguments,
+)
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.facts import get_facts
@@ -21,7 +27,7 @@ def _get_executor_defaults(state, host):
     return {
         key: value
         for key, value in global_argument_defaults.items()
-        if key in CONNECTOR_ARGUMENT_KEYS
+        if key in CONNECTOR_ARGUMENT_KEYS and key not in FACT_EXCLUDED_ARGUMENT_KEYS
     }
 
 
@@ -103,6 +109,41 @@ class TestFactsApi(PatchSSHTestCase):
             print_output=False,
             **defaults,
         )
+
+    def test_get_fact_does_not_inherit_stdin_or_stdout(self):
+        inventory = make_inventory(hosts=("anotherhost",))
+        state = State(inventory, Config())
+
+        anotherhost = inventory.get_host("anotherhost")
+
+        connect_all(state)
+
+        sink = BytesIO()
+        stdin = BytesIO(b"payload")
+        anotherhost.current_op_global_arguments = cast(
+            AllArguments,
+            {
+                "_stdout": sink,
+                "_stdin": stdin,
+            },
+        )
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (
+                True,
+                CommandOutput([OutputLine("stdout", "some-output")]),
+            )
+            fact_data = get_facts(state, Command, ("yes",))
+
+        # The fact's own command keeps its stdout: diverting it into the sink would leave
+        # the fact parsing an empty output and silently returning its default.
+        assert fact_data == {anotherhost: "some-output"}
+
+        kwargs = fake_run_command.call_args.kwargs
+        assert "_stdout" not in kwargs
+        assert "_stdin" not in kwargs
+        # The payload is untouched, so the operation's own commands still get it.
+        assert stdin.read() == b"payload"
 
     def test_get_fact_error(self):
         inventory = make_inventory(hosts=("anotherhost",))
