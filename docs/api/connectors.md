@@ -249,7 +249,7 @@ For complete examples see pyinfra's built-in connectors in `pyinfra/connectors/d
 ## Making a connector chain-compatible
 
 To allow a connector to be used as an **inner** layer in a :doc:`chain </connectors/chain>`,
-it must implement three wrapping methods and declare how to resolve its runtime identifier.
+it must implement a command wrapper and declare how to resolve its runtime identifier.
 
 ### Runtime identifier
 
