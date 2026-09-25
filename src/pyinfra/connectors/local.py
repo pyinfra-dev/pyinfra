@@ -96,6 +96,8 @@ class LocalConnector(BaseConnector):
             self.host,
             arguments,
             execute_command,
+            stdin=_stdin,
+            stdout=_stdout,
         )
 
         if _success_exit_codes:
