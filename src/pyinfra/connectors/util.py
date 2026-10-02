@@ -62,11 +62,6 @@ def run_local_process(
     assert process.stdin is not None
 
     try:
-        # Write any stdin and then close it
-        if stdin is not None:
-            write_stdin(stdin, process.stdin)
-        process.stdin.close()
-
         combined_output = read_output_buffers(
             process.stdout,
             process.stderr,
@@ -74,6 +69,8 @@ def run_local_process(
             print_output=print_output,
             print_prefix=print_prefix,
             stdout_sink=stdout_sink,
+            stdin_buffer=process.stdin,
+            stdin=stdin,
         )
 
         logger.debug("--> Waiting for exit status...")
@@ -185,8 +182,26 @@ def read_output_buffers(
     print_output: bool,
     print_prefix: str,
     stdout_sink: StdoutSink | None = None,
+    stdin_buffer: Any | None = None,
+    stdin: StdinPayload | None = None,
 ) -> CommandOutput:
+    """
+    Drive a command's three streams until it closes its output.
+
+    + param stdin_buffer: the command's stdin, closed once ``stdin`` is written (or at once
+      when there is no payload), so the command sees EOF.
+    + param stdin: the ``_stdin`` payload, written concurrently with the output readers - a
+      command that emits output while consuming its input must not deadlock on a full pipe.
+    """
+
     output_queue: Queue[OutputLine] = Queue()
+
+    stdin_writer: gevent.Greenlet | None = None
+    if stdin_buffer is not None:
+        if stdin is None:
+            stdin_buffer.close()
+        else:
+            stdin_writer = gevent.spawn(write_stdin, stdin, stdin_buffer)
 
     # Iterate through outputs to get an exit status and generate desired list
     # output, done in two greenlets so stdout isn't printed before stderr. Not
@@ -214,32 +229,41 @@ def read_output_buffers(
         print_func=lambda line: f"{print_prefix}{format_text(line, 'red')}",
     )
 
+    workers: list[gevent.Greenlet] = [stdout_reader, stderr_reader]
+    if stdin_writer is not None:
+        workers.insert(0, stdin_writer)
+
     if stdout_sink is not None:
         # A sink that fails stops draining stdout, so a command blocked writing into a
-        # full pipe would never exit and the wait below would hang until the timeout (or
-        # forever). Kill the peer reader so the wait returns and the error is raised.
+        # full pipe would never exit: the stderr reader, and a writer still feeding it,
+        # would hang the wait below until the timeout (or forever). Kill the peers so the
+        # wait returns and the error is raised.
         stdout_reader.link(
-            lambda reader: stderr_reader.kill() if reader.exception is not None else None
+            lambda reader: (
+                gevent.killall([worker for worker in workers if worker is not reader])
+                if reader.exception is not None
+                else None
+            )
         )
 
     # Wait on output, with our timeout (or None)
-    greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
+    finished = gevent.wait(workers, timeout=timeout)
 
-    # gevent.wait returns the greenlets that *finished*, not the ones that succeeded, so a
-    # failed sink write (disk full, closed file) must be checked explicitly - otherwise the
-    # command reports success with a truncated sink, or the failure is misreported as a
-    # timeout below. Checked first so the real error wins over that timeout.
-    if stdout_sink is not None and stdout_reader.exception is not None:
-        stderr_reader.kill()
+    # gevent.wait returns the greenlets that *finished*, not the ones that succeeded. A
+    # failed stdin write (unreadable payload) or sink write (disk full, closed file) leaves
+    # the command with a truncated stream, so it must win over a successful exit status or
+    # over the timeout below.
+    for worker in (stdin_writer, stdout_reader if stdout_sink is not None else None):
+        if worker is not None and worker.exception is not None:
+            gevent.killall(workers)
 
-        raise stdout_reader.exception
+            raise worker.exception
 
     # Timeout doesn't raise an exception, but gevent.wait returns the greenlets
-    # which did complete. So if both haven't completed, we kill them and fail
+    # which did complete. So if any hasn't completed, we kill them and fail
     # with a timeout.
-    if len(greenlets) != 2:
-        stdout_reader.kill()
-        stderr_reader.kill()
+    if len(finished) != len(workers):
+        gevent.killall(workers)
 
         raise TimeoutError()
 
@@ -367,10 +391,6 @@ def write_stdin(stdin: Any, buffer: Any) -> None:
 
     + param stdin: the payload: text, bytes, bytes-like, or a text/binary file object.
     + param buffer: the binary buffer the command reads stdin from, closed by this function.
-
-    .. caution::
-        stdin is fully written before any output is read, so a command that emits more
-        than a pipe buffer of output while consuming a large payload will deadlock.
     """
     try:
         if isinstance(stdin, (bytes, bytearray, memoryview)):

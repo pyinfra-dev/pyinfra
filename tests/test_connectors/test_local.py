@@ -469,3 +469,36 @@ class TestLocalProcessCleanup(TestCase):
         assert len(processes) == 1
         assert processes[0].poll() is not None
         assert processes[0].wait(timeout=1) is not None
+
+
+class TestLocalProcessStreams(TestCase):
+    # Well past the 64 KiB a Linux pipe holds, so a stream nobody drains blocks the peer.
+    PAYLOAD = b"x" * (1024 * 1024)
+
+    def test_large_stdin_does_not_deadlock_on_a_chatty_stderr(self):
+        # The command floods stderr before reading its input: writing the whole payload
+        # before reading any output would block on a full stdin pipe, forever.
+        command = "head -c 1048576 /dev/zero | tr '\\0' e >&2; wc -c"
+
+        with gevent.Timeout(20):
+            return_code, output = run_local_process(command, stdin=BytesIO(self.PAYLOAD))
+
+        assert return_code == 0
+        assert output.stdout.strip() == str(len(self.PAYLOAD))
+
+    def test_large_stdin_streams_into_a_sink(self):
+        sink = BytesIO()
+
+        with gevent.Timeout(20):
+            return_code, _ = run_local_process("cat", stdin=BytesIO(self.PAYLOAD), stdout_sink=sink)
+
+        assert return_code == 0
+        assert sink.getvalue() == self.PAYLOAD
+
+    def test_no_stdin_closes_the_pipe(self):
+        # Without a payload the command must still see EOF, or `cat` never exits.
+        with gevent.Timeout(20):
+            return_code, output = run_local_process("cat")
+
+        assert return_code == 0
+        assert output.stdout == ""
