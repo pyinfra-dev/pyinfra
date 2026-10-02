@@ -6,7 +6,7 @@ from io import TextIOBase
 from queue import Queue
 from shutil import copyfileobj
 from gevent.subprocess import PIPE, Popen, TimeoutExpired
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeGuard
 from collections.abc import Callable, Iterable
 
 import gevent
@@ -253,13 +253,34 @@ def read_output_buffers(
 # The two retry helpers and `write_stdin` probe their payload at runtime (`hasattr(stdin,
 # "read")` and friends) rather than assuming a shape, so their annotations stay loose. The
 # contract for callers lives on `StdinPayload` and `StdoutSink` in `pyinfra.api.arguments`.
+def _is_stream(payload: Any | None) -> TypeGuard[Any]:
+    return payload is not None and hasattr(payload, "read")
+
+
+def _is_seekable(stream: Any) -> bool:
+    return getattr(stream, "seekable", lambda: False)()
+
+
+def check_stdin_is_rewindable(stdin: Any | None) -> None:
+    """
+    Raise if a stream ``_stdin`` payload could not be re-sent by a retry.
+
+    String, bytes and sequence payloads are never consumed by an attempt and always pass.
+
+    + param stdin: the payload passed as ``_stdin``, or None.
+    """
+
+    if _is_stream(stdin) and not _is_seekable(stdin):
+        raise PyinfraError(
+            "Cannot retry the command: `_stdin` is a non-seekable stream that an attempt "
+            "consumes. Pass `bytes` or a seekable file object."
+        )
+
+
 def get_stdin_position_for_retry(stdin: Any | None) -> int | None:
     """Return the initial cursor for a seekable stream payload, if any."""
 
-    if stdin is None or not hasattr(stdin, "read"):
-        return None
-
-    if not getattr(stdin, "seekable", lambda: False)():
+    if not _is_stream(stdin) or not _is_seekable(stdin):
         return None
 
     return stdin.tell()
@@ -269,22 +290,17 @@ def rewind_stdin_for_retry(stdin: Any | None, position: int | None = None) -> No
     """
     Rewind a stream ``_stdin`` payload so a retried command sends the same bytes again.
 
-    String, bytes and sequence payloads are never consumed by an attempt and need nothing
-    done to them; a stream that cannot be rewound cannot be re-sent at all, which is an
-    error rather than silently sending an empty payload.
+    A stream that cannot be rewound cannot be re-sent at all, which is an error rather
+    than silently sending an empty payload.
 
     + param stdin: the payload passed as ``_stdin``, or None.
+    + param position: the cursor to restore; the start of the stream when not given.
     """
 
-    if stdin is None or not hasattr(stdin, "read"):
+    if not _is_stream(stdin):
         return
 
-    if not getattr(stdin, "seekable", lambda: False)():
-        raise PyinfraError(
-            "Cannot retry the command: `_stdin` is a non-seekable stream that the first "
-            "attempt already consumed. Pass `bytes` or a seekable file object."
-        )
-
+    check_stdin_is_rewindable(stdin)
     stdin.seek(position if position is not None else 0)
 
 
@@ -298,7 +314,7 @@ def reset_stdout_for_retry(stdout: Any | None) -> None:
     if stdout is None:
         return
 
-    if not getattr(stdout, "seekable", lambda: False)():
+    if not _is_seekable(stdout):
         raise PyinfraError(
             "Cannot retry the command: `_stdout` is a non-seekable sink that already holds "
             "the first attempt's output."
