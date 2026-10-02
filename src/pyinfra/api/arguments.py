@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from io import TextIOBase
 from typing import (
     IO,
     TYPE_CHECKING,
@@ -105,6 +106,16 @@ def generate_env(config: Config, value: Mapping[str, EnvValue] | None) -> dict[s
     return env
 
 
+def reject_text_sink(config: Config, value: StdoutSink | None) -> StdoutSink | None:
+    # `StringIO` passes the class based check as an `Iterable`, then fails on the first
+    # `write(bytes)`: refuse it here with a message naming the argument.
+    if isinstance(value, TextIOBase):
+        raise ArgumentTypeError(
+            f"Invalid argument `_stdout`: expected a binary buffer, got {type(value).__name__}"
+        )
+    return value
+
+
 auth_argument_meta: dict[str, ArgumentMeta] = {
     "_sudo": ArgumentMeta(
         "Execute/apply any changes with sudo.",
@@ -205,6 +216,7 @@ shell_argument_meta: dict[str, ArgumentMeta] = {
         "Binary buffer to stream the stdout of any commands into. Output sent there is "
         "not decoded, printed, or included in the command result.",
         default=lambda _: None,
+        handler=reject_text_sink,
         excluded_from_facts=True,
     ),
     "_temp_dir": ArgumentMeta(
