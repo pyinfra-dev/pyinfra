@@ -1,5 +1,5 @@
 from collections import defaultdict
-from io import StringIO
+from io import BytesIO, StringIO
 from os import path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
@@ -1149,6 +1149,37 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertEqual(op_meta.max_retries, 2)
         self.assertTrue(op_meta.was_retried)
         self.assertTrue(op_meta.retry_succeeded)
+
+    @patch("time.sleep")
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    def test_retry_preserves_initial_stdin_position(self, fake_run_command, fake_sleep):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        stdin = BytesIO(b"headerpayload")
+        stdin.seek(len(b"header"))
+        add_op(
+            state,
+            server.shell,
+            "cat > /dest",
+            _stdin=stdin,
+            _retries=1,
+            _retry_delay=0,
+        )
+
+        attempts = []
+
+        def execute(*args, **kwargs):
+            attempts.append(kwargs["_stdin"].read())
+            channel = FakeChannel(1 if len(attempts) == 1 else 0)
+            return len(attempts) > 1, FakeBuffer("", channel)
+
+        fake_run_command.side_effect = execute
+        run_ops(state)
+
+        assert attempts == [b"payload", b"payload"]
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
     def test_retry_max_attempts_failure(self, fake_run_command):

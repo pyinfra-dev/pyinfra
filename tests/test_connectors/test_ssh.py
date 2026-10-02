@@ -674,11 +674,13 @@ class TestSSHConnector(TestCase):
         third_stdout.channel.recv_exit_status.return_value = 0
 
         payload = b"\x00binary\xffpayload"
+        stdin = BytesIO(b"header" + payload)
+        stdin.seek(len(b"header"))
         sink = BytesIO()
         status, _ = host.run_shell_command(
             "cat > /dest",
             _sudo=True,
-            _stdin=BytesIO(payload),
+            _stdin=stdin,
             _stdout=sink,
         )
 

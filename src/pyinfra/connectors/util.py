@@ -5,7 +5,7 @@ from getpass import getpass
 from io import TextIOBase
 from queue import Queue
 from shutil import copyfileobj
-from gevent.subprocess import PIPE, Popen
+from gevent.subprocess import PIPE, Popen, TimeoutExpired
 from typing import TYPE_CHECKING, Any
 from collections.abc import Callable, Iterable
 
@@ -61,29 +61,48 @@ def run_local_process(
     assert process.stderr is not None
     assert process.stdin is not None
 
-    # Write any stdin and then close it
-    if stdin is not None:
-        write_stdin(stdin, process.stdin)
-    process.stdin.close()
+    try:
+        # Write any stdin and then close it
+        if stdin is not None:
+            write_stdin(stdin, process.stdin)
+        process.stdin.close()
 
-    combined_output = read_output_buffers(
-        process.stdout,
-        process.stderr,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=print_prefix,
-        stdout_sink=stdout_sink,
-    )
+        combined_output = read_output_buffers(
+            process.stdout,
+            process.stderr,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+            stdout_sink=stdout_sink,
+        )
 
-    logger.debug("--> Waiting for exit status...")
-    process.wait()
-    logger.debug("--> Command exit status: %i", process.returncode)
+        logger.debug("--> Waiting for exit status...")
+        process.wait()
+        logger.debug("--> Command exit status: %i", process.returncode)
 
-    # Close any open file descriptors
-    process.stdout.close()
-    process.stderr.close()
+        return process.returncode, combined_output
+    except BaseException:
+        # In particular, a failed stdout sink stops draining the pipe. Terminate the child
+        # before re-raising, or it may block forever writing to the now-undrained pipe.
+        try:
+            process.terminate()
+        except OSError:
+            pass
 
-    return process.returncode, combined_output
+        try:
+            process.wait(timeout=1)
+        except TimeoutExpired:
+            try:
+                process.kill()
+            except OSError:
+                pass
+            process.wait()
+
+        raise
+    finally:
+        process.stdin.close()
+        process.stdout.close()
+        process.stderr.close()
 
 
 # Command output buffer handling
@@ -234,7 +253,19 @@ def read_output_buffers(
 # The two retry helpers and `write_stdin` probe their payload at runtime (`hasattr(stdin,
 # "read")` and friends) rather than assuming a shape, so their annotations stay loose. The
 # contract for callers lives on `StdinPayload` and `StdoutSink` in `pyinfra.api.arguments`.
-def rewind_stdin_for_retry(stdin: Any | None) -> None:
+def get_stdin_position_for_retry(stdin: Any | None) -> int | None:
+    """Return the initial cursor for a seekable stream payload, if any."""
+
+    if stdin is None or not hasattr(stdin, "read"):
+        return None
+
+    if not getattr(stdin, "seekable", lambda: False)():
+        return None
+
+    return stdin.tell()
+
+
+def rewind_stdin_for_retry(stdin: Any | None, position: int | None = None) -> None:
     """
     Rewind a stream ``_stdin`` payload so a retried command sends the same bytes again.
 
@@ -254,7 +285,7 @@ def rewind_stdin_for_retry(stdin: Any | None) -> None:
             "attempt already consumed. Pass `bytes` or a seekable file object."
         )
 
-    stdin.seek(0)
+    stdin.seek(position if position is not None else 0)
 
 
 def reset_stdout_for_retry(stdout: Any | None) -> None:
@@ -284,6 +315,7 @@ def execute_command_with_sudo_retry(
     stdin: StdinPayload | None = None,
     stdout: StdoutSink | None = None,
 ) -> tuple[int, CommandOutput]:
+    stdin_position = get_stdin_position_for_retry(stdin)
     return_code, output = execute_command()
 
     # If we failed look for a sudo password prompt line and re-submit using the sudo password. Look
@@ -299,7 +331,7 @@ def execute_command_with_sudo_retry(
                 # The first attempt consumed the payload and filled the sink: put both back,
                 # or the retry sends an empty stdin (truncating e.g. `cat > dest`) and
                 # appends its output to the first attempt's.
-                rewind_stdin_for_retry(stdin)
+                rewind_stdin_for_retry(stdin, stdin_position)
                 reset_stdout_for_retry(stdout)
                 return_code, output = execute_command()
                 break
