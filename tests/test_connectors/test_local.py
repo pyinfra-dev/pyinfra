@@ -6,11 +6,12 @@ from unittest import TestCase
 from unittest.mock import MagicMock, call, mock_open, patch
 
 import gevent
+from gevent.subprocess import Popen
 
 from pyinfra.api import Config, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.connectors.util import make_unix_command
+from pyinfra.connectors.util import make_unix_command, run_local_process
 
 from ..util import make_inventory
 
@@ -450,3 +451,21 @@ class TestLocalConnector(TestCase):
             )
 
         assert "must be text or bytes" in str(context.exception)
+
+
+class TestLocalProcessCleanup(TestCase):
+    def test_stdout_sink_error_terminates_and_reaps_process(self):
+        processes = []
+
+        def start_process(*args, **kwargs):
+            process = Popen(*args, **kwargs)
+            processes.append(process)
+            return process
+
+        with patch("pyinfra.connectors.util.Popen", side_effect=start_process):
+            with self.assertRaises(OSError):
+                run_local_process("exec yes", stdout_sink=FailingSink())
+
+        assert len(processes) == 1
+        assert processes[0].poll() is not None
+        assert processes[0].wait(timeout=1) is not None
