@@ -29,7 +29,6 @@ from .util import (
     make_unix_command_for_host,
     read_output_buffers,
     run_local_process,
-    write_stdin,
 )
 
 if TYPE_CHECKING:
@@ -424,11 +423,6 @@ class SSHConnector(BaseConnector):
                 get_pty=_get_pty,
             )
 
-            # Write any stdin and then close it
-            if _stdin is not None:
-                write_stdin(_stdin, stdin_buffer)
-            stdin_buffer.close()
-
             combined_output = read_output_buffers(
                 stdout_buffer,
                 stderr_buffer,
@@ -436,6 +430,8 @@ class SSHConnector(BaseConnector):
                 print_output=print_output,
                 print_prefix=self.host.print_prefix,
                 stdout_sink=_stdout,
+                stdin_buffer=stdin_buffer,
+                stdin=_stdin,
             )
 
             logger.debug("Waiting for exit status...")
