@@ -95,8 +95,8 @@ class ChainedConnector(BaseConnector):
     single shell string and executed by the outer connector.
 
     Uploads are streamed into a ``cat`` running in the innermost target and downloads
-    stream back out of one, so no layer ever stores a copy of the payload. Chaining
-    through a space constrained hop works whatever the file size.
+    stream back out of one, so no intermediate layer ever stores a copy of the payload.
+    Chaining through a space constrained hop works whatever the file size.
 
     ## Writing a chain compatible connector
 
@@ -348,32 +348,59 @@ class ChainedConnector(BaseConnector):
         Upload ``filename_or_io`` to ``remote_filename`` inside the innermost target.
 
         The payload is streamed into a ``cat`` running in the innermost target, so no
-        layer stores a copy of it. Chaining through a space constrained hop therefore
-        works whatever the file size.
+        intermediate layer stores a copy of it. Chaining through a space constrained hop
+        therefore works whatever the file size. It lands in a temporary file on the target
+        and is copied into place once complete, so a transfer that breaks or is retried
+        never leaves a truncated destination behind.
 
         Privilege escalation applies to the whole wrapped command, as run by the
         outermost connector - see the class docstring.
         """
         self._check_no_pty(arguments)
 
+        temp_file = remote_temp_filename or self.host.get_temp_filename(remote_filename)
+        innermost = len(self._connectors) - 1
+
+        # `cp` rather than `mv`: it writes through to the existing destination, keeping its
+        # owner and mode, as `@ssh` does and as a plain `cat > dest` did.
         write_command = self._wrap_for_layer(
-            StringCommand("cat", ">", QuoteString(remote_filename)),
-            len(self._connectors) - 1,
+            StringCommand(
+                "cat",
+                ">",
+                QuoteString(temp_file),
+                "&&",
+                "cp",
+                QuoteString(temp_file),
+                QuoteString(remote_filename),
+                "&&",
+                "rm",
+                "-f",
+                QuoteString(temp_file),
+            ),
+            innermost,
         )
 
         # `IOBase` (the base connector signature) and `IO` (what get_file_io takes) do not
         # overlap for mypy, though every real file object satisfies both.
         with get_file_io(cast("str | IO[Any]", filename_or_io)) as file_io:
             # The payload *is* stdin here, overriding anything the caller passed.
-            arguments["_stdin"] = file_io
+            transfer_arguments = arguments.copy()
+            transfer_arguments["_stdin"] = file_io
             status, output = self._connectors[0].run_shell_command(
                 write_command,
                 print_output=print_output,
                 print_input=print_input,
-                **arguments,
+                **transfer_arguments,
             )
 
         if not status:
+            # Best effort: the temp file may hold a partial payload.
+            self._connectors[0].run_shell_command(
+                self._wrap_for_layer(StringCommand("rm", "-f", QuoteString(temp_file)), innermost),
+                print_output=print_output,
+                print_input=print_input,
+                **arguments,
+            )
             raise OSError(f"@chain: failed to upload {remote_filename}: {output.stderr}")
 
         if print_output:
