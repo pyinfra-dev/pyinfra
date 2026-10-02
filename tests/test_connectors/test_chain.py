@@ -3,6 +3,7 @@ Tests for the @chain connector.
 """
 
 from io import StringIO
+import re
 from tempfile import NamedTemporaryFile
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
@@ -200,8 +201,36 @@ class TestChainFileTransfer(TestCase):
         outer.put_file.assert_not_called()
         assert outer.run_shell_command.call_count == 1
 
+        # The temp file lives in the innermost target, next to the destination.
         command = outer.run_shell_command.call_args.args[0].get_raw_value()
-        assert command == "cat > /etc/thing.conf"
+        assert re.fullmatch(
+            r"cat > (/tmp/pyinfra-\w+) && cp \1 /etc/thing\.conf && rm -f \1", command
+        ), command
+
+    def test_put_file_uses_the_given_temp_filename(self):
+        chain, outer = self._make_chain()
+
+        chain.put_file(StringIO("payload"), "/etc/thing.conf", remote_temp_filename="/tmp/t")
+
+        command = outer.run_shell_command.call_args.args[0].get_raw_value()
+        assert command == "cat > /tmp/t && cp /tmp/t /etc/thing.conf && rm -f /tmp/t"
+
+    def test_put_file_removes_the_temp_file_on_failure(self):
+        chain, outer = self._make_chain()
+        outer.run_shell_command.side_effect = [
+            (False, MagicMock(stderr="No space left on device")),
+            (True, MagicMock()),
+        ]
+
+        with self.assertRaises(OSError) as context:
+            chain.put_file(StringIO("payload"), "/etc/thing.conf", remote_temp_filename="/tmp/t")
+
+        assert "No space left on device" in str(context.exception)
+
+        cleanup = outer.run_shell_command.call_args_list[1]
+        assert cleanup.args[0].get_raw_value() == "rm -f /tmp/t"
+        # The exhausted payload must not be replayed into the cleanup command.
+        assert "_stdin" not in cleanup.kwargs
 
     def test_put_file_sends_payload_as_stdin(self):
         chain, outer = self._make_chain()
@@ -241,10 +270,17 @@ class TestChainFileTransfer(TestCase):
     def test_get_file_receives_contents_as_stdout(self):
         chain, outer = self._make_chain()
 
+        def _stream(command, **kwargs):
+            kwargs["_stdout"].write(b"payload")
+            return True, MagicMock()
+
+        outer.run_shell_command.side_effect = _stream
+
+        # A text destination receives the decoded bytes, as with any other connector.
         destination = StringIO()
         chain.get_file("/etc/thing.conf", destination)
 
-        assert outer.run_shell_command.call_args.kwargs["_stdout"] is destination
+        assert destination.getvalue() == "payload"
 
     def test_get_file_propagates_arguments(self):
         chain, outer = self._make_chain()
