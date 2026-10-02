@@ -13,6 +13,7 @@ from pyinfra.api.output import format_text
 from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
+    check_stdin_is_rewindable,
     get_stdin_position_for_retry,
     reset_stdout_for_retry,
     rewind_stdin_for_retry,
@@ -84,7 +85,11 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
         {key: global_arguments[key] for key in executor_kwarg_keys if key in global_arguments},  # type: ignore[literal-required] # noqa
     )
     stdin = base_connector_arguments.get("_stdin")
-    stdin_position = get_stdin_position_for_retry(stdin) if retries else None
+    stdin_position = None
+    if retries:
+        # Checked before any command runs: the first attempt would consume the stream.
+        check_stdin_is_rewindable(stdin)
+        stdin_position = get_stdin_position_for_retry(stdin)
 
     retry_attempt = 0
     did_error = False
