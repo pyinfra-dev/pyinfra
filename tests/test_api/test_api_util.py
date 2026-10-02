@@ -59,3 +59,22 @@ class TestApiUtilFileIO(TestCase):
 
         assert isinstance(data, str)
         assert data == "some string"
+
+    def test_get_file_io_binary_write_into_stringio(self):
+        # A binary writer (a command's raw stdout) landing in a text destination.
+        file = StringIO("stale")
+
+        with get_file_io(file, mode="wb") as f:
+            f.write(b"h\xc3\xa9")
+
+        assert file.getvalue() == "hé"
+
+    def test_get_file_io_failed_binary_write_leaves_stringio_intact(self):
+        file = StringIO("stale")
+
+        with self.assertRaises(RuntimeError):
+            with get_file_io(file, mode="wb") as f:
+                f.write(b"partial")
+                raise RuntimeError()
+
+        assert file.getvalue() == "stale"
