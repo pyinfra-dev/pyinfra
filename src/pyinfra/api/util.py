@@ -9,7 +9,7 @@ import os.path
 from os import getcwd, stat
 from pathlib import Path
 from socket import error as socket_error, timeout as timeout_error
-from typing import IO, TYPE_CHECKING, Any
+from typing import IO, TYPE_CHECKING, Any, cast
 from collections.abc import Callable
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, Template
@@ -355,6 +355,8 @@ class get_file_io:
 
     _close: bool = False
     _file_io: IO[Any]
+    # Text destination of a binary write, filled from the stand-in buffer on exit.
+    _text_target: StringIO | None = None
 
     def __init__(self, filename_or_io: str | IO, mode: str = "rb"):
         if not (
@@ -374,6 +376,9 @@ class get_file_io:
         if isinstance(filename_or_io, BytesIO) and mode == "r":
             filename_or_io.seek(0)
             filename_or_io = StringIO(filename_or_io.read().decode())
+        if isinstance(filename_or_io, StringIO) and mode == "wb":
+            self._text_target = filename_or_io
+            filename_or_io = BytesIO()
 
         self.filename_or_io = filename_or_io
         self.mode = mode
@@ -393,6 +398,13 @@ class get_file_io:
     def __exit__(self, type, value, traceback):
         if self._close:
             self._file_io.close()
+
+        # Only a completed write replaces the destination: a failed one leaves it intact.
+        if self._text_target is not None and type is None:
+            stand_in = cast(BytesIO, self.filename_or_io)
+            self._text_target.seek(0)
+            self._text_target.truncate()
+            self._text_target.write(stand_in.getvalue().decode())
 
     @property
     def cache_key(self):
