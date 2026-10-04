@@ -1,7 +1,6 @@
 from collections import defaultdict
-from io import BytesIO, StringIO
+from io import BytesIO, RawIOBase, StringIO
 from os import path
-import os
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 import time
@@ -1189,15 +1188,22 @@ class TestOperationRetry(PatchSSHTestCase):
         state.current_stage = StateStage.Prepare
         connect_all(state)
 
-        read_fd, write_fd = os.pipe()
-        os.close(write_fd)
-        with os.fdopen(read_fd, "rb") as pipe:
-            add_op(state, server.shell, "cat > /dest", _stdin=pipe, _retries=1)
+        class NonSeekableStream(RawIOBase):
+            """
+            A stream that says it cannot be rewound. A real `IO[bytes]`, as the payload
+            check requires, but no pipe under it: what the check reads is the same on every
+            platform.
+            """
 
-            # Refused up front, rather than after a first attempt has consumed the stream
-            # and truncated the destination.
-            with self.assertRaises(PyinfraError) as context:
-                run_ops(state)
+            def seekable(self):
+                return False
+
+        add_op(state, server.shell, "cat > /dest", _stdin=NonSeekableStream(), _retries=1)
+
+        # Refused up front, rather than after a first attempt has consumed the stream
+        # and truncated the destination.
+        with self.assertRaises(PyinfraError) as context:
+            run_ops(state)
 
         assert "non-seekable" in str(context.exception)
         fake_run_command.assert_not_called()
