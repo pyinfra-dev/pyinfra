@@ -3,6 +3,7 @@ Tests for the @chain connector.
 """
 
 from io import StringIO
+import os
 import re
 from tempfile import NamedTemporaryFile
 from unittest import TestCase
@@ -306,10 +307,15 @@ class TestChainFileTransfer(TestCase):
 
         outer.run_shell_command.side_effect = _capture
 
-        with NamedTemporaryFile() as payload:
+        # Closed before the connector opens it: Windows refuses a second open of a file
+        # `NamedTemporaryFile` still holds.
+        with NamedTemporaryFile(delete=False) as payload:
             payload.write(b"hello")
-            payload.flush()
+
+        try:
             chain.put_file(payload.name, "/tmp/thing.txt")
+        finally:
+            os.remove(payload.name)
 
         assert seen["seekable"] is True
         assert seen["content"] == b"hello"
@@ -325,8 +331,13 @@ class TestChainFileTransfer(TestCase):
 
         outer.run_shell_command.side_effect = _capture
 
-        with NamedTemporaryFile() as destination:
-            chain.get_file("/tmp/thing.txt", destination.name)
+        with NamedTemporaryFile(delete=False) as destination:
+            path = destination.name
+
+        try:
+            chain.get_file("/tmp/thing.txt", path)
+        finally:
+            os.remove(path)
 
         assert seen["seekable"] is True
 
