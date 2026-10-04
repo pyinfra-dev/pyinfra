@@ -1,3 +1,4 @@
+import sys
 import tempfile
 from array import array
 from io import BytesIO, StringIO
@@ -453,6 +454,21 @@ class TestLocalConnector(TestCase):
         assert "must be text or bytes" in str(context.exception)
 
 
+def run_python(source, **kwargs):
+    """
+    Run *source* under this interpreter, through the local connector.
+
+    A script file rather than `-c`: the command stays free of shell metacharacters, and it
+    quotes the same way under `sh` and `cmd.exe`.
+    """
+    with tempfile.TemporaryDirectory() as directory:
+        path = f"{directory}/script.py"
+        with open(path, "w") as handle:
+            handle.write(source)
+
+        return run_local_process(f'"{sys.executable}" -u "{path}"', **kwargs)
+
+
 class TestLocalProcessCleanup(TestCase):
     def test_stdout_sink_error_terminates_and_reaps_process(self):
         processes = []
@@ -464,7 +480,7 @@ class TestLocalProcessCleanup(TestCase):
 
         with patch("pyinfra.connectors.util.Popen", side_effect=start_process):
             with self.assertRaises(OSError):
-                run_local_process("exec yes", stdout_sink=FailingSink())
+                run_python("while True:\n    print('y')\n", stdout_sink=FailingSink())
 
         assert len(processes) == 1
         assert processes[0].poll() is not None
@@ -472,16 +488,18 @@ class TestLocalProcessCleanup(TestCase):
 
 
 class TestLocalProcessStreams(TestCase):
-    # Well past the 64 KiB a Linux pipe holds, so a stream nobody drains blocks the peer.
+    # Well past the 64 KiB a pipe holds, so a stream nobody drains blocks the peer.
     PAYLOAD = b"x" * (1024 * 1024)
 
     def test_large_stdin_does_not_deadlock_on_a_chatty_stderr(self):
         # The command floods stderr before reading its input: writing the whole payload
         # before reading any output would block on a full stdin pipe, forever.
-        command = "head -c 1048576 /dev/zero | tr '\\0' e >&2; wc -c"
+        source = (
+            "import sys\nsys.stderr.write('e' * 1048576)\nprint(len(sys.stdin.buffer.read()))\n"
+        )
 
         with gevent.Timeout(20):
-            return_code, output = run_local_process(command, stdin=BytesIO(self.PAYLOAD))
+            return_code, output = run_python(source, stdin=BytesIO(self.PAYLOAD))
 
         assert return_code == 0
         assert output.stdout.strip() == str(len(self.PAYLOAD))
