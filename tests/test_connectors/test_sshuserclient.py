@@ -1,8 +1,10 @@
 from base64 import b64decode
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
 import pytest
+from packaging.requirements import Requirement
 from paramiko import PKey, ProxyCommand, SSHException
 from paramiko.ed25519key import Ed25519Key
 
@@ -719,3 +721,18 @@ def test_parse_config_keeps_key_filename_when_no_real_identityfile(
 
     assert "pkey" not in cfg
     assert cfg["key_filename"] == [str(tmp_path / "does-not-exist")]
+
+
+def test_paramiko_floor_supports_ssh_client():
+    # PKey.from_type_string and pkey.UnknownKeyType were added in paramiko 3.2 (#1290)
+    tomllib = pytest.importorskip("tomllib")
+    pyproject = tomllib.loads(
+        (Path(__file__).parents[2] / "pyproject.toml").read_text(encoding="utf-8"),
+    )
+    spec = next(
+        Requirement(dep)
+        for dep in pyproject["project"]["dependencies"]
+        if Requirement(dep).name == "paramiko"
+    )
+    assert not spec.specifier.contains("3.1.0")
+    assert spec.specifier.contains("3.2.0")
