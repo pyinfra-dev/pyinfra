@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class PackageStatus(Enum):
@@ -60,7 +61,7 @@ class PackageInfo:
         return self.installed_versions[-1] if self.installed_versions else None
 
     @classmethod
-    def from_dict(cls, data: dict) -> PackageInfo:
+    def from_dict(cls, data: dict[str, Any]) -> PackageInfo:
         """Build a :class:`PackageInfo` from a dict-shaped description.
 
         This is useful for consumers that receive plain JSON-like package
