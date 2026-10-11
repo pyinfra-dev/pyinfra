@@ -9,18 +9,20 @@ class S6RepositoryList(FactBase[list[str]]):
 
     @override
     def requires_command(self, repodir=None):
+        if repodir is None:
+            return "s6"
         return "s6-rc-repo-list"
         # and envfile, but that comes bundled in execline dependency of s6
 
     @override
     def command(self, repodir=None):
         """
-        + repository: path of the repository to inspect. If `None`, the compiled-in default will be used, most likely `/var/lib/s6/repository`.
+        + repodir: path of the repository to inspect. If `None`, the one configured for s6-frontend will be used.
         """
         if repodir:
             return make_formatted_string_command("s6-rc-repo-list -r {0}", QuoteString(repodir))
 
-        return StringCommand("s6-rc-repo-list")
+        return StringCommand("s6 repo list")
 
         # if no repository passed, try to get its location from the s6-frontend configuration file
         # return StringCommand(
@@ -38,6 +40,8 @@ class S6SetStatus(FactBase[dict[str, str]]):
 
     @override
     def requires_command(self, the_set="current", repodir=None):
+        if repodir is None:
+            return "s6"
         return "s6-rc-set-status"
         # and sh
 
@@ -45,7 +49,7 @@ class S6SetStatus(FactBase[dict[str, str]]):
     def command(self, the_set="current", repodir=None):
         """
         + the_set: the set to inspect.
-        + repository: path of the repository to inspect, default `None`, which means to use the compiled-in default repository most likely `/var/lib/s6/repository`.
+        + repository: path of the repository to inspect, default `None`, which means to use the one configured for s6-frontend.
         """
         if repodir:
             return make_formatted_string_command(
@@ -54,8 +58,11 @@ class S6SetStatus(FactBase[dict[str, str]]):
                 QuoteString(the_set),
             )
 
+        # s6-frontend opportunistically pretty-prints set status output. It should detect when the
+        # terminal does not have a user behind it and fall back to the "service/rx" per line output,
+        # but if there are output processing bugs, this behavior could be the cause.
         return make_formatted_string_command(
-            "s6-rc-set-status {0}", QuoteString(the_set)
+            "s6 set status -s {0}", QuoteString(the_set)
         )
         # extra escaping needed for make_formatted_string_command, but not in StringCommand
         # return make_formatted_string_command(
@@ -87,9 +94,10 @@ class S6LiveStatus(FactBase[dict[str, bool]]):
     @override
     def requires_command(self, livedir=None):
         """
-        + livedir: the directory of the live state. If `None`, it will use the compiled-in default,
-        most likely `/run/s6-rc`.
+        + livedir: the directory of the live state. If `None`, it will use the one configured for s6-frontend.
         """
+        if livedir is None:
+            return "s6"
         return "s6-rc"
 
     # @override
@@ -101,7 +109,7 @@ class S6LiveStatus(FactBase[dict[str, bool]]):
     def command(self, livedir=None):
         if livedir:
             return make_formatted_string_command("s6-rc -l {0} -c list", QuoteString(livedir))
-        return "s6-rc -c list"
+        return "s6 live status"
 
     @override
     def process(self, output):
