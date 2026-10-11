@@ -106,6 +106,34 @@ class TestContainerConnector(TestCase):
             stdin=PIPE,
         )
 
+    def test_run_shell_command_with_user(self):
+        inventory = make_inventory(
+            hosts=(f"@{self.connector_name}/not-an-image",),
+            override_data={"docker_user": "myuser"},
+        )
+        State(inventory, Config())
+
+        command = "echo hi"
+        self.fake_popen_mock().returncode = 0
+
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        host.connect()
+        out = host.run_shell_command(command, _get_pty=True)
+        assert out[0] is True
+
+        command = make_unix_command(command).get_raw_value()
+        command = shlex.quote(command)
+        docker_command = f"{self.cli_cmd} exec --user myuser -it containerid sh -c {command}"
+        shell_command = make_unix_command(docker_command).get_raw_value()
+
+        self.fake_popen_mock.assert_called_with(
+            shell_command,
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
+        )
+
     def test_run_shell_command_success_exit_codes(self):
         inventory = make_inventory(hosts=(f"@{self.connector_name}/not-an-image",))
         State(inventory, Config())

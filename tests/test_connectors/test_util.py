@@ -457,3 +457,52 @@ class TestEnsureAskpassTempDir(TestCase):
             )
 
         assert "${TMPDIR:=/op/tmp}" in captured["command"]
+
+
+class TestUseSudoPassword(TestCase):
+    """
+    With ``config.USE_SUDO_PASSWORD`` (``--use-sudo-password``) set, pyinfra should prompt for the
+    sudo password before the first sudo command rather than first trying passwordless sudo
+    (issue #1850).
+    """
+
+    def _make_host(self, config):
+        state = State(make_inventory(hosts=("somehost",)), config)
+        host = state.inventory.get_host("somehost")
+        host.init(state)
+        host.run_shell_command = MagicMock(  # type: ignore[method-assign]
+            return_value=(True, CommandOutput([OutputLine("stdout", "/tmp/askpass-XYZ")])),
+        )
+        return host
+
+    @patch("pyinfra.connectors.util.getpass", return_value="supersecret")
+    def test_prompts_before_first_sudo_command(self, fake_getpass):
+        host = self._make_host(Config(USE_SUDO_PASSWORD=True))
+
+        command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        assert command.get_raw_value() == (
+            "env SUDO_ASKPASS=/tmp/askpass-XYZ PYINFRA_SUDO_PASSWORD=supersecret "
+            "sudo -H -A -k sh -c uptime"
+        )
+
+        # The prompted password is reused for later commands
+        make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        fake_getpass.assert_called_once()
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_prompt_when_password_given(self, fake_getpass):
+        host = self._make_host(Config(USE_SUDO_PASSWORD=True, SUDO_PASSWORD="configured"))
+
+        command = make_unix_command_for_host(
+            host.state, host, "uptime", _sudo=True, _sudo_password="configured"
+        )
+        assert "sudo -H -A -k" in command.get_raw_value()
+        fake_getpass.assert_not_called()
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_prompt_without_use_sudo_password(self, fake_getpass):
+        host = self._make_host(Config())
+
+        command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        assert command.get_raw_value() == "sudo -H -n sh -c uptime"
+        fake_getpass.assert_not_called()

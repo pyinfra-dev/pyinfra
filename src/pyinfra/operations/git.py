@@ -5,6 +5,7 @@ Manage git repositories and configuration.
 from __future__ import annotations
 
 import re
+from urllib.parse import urlsplit
 
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
@@ -88,6 +89,51 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
         host.noop(f"git config {key} is set to {value}")
 
 
+# scp-like sources: [user@]host:path (git has no port syntax in this form)
+_SCP_LIKE_RE = re.compile(r"^(?:[^@/]+@)?(?P<host>\[[^\]]+\]|[^:@/]+):")
+
+
+def _parse_keyscan_source(src: str) -> tuple[str, int]:
+    """
+    Extract the SSH host and port to keyscan from a git source.
+
+    Only SSH sources can be keyscanned: the scp-like ``[user@]host:path`` syntax and
+    ``ssh://[user@]host[:port]/path`` URLs, bracketed IPv6 included, with the port read
+    from the URL where it really is an sshd port.
+
+    + src: the git source URL
+    """
+    if "://" in src:
+        # Discriminate on "://" rather than on urlsplit's scheme, which treats any word
+        # before a ":" as a scheme, and would thus parse scp-like sources (git@host:path)
+        # as URLs.
+        if src.split("://", 1)[0].lower() != "ssh":
+            raise OperationError(
+                f"ssh_keyscan only applies to SSH sources, not: {src} "
+                "(a clone over any other transport never reads known_hosts)",
+            )
+
+        try:
+            parsed = urlsplit(src)
+            hostname = parsed.hostname
+            port = parsed.port or 22
+        except ValueError:  # invalid IPv6 URL / non-numeric port
+            hostname = None
+
+        if hostname is None:
+            raise OperationError(f"Could not parse domain (to SSH keyscan) from: {src}")
+        return hostname, port
+
+    match = _SCP_LIKE_RE.match(src)
+    if match is None:
+        raise OperationError(f"Could not parse domain (to SSH keyscan) from: {src}")
+
+    hostname = match.group("host")
+    if hostname.startswith("["):  # bracketed IPv6: git@[2001:db8::1]:org/repo.git
+        hostname = hostname[1:-1]
+    return hostname, 22
+
+
 @operation()
 def repo(
     src: str,
@@ -103,6 +149,7 @@ def repo(
     depth: int | None = None,
     *,
     fetch_tags: bool = False,
+    force: bool = False,
 ):
     """
     Clone/pull git repositories.
@@ -114,13 +161,17 @@ def repo(
     + rebase: when pulling, use ``--rebase``
     + user: chown files to this user after
     + group: chown files to this group after
-    + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull
+    + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull; only
+      SSH sources can be keyscanned (``user@host:path`` or ``ssh://host[:port]/path``),
+      with the host and port read from ``src``
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
-    + depth: create a shallow clone with a history truncated to the specified number of commits
-    + fetch_tags: Whether all tags should be fetched prior to attempting to check out the specified revision
+    + depth: truncate clone, fetch and pull history to the specified number of commits
+    + fetch_tags: Whether all tags should be fetched prior to attempting to
+      check out the specified revision.
+    + force: Execute ``fetch``, ``pull`` and ``checkout`` commands with ``--force``.
 
-    **Example:**
+    **Examples:**
 
     .. code:: python
 
@@ -129,37 +180,44 @@ def repo(
             src="https://github.com/Fizzadar/pyinfra.git",
             dest="/usr/local/src/pyinfra",
         )
+
+        git.repo(
+            name="Clone repo with SSH keyscan (non-standard port)",
+            src="ssh://git@git.example.com:2222/org/repo.git",
+            dest="/usr/local/src/repo",
+            ssh_keyscan=True,
+        )
     """
+
+    force_flag_list = ["--force"] if force else []
 
     # Ensure our target directory exists
     yield from files.directory._inner(dest)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
-        # Attempt to parse the domain from the git repository
-        domain = re.match(r"^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)", src)
-
-        if domain:
-            yield from ssh.keyscan._inner(domain.group(1))
-        else:
-            raise OperationError(
-                f"Could not parse domain (to SSH keyscan) from: {src}",
-            )
+        hostname, port = _parse_keyscan_source(src)
+        yield from ssh.keyscan._inner(hostname, port=port)
 
     # Store git commands for directory prefix
     git_commands: list[str | StringCommand] = []
     git_dir = unix_path_join(dest, ".git")
     is_repo = host.get_fact(Directory, path=git_dir)
 
+    # The depth argument can be passed to clone, fetch and pull operations.
+    # We prepare the argument list to reuse it later on
+    depth_options: list[str | QuoteString] = []
+    if depth is not None:
+        depth_options.extend(["--depth", QuoteString(str(depth))])
+
     # Cloning new repo?
     if not is_repo:
-        options: list[str | QuoteString] = []
-        if depth is not None:
-            options.extend(["--depth", str(depth)])
+        clone_options: list[str | QuoteString] = []
+        clone_options.extend(depth_options)
         if branch:
-            options.extend(["--branch", QuoteString(branch)])
+            clone_options.extend(["--branch", QuoteString(branch)])
 
-        git_commands.append(StringCommand("clone", QuoteString(src), *options, "."))
+        git_commands.append(StringCommand("clone", QuoteString(src), *clone_options, "."))
 
     # Ensuring existing repo
     else:
@@ -177,14 +235,15 @@ def repo(
         current_branch = host.get_fact(GitBranch, repo=dest)
         if branch is not None and current_branch != branch:
             # fetch to ensure we have the branch/tag locally
+            fetch_options: list[str | QuoteString] = []
+            fetch_options.extend(depth_options)
             if fetch_tags:
-                git_commands.append(StringCommand("fetch", "--tags"))
-            else:
-                git_commands.append(StringCommand("fetch"))
+                fetch_options.append("--tags")
+            git_commands.append(StringCommand("fetch", *fetch_options, *force_flag_list))
 
-            git_commands.append(StringCommand("checkout", QuoteString(branch)))
+            git_commands.append(StringCommand("checkout", QuoteString(branch), *force_flag_list))
         if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
-            git_commands.append(StringCommand("checkout", QuoteString(branch)))
+            git_commands.append(StringCommand("checkout", QuoteString(branch), *force_flag_list))
             is_tag = True
         if pull and not is_tag:
             skip_pull = False
@@ -209,16 +268,18 @@ def repo(
                 host.noop(
                     f"git repository {dest} is already up to date",
                 )
-            elif rebase:
-                git_commands.append("pull --rebase")
             else:
-                git_commands.append("pull")
+                pull_options: list[str | QuoteString] = []
+                pull_options.extend(depth_options)
+                if rebase:
+                    pull_options.append("--rebase")
+                git_commands.append(StringCommand("pull", *pull_options, *force_flag_list))
 
     if update_submodules:
         if recursive_submodules:
-            git_commands.append("submodule update --init --recursive")
+            git_commands.append(StringCommand("submodule", "update", "--init", "--recursive"))
         else:
-            git_commands.append("submodule update --init")
+            git_commands.append(StringCommand("submodule", "update", "--init"))
 
     # Attach prefixes for directory
     command_prefix = StringCommand("cd", QuoteString(dest), "&&", "git")

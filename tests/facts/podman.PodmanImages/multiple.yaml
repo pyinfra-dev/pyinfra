@@ -1,0 +1,88 @@
+command: podman image ls --format=json --all
+requires_command: podman
+output: |
+  [
+    {
+      "Id": "c9c1077449dead9e30ac230b376e761345deceab3fba17e74eeb71fcdb385845",
+      "ParentId": "",
+      "RepoTags": null,
+      "RepoDigests": [
+        "gcr.io/distroless/static-debian13@sha256:963fa6c544fe5ce420f1f54fb88b6fb01479f054c8056d0f74cc2c6000df5240",
+        "gcr.io/distroless/static-debian13@sha256:dfadf31470f770fcabd48903762dce126958e98d1ce320acf1216bbfaa42d79c"
+      ],
+      "Size": 3255272,
+      "SharedSize": 0,
+      "VirtualSize": 3255272,
+      "Labels": null,
+      "Containers": 0,
+      "Digest": "sha256:963fa6c544fe5ce420f1f54fb88b6fb01479f054c8056d0f74cc2c6000df5240",
+      "History": [
+        "gcr.io/distroless/static-debian13:nonroot"
+      ],
+      "Names": [
+        "gcr.io/distroless/static-debian13:nonroot"
+      ],
+      "Created": 0,
+      "CreatedAt": "1970-01-01T00:00:00Z"
+    },
+    {
+      "Id": "16dc3bf48e82d960a688b7cd6fc92155cf11043535a9770f0f37d97667386787",
+      "ParentId": "",
+      "RepoTags": null,
+      "RepoDigests": [
+        "gcr.io/distroless/python3-debian13@sha256:5e4f66494f35b29ac8356a0119a4e0545aedb64e5058264660fc43e6c84d74d2",
+        "gcr.io/distroless/python3-debian13@sha256:886011e8c25a19ab38fa6d929e06b47d4fd3661d1dff61c6b4ebb4becd030c37"
+      ],
+      "Size": 62088759,
+      "SharedSize": 0,
+      "VirtualSize": 62088759,
+      "Labels": null,
+      "Containers": 0,
+      "Digest": "sha256:886011e8c25a19ab38fa6d929e06b47d4fd3661d1dff61c6b4ebb4becd030c37",
+      "History": [
+        "gcr.io/distroless/python3-debian13:nonroot"
+      ],
+      "Names": [
+        "gcr.io/distroless/python3-debian13:nonroot"
+      ],
+      "Created": 0,
+      "CreatedAt": "1970-01-01T00:00:00Z"
+    }
+  ]
+fact:
+  - Id: c9c1077449dead9e30ac230b376e761345deceab3fba17e74eeb71fcdb385845
+    ParentId: ""
+    RepoTags: null
+    RepoDigests:
+      - gcr.io/distroless/static-debian13@sha256:963fa6c544fe5ce420f1f54fb88b6fb01479f054c8056d0f74cc2c6000df5240
+      - gcr.io/distroless/static-debian13@sha256:dfadf31470f770fcabd48903762dce126958e98d1ce320acf1216bbfaa42d79c
+    Size: 3255272
+    SharedSize: 0
+    VirtualSize: 3255272
+    Labels: null
+    Containers: 0
+    Digest: sha256:963fa6c544fe5ce420f1f54fb88b6fb01479f054c8056d0f74cc2c6000df5240
+    History:
+      - gcr.io/distroless/static-debian13:nonroot
+    Names:
+      - gcr.io/distroless/static-debian13:nonroot
+    Created: 0
+    CreatedAt: "1970-01-01T00:00:00Z"
+  - Id: 16dc3bf48e82d960a688b7cd6fc92155cf11043535a9770f0f37d97667386787
+    ParentId: ""
+    RepoTags: null
+    RepoDigests:
+      - gcr.io/distroless/python3-debian13@sha256:5e4f66494f35b29ac8356a0119a4e0545aedb64e5058264660fc43e6c84d74d2
+      - gcr.io/distroless/python3-debian13@sha256:886011e8c25a19ab38fa6d929e06b47d4fd3661d1dff61c6b4ebb4becd030c37
+    Size: 62088759
+    SharedSize: 0
+    VirtualSize: 62088759
+    Labels: null
+    Containers: 0
+    Digest: sha256:886011e8c25a19ab38fa6d929e06b47d4fd3661d1dff61c6b4ebb4becd030c37
+    History:
+      - gcr.io/distroless/python3-debian13:nonroot
+    Names:
+      - gcr.io/distroless/python3-debian13:nonroot
+    Created: 0
+    CreatedAt: "1970-01-01T00:00:00Z"

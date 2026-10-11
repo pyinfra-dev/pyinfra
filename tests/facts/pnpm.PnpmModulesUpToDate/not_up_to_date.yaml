@@ -1,0 +1,6 @@
+arg:
+  directory: /opt/app
+command: "if cmp -s /opt/app/pnpm-lock.yaml /opt/app/node_modules/.pnpm/lock.yaml ; then echo up_to_date; else echo not_up_to_date; fi"
+output: |
+  not_up_to_date
+fact: false

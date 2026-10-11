@@ -1,0 +1,9 @@
+args:
+  - /opt/app
+kwargs:
+  ignore_scripts: true
+facts:
+  pnpm.PnpmModulesUpToDate:
+    directory=/opt/app: false
+commands:
+  - cd /opt/app && pnpm install --ignore-scripts

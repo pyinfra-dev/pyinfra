@@ -1,0 +1,15 @@
+args:
+  - php
+kwargs:
+  update: true
+  upgrade: true
+facts:
+  brew.BrewPackages:
+    php:
+      - 'set:'
+      - "1"
+commands:
+  - brew update
+  - brew upgrade
+idempotent: false
+disable_idempotent_warning_reason: package upgrades are always executed

@@ -1,0 +1,11 @@
+args:
+  - ["typescript"]
+kwargs:
+  dev: true
+facts:
+  pnpm.PnpmPackages:
+    directory=None: {}
+exception:
+  name: OperationError
+  message: "pnpm has no global dev dependencies, `directory` is required"
+commands: []

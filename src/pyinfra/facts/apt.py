@@ -230,11 +230,24 @@ class AptSourcesFile:
         return repos
 
 
-def noninteractive_apt(command: str, force=False):
+def apt_lock_timeout(wait_for_lock: bool | int) -> str:
+    """
+    Return the ``DPkg::Lock::Timeout`` apt option for a ``wait_for_lock`` argument.
+    ``True`` maps to a 60 second default, an int sets the timeout in seconds.
+    """
+
+    timeout = 60 if wait_for_lock is True else int(wait_for_lock)
+    return f"-o DPkg::Lock::Timeout={timeout}"
+
+
+def noninteractive_apt(command: str, force=False, wait_for_lock: bool | int = False):
     args = ["DEBIAN_FRONTEND=noninteractive apt-get -y"]
 
     if force:
         args.append("--force-yes")
+
+    if wait_for_lock:
+        args.append(apt_lock_timeout(wait_for_lock))
 
     args.extend(
         (

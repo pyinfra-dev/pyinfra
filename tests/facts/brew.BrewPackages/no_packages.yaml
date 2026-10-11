@@ -1,0 +1,4 @@
+command: brew list --versions
+requires_command: brew
+output: []
+fact: {}

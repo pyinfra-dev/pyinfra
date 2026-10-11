@@ -1,0 +1,18 @@
+args:
+  - - foo
+    - bar
+    - baz
+  - taps
+  - false
+facts:
+  brew.BrewTrusted:
+    casks: []
+    commands: []
+    formulae: []
+    taps:
+      - foo
+      - baz
+commands:
+  - brew untrust --tap baz
+  - brew untrust --tap foo
+noop_description: bar taps already untrusted

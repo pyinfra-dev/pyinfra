@@ -1,0 +1,8 @@
+{
+    "arg": "/tmp/mnt-data\\x2dbig.mount",
+    "command": "test -e '/tmp/mnt-data\\x2dbig.mount' && ( sha384sum < '/tmp/mnt-data\\x2dbig.mount' 2> /dev/null || shasum -a 384 < '/tmp/mnt-data\\x2dbig.mount' 2> /dev/null || sha384 < '/tmp/mnt-data\\x2dbig.mount' 2> /dev/null ) || true",
+    "output": [
+        "1dd2e448df7c4dc19848a37fdf25c86660b19d06a4cd6987ca2c4071f80e9dd3061e4b01ddb982dc56ed7a2ed2294699  -"
+    ],
+    "fact": "1dd2e448df7c4dc19848a37fdf25c86660b19d06a4cd6987ca2c4071f80e9dd3061e4b01ddb982dc56ed7a2ed2294699"
+}

@@ -18,7 +18,6 @@ from typing import IO, Any
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
-from pyinfra.api.output import format_text
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -31,6 +30,7 @@ from pyinfra.api import (
     operation,
 )
 from pyinfra.api.command import make_formatted_string_command
+from pyinfra.api.output import format_text
 from pyinfra.api.util import (
     get_call_location,
     get_file_io,
@@ -55,6 +55,7 @@ from pyinfra.facts.files import (
     Flags,
     Link,
     Md5File,
+    SameFile,
     Sha1File,
     Sha256File,
     Sha384File,
@@ -825,8 +826,8 @@ def rsync(src: str, dest: str, flags: list[str] | None = None):
         StrictHostKeyChecking setting, config and known_hosts file (when specified).
 
     .. caution::
-        When using SSH, the ``files.rsync`` operation only supports the ``sudo`` and ``sudo_user``
-        global arguments.
+        When using SSH, the ``files.rsync`` operation only supports the ``sudo``, ``sudo_user``,
+        and ``sudo_password`` global arguments.
     """
 
     if flags is None:
@@ -1484,10 +1485,19 @@ def move(src: str, dest: str, overwrite=False):
     """
 
     if host.get_fact(File, src) is None:
-        raise OperationError(f"src {src} does not exist")
+        if state.is_executing:
+            raise OperationError(f"src {src} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}src {src} does not exist yet")
 
-    if not host.get_fact(Directory, dest):
-        raise OperationError(f"dest {dest} is not an existing directory")
+    dest_info = host.get_fact(Directory, dest)
+    if dest_info is False:
+        raise OperationError(f"dest {dest} is not a directory")
+    elif dest_info is None:
+        if state.is_executing:
+            raise OperationError(f"dest directory {dest} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}dest directory {dest} does not exist yet")
 
     full_dest_path = posixpath.join(dest, PurePosixPath(src).name)
     if host.get_fact(File, full_dest_path) is not None:
@@ -1495,6 +1505,28 @@ def move(src: str, dest: str, overwrite=False):
             yield StringCommand("rm", "-rf", QuoteString(full_dest_path))
         else:
             raise OperationError(f"dest {full_dest_path} already exists and `overwrite` is unset")
+
+    yield StringCommand("mv", QuoteString(src), QuoteString(dest))
+
+
+@operation()
+def rename(src: str, dest: str, overwrite=False):
+    """
+    Rename a remote file/directory/link to a new path
+
+    + src: remote file/directory to rename
+    + dest: new path for `src`
+    + overwrite: whether to overwrite dest, if present
+    """
+
+    if host.get_fact(File, src) is None:
+        raise OperationError(f"src {src} does not exist")
+
+    if host.get_fact(File, dest) is not None:
+        if overwrite:
+            yield StringCommand("rm", "-rf", QuoteString(dest))
+        else:
+            raise OperationError(f"dest {dest} already exists and `overwrite` is unset")
 
     yield StringCommand("mv", QuoteString(src), QuoteString(dest))
 
@@ -1509,11 +1541,21 @@ def copy(src: str, dest: str, overwrite=False):
     + overwrite: whether to overwrite dest, if present
     """
     src_is_dir = host.get_fact(Directory, src)
-    if not host.get_fact(File, src) and not src_is_dir:
-        raise OperationError(f"src {src} does not exist")
+    src_is_file = host.get_fact(File, src)
+    if not src_is_file and not src_is_dir:
+        if state.is_executing:
+            raise OperationError(f"src {src} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}src {src} does not exist yet")
 
-    if not host.get_fact(Directory, dest):
-        raise OperationError(f"dest {dest} is not an existing directory")
+    dest_info = host.get_fact(Directory, dest)
+    if dest_info is False:
+        raise OperationError(f"dest {dest} is not a directory")
+    elif dest_info is None:
+        if state.is_executing:
+            raise OperationError(f"dest directory {dest} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}dest directory {dest} does not exist yet")
 
     dest_file_path = posixpath.join(dest, PurePosixPath(src).name)
     dest_file_exists = host.get_fact(File, dest_file_path)
@@ -1606,6 +1648,13 @@ def link(
         raise OperationError("If present is True target must be provided")
 
     info = host.get_fact(Link, path=path)
+
+    if info is False and not symbolic and target is not None:
+        # The path exists but is not a symlink - it may already be a hard link to the target
+        file_info = host.get_fact(File, path=path)
+        same_file = host.get_fact(SameFile, path=path, target=target)
+        if file_info and same_file:
+            info = {**file_info, "link_target": target}
 
     if info is False:  # not a link
         yield from _raise_or_remove_invalid_path(
@@ -1810,6 +1859,7 @@ def directory(
             path="/web",
             user="myweb",
             group="myweb",
+            mode="750",
         )
 
         # Multiple directories
@@ -2255,9 +2305,14 @@ def unarchive(
         yield FileUploadCommand(src, temp_archive)
         archive_path = temp_archive
     else:
-        # Validate the remote archive exists
-        if host.get_fact(File, path=src) is None:
-            raise OperationError(f"Remote archive {src} does not exist")
+        # Check if the remote archive exists
+        archive_info = host.get_fact(File, path=src)
+        if archive_info is False:
+            raise OperationError(f"Remote archive {src} is not a file")
+        elif archive_info is None:
+            if state.is_executing:
+                raise OperationError(f"Remote archive {src} does not exist")
+            logger.info(f"{host.print_prefix}Remote archive {src} does not exist")
         archive_path = src
 
     extras = list(extra_opts) if extra_opts else []

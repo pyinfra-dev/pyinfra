@@ -1,0 +1,5 @@
+command: pnpm --global list --depth=0 --json
+requires_command: pnpm
+output: |
+  ERR_PNPM_NO_GLOBAL_BIN_DIR  Unable to find the global bin directory
+fact: {}

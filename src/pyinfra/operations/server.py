@@ -8,7 +8,6 @@ from __future__ import annotations
 import os
 from io import StringIO
 from itertools import filterfalse, tee
-from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING
 
@@ -186,7 +185,9 @@ def shell(commands: str | list[str]):
     """
     Run raw shell code on server during a deploy. If the command would
     modify data that would be in a fact, the fact would not be updated
-    since facts are only run at the start of a deploy.
+    since facts are only run at the start of a deploy. Commands run via the
+    configured shell, which defaults to ``sh``; use the ``_shell_executable``
+    global argument when a command needs Bash or another shell.
 
     + commands: command or list of commands to execute on the remote server
 
@@ -197,6 +198,12 @@ def shell(commands: str | list[str]):
         server.shell(
             name="Run lxd auto init",
             commands=["lxd init --auto"],
+        )
+
+        server.shell(
+            name="Source a Bash environment before building",
+            commands=["source /opt/example/setupvars.sh && make"],
+            _shell_executable="bash",
         )
     """
 
@@ -941,7 +948,9 @@ def user_authorized_keys(
         if state.cwd:
             try_path = os.path.join(state.cwd, key)
 
-        if Path(try_path).exists():
+        # NOTE: os.path.exists swallows OSError (eg ENAMETOOLONG from long inline
+        # keys), whereas Path.exists re-raises it on Python < 3.14.
+        if os.path.exists(try_path):
             with open(try_path) as f:
                 return [key.strip() for key in f.readlines()]
 
