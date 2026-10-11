@@ -1,0 +1,6 @@
+arg:
+  repodir: /fake/path
+command: s6-rc-repo-list -r /fake/path
+requires_command: s6-rc-repo-list
+output: "s6-rc-repo-list: fatal: unable to lock /fake/path: No such file or directory"
+fact: null

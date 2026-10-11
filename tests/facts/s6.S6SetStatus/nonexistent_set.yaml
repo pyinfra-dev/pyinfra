@@ -1,6 +1,8 @@
 # TODO remote command fails and exception raised, but should not halt execution of entire deploy
 arg:
+  the_set: fakeset
   repodir: /etc/s6/repo
-command: "s6-rc-set-status -r /etc/s6/repo current"
+command: s6-rc-set-status -r /etc/s6/repo fakeset
 requires_command: s6-rc-set-status
+output: "s6-rc-set-status: fatal: set fakeset does not exist in repository /etc/s6/repo"
 fact: null

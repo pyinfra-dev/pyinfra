@@ -29,7 +29,8 @@ class S6RepositoryList(FactBase[list[str]]):
 
     @override
     def process(self, output):
-        return output
+        if "No such file or directory" not in output[0]:
+            return output
 
 
 class S6SetStatus(FactBase[dict[str, str]]):
@@ -64,6 +65,13 @@ class S6SetStatus(FactBase[dict[str, str]]):
 
     @override
     def process(self, output):
+        # repository does not exist
+        if "No such file or directory" in output[0]:
+            return
+        # repository exists, but set does not
+        if "does not exist in repository" in output[0]:
+            return
+
         return {
             triplet[0]: triplet[-1]
             for triplet in map(lambda line: line.partition("/"), output)
