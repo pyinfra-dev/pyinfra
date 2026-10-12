@@ -1,14 +1,15 @@
 """Manage s6-rc services (https://www.skarnet.org/software/s6-rc/)."""
 
-import re
+#import re
 import shlex
 from collections.abc import Sequence
+from typing import Never
 
 from pyinfra import host, logger
 from pyinfra.api import (
     QuoteString,
     StringCommand,
-    OperationError,
+    # OperationError,
     OperationValueError,
     operation,
     Host,
@@ -25,45 +26,45 @@ _rx_to_subcommand = {
     "masked": "mask",
 }
 
-def _get_s6_frontend_conf_contents(host: Host) -> list[str] | None:
-    """Attempts to locate and return the contents of an s6-frontend configuration.
+# def _get_s6_frontend_conf_contents(host: Host) -> list[str] | None:
+#     """Attempts to locate and return the contents of an s6-frontend configuration.
+# 
+#     Does not return anything if no configuration is found.
+# 
+#     + host: pyinfra host object on which to perform this lookup.
+#     """
+#     conf_envvar = host.get_fact(Command, 'printf %s "$S6_CONF"')
+#     if conf_envvar != "":
+#         if contents := host.get_fact(FileContents, conf_envvar):
+#             return contents
+# 
+#     if contents := host.get_fact(FileContents, "/etc/s6.conf"):
+#         return contents
+# 
+#     return None
 
-    Does not return anything if no configuration is found.
 
-    + host: pyinfra host object on which to perform this lookup.
-    """
-    conf_envvar = host.get_fact(Command, 'printf %s "$S6_CONF"')
-    if conf_envvar != "":
-        if contents := host.get_fact(FileContents, conf_envvar):
-            return contents
-
-    if contents := host.get_fact(FileContents, "/etc/s6.conf"):
-        return contents
-
-    return None
-
-
-def _get_value_from_conf(key: str, content: list[str] | None) -> str | None:
-    """Get the value associated with a key in an s6-frontend configuration.
-
-    If no repodir is found, nothing is returned.
-
-    + key: the key associated with the value, e.g. "repodir".
-    + content: the file contents, as a list of strings. if `None`, this function returns nothing.
-    """
-    # simplistic check for now, avoiding complicated syntax
-    # does not account for a statement broken over multiple lines with backslashes
-    # assume the key is unique
-    if content is not None:
-        if match := re.search(
-            # https://skarnet.org/software/execline/envfile.html#syntax
-            r"^\s*" + re.escape(key) + r'\s*=\s*(/[^\s]*|"/.*")\s*$',
-            "\n".join(content),
-            re.MULTILINE,
-        ):
-            return match.group(1)
-
-    return None
+# def _get_value_from_conf(key: str, content: list[str] | None) -> str | None:
+#     """Get the value associated with a key in an s6-frontend configuration.
+# 
+#     If no repodir is found, nothing is returned.
+# 
+#     + key: the key associated with the value, e.g. "repodir".
+#     + content: the file contents, as a list of strings. if `None`, this function returns nothing.
+#     """
+#     # simplistic check for now, avoiding complicated syntax
+#     # does not account for a statement broken over multiple lines with backslashes
+#     # assume the key is unique
+#     if content is not None:
+#         if match := re.search(
+#             # https://skarnet.org/software/execline/envfile.html#syntax
+#             r"^\s*" + re.escape(key) + r'\s*=\s*(/[^\s]*|"/.*")\s*$',
+#             "\n".join(content),
+#             re.MULTILINE,
+#         ):
+#             return match.group(1)
+# 
+#     return None
 
     ## TODO edge case
     # for line, next_line in itertools.pairwise(content):
@@ -221,7 +222,7 @@ def _make_all_set_change_commands(
 ):
     """Returns all commands necessary to bring the prescriptions to the desired state.
 
-    + prescriptions: map of service -> prescription, which is one of "always", "active", "usable", "masked".
+    + prescriptions: map of service -> prescription, which is one of "always", "active", "usable", "masked". If this is an empty dict, all services will be masked.
     + repodir: path to a repository containing the set.
     + the_set: the set to change the prescriptions of.
     + force_prescriptions: whether to ensure there are no other services in the set or to only modify the prescriptions of the specified services, leaving others untouched.
@@ -269,6 +270,9 @@ def _make_all_set_change_commands(
     #     service_bins["wanted_masked"].extend(
     #         [srv for srv in current_rxs if srv not in prescriptions]
     #     )
+
+    if prescriptions == {}:
+       return [None] * 3 + [ _make_set_change_command(current_rxs.keys(), current_rxs, "masked", repodir, the_set=the_set) ]
 
     return [
         _make_set_change_command(
@@ -438,7 +442,7 @@ def live_install(repodir: str | None = None, the_set: str = "current", livedir: 
 def manage_set(
     the_set: str = "current",
     present: bool = True,
-    prescriptions: dict[str, str] | None = None,
+    prescriptions: dict[Never, Never] | dict[str, str] | None = None,
     #force_prescriptions: bool = True,
     do_commit: bool = True,
     do_install: bool = False,
@@ -461,7 +465,7 @@ def manage_set(
 
     + the_set: name of the set to manage.
     + present: whether the set should be present in the repository.
-    + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only.
+    + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only. If it is the empty dict, then all services will be masked.
     + force_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be masked)
     + do_commit: whether to commit the set.
     + do_install: whether to install the set to the livedir.
@@ -508,7 +512,7 @@ def manage_set(
             else:
                 yield make_formatted_string_command("s6-rc-set-new {0}", QuoteString(the_set))
 
-        if prescriptions:
+        if prescriptions or prescriptions == {}:
             if any(
                 cmds := _make_all_set_change_commands(
                     prescriptions, repodir, the_set=the_set#, force_prescriptions=force_prescriptions
@@ -546,9 +550,8 @@ def manage_set(
             host.noop(f'the set "{the_set}" is already nonexistent')
 
 
-# TODO enabled masks all other services (and doesn't consider bundles)
+# TODO enabled doesn't work well with bundles
 # TODO verify idempotency paths
-# TODO commit_set should allow specification of which set to commit
 @operation()
 def service(
     service: str | Sequence[str],
