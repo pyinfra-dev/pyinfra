@@ -18,6 +18,12 @@ from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus, S6RepositoryList
 from pyinfra.facts.files import FileContents
 from pyinfra.facts.server import Command
 
+_rx_to_subcommand = {
+    "always": "make-essential",
+    "active": "enable",
+    "usable": "disable",
+    "masked": "mask",
+}
 
 def _get_s6_frontend_conf_contents(host: Host) -> list[str] | None:
     """Attempts to locate and return the contents of an s6-frontend configuration.
@@ -181,18 +187,15 @@ def _make_set_change_command(
             service_subset.append(srv)
 
     if service_subset:
-        #    _rx_to_subcommand = {
-        #        "always": "make-essential",
-        #        "active": "enable",
-        #        "usable": "disable",
-        #        "masked": "mask",
-        #    }
-
         # example of the string passed into make_formatted_string_command:
         # s6-rc-set-change -r {5} {6} usable {0} {1} {2} {3} {4}
+        # NOTE: because -p (--pull-dependencies) is used, enabling a set of services then disabling
+        # the same set of services (without using force_prescriptions) will likely leave the system
+        # in a different state than before, as several dependent services may still be in the
+        # altered state.
         if repodir:
             return make_formatted_string_command(
-                f"s6-rc-set-change -r {{{len(service_subset)}}} {{{len(service_subset) + 1}}} {wanted_rx} "
+                f"s6-rc-set-change -r {{{len(service_subset)}}} -p {{{len(service_subset) + 1}}} {wanted_rx} "
                 + _make_format_fields(len(service_subset)),
                 *map(QuoteString, service_subset),
                 QuoteString(repodir),
@@ -200,7 +203,7 @@ def _make_set_change_command(
             )
 
         return make_formatted_string_command(
-            f"s6-rc-set-change {{{len(service_subset)}}} {wanted_rx} "
+            f"s6 set {_rx_to_subcommand[wanted_rx]} -p -s {{{len(service_subset)}}} "
             + _make_format_fields(len(service_subset)),
             *map(QuoteString, service_subset),
             QuoteString(the_set),
@@ -452,28 +455,29 @@ def manage_set(
     + the_set: name of the set to manage.
     + present: whether the set should be present in the repository.
     + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only.
-    + force_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be removed)
+    + force_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be masked)
     + do_commit: whether to commit the set.
     + do_install: whether to install the set to the livedir.
-
+    + repodir: TODO
+    + livedir: TODO
     """
 
     # automatically find the configured s6-frontend repository to use in commands. the value can be
     # `None`, which happens when no configuration file was found. in this case, s6 commands will use
     # the compiled-in default repository.
-    s6_conf_lines = _get_s6_frontend_conf_contents(host)
-    if s6_conf_lines is None:
-        # TODO should it really be a warning instead of info?
-        logger.warning(
-            "could not find an s6-frontend configuration on remote host, will use compiled-in default repository for s6 commands"
-        )
-    elif s6_conf_lines == []:
-        logger.warning(
-            "remote host's s6-frontend configuration is an empty file, will use compiled-in default repository for s6 commands"
-        )
-    # repodir will be `None` if not found, but possibility of None is handled, resulting in the
-    # compiled-in default repository being used.
-    repodir = _get_value_from_conf(key="repodir", content=s6_conf_lines)
+    # s6_conf_lines = _get_s6_frontend_conf_contents(host)
+    # if s6_conf_lines is None:
+    #     # TODO should it really be a warning instead of info?
+    #     logger.warning(
+    #         "could not find an s6-frontend configuration on remote host, will use compiled-in default repository for s6 commands"
+    #     )
+    # elif s6_conf_lines == []:
+    #     logger.warning(
+    #         "remote host's s6-frontend configuration is an empty file, will use compiled-in default repository for s6 commands"
+    #     )
+    # # repodir will be `None` if not found, but possibility of None is handled, resulting in the
+    # # compiled-in default repository being used.
+    # repodir = _get_value_from_conf(key="repodir", content=s6_conf_lines)
 
     # if not (repodir := _get_value_from_conf(key="repodir", content=s6_conf_lines)):
     #    raise OperationError(

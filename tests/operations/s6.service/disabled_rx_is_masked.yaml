@@ -15,7 +15,7 @@ facts:
     repodir=None, the_set=current:
       tipidee: "active"
 commands:
-  - s6-rc-set-change current masked tipidee
+  - s6 set mask -p -s current tipidee
   - s6-rc-set-fix current
   - s6-rc-set-commit current
 

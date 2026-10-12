@@ -22,6 +22,6 @@ facts:
       mysqld: "active"
       tipidee: "active"
 commands:
-  - s6-rc-set-change default usable nftables mysqld tipidee
+  - s6 set disable -p -s default nftables mysqld tipidee
   - s6-rc-set-fix default
   - s6-rc-set-commit default

@@ -34,6 +34,6 @@ commands:
   - s6 process kill -s SIGHUP nftables
   # enabled argument applies enabled_rx to all services, hence why nftables is here, despite having
   # "always" rx
-  - s6-rc-set-change webserver active nftables php-fpm tipidee
+  - s6 set enable -p -s webserver nftables php-fpm tipidee
   - s6-rc-set-fix webserver
   - s6-rc-set-commit webserver

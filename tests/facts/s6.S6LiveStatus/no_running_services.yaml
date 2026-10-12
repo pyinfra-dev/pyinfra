@@ -1,5 +1,5 @@
-command: s6-rc -c list
-requires_command: s6-rc
+command: s6 live status
+requires_command: s6
 output: |
   NetworkManager-srv/longrun//down/
   NetworkManager-log/longrun//down/

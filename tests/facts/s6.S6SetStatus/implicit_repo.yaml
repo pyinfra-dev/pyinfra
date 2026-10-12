@@ -1,5 +1,5 @@
-command: 's6-rc-set-status current'
-requires_command: s6-rc-set-status
+command: s6 set status -s current
+requires_command: s6
 output: |
   swap/always
   NetworkManager-srv/active

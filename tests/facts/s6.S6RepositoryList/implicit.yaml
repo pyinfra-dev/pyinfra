@@ -1,5 +1,5 @@
-command: s6-rc-repo-list
-requires-command: s6-rc-repo-list
+command: s6 repo list
+requires-command: s6
 output: |
   kiosk
   current

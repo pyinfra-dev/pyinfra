@@ -17,6 +17,6 @@ facts:
       mysqld: "usable"
       tipidee: "active"
 commands:
-  - s6-rc-set-change current usable nftables tipidee
+  - s6 set disable -p -s current nftables tipidee
   - s6-rc-set-fix current
   - s6-rc-set-commit current

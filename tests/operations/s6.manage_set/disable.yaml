@@ -18,6 +18,6 @@ facts:
     repodir=None, the_set=default:
       tipidee: "active"
 commands:
-  - s6-rc-set-change default usable tipidee
+  - s6 set disable -p -s default tipidee
   - s6-rc-set-fix default
   - s6-rc-set-commit default
