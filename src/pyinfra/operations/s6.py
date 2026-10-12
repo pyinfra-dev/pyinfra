@@ -277,7 +277,6 @@ def _make_all_set_change_commands(
         for wanted_rx, service_set in service_bins.items()
     ]
 
-
 @operation(is_idempotent=False)
 def set_create(name: str, repodir: str | None = None):
     """Create a new set.
@@ -446,6 +445,10 @@ def manage_set(
 ):
     """Manage sets in a repository.
 
+    .. important::
+        This operation is in alpha. Things may break if you use it. Additionally, there is no
+        support for bundles at this time, as they break the operation's idempotency logic.
+
     The repository is automatically found by inspecting the `S6_CONF` environment variable or
     trying the hardcoded path `/etc/s6.conf`, in line with `s6-frontend` behavior. `manage_set`
     combines smaller operations into one:
@@ -485,6 +488,8 @@ def manage_set(
     #    raise OperationError(
     #        f"failed to extract a repodir from remote s6-frontend config: {s6_conf_lines}"
     #    )
+
+    logger.warning("The `s6.manage_set` operation is in alpha!")
 
     if present:
         # remove noops from this set as conditions are satisfied
@@ -560,6 +565,10 @@ def service(
     """
     Manage the state of s6-supervise'd services.
 
+    .. important::
+        This operation is in alpha. Things may break if you use it. Additionally, there is no
+        support for bundles at this time, as they break the operation's idempotency logic.
+
     + service: name(s) of the service(s) to manage.
     + running: whether the service(s) should be under an s6-supervise.
     + restarted: whether the service(s) should be restarted.
@@ -582,6 +591,9 @@ def service(
     `manage_set` operation does; all services will be assigned the same prescription if `enabled` is
     set.
     """
+
+    logger.warning("The `s6.service` operation is in alpha!")
+
     if enabled_rx not in {"active", "always"}:
         raise ValueError('enabled_rx must be either "active" or "always"')
     if disabled_rx not in {"usable", "masked"}:
