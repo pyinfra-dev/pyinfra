@@ -160,12 +160,12 @@ def _make_set_change_command(
     repodir: str | None = None,
     the_set: str = "current",
 ):
-    """Returns a command like "s6-rc-set-change -r /etc/s6/repo current active httpd".
+    """Returns a command like "s6-rc-set-change -r /etc/s6/repo -p current active httpd".
 
     + services: the services to be assigned a specific prescription.
     + current_rxs: the current prescriptions for all services (from the `S6SetStatus` fact).
     + wanted_rx: the prescription to assign to each service.
-    + repodir: path to the repository containing the set.
+    + repodir: path to the repository containing the set. If None, will use s6-frontend to autodiscover the repodir.
     + the_set: name of the set to operate on.
 
     If every service already matches the desired prescription, None is returned.
@@ -212,11 +212,12 @@ def _make_set_change_command(
     return None
 
 
+# TODO should an empty prescriptions dict mean to mask everything?
 def _make_all_set_change_commands(
     prescriptions: dict,
     repodir: str | None = None,
     the_set: str = "current",
-    force_prescriptions: bool = True,
+    #force_prescriptions: bool = True,
 ):
     """Returns all commands necessary to bring the prescriptions to the desired state.
 
@@ -263,11 +264,11 @@ def _make_all_set_change_commands(
 
     current_rxs = host.get_fact(S6SetStatus, the_set, repodir)
 
-    if force_prescriptions:
-        # mask all services not present in `prescriptions` arg
-        service_bins["wanted_masked"].extend(
-            [srv for srv in current_rxs if srv not in prescriptions]
-        )
+    # if force_prescriptions:
+    #     # mask all services not present in `prescriptions` arg
+    #     service_bins["wanted_masked"].extend(
+    #         [srv for srv in current_rxs if srv not in prescriptions]
+    #     )
 
     return [
         _make_set_change_command(
@@ -437,9 +438,10 @@ def manage_set(
     the_set: str = "current",
     present: bool = True,
     prescriptions: dict[str, str] | None = None,
-    force_prescriptions: bool = True,
+    #force_prescriptions: bool = True,
     do_commit: bool = True,
     do_install: bool = False,
+    repodir: str | None = None,
     livedir: str | None = None,
 ):
     """Manage sets in a repository.
@@ -502,7 +504,7 @@ def manage_set(
         if prescriptions:
             if any(
                 cmds := _make_all_set_change_commands(
-                    prescriptions, repodir, the_set=the_set, force_prescriptions=force_prescriptions
+                    prescriptions, repodir, the_set=the_set#, force_prescriptions=force_prescriptions
                 )
             ):
                 noops.remove("prescribe")
@@ -556,7 +558,7 @@ def service(
     disabled_rx: str = "usable",
 ):
     """
-    Manage the state of s6-supervised services.
+    Manage the state of s6-supervise'd services.
 
     + service: name(s) of the service(s) to manage.
     + running: whether the service(s) should be under an s6-supervise.
@@ -571,12 +573,14 @@ def service(
     + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either "active" or "always".
     + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either "usable" or "masked".
 
-    Specifying multiple services results in fewer commands executed, especially in the case of
-    changing the enabled status of the service, where the service database is recompiled per command
-    by default.
+
+    Services can be started, stopped, restarted, reloaded, enabled, and disabled.
+
+    This operation can manage multiple services at once.
 
     Note that this operation does not give as granular control over prescriptions as the
-    `manage_set` operation does; all services will be assigned the same prescription.
+    `manage_set` operation does; all services will be assigned the same prescription if `enabled` is
+    set.
     """
     if enabled_rx not in {"active", "always"}:
         raise ValueError('enabled_rx must be either "active" or "always"')
