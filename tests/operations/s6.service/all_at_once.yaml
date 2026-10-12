@@ -31,7 +31,7 @@ facts:
 commands:
   - s6 live start mysqld php-fpm tipidee
   - s6 live restart nftables
-  - s6 process kill -s SIGHUP nftables
+  - s6 live reload -t 10 nftables
   # enabled argument applies enabled_rx to all services, hence why nftables is here, despite having
   # "always" rx
   - s6 set enable -p -s webserver nftables php-fpm tipidee

@@ -125,7 +125,7 @@ def _make_format_fields(n):
     return " ".join([f"{{{i}}}" for i in range(n)])
 
 
-def _make_live_command(op: str, services: Sequence, livedir: str | None = None):
+def _make_live_change_command(op: str, services: Sequence, livedir: str | None = None):
     """
     + op: the operation, e.g. "start", "stop", "restart".
     + services: the service(s) to operate on.
@@ -562,7 +562,7 @@ def service(
     enabled: bool | None = None,
     repodir: str | None = None,
     livedir: str | None = None,
-    reload_signal: str = "SIGHUP",
+    reload_timeout: float | None = 10,
     the_set: str = "current",
     enabled_rx: str = "active",
     disabled_rx: str = "usable",
@@ -582,7 +582,7 @@ def service(
     + enabled: whether the service should be given an "active" or "usable" prescription.
     + repodir: path to the repository to manage. Uses the one compiled into s6 by default.
     + livedir: path to the live state to manage. Uses the one configured for s6-frontend by default.
-    + reload_signal: the signal to send to the service(s) when a reload is desired.
+    + reload_timeout: how many seconds to wait for a service to reload.
     + the_set: name of the set to use when managing enabled status, using the set named "current" by default.
     + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either "active" or "always".
     + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either "usable" or "masked".
@@ -617,31 +617,36 @@ def service(
 
         if running is False:
             if some_up:
-                yield _make_live_command("stop", all_up_services, livedir=livedir)
+                yield _make_live_change_command("stop", all_up_services, livedir=livedir)
             else:
                 host.noop(f"all specified services are already down: {', '.join(service)}")
 
         if running is True:
             if not all_up:
-                yield _make_live_command("start", all_down_services, livedir=livedir)
+                yield _make_live_change_command("start", all_down_services, livedir=livedir)
             else:
                 host.noop(f"all specified services are already up: {', '.join(service)}")
 
         if restarted:
             if some_up:
-                yield _make_live_command("restart", all_up_services, livedir=livedir)
+                yield _make_live_change_command("restart", all_up_services, livedir=livedir)
             else:
                 host.noop(f"all specified services are down: {', '.join(service)}")
 
         if reloaded:
             if some_up:
-                # TODO use s6-svc instead of frontend?
-                yield make_formatted_string_command(
-                    "s6 process kill -s {0} "
-                    + " ".join([f"{{{i + 1}}}" for i in range(len(all_up_services))]),
-                    QuoteString(reload_signal),
-                    *map(QuoteString, all_up_services),
-                )
+                if livedir:
+                    yield make_formatted_string_command(
+                            f"s6-rc -l {{{len(all_up_services)}}} -t {reload_timeout} reload " +
+                            _make_format_fields(len(all_up_services)), *map(QuoteString,
+                                                                            all_up_services), livedir
+                    )
+                else:
+                    yield make_formatted_string_command(
+                            f"s6 live reload -t {reload_timeout} " +
+                            _make_format_fields(len(all_up_services)), *map(QuoteString,
+                                                                            all_up_services)
+                    )
             else:
                 host.noop(f"all specified services are down: {', '.join(service)}")
 

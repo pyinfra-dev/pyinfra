@@ -9,4 +9,4 @@ facts:
       mysqld: true
       tipidee: true
 commands:
-  - s6 process kill -s SIGHUP nftables mysqld tipidee
+  - s6 live reload -t 10 nftables mysqld tipidee

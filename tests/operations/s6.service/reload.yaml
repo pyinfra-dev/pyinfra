@@ -7,4 +7,4 @@ facts:
     livedir=None:
       tipidee: true
 commands:
-  - s6 process kill -s SIGHUP tipidee
+  - s6 live reload -t 10 tipidee
