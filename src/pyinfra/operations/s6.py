@@ -3,7 +3,7 @@
 # import re
 import shlex
 from collections.abc import Sequence
-from typing import Never
+from typing import Literal
 
 from pyinfra import host, logger
 from pyinfra.api import (
@@ -219,10 +219,9 @@ def _make_all_set_change_commands(
 ):
     """Returns all commands necessary to bring the prescriptions to the desired state.
 
-    + prescriptions: map of service -> prescription, which is one of "always", "active", "usable", "masked". If this is an empty dict, all services will be masked.
+    + prescriptions: map of service -> prescription, which is one of "always", "active", "usable", "masked". If this is set to `False`, all services will be masked.
     + repodir: path to a repository containing the set.
     + the_set: the set to change the prescriptions of.
-    + force_prescriptions: whether to ensure there are no other services in the set or to only modify the prescriptions of the specified services, leaving others untouched.
 
     Returns a length-4 array of `StringCommand`s or `None`s, for each prescription type, depending
     on whether any services needed to be switched to that prescription. This is essentially 4
@@ -443,13 +442,13 @@ def live_install(repodir: str | None = None, the_set: str = "current", livedir: 
 @operation(
     is_idempotent=False,
     # TODO verify idempotency paths
-    idempotent_notice="Not idempotent by default. If `do_commit=False`, then the operation is idempotent.",
+    idempotent_notice="Not idempotent by default. If `do_commit=False` and `do_install=False`, then the operation is idempotent.",
 )
 # TODO add option to install a set
 def manage_set(
     the_set: str = "current",
     present: bool = True,
-    prescriptions: dict[Never, Never] | dict[str, str] | None = None,
+    prescriptions: Literal[False] | dict[str, str] | None = None,
     # force_prescriptions: bool = True,
     do_commit: bool = True,
     do_install: bool = False,
@@ -472,8 +471,7 @@ def manage_set(
 
     + the_set: name of the set to manage.
     + present: whether the set should be present in the repository.
-    + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only. If it is the empty dict, then all services will be masked.
-    + force_prescriptions: whether the `prescriptions` should be the *only* prescriptions in the set (i.e. other services will be masked)
+    + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only. If it is set to `False`, then all services will be masked.
     + do_commit: whether to commit the set.
     + do_install: whether to install the set to the livedir.
     + repodir: TODO
@@ -519,8 +517,12 @@ def manage_set(
             else:
                 yield make_formatted_string_command("s6-rc-set-new {0}", QuoteString(the_set))
 
-        if prescriptions or prescriptions == {}:
-            if any(
+        if prescriptions is not None:
+            if prescriptions is False:
+                noops.remove("prescribe")
+                cmds = _make_all_set_change_commands({}, repodir, the_set=the_set)
+                yield from filter(lambda cmd: cmd is not None, cmds)
+            elif any(
                 cmds := _make_all_set_change_commands(
                     prescriptions,
                     repodir,
@@ -561,7 +563,10 @@ def manage_set(
 
 # TODO enabled doesn't work well with bundles
 # TODO verify idempotency paths
-@operation()
+@operation(
+    is_idempotent=False,
+    idempotent_notice="Idempotent so long as `restarted`, `reloaded`, and `command` are not specified",
+)
 def service(
     service: str | Sequence[str],
     running: bool | None = None,

@@ -1,7 +1,7 @@
 args:
   - default
 kwargs:
-  prescriptions: {}
+  prescriptions: false
 facts:
   s6.S6RepositoryList:
     repodir=None:
