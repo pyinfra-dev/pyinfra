@@ -1,6 +1,6 @@
 """Manage s6-rc services (https://www.skarnet.org/software/s6-rc/)."""
 
-#import re
+# import re
 import shlex
 from collections.abc import Sequence
 from typing import Never
@@ -12,12 +12,9 @@ from pyinfra.api import (
     # OperationError,
     OperationValueError,
     operation,
-    Host,
 )
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.facts.s6 import S6LiveStatus, S6SetStatus, S6RepositoryList
-from pyinfra.facts.files import FileContents
-from pyinfra.facts.server import Command
 
 _rx_to_subcommand = {
     "always": "make-essential",
@@ -28,27 +25,27 @@ _rx_to_subcommand = {
 
 # def _get_s6_frontend_conf_contents(host: Host) -> list[str] | None:
 #     """Attempts to locate and return the contents of an s6-frontend configuration.
-# 
+#
 #     Does not return anything if no configuration is found.
-# 
+#
 #     + host: pyinfra host object on which to perform this lookup.
 #     """
 #     conf_envvar = host.get_fact(Command, 'printf %s "$S6_CONF"')
 #     if conf_envvar != "":
 #         if contents := host.get_fact(FileContents, conf_envvar):
 #             return contents
-# 
+#
 #     if contents := host.get_fact(FileContents, "/etc/s6.conf"):
 #         return contents
-# 
+#
 #     return None
 
 
 # def _get_value_from_conf(key: str, content: list[str] | None) -> str | None:
 #     """Get the value associated with a key in an s6-frontend configuration.
-# 
+#
 #     If no repodir is found, nothing is returned.
-# 
+#
 #     + key: the key associated with the value, e.g. "repodir".
 #     + content: the file contents, as a list of strings. if `None`, this function returns nothing.
 #     """
@@ -63,25 +60,25 @@ _rx_to_subcommand = {
 #             re.MULTILINE,
 #         ):
 #             return match.group(1)
-# 
+#
 #     return None
 
-    ## TODO edge case
-    # for line, next_line in itertools.pairwise(content):
-    #    # ignore commented, empty and whitespace lines
-    #    if line == "":
-    #        continue
-    #    elif re.search(r'^\s*#', line, re.ASCII):
-    #        continue
-    #    elif re.fullmatch(r'\s+', line, re.ASCII):
-    #        continue
+## TODO edge case
+# for line, next_line in itertools.pairwise(content):
+#    # ignore commented, empty and whitespace lines
+#    if line == "":
+#        continue
+#    elif re.search(r'^\s*#', line, re.ASCII):
+#        continue
+#    elif re.fullmatch(r'\s+', line, re.ASCII):
+#        continue
 
-    #    # line continuation detected
-    #    if line.endswith("\\"):
-    #        if next_line.endswith("\\"):
-    #            pass
-    #    elif "=" not in line:
-    #        return False
+#    # line continuation detected
+#    if line.endswith("\\"):
+#        if next_line.endswith("\\"):
+#            pass
+#    elif "=" not in line:
+#        return False
 
 
 # def _s6_frontend_repo_lookup(host: Host):
@@ -134,20 +131,20 @@ def _make_live_change_command(op: str, services: Sequence, livedir: str | None =
     if livedir:
         if op == "restart":
             return make_formatted_string_command(
-                    f"s6-rc -l {{{len(services)}}} -d change " +
-                    _make_format_fields(len(services)) +
-                    f" && s6-rc -l {{{len(services)}}} -u change " +
-                    _make_format_fields(len(services)),
-                    *map(QuoteString, services),
-                    QuoteString(livedir)
-                    )
+                f"s6-rc -l {{{len(services)}}} -d change "
+                + _make_format_fields(len(services))
+                + f" && s6-rc -l {{{len(services)}}} -u change "
+                + _make_format_fields(len(services)),
+                *map(QuoteString, services),
+                QuoteString(livedir),
+            )
         # translate s6 frontend arguments to s6-rc arguments
         op = "-u" if op == "start" else "-d"
         return make_formatted_string_command(
-                f"s6-rc -l {{{len(services)}}} {op} change " + _make_format_fields(len(services)),
-                *map(QuoteString, services),
-                QuoteString(livedir)
-                )
+            f"s6-rc -l {{{len(services)}}} {op} change " + _make_format_fields(len(services)),
+            *map(QuoteString, services),
+            QuoteString(livedir),
+        )
 
     return make_formatted_string_command(
         f"s6 live {op} " + _make_format_fields(len(services)), *map(QuoteString, services)
@@ -218,7 +215,7 @@ def _make_all_set_change_commands(
     prescriptions: dict,
     repodir: str | None = None,
     the_set: str = "current",
-    #force_prescriptions: bool = True,
+    # force_prescriptions: bool = True,
 ):
     """Returns all commands necessary to bring the prescriptions to the desired state.
 
@@ -272,7 +269,11 @@ def _make_all_set_change_commands(
     #     )
 
     if prescriptions == {}:
-       return [None] * 3 + [ _make_set_change_command(current_rxs.keys(), current_rxs, "masked", repodir, the_set=the_set) ]
+        return [None] * 3 + [
+            _make_set_change_command(
+                list(current_rxs.keys()), current_rxs, "masked", repodir, the_set=the_set
+            )
+        ]
 
     return [
         _make_set_change_command(
@@ -280,6 +281,7 @@ def _make_all_set_change_commands(
         )
         for wanted_rx, service_set in service_bins.items()
     ]
+
 
 @operation(is_idempotent=False)
 def set_create(name: str, repodir: str | None = None):
@@ -420,15 +422,20 @@ def live_install(repodir: str | None = None, the_set: str = "current", livedir: 
     """
     if repodir:
         if livedir:
-            yield make_formatted_string_command("s6-rc-set-install -r {0} -l {1} {2}",
-                                                QuoteString(repodir), QuoteString(livedir),
-                                                QuoteString(the_set))
+            yield make_formatted_string_command(
+                "s6-rc-set-install -r {0} -l {1} {2}",
+                QuoteString(repodir),
+                QuoteString(livedir),
+                QuoteString(the_set),
+            )
         else:
-            yield make_formatted_string_command("s6-rc-set-install -r {0} {1}",
-                                                QuoteString(repodir), QuoteString(the_set))
+            yield make_formatted_string_command(
+                "s6-rc-set-install -r {0} {1}", QuoteString(repodir), QuoteString(the_set)
+            )
     elif livedir:
-        yield make_formatted_string_command("s6-rc-set-install -l {0} {1}",
-                                            QuoteString(livedir), QuoteString(the_set))
+        yield make_formatted_string_command(
+            "s6-rc-set-install -l {0} {1}", QuoteString(livedir), QuoteString(the_set)
+        )
     else:
         yield make_formatted_string_command("s6 live install -s {0}", QuoteString(the_set))
 
@@ -443,7 +450,7 @@ def manage_set(
     the_set: str = "current",
     present: bool = True,
     prescriptions: dict[Never, Never] | dict[str, str] | None = None,
-    #force_prescriptions: bool = True,
+    # force_prescriptions: bool = True,
     do_commit: bool = True,
     do_install: bool = False,
     repodir: str | None = None,
@@ -515,7 +522,9 @@ def manage_set(
         if prescriptions or prescriptions == {}:
             if any(
                 cmds := _make_all_set_change_commands(
-                    prescriptions, repodir, the_set=the_set#, force_prescriptions=force_prescriptions
+                    prescriptions,
+                    repodir,
+                    the_set=the_set,  # , force_prescriptions=force_prescriptions
                 )
             ):
                 noops.remove("prescribe")
@@ -637,15 +646,16 @@ def service(
             if some_up:
                 if livedir:
                     yield make_formatted_string_command(
-                            f"s6-rc -l {{{len(all_up_services)}}} -t {reload_timeout} reload " +
-                            _make_format_fields(len(all_up_services)), *map(QuoteString,
-                                                                            all_up_services), livedir
+                        f"s6-rc -l {{{len(all_up_services)}}} -t {reload_timeout} reload "
+                        + _make_format_fields(len(all_up_services)),
+                        *map(QuoteString, all_up_services),
+                        livedir,
                     )
                 else:
                     yield make_formatted_string_command(
-                            f"s6 live reload -t {reload_timeout} " +
-                            _make_format_fields(len(all_up_services)), *map(QuoteString,
-                                                                            all_up_services)
+                        f"s6 live reload -t {reload_timeout} "
+                        + _make_format_fields(len(all_up_services)),
+                        *map(QuoteString, all_up_services),
                     )
             else:
                 host.noop(f"all specified services are down: {', '.join(service)}")
@@ -660,7 +670,9 @@ def service(
 
         if enabled is False:
             yield from manage_set._inner(
-                the_set=the_set, repodir=repodir, prescriptions={srv: disabled_rx for srv in service}
+                the_set=the_set,
+                repodir=repodir,
+                prescriptions={srv: disabled_rx for srv in service},
             )
 
     if command:

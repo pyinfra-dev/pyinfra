@@ -61,9 +61,7 @@ class S6SetStatus(FactBase[dict[str, str]]):
         # s6-frontend opportunistically pretty-prints set status output. It should detect when the
         # terminal does not have a user behind it and fall back to the "service/rx" per line output,
         # but if there are output processing bugs, this behavior could be the cause.
-        return make_formatted_string_command(
-            "s6 set status -s {0}", QuoteString(the_set)
-        )
+        return make_formatted_string_command("s6 set status -s {0}", QuoteString(the_set))
         # extra escaping needed for make_formatted_string_command, but not in StringCommand
         # return make_formatted_string_command(
         #    '[ ! -z \\"$S6_CONF\\" ] || S6_CONF=/etc/s6.conf && envfile \\"$S6_CONF\\" sh -c \\\'s6-rc-set-status -r \\"$repodir\\" {0}\\\'; echo EXIT CODE: $?',
@@ -80,9 +78,9 @@ class S6SetStatus(FactBase[dict[str, str]]):
             return
 
         return {
-            triplet[0]: triplet[-1]
-            for triplet in map(lambda line: line.partition("/"), output)
+            triplet[0]: triplet[-1] for triplet in map(lambda line: line.partition("/"), output)
         }
+
 
 class S6LiveStatus(FactBase[dict[str, bool]]):
     """Returns a dict of name -> status for each service in the live state.
