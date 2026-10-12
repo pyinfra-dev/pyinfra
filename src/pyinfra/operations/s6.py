@@ -289,7 +289,9 @@ def set_create(name: str, repodir: str | None = None):
             "s6-rc-set-new -r {0} {1}", QuoteString(repodir), QuoteString(name)
         )
     else:
-        yield make_formatted_string_command("s6-rc-set-new -r {0}", QuoteString(name))
+        # TODO there is no s6-frontend command equivalent, so repodir must be given or it will fall
+        # back to compiled-in default, not frontend repodir
+        yield make_formatted_string_command("s6-rc-set-new {0}", QuoteString(name))
 
 
 @operation(is_idempotent=False)
@@ -643,13 +645,14 @@ def service(
     # TODO: test masked services present in `services` arg on a real system
     if enabled is not None:
         if enabled is True:
+            # TODO do_commit always on here, no option to set it in s6.service()
             yield from manage_set._inner(
-                the_set=the_set, prescriptions={srv: enabled_rx for srv in service}
+                the_set=the_set, repodir=repodir, prescriptions={srv: enabled_rx for srv in service}
             )
 
         if enabled is False:
             yield from manage_set._inner(
-                the_set=the_set, prescriptions={srv: disabled_rx for srv in service}
+                the_set=the_set, repodir=repodir, prescriptions={srv: disabled_rx for srv in service}
             )
 
     if command:
