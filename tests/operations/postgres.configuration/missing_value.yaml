@@ -1,0 +1,5 @@
+args:
+  - work_mem
+exception:
+  name: OperationError
+  message: "`value` is required when `present` is True"

@@ -1,0 +1,14 @@
+args:
+  - idle_in_transaction_session_timeout
+kwargs:
+  value: "30s"
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      idle_in_transaction_session_timeout:
+        value: "30000"
+        unit: ms
+        source: configuration file
+        context: user
+commands: []
+noop_description: "postgresql setting idle_in_transaction_session_timeout is already set to 30s"
