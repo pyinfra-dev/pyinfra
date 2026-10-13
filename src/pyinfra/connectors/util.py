@@ -156,9 +156,9 @@ def read_buffer(
 def read_output_buffers(
     stdout_buffer: Iterable,
     stderr_buffer: Iterable,
-    timeout: int | None,
-    print_output: bool,
-    print_prefix: str,
+    timeout: int | None = None,
+    print_output: bool = False,
+    print_prefix: str = "",
 ) -> CommandOutput:
     output_queue: Queue[OutputLine] = Queue()
 
