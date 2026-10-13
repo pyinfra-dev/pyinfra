@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import difflib
 import re
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from enum import Enum
 from collections.abc import Callable, Generator
 
@@ -218,7 +218,7 @@ def touch(
         args.append("-h")
 
     # don't reinvent the wheel; use isoformat()
-    timestr = timesrc.astimezone(timezone.utc).isoformat()
+    timestr = timesrc.astimezone(UTC).isoformat()
     # but replace the ISO format TZ offset with "Z" for BSD
     timestr = timestr.replace("+00:00", "Z")
     args.extend(["-d", timestr])
