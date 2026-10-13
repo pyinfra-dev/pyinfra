@@ -6,6 +6,7 @@ Linux/BSD.
 from __future__ import annotations
 
 import os
+from collections.abc import Generator
 from io import StringIO
 from itertools import filterfalse, tee
 from time import sleep
@@ -1034,6 +1035,7 @@ def user(
     comment: str | None = None,
     unique=True,
     password: str | None = None,
+    password_lock: bool | None = None,
 ):
     """
     Add/remove/update system users & their ssh `authorized_keys`.
@@ -1054,6 +1056,7 @@ def user(
     + comment: the user GECOS comment
     + unique: prevent creating users with duplicate UID
     + password: set the encrypted password for the user
+    + password_lock: whether the user's password should be locked (``True``) or unlocked (``False``)
 
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
@@ -1064,6 +1067,12 @@ def user(
     Public keys:
         These can be provided as strings containing the public key or as a path to
         a public key file which pyinfra will read.
+
+    Password lock:
+        New users created without a ``password`` have a locked password on most Linux
+        systems. ``password_lock=False`` unlocks the password, or deletes it (making it
+        empty) when there is no password hash to unlock, so the user can set one with
+        ``passwd``. Only supported on Linux and FreeBSD.
 
     **Examples:**
 
@@ -1081,6 +1090,12 @@ def user(
             shell="/bin/bash",
         )
 
+        server.user(
+            name="Ensure alice exists and can set her own password",
+            user="alice",
+            password_lock=False,
+        )
+
         # multiple users
         for user in ["kevin", "bob"]:
             server.user(
@@ -1094,6 +1109,10 @@ def user(
     existing_groups = host.get_fact(Groups)
     existing_user = users.get(user)
     os_type = host.get_fact(Os)
+
+    if password_lock is not None and os_type not in ("Linux", "FreeBSD"):
+        raise OperationError("password_lock is only supported on Linux and FreeBSD")
+
     if groups is None:
         groups = []
 
@@ -1192,6 +1211,9 @@ def user(
                 raise OperationError("useradd is not installed")
             yield StringCommand("useradd", *args, QuoteString(user))
 
+        # useradd (but not pw useradd) leaves users without a password locked
+        current_password = password or ("*" if os_type == "FreeBSD" else "!")
+
     # User exists and we want them, check home/shell/keys/password
     else:
         mod_args: list[str | QuoteString | StringCommand] = []
@@ -1226,7 +1248,10 @@ def user(
         if comment and existing_user["comment"] != comment:
             mod_args.extend(["-c", QuoteString(comment)])
 
+        current_password = existing_user.get("password") or ""
+
         if password and existing_user["password"] != password:
+            current_password = password
             if os_type == "FreeBSD":
                 yield StringCommand(
                     "echo",
@@ -1255,6 +1280,9 @@ def user(
                     raise OperationError("usermod is not installed")
                 yield StringCommand("usermod", *mod_args, QuoteString(user))
 
+    if password_lock is not None:
+        yield from _user_password_lock(user, current_password, password_lock, os_type)
+
     # Ensure home directory ownership
     if ensure_home and home:
         yield from files.directory._inner(
@@ -1275,6 +1303,35 @@ def user(
             authorized_key_directory=f"{home}/.ssh",
             authorized_key_filename=None,
         )
+
+
+def _user_password_lock(
+    user: str,
+    current_password: str,
+    password_lock: bool,
+    os_type: str,
+) -> Generator[StringCommand, None, None]:
+    lock_prefix = "*LOCKED*" if os_type == "FreeBSD" else "!"
+    is_locked = current_password.startswith(lock_prefix)
+
+    if password_lock is is_locked:
+        host.noop(f"password for user {user} is already {'locked' if is_locked else 'unlocked'}")
+        return
+
+    if os_type == "FreeBSD":
+        yield StringCommand("pw", "lock" if password_lock else "unlock", QuoteString(user))
+        return
+
+    if password_lock:
+        yield StringCommand("usermod", "-L", QuoteString(user))
+        return
+
+    # `usermod -U` refuses to unlock a password with no hash behind the lock, as that
+    # would leave an empty password, so delete the password instead.
+    if current_password.lstrip("!") in ("", "*"):
+        yield StringCommand("passwd", "-d", QuoteString(user))
+    else:
+        yield StringCommand("usermod", "-U", QuoteString(user))
 
 
 @operation()
