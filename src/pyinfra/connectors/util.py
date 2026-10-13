@@ -214,6 +214,18 @@ def execute_command_with_sudo_retry(
     if return_code != 0 and output and output.combined_lines:
         for line in reversed(output.combined_lines):
             if line.line.strip() in SUDO_PASSWORD_REQUIRED_LINES:
+                # Re-running only helps when the command is executed with sudo, otherwise
+                # the prompted password cannot be applied and the command just runs (and
+                # fails) a second time. Return the failed result so the usual failure
+                # handling (fail_hosts, _ignore_errors, --fail-percent) applies:
+                # https://github.com/pyinfra-dev/pyinfra/issues/940
+                if not command_arguments.get("_sudo"):
+                    logger.warning(
+                        "sudo is asking for a password but the command was not run with "
+                        "`_sudo`, not re-running it. Run the operation with `_sudo=True` "
+                        "so the whole command (or script) runs as root."
+                    )
+                    break
                 # If we need a password, ask the user for it and attach to the host
                 # internal connector data for use when executing future commands.
                 sudo_password = getpass(f"{host.print_prefix}sudo password: ")
