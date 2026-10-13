@@ -58,7 +58,7 @@ jobs:
       - spell-check
     strategy:
       matrix:
-        os: [macos-27, macos-26, macos-15, macos-14, windows-2025, windows-2022, ubuntu-26.04, ubuntu-22.04]
+        os: [macos-27, macos-26, macos-15, macos-14, windows-2025, windows-2022, ubuntu-26.04, ubuntu-24.04, ubuntu-22.04]
         # Test every OS vs. the default Python version (the newest stable release), and only one for
         # supported Python versions below that
         python-version: ["3.15"]
