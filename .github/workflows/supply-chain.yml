@@ -31,9 +31,10 @@ jobs:
       - name: Download osv-scanner
         run: |
           OSV_SCANNER_VERSION=2.7.0
-          curl -sSfL "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64" -o osv-scanner
+          curl -sSfL "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64" -o osv-scanner_linux_amd64
           curl -sSfL "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_SHA256SUMS" -o SHA256SUMS
           grep 'osv-scanner_linux_amd64$' SHA256SUMS | sha256sum -c -
+          mv osv-scanner_linux_amd64 osv-scanner
           chmod +x osv-scanner
       - name: Scan dependencies
         id: scan
