@@ -125,3 +125,58 @@ class TestDeploysApi(PatchSSHTestCase):
         assert state.ops[somehost][third_op_hash].operation_meta._commands == [
             StringCommand("echo second command"),
         ]
+
+    def test_deploy_signature_global_argument_defaults(self):
+        inventory = make_inventory()
+        somehost = inventory.get_host("somehost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+
+        connect_all(state)
+
+        @deploy()
+        def test_nested_deploy():
+            server.shell(commands=["echo nested command"])
+
+        @deploy()
+        def test_default_deploy(_sudo=True):
+            server.shell(commands=["echo default command"])
+
+        @deploy()
+        def test_deploy(_sudo=True):
+            server.shell(commands=["echo first command"])
+            test_nested_deploy()
+
+        @deploy()
+        def test_no_sudo_deploy(_sudo=False):
+            test_default_deploy()
+
+        add_deploy(state, test_deploy)
+        add_deploy(state, test_no_sudo_deploy)
+        add_deploy(state, test_default_deploy, _sudo=False)
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 4
+
+        # The _sudo=True signature default applies when the deploy is called bare
+        assert state.op_meta[op_order[0]].names == {"test_deploy | server.shell"}
+        assert state.ops[somehost][op_order[0]].global_arguments["_sudo"] is True
+
+        # Nested deploys inherit the signature default via the deploy context
+        assert state.op_meta[op_order[1]].names == {
+            "test_deploy | test_nested_deploy | server.shell",
+        }
+        assert state.ops[somehost][op_order[1]].global_arguments["_sudo"] is True
+
+        # Signature defaults take precedence over the enclosing deploy context
+        assert state.op_meta[op_order[2]].names == {
+            "test_no_sudo_deploy | test_default_deploy | server.shell",
+        }
+        assert state.ops[somehost][op_order[2]].global_arguments["_sudo"] is True
+
+        # Explicitly passed arguments override the signature default
+        assert state.op_meta[op_order[3]].names == {"test_default_deploy | server.shell"}
+        assert state.ops[somehost][op_order[3]].global_arguments["_sudo"] is False
+
+        disconnect_all(state)
