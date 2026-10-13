@@ -1,0 +1,12 @@
+{
+    "args": [["foo[bar]"]],
+    "facts": {
+        "pip.PipVersion": {
+            "pip=pip": "21.0"
+        }
+    },
+    "exception": {
+        "names": ["OperationError"],
+        "message": "pip >= 22.2 is required to install packages with extras (e.g. foo[bar]); found 21.0"
+    }
+}
