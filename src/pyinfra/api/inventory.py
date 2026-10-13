@@ -4,8 +4,10 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 from collections.abc import Iterator
 
-from .connectors import get_all_connectors, get_execution_connectors
-from .exceptions import NoConnectorError, NoGroupError, NoHostError
+from pyinfra.connectors.base import BaseConnector
+
+from .connectors import get_connector, get_execution_connector
+from .exceptions import NoGroupError, NoHostError
 from .host import Host
 
 if TYPE_CHECKING:
@@ -38,6 +40,7 @@ class Inventory:
 
     state: State
     groups: dict[str, list[Host]]
+    _default_connector_cls: type[BaseConnector] | None
 
     @staticmethod
     def empty():
@@ -50,6 +53,10 @@ class Inventory:
         self.group_data: dict[str, dict] = defaultdict(dict)  # dict of name -> data
         self.override_data = override_data or {}
 
+        # Resolved on first use: an inventory naming only execution connectors, or naming
+        # no host at all, never imports the default one.
+        self._default_connector_cls = None
+
         names, data = names_data
 
         # Assign global data
@@ -58,10 +65,21 @@ class Inventory:
         # Create the actual host instances and groups
         self.make_hosts_and_groups(names, groups)
 
-    def make_hosts_and_groups(self, names, groups) -> None:
-        all_connectors = get_all_connectors()
-        execution_connectors = get_execution_connectors()
+    def _get_default_connector_cls(self) -> type[BaseConnector]:
+        """
+        Connector used for hosts that name none, and for connectors that only provide names.
 
+        Resolved once per inventory, so a large inventory does not rescan the entry points
+        for every host.
+        """
+
+        if self._default_connector_cls is None:
+            # Default to executing commands with the ssh connector
+            self._default_connector_cls = get_execution_connector("ssh")
+
+        return self._default_connector_cls
+
+    def make_hosts_and_groups(self, names, groups) -> None:
         # Map name -> data
         name_to_data: dict[str, dict] = defaultdict(dict)
         # Map name -> group names
@@ -87,9 +105,6 @@ class Inventory:
         for name, _ in extract_name_data(names):
             host_data = name_to_data[name]
 
-            # Default to executing commands with the ssh connector
-            connector_cls = execution_connectors["ssh"]
-
             if name[0] == "@":
                 connector_name = name[1:]
                 arg_string = None
@@ -97,18 +112,21 @@ class Inventory:
                 if "/" in connector_name:
                     connector_name, arg_string = connector_name.split("/", 1)
 
-                if connector_name not in get_all_connectors():
-                    raise NoConnectorError(
-                        f"Invalid connector: {connector_name}",
-                    )
+                # Imports this connector only: installed packages that cannot be imported
+                # are only a problem when something asks for one.
+                connector = get_connector(connector_name)
 
-                # Execution connector? Simple, just set it for their host
-                if connector_name in execution_connectors:
-                    connector_cls = execution_connectors[connector_name]
+                # Execution connector? Simple, just set it for their host. Connectors that
+                # only provide names (eg @terraform) leave the default in place.
+                if connector.handles_execution:
+                    connector_cls = connector
+                else:
+                    connector_cls = self._get_default_connector_cls()
 
-                names_data = all_connectors[connector_name].make_names_data(arg_string)
+                names_data = connector.make_names_data(arg_string)
                 connector_inventory_name = name
             else:
+                connector_cls = self._get_default_connector_cls()
                 names_data = [(name, {}, [])]
                 connector_inventory_name = None
 
