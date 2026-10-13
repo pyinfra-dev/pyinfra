@@ -1,0 +1,4 @@
+args:
+  - web
+commands:
+  - supervisorctl remove web

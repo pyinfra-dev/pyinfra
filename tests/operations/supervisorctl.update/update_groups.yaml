@@ -1,0 +1,6 @@
+kwargs:
+  groups:
+    - workers
+    - web
+commands:
+  - supervisorctl update workers web

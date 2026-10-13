@@ -1,0 +1,11 @@
+args:
+  - web
+kwargs:
+  running: null
+  command: clear
+facts:
+  supervisorctl.SupervisorctlStatus:
+    "config_file=None, password=None, server_url=None, username=None":
+      web: true
+commands:
+  - supervisorctl clear web
