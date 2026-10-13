@@ -425,7 +425,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
     + hostname_file: the file that permanently sets the hostname
 
     Hostname file:
-        The hostname file only matters no systems that do not have ``hostnamectl``,
+        The hostname file only matters on systems that do not have ``hostnamectl``,
         which is part of ``systemd``.
 
         By default pyinfra will auto detect this by targeting ``/etc/hostname``
