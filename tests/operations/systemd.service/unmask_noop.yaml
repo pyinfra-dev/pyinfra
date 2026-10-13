@@ -1,0 +1,13 @@
+args:
+  - redis-server.service
+kwargs:
+  masked: false
+facts:
+  systemd.SystemdStatus:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: true
+  systemd.SystemdMasked:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: false
+commands: []
+noop_description: service redis-server.service is running

@@ -1,0 +1,19 @@
+requires_command: systemctl
+command: systemctl show --all --property Id --property UnitFileState '*'
+output:
+  - Id=vboxadd.service
+  - UnitFileState=enabled
+  - ""
+  - Id=vgauth.timer
+  - UnitFileState=disabled
+  - ""
+  - Id=x11-common.service
+  - UnitFileState=masked
+  - ""
+  - Id=cups.service
+  - UnitFileState=masked-runtime
+fact:
+  vboxadd.service: false
+  vgauth.timer: false
+  x11-common.service: true
+  cups.service: true
