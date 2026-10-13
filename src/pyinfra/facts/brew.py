@@ -95,7 +95,13 @@ class BrewPackages(FactBase[BrewPackingMapping]):
 
     @override
     def command(self) -> str:
-        return "brew list --versions"
+        return (
+            r'if brew --version | grep -q -E "Homebrew 0\."; then '
+            r"brew list --versions; "
+            r"else "
+            r"brew info --json --installed; "
+            r"fi"
+        )
 
     @override
     def requires_command(self) -> str:
@@ -105,6 +111,29 @@ class BrewPackages(FactBase[BrewPackingMapping]):
 
     @override
     def process(self, output: list[str]) -> BrewPackingMapping:
+        body = "\n".join(output).strip()
+        if body.startswith("["):
+            try:
+                data = json.loads(body)
+                if not isinstance(data, list):
+                    logger.warning(f"unexpected structure from brew info: '{body}'")
+                    return self.default()
+
+                packages: BrewPackingMapping = {}
+                for form in data:
+                    versions = {
+                        item["version"]
+                        for item in form.get("installed", [])
+                        if isinstance(item, dict) and "version" in item
+                    }
+                    if versions:
+                        for key in ("name", "full_name"):
+                            if key in form:
+                                packages.setdefault(form[key], set()).update(versions)
+                return packages
+            except (json.JSONDecodeError, TypeError, RecursionError, AttributeError):
+                logger.warning(f"unexpected output from brew info: '{body}'")
+                return self.default()
         return parse_packages(BREW_REGEX, output)
 
 
@@ -125,6 +154,10 @@ class BrewCasks(BrewPackages):
             r'if brew --version | grep -q -e "Homebrew\ +(1\.|2\.[0-5]).*" 1>/dev/null;'
             r"then brew cask list --versions; else brew list --cask --versions; fi"
         )
+
+    @override
+    def process(self, output: list[str]) -> BrewPackingMapping:
+        return parse_packages(BREW_REGEX, output)
 
     @override
     def requires_command(self) -> str:

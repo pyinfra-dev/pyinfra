@@ -811,7 +811,9 @@ def sync(
 
 @memoize
 def show_rsync_warning() -> None:
-    logger.warning("The `files.rsync` operation is in alpha!")
+    logger.warning(
+        "The `files.rsync` operation is in alpha and deletes extra remote files by default!"
+    )
 
 
 @operation(is_idempotent=False)
@@ -824,6 +826,10 @@ def rsync(src: str, dest: str, flags: list[str] | None = None):
         The ``files.rsync`` operation is in alpha, and only supported using SSH
         or ``@local`` connectors. When using the SSH connector, rsync will automatically use the
         StrictHostKeyChecking setting, config and known_hosts file (when specified).
+
+    .. warning::
+        The default flags are ``["-ax", "--delete"]``, so remote files missing from ``src`` are
+        deleted. Pass ``flags=["-ax"]`` to preserve extra remote files.
 
     .. caution::
         When using SSH, the ``files.rsync`` operation only supports the ``sudo``, ``sudo_user``,
