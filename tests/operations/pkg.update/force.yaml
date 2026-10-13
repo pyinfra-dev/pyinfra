@@ -1,0 +1,4 @@
+kwargs:
+  force: true
+commands:
+  - pkg update -f
