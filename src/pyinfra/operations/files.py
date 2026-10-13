@@ -1041,8 +1041,9 @@ def put(
     + mtime: value of mtime the file should have, use ``True`` to match the local file
 
     ``dest``:
-        If this is a directory that already exists on the remote side, the local
-        file will be uploaded to that directory with the same filename.
+        If this is a directory that already exists on the remote side, or the
+        destination ends with a trailing slash, the file will be uploaded to
+        that directory with the same filename.
 
     ``mode``:
         When set to ``True`` the permissions of the local file are applied to the
@@ -1137,7 +1138,9 @@ def put(
 
     remote_file = host.get_fact(File, path=dest)
 
-    if not remote_file and bool(host.get_fact(Directory, path=dest)):
+    if not remote_file and (
+        (isinstance(dest, str) and dest.endswith("/")) or bool(host.get_fact(Directory, path=dest))
+    ):
         # A file-like ``src`` has no filename to append to the directory, so the
         # destination is ambiguous. Raise a clear error rather than a bare
         # ``AssertionError`` from the ``isinstance`` check below (#1144).
@@ -1146,6 +1149,7 @@ def put(
                 "When `src` is a file-like object, `dest` must be a full file "
                 "path, not a directory",
             )
+
         dest = unix_path_join(dest, Path(src).name)
         remote_file = host.get_fact(File, path=dest)
 
