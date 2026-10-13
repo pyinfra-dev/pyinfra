@@ -1,12 +1,20 @@
 from base64 import b64decode
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
 import pytest
+from packaging.requirements import Requirement
 from paramiko import PKey, ProxyCommand, SSHException
+from paramiko.ed25519key import Ed25519Key
 
 from pyinfra.connectors.sshuserclient import SSHClient
-from pyinfra.connectors.sshuserclient.client import AskPolicy, get_host_keys, get_ssh_config
+from pyinfra.connectors.sshuserclient.client import (
+    AskPolicy,
+    StrictPolicy,
+    get_host_keys,
+    get_ssh_config,
+)
 
 CERT_KEY_TYPE = "ssh-ed25519-cert-v01@openssh.com"
 
@@ -65,6 +73,22 @@ Host device
     ProxyJump jump
     ConnectTimeout 5
     User deviceuser
+"""
+
+SSH_CONFIG_NESTED_PROXYJUMP = """
+Host first
+    HostName first.example.com
+    User firstuser
+
+Host hop
+    HostName 127.0.0.1
+    User hopuser
+    ProxyJump first
+
+Host target
+    HostName target.example.com
+    User targetuser
+    ProxyJump hop
 """
 
 SSH_CONFIG_CONNECTTIMEOUT = """
@@ -441,6 +465,27 @@ class TestSSHUserConfig(TestCase):
         _, gw_kwargs = fake_gateway.call_args
         assert gw_kwargs["timeout"] == 5
 
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_NESTED_PROXYJUMP),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_NESTED_PROXYJUMP),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_connect_preserves_nested_proxyjump_sock(self, fake_gateway, fake_paramiko_connect):
+        fake_gateway.side_effect = ["inner-sock", "outer-sock"]
+
+        client = SSHClient()
+        client.connect("target")
+
+        assert fake_paramiko_connect.call_args_list[1].args == ("127.0.0.1",)
+        assert fake_paramiko_connect.call_args_list[1].kwargs["sock"] == "inner-sock"
+
     @patch("pyinfra.connectors.sshuserclient.client.open", mock_open(), create=True)
     @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
     def test_test_paramiko_connect_kwargs(self, fake_paramiko_connect):
@@ -665,6 +710,85 @@ def test_get_host_keys_skips_unparsable_lines(tmp_path):
     assert keys[example_keytype].get_base64() == example_key
 
 
+def test_strict_policy_accepts_matching_cert_authority(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority 192.168.1.* {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    StrictPolicy().missing_host_key(client, "192.168.1.236", server_key)
+
+
+def test_strict_policy_accepts_matching_cert_authority_on_nondefault_port(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority 192.168.1.* {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    StrictPolicy().missing_host_key(client, "[192.168.1.236]:2231", server_key)
+
+
+def test_strict_policy_accepts_bracketed_cert_authority_on_nondefault_port(
+    ssh_ca_keypair, tmp_path
+):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority [192.168.1.236]:2231 {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    StrictPolicy().missing_host_key(client, "[192.168.1.236]:2231", server_key)
+
+
+def test_strict_policy_honors_bracketed_cert_authority_negation(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority *,![192.168.1.236]:2231 {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    with pytest.raises(SSHException, match="No host key for"):
+        StrictPolicy().missing_host_key(client, "[192.168.1.236]:2231", server_key)
+
+
+def test_strict_policy_rejects_nonmatching_cert_authority(ssh_ca_keypair, tmp_path):
+    known_hosts = tmp_path / "known_hosts"
+    ca_public_key = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().strip()
+    known_hosts.write_text(f"@cert-authority 10.0.0.* {ca_public_key}\n")
+
+    get_host_keys.cache = {}
+    client = SSHClient()
+    client._host_keys = get_host_keys((str(known_hosts),))
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+
+    with pytest.raises(SSHException, match="No host key for 192.168.1.236"):
+        StrictPolicy().missing_host_key(client, "192.168.1.236", server_key)
+
+
 def test_parse_config_keeps_key_filename_when_no_real_identityfile(
     tmp_path, _clear_ssh_config_cache
 ):
@@ -682,3 +806,18 @@ def test_parse_config_keeps_key_filename_when_no_real_identityfile(
 
     assert "pkey" not in cfg
     assert cfg["key_filename"] == [str(tmp_path / "does-not-exist")]
+
+
+def test_paramiko_floor_supports_ssh_client():
+    # PKey.from_type_string and pkey.UnknownKeyType were added in paramiko 3.2 (#1290)
+    tomllib = pytest.importorskip("tomllib")
+    pyproject = tomllib.loads(
+        (Path(__file__).parents[2] / "pyproject.toml").read_text(encoding="utf-8"),
+    )
+    spec = next(
+        Requirement(dep)
+        for dep in pyproject["project"]["dependencies"]
+        if Requirement(dep).name == "paramiko"
+    )
+    assert not spec.specifier.contains("3.1.0")
+    assert spec.specifier.contains("3.2.0")

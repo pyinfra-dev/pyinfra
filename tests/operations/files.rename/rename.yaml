@@ -1,0 +1,13 @@
+require_platform:
+  - Darwin
+  - Linux
+args:
+  - tmp/testfile
+  - tmp/renamed
+facts:
+  files.File:
+    path=tmp/testfile:
+      mode: 600
+    path=tmp/renamed:
+commands:
+  - mv tmp/testfile tmp/renamed

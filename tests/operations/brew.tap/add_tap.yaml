@@ -1,0 +1,11 @@
+args:
+  - homebrew/cask
+facts:
+  brew.BrewTaps: []
+  brew.BrewTrusted:
+    casks: []
+    commands: []
+    formulae: []
+    taps: []
+commands:
+  - brew tap homebrew/cask

@@ -15,6 +15,7 @@ from pyinfra.facts.apt import (
     AptSourcesFile,
     AptSources,
     SimulateOperationWillChange,
+    apt_lock_timeout,
     noninteractive_apt,
     parse_apt_repo,
 )
@@ -29,13 +30,13 @@ APT_UPDATE_FILENAME = "/var/lib/apt/periodic/update-success-stamp"
 APT_KEYRING_DIRS = ["/etc/apt/trusted.gpg.d", "/etc/apt/keyrings", "/usr/share/keyrings"]
 
 
-def _simulate_then_perform(command: str):
+def _simulate_then_perform(command: str, wait_for_lock: bool | int = False):
     changes = host.get_fact(SimulateOperationWillChange, command)
 
     if not changes:
         # Simulating apt-get command failed, so the actual
         # operation will probably fail too:
-        yield noninteractive_apt(command)
+        yield noninteractive_apt(command, wait_for_lock=wait_for_lock)
     elif (
         changes["upgraded"] == 0
         and changes["newly_installed"] == 0
@@ -44,7 +45,7 @@ def _simulate_then_perform(command: str):
     ):
         host.noop(f"{command} skipped, no changes would be performed")
     else:
-        yield noninteractive_apt(command)
+        yield noninteractive_apt(command, wait_for_lock=wait_for_lock)
 
 
 def _sanitize_keyring_part(name: str) -> str:
@@ -388,13 +389,15 @@ def ppa(src: str, present=True):
 
 
 @operation()
-def deb(src: str, present=True, force=False):
+def deb(src: str, present=True, force=False, wait_for_lock: bool | int = False):
     """
     Add/remove ``.deb`` file packages.
 
     + src: filename or URL of the ``.deb`` file
     + present: whether or not the package should exist on the system
     + force: whether to force the package install by passing `--force-yes` to apt
+    + wait_for_lock: wait for the apt lock instead of failing instantly, ``True``
+      waits up to 60 seconds, an integer sets the timeout in seconds
 
     Note:
         When installing, ``apt-get install -f`` will be run to install any unmet
@@ -448,7 +451,7 @@ def deb(src: str, present=True, force=False):
                 "2> /dev/null || true",
             )
             # Attempt to install any missing dependencies
-            yield f"{noninteractive_apt('install', force=force)} -f"
+            yield f"{noninteractive_apt('install', force=force, wait_for_lock=wait_for_lock)} -f"
             # Now reinstall, and critically configure, the package - if there are still
             # missing deps, now we error
             yield StringCommand("dpkg --force-confdef --force-confold -i", QuoteString(src))
@@ -459,7 +462,8 @@ def deb(src: str, present=True, force=False):
     if not present:
         if exists:
             yield StringCommand(
-                noninteractive_apt("remove", force=force), QuoteString(info["name"])
+                noninteractive_apt("remove", force=force, wait_for_lock=wait_for_lock),
+                QuoteString(info["name"]),
             )
         else:
             host.noop(f"deb {original_src} is not installed")
@@ -472,11 +476,13 @@ def deb(src: str, present=True, force=False):
         "unless the ``cache_time`` argument is provided."
     ),
 )
-def update(cache_time: int | None = None):
+def update(cache_time: int | None = None, wait_for_lock: bool | int = False):
     """
     Updates apt repositories.
 
     + cache_time: cache updates for this many seconds
+    + wait_for_lock: wait for the apt lock instead of failing instantly, ``True``
+      waits up to 60 seconds, an integer sets the timeout in seconds
 
     **Example:**
 
@@ -507,7 +513,10 @@ def update(cache_time: int | None = None):
                 host.noop("apt is already up to date")
                 return
 
-    yield "apt-get update"
+    if wait_for_lock:
+        yield f"apt-get {apt_lock_timeout(wait_for_lock)} update"
+    else:
+        yield "apt-get update"
 
     # Some apt systems (Debian) have the /var/lib/apt/periodic directory, but
     # don't bother touching anything in there - so pyinfra does it, enabling
@@ -520,11 +529,13 @@ _update = update  # noqa: E305
 
 
 @operation()
-def upgrade(auto_remove: bool = False):
+def upgrade(auto_remove: bool = False, wait_for_lock: bool | int = False):
     """
     Upgrades all apt packages.
 
     + auto_remove: removes transitive dependencies that are no longer needed.
+    + wait_for_lock: wait for the apt lock instead of failing instantly, ``True``
+      waits up to 60 seconds, an integer sets the timeout in seconds
 
     **Example:**
 
@@ -547,18 +558,20 @@ def upgrade(auto_remove: bool = False):
     if auto_remove:
         command.append("--autoremove")
 
-    yield from _simulate_then_perform(" ".join(command))
+    yield from _simulate_then_perform(" ".join(command), wait_for_lock=wait_for_lock)
 
 
 _upgrade = upgrade  # noqa: E305 (for use below where update is a kwarg)
 
 
 @operation()
-def dist_upgrade(auto_remove: bool = False):
+def dist_upgrade(auto_remove: bool = False, wait_for_lock: bool | int = False):
     """
     Updates all apt packages, employing dist-upgrade.
 
     + auto_remove: removes transitive dependencies that are no longer needed.
+    + wait_for_lock: wait for the apt lock instead of failing instantly, ``True``
+      waits up to 60 seconds, an integer sets the timeout in seconds
 
     **Example:**
 
@@ -574,7 +587,7 @@ def dist_upgrade(auto_remove: bool = False):
     if auto_remove:
         command.append("--autoremove")
 
-    yield from _simulate_then_perform(" ".join(command))
+    yield from _simulate_then_perform(" ".join(command), wait_for_lock=wait_for_lock)
 
 
 @operation()
@@ -591,6 +604,7 @@ def packages(
     purge=False,
     extra_install_args: str | None = None,
     extra_uninstall_args: str | None = None,
+    wait_for_lock: bool | int = False,
 ):
     """
     Install/remove/update packages & update apt.
@@ -608,6 +622,8 @@ def packages(
       are removed alongside the package
     + extra_install_args: additional arguments to the apt install command
     + extra_uninstall_args: additional arguments to the apt uninstall command
+    + wait_for_lock: wait for the apt lock instead of failing instantly, ``True``
+      waits up to 60 seconds, an integer sets the timeout in seconds
 
     Versions:
         Package versions can be pinned like apt: ``<pkg>=<version>``
@@ -644,10 +660,10 @@ def packages(
     """
 
     if update:
-        yield from _update._inner(cache_time=cache_time)
+        yield from _update._inner(cache_time=cache_time, wait_for_lock=wait_for_lock)
 
     if upgrade:
-        yield from _upgrade._inner()
+        yield from _upgrade._inner(wait_for_lock=wait_for_lock)
 
     install_command_args = ["install"]
     if no_recommends is True:
@@ -674,9 +690,15 @@ def packages(
         packages,
         host.get_fact(DebPackages),
         present,
-        install_command=noninteractive_apt(install_command, force=force),
-        uninstall_command=noninteractive_apt(uninstall_command, force=force),
-        upgrade_command=noninteractive_apt(upgrade_command, force=force),
+        install_command=noninteractive_apt(
+            install_command, force=force, wait_for_lock=wait_for_lock
+        ),
+        uninstall_command=noninteractive_apt(
+            uninstall_command, force=force, wait_for_lock=wait_for_lock
+        ),
+        upgrade_command=noninteractive_apt(
+            upgrade_command, force=force, wait_for_lock=wait_for_lock
+        ),
         version_join="=",
         latest=latest,
     )

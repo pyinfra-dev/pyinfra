@@ -5,7 +5,7 @@
 
 ## Inventory Files
 
-Inventory files contain groups of hosts. Groups are defined as a `list` or `tuple`. For example, this inventory creates two groups, `app_servers` and `db_servers`. Note that group names cannot start `_`:
+Inventory files contain groups of hosts. Groups are defined as a `list` or `tuple`. For example, this inventory creates two groups, `app_servers` and `db_servers`. Note that group names cannot start with `_`:
 
 ```python
 app_servers = [
@@ -193,7 +193,7 @@ ssh_key = "~/.ssh/some_key"
 ssh_key_password = "password for key"
 ```
 
-The [Connectors Index](connectors/index.md) contains full details of which data keys are available in each connector.
+The [Connectors Index](connectors.md) contains full details of which data keys are available in each connector.
 
 ## Global Arguments with Data
 

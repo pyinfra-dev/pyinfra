@@ -1,0 +1,12 @@
+args:
+  - remote-host.net
+facts:
+  server.Home: /home/pyinfra
+  files.Directory:
+    path=/home/pyinfra/.ssh:
+      mode: 700
+  files.FindInFile:
+    extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net:
+      - alias.net,remote-host.net,192.0.2.1 ssh-ed25519 AAAA
+commands: []
+noop_description: host key for remote-host.net already exists

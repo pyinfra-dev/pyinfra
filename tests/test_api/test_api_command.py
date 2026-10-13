@@ -38,6 +38,12 @@ class TestStringCommand(TestCase):
         assert cmd.get_raw_value() == "adsfg"
         assert str(cmd) == "*MASKED*"
 
+    def test_nested_masked(self):
+        """The command that runs must carry the value, not the mask two wrappers deep."""
+        cmd = StringCommand("--token ", HiddenValue(HiddenValue("s3cret")), _separator="")
+        assert cmd.get_raw_value() == "--token s3cret"
+        assert str(cmd) == "--token *MASKED*"
+
     def test_mixed_masked(self):
         cmd = StringCommand("some", "stuff", HiddenValue("mask me"), "other", "stuff")
         assert cmd.get_raw_value() == "some stuff mask me other stuff"
