@@ -392,7 +392,9 @@ def _get_fact(
         first_line = stderr_lines[0]
         if executor_kwargs.get("_sudo_user") and re.match(SUDO_REGEX, first_line):
             status = True
-        if executor_kwargs.get("_su_user") and any(re.match(regex, first_line) for regex in SU_REGEXES):
+        if executor_kwargs.get("_su_user") and any(
+            re.match(regex, first_line) for regex in SU_REGEXES
+        ):
             status = True
 
     if status:
