@@ -604,7 +604,7 @@ def service(
     This operation can manage multiple services at once.
 
     Note that this operation does not give as granular control over
-    prescriptions as the `manage_set` operation does; all services speecified
+    prescriptions as the `manage_set` operation does; all services specified
     will be assigned the same prescription if `enabled` is set.
     """
 
