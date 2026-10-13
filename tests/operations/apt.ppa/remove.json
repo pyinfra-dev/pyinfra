@@ -10,6 +10,6 @@
         "find_in_file:/etc/apt/sources.list": false
     },
     "commands": [
-        "apt-add-repository -y --remove \"ppa:some-repo\""
+        "apt-add-repository -y --remove ppa:some-repo"
     ]
 }

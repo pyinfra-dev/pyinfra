@@ -1,0 +1,69 @@
+{
+    "command": "ip -j addr show 2> /dev/null || ip addr show 2> /dev/null || ifconfig -a",
+    "output": [
+        "[",
+        "  {",
+        "    \"ifindex\": 2,",
+        "    \"ifname\": \"eth0\",",
+        "    \"flags\": [",
+        "      \"BROADCAST\",",
+        "      \"MULTICAST\",",
+        "      \"UP\",",
+        "      \"LOWER_UP\"",
+        "    ],",
+        "    \"mtu\": 1500,",
+        "    \"qdisc\": \"fq_codel\",",
+        "    \"operstate\": \"UP\",",
+        "    \"group\": \"default\",",
+        "    \"txqlen\": 1000,",
+        "    \"link_type\": \"ether\",",
+        "    \"address\": \"08:00:27:6d:95:c4\",",
+        "    \"broadcast\": \"ff:ff:ff:ff:ff:ff\",",
+        "    \"altnames\": [",
+        "      \"enx0800276d95c4\"",
+        "    ],",
+        "    \"addr_info\": [",
+        "      {",
+        "        \"family\": \"inet\",",
+        "        \"local\": \"192.168.1.2\",",
+        "        \"prefixlen\": 24,",
+        "        \"broadcast\": \"192.168.1.255\",",
+        "        \"scope\": \"global\",",
+        "        \"dynamic\": true,",
+        "        \"noprefixroute\": true,",
+        "        \"label\": \"eth0\",",
+        "        \"valid_life_time\": 31856,",
+        "        \"preferred_life_time\": 31856",
+        "      },",
+        "      {",
+        "        \"family\": \"inet6\",",
+        "        \"local\": \"2a01::01\",",
+        "        \"prefixlen\": 64,",
+        "        \"scope\": \"global\",",
+        "        \"dynamic\": true,",
+        "        \"noprefixroute\": true,",
+        "        \"valid_life_time\": 28879,",
+        "        \"preferred_life_time\": 28879",
+        "      }",
+        "    ]",
+        "  }",
+        "]"
+    ],
+    "fact": {
+        "eth0": {
+            "ether": "08:00:27:6d:95:c4",
+            "mtu": 1500,
+            "state": "UP",
+            "ipv4": {
+                "address": "192.168.1.2",
+                "mask_bits": 24,
+                "netmask": "255.255.255.0",
+                "broadcast": "192.168.1.255"
+            },
+            "ipv6": {
+                "address": "2a01::01",
+                "mask_bits": 64
+            }
+        }
+    }
+}

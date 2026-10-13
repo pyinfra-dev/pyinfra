@@ -1,0 +1,15 @@
+args:
+  - - git
+    - python-pip
+    - something=1.0
+    - another=1.1
+kwargs:
+  wait_for_lock: true
+facts:
+  deb.DebPackages:
+    something:
+      - "0.9"
+    another:
+      - "1.1"
+commands:
+  - DEBIAN_FRONTEND=noninteractive apt-get -y -o DPkg::Lock::Timeout=60 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install git python-pip something=1.0

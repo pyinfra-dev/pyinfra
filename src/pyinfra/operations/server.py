@@ -5,9 +5,9 @@ Linux/BSD.
 
 from __future__ import annotations
 
+import os
 from io import StringIO
 from itertools import filterfalse, tee
-from os import path
 from time import sleep
 from typing import TYPE_CHECKING
 
@@ -95,7 +95,13 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield FunctionCommand(capture_uptime, (), {})
 
-    yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
+    # Detach the reboot from the SSH session so the channel closes immediately.
+    # When the reboot is run inline, paramiko blocks on `recv_exit_status` for
+    # the remote process - that never returns when the connection goes through
+    # a still-alive ProxyCommand (#1708).
+    yield StringCommand(
+        "( sleep 1 && reboot ) </dev/null >/dev/null 2>&1 &",
+    )
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
@@ -179,7 +185,9 @@ def shell(commands: str | list[str]):
     """
     Run raw shell code on server during a deploy. If the command would
     modify data that would be in a fact, the fact would not be updated
-    since facts are only run at the start of a deploy.
+    since facts are only run at the start of a deploy. Commands run via the
+    configured shell, which defaults to ``sh``; use the ``_shell_executable``
+    global argument when a command needs Bash or another shell.
 
     + commands: command or list of commands to execute on the remote server
 
@@ -190,6 +198,12 @@ def shell(commands: str | list[str]):
         server.shell(
             name="Run lxd auto init",
             commands=["lxd init --auto"],
+        )
+
+        server.shell(
+            name="Source a Bash environment before building",
+            commands=["source /opt/example/setupvars.sh && make"],
+            _shell_executable="bash",
         )
     """
 
@@ -325,6 +339,8 @@ def mount(
     + path: the path of the mounted filesystem
     + mounted: whether the filesystem should be mounted
     + options: the mount options
+    + device: the device behind the mount
+    + fs_type: the filesystem type
 
     Options:
         If the currently mounted filesystem does not have all of the provided
@@ -373,14 +389,14 @@ def mount(
         mounted_options = mounts[mounted_path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            if host.get_fact(Kernel).strip() == "FreeBSD":
+            # the -u option is common among FreeBSD, OpenBSD, NetBSD, DragonFlyBSD
+            if "BSD" in host.get_fact(Kernel).strip():
                 fs_type = mounts[mounted_path]["type"]
                 device = mounts[mounted_path]["device"]
-
                 yield StringCommand(
                     "mount",
-                    "-o",
-                    StringCommand("update,", options_string, _separator=""),
+                    "-uo",
+                    StringCommand(options_string, _separator=""),
                     "-t",
                     fs_type,
                     QuoteString(device),
@@ -409,7 +425,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
     + hostname_file: the file that permanently sets the hostname
 
     Hostname file:
-        The hostname file only matters no systems that do not have ``hostnamectl``,
+        The hostname file only matters on systems that do not have ``hostnamectl``,
         which is part of ``systemd``.
 
         By default pyinfra will auto detect this by targeting ``/etc/hostname``
@@ -606,10 +622,12 @@ def timezone(timezone: str):
         return
 
     if host.get_fact(Which, command="timedatectl"):
-        yield f"timedatectl set-timezone {timezone}"
+        yield StringCommand("timedatectl set-timezone", QuoteString(timezone))
     else:
-        yield f"ln -sf /usr/share/zoneinfo/{timezone} /etc/localtime"
-        yield f"echo {timezone} > /etc/timezone"
+        yield StringCommand(
+            "ln -sf", QuoteString(f"/usr/share/zoneinfo/{timezone}"), "/etc/localtime"
+        )
+        yield StringCommand("echo", QuoteString(timezone), "> /etc/timezone")
 
 
 @operation()
@@ -928,9 +946,11 @@ def user_authorized_keys(
     def read_any_pub_key_file(key):
         try_path = key
         if state.cwd:
-            try_path = path.join(state.cwd, key)
+            try_path = os.path.join(state.cwd, key)
 
-        if path.exists(try_path):
+        # NOTE: os.path.exists swallows OSError (eg ENAMETOOLONG from long inline
+        # keys), whereas Path.exists re-raises it on Python < 3.14.
+        if os.path.exists(try_path):
             with open(try_path) as f:
                 return [key.strip() for key in f.readlines()]
 
@@ -1346,7 +1366,7 @@ def kill(pid: int, signal: str = "TERM"):
         )
     """
 
-    yield f"kill -{signal} {pid}"
+    yield StringCommand("kill", QuoteString(f"-{signal}"), QuoteString(str(pid)))
 
 
 @operation()

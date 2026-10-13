@@ -8,7 +8,17 @@ import urllib.parse
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.brew import BrewCasks, BrewPackages, BrewTaps, BrewVersion, new_cask_cli
+from pyinfra.api.command import QuoteString, StringCommand
+from pyinfra.api.exceptions import OperationValueError
+from pyinfra.facts.brew import (
+    BrewCasks,
+    BrewItemKind,
+    BrewPackages,
+    BrewTaps,
+    BrewTrusted,
+    BrewVersion,
+    _new_cask_cli,
+)
 
 from .util.packaging import ensure_packages
 
@@ -54,8 +64,13 @@ def packages(
     + update: run ``brew update`` before installing packages
     + upgrade: run ``brew upgrade`` before installing packages
 
-    Versions:
-        Package versions can be pinned like brew: ``<pkg>@<version>``.
+    !!! note
+        Homebrew maintains separate versions of certain formulae (e.g. `python`, `postgres` and
+        `node`) and multiple versions of these formulae can be installed at the same time
+        (e.g. `python@3.15` and `python@3.10`) but Homebrew does not otherwise support installing
+        a specific version of a formula (e.g. `rclone@1.75`).
+        When one adds one of these specific packages with `package@X.Y.Z`, brew will drop the
+        `Z` (if it was supplied) and install the latest sub-version of `X.Y` of `package`.
 
     **Examples:**
 
@@ -83,21 +98,33 @@ def packages(
     if upgrade:
         yield from _upgrade._inner()
 
+    # brew "versions" are really distinct packages and multi versions can be installed at one time
+    # (e.g. python@3.15 and python@3.10) thus we shouldn't use a version separator at all but
+    # instead maintains multiple packages thus there is no version separator passed to
+    # ensure_packages. One can, see https://docs.brew.sh/Versions#brew-version-install,
+    # pin a specific version (using brew pin) or "fork" the formula with `brew version-install`
+    # or `brew extract` but those are beyond the scope of pyinfra
+
+    packages = [packages] if isinstance(packages, str) else (packages or [])
+    if len(packages) < 1:
+        host.noop("no packages specified")
+        return
+
+    current = host.get_fact(BrewPackages)
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(BrewPackages),
+        current,
         present,
         install_command="brew install",
         uninstall_command="brew uninstall",
         upgrade_command="brew upgrade",
-        version_join="@",
         latest=latest,
     )
 
 
 def cask_args():
-    return ("", " --cask") if new_cask_cli(host.get_fact(BrewVersion)) else ("cask ", "")
+    return ("", " --cask") if _new_cask_cli(host.get_fact(BrewVersion)) else ("cask ", "")
 
 
 @operation(is_idempotent=False)
@@ -159,12 +186,18 @@ def casks(
 
 
 @operation()
-def tap(src: str | None = None, present=True, url: str | None = None):
+def tap(
+    src: str | None = None,
+    present: bool = True,
+    trusted: bool | None = False,
+    url: str | None = None,
+):
     """
     Add/remove brew taps.
 
     + src: the name of the tap
-    + present: whether this tap should be present or not
+    + present: whether this tap should be present or not. Default True.
+    + trusted: whether or not this tap should be trusted.  Default False.
     + url: the url of the tap. See https://docs.brew.sh/Taps
 
     **Examples:**
@@ -174,12 +207,14 @@ def tap(src: str | None = None, present=True, url: str | None = None):
         brew.tap(
             name="Add a brew tap",
             src="includeos/includeos",
+            trusted=True,
         )
 
         # Just url is equivalent to
         # `brew tap kptdev/kpt https://github.com/kptdev/kpt`
         brew.tap(
             url="https://github.com/kptdev/kpt",
+            trusted=True,
         )
 
         # src and url is equivalent to
@@ -187,6 +222,7 @@ def tap(src: str | None = None, present=True, url: str | None = None):
         brew.tap(
             src="example/project",
             url="https://github.example.com/project",
+            trusted=True,
         )
 
         # Multiple taps
@@ -194,9 +230,15 @@ def tap(src: str | None = None, present=True, url: str | None = None):
             brew.tap(
                 name={f"Add brew tap {tap}"},
                 src=tap,
+                trusted=True,
             )
 
     """
+
+    def mk_trust_cmd(tap: str, *, trust: bool | None = None) -> StringCommand:
+        return StringCommand("brew", "trust" if trust else "untrust", "--tap", QuoteString(tap))
+
+    trusted = trusted or False
 
     if not (src or url):
         host.noop("no tap was specified")
@@ -213,20 +255,69 @@ def tap(src: str | None = None, present=True, url: str | None = None):
 
     if present and already_tapped:
         host.noop(f"tap {src} already exists")
+        trusted_taps = host.get_fact(BrewTrusted).get("taps", [])
+        if (trusted and (src not in trusted_taps)) or ((not trusted) and (src in trusted_taps)):
+            yield mk_trust_cmd(src, trust=trusted)
         return
 
     if already_tapped:
-        yield f"brew untap {src}"
+        yield StringCommand("brew", "untap", QuoteString(src))
         return
 
     if not present:
         host.noop(f"tap {src} does not exist")
         return
 
-    cmd = f"brew tap {src}"
-
+    args = [QuoteString(src)]
     if url is not None:
-        cmd = " ".join([cmd, url])
+        args.append(QuoteString(url))
 
-    yield cmd
+    yield StringCommand("brew", "tap", *args)
+
+    if trusted:  # if not already present, can't be trusted so no check of BrewTrusted
+        yield mk_trust_cmd(src, trust=True)
+
     return
+
+
+TRUST_SRC_AND_OPTION = {
+    BrewItemKind.CASK: "--cask",
+    BrewItemKind.COMMAND: "--command",
+    BrewItemKind.FORMULA: "--formula",
+    BrewItemKind.TAP: "--tap",
+}
+
+
+@operation()
+def trust(items: str | list[str], kind: BrewItemKind, trusted: bool):
+    """
+    Trust/untrust brew casks, commands, formulae and/or taps (see https://docs.brew.sh/Tap-Trust)
+
+    + items: the cask, command, formula or tap to be trusted or untrusted
+    + kind: whether the item is a CASK, COMMAND, FORMULA or TAP (using BrewItemKind enum)
+    + trusted: whether this item should be trusted or not.  no default, must be specified
+
+    **Examples:**
+
+    .. code:: python
+
+        brew.trust(
+            name="Mark magic tap as trusted",
+            items="includeos/includeos",
+            kind=BrewItemKind.TAP,
+            trusted=True
+        )
+    """
+    item_set = set(items if isinstance(items, list) else [items])
+    if any(len(item) < 1 for item in item_set):
+        raise OperationValueError("all items must have non-zero length names")
+    desired_state = "trust" if trusted else "untrust"
+    trusted_items = set(host.get_fact(BrewTrusted).get(kind.value, []))
+    found = item_set & trusted_items
+    need_to_change = (item_set - found) if trusted else found
+    already_ok = item_set - need_to_change
+
+    for item in sorted(need_to_change):
+        yield StringCommand("brew", desired_state, TRUST_SRC_AND_OPTION[kind], QuoteString(item))
+    if len(already_ok) > 0:
+        host.noop(f"{', '.join(sorted(already_ok))} {kind.value} already {desired_state}ed")

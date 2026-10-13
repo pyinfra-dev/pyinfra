@@ -7,6 +7,6 @@
     },
     "commands": [
         "echo '* * * * * this_is_a_command' >> _tempfile_",
-        "crontab  _tempfile_"
+        "crontab _tempfile_"
     ]
 }

@@ -1,0 +1,16 @@
+{
+    "kwargs": {
+        "volume": "my_volume",
+        "driver": "local",
+        "options": ["type=nfs", "o=addr=192.168.1.100,rw,nfsvers=4.1", "device=:/exported/path"],
+        "present": true
+    },
+    "facts": {
+        "docker.DockerVolume": {
+            "object_id=my_volume": []
+        }
+    },
+    "commands": [
+        "docker volume create my_volume -d local --opt type=nfs --opt o=addr=192.168.1.100,rw,nfsvers=4.1 --opt device=:/exported/path"
+    ]
+}

@@ -19,24 +19,24 @@ def make_mysql_command(
     port: int | None = None,
     executable="mysql",
 ):
-    target_bits = [executable]
+    target_bits: list[str | StringCommand] = [executable]
 
     if database:
-        target_bits.append(database)
+        target_bits.append(StringCommand(QuoteString(database)))
 
     if user:
-        # Quote the username as in may contain special characters
-        target_bits.append(f'-u"{user}"')
+        # Quote the username as it may contain special characters
+        target_bits.append(StringCommand("-u", QuoteString(user), _separator=""))
 
     if password:
         # Quote the password as it may contain special characters
         target_bits.append(StringCommand("-p", QuoteString(HiddenValue(password)), _separator=""))
 
     if host:
-        target_bits.append(f"-h{host}")
+        target_bits.append(StringCommand("-h", QuoteString(host), _separator=""))
 
     if port:
-        target_bits.append(f"-P{port}")
+        target_bits.append(StringCommand("-P", QuoteString(str(port)), _separator=""))
 
     return StringCommand(*target_bits)
 

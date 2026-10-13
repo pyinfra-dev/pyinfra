@@ -3,7 +3,9 @@ The files facts provide information about the filesystem and it's contents on th
 
 Facts need to be imported before use, eg
 
-from pyinfra.facts.files import File
+.. code:: python
+
+    from pyinfra.facts.files import File
 """
 
 from __future__ import annotations
@@ -11,7 +13,7 @@ from __future__ import annotations
 import re
 import stat
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from typing_extensions import NotRequired, TypedDict, override
 from typing import Literal
@@ -218,7 +220,7 @@ class FileDict(TypedDict):
     link_target: NotRequired[str]
 
 
-class File(FactBase[Union[FileDict, Literal[False], None]]):
+class File(FactBase[FileDict | Literal[False] | None]):
     """
     Returns information about a file on the remote system:
 
@@ -367,8 +369,27 @@ class Socket(File):
     type = "socket"
 
 
+class SameFile(FactBase[bool]):
+    """
+    Returns ``True`` if ``path`` and ``target`` refer to the same file (same device and
+    inode, ie one is a hard link to the other), otherwise ``False``.
+    """
+
+    @override
+    def command(self, path: str, target: str) -> StringCommand:
+        return make_formatted_string_command(
+            "test {0} -ef {1} && echo true || echo false",
+            QuoteString(path),
+            QuoteString(target),
+        )
+
+    @override
+    def process(self, output: list[str]) -> bool:
+        return output == ["true"]
+
+
 if TYPE_CHECKING:
-    FactBaseOptionalStr = FactBase[Optional[str]]
+    FactBaseOptionalStr = FactBase[str | None]
 else:
     FactBaseOptionalStr = FactBase
 
@@ -381,30 +402,28 @@ class HashFileFactBase(FactBaseOptionalStr):
     def __init_subclass__(cls, digits: int, cmds: list[str], **kwargs) -> None:
         super().__init_subclass__(**kwargs)
 
-        raw_hash_cmds = [f"{cmd} {{0}} 2> /dev/null" for cmd in cmds]
+        # Read files through stdin so checksum tools never see the filename,
+        # avoiding GNU coreutils' backslash/newline escaping (see #1911).
+        raw_hash_cmds = [f"{cmd} < {{0}} 2> /dev/null" for cmd in cmds]
         raw_hash_cmd = " || ".join(raw_hash_cmds)
         cls._raw_cmd = f"test -e {{0}} && ( {raw_hash_cmd} ) || true"
 
-        assert cls.__name__.endswith("File")
-        hash_name = cls.__name__[:-4].upper()
         cls._regexes = (
-            # GNU coreutils style:
-            r"^([a-fA-F0-9]{%d})\s+%%s$" % digits,
-            # BSD style:
-            r"^%s\s+\(%%s\)\s+=\s+([a-fA-F0-9]{%d})$" % (hash_name, digits),
+            # GNU coreutils / shasum stdin style: "<hash>  -"
+            r"^([a-fA-F0-9]{%d})\s+-\s*$" % digits,  # noqa: UP031
+            # BSD digest stdin style: just "<hash>"
+            r"^([a-fA-F0-9]{%d})$" % digits,  # noqa: UP031
         )
 
     @override
     def command(self, path):
-        self.path = path
         return make_formatted_string_command(self._raw_cmd, QuoteString(path))
 
     @override
     def process(self, output) -> str | None:
         output = output[0]
-        escaped_path = re.escape(self.path)
         for regex in self._regexes:
-            matches = re.match(regex % escaped_path, output)
+            matches = re.match(regex, output)
             if matches:
                 return matches.group(1)
         return None
@@ -489,6 +508,7 @@ class FindFilesBase(FactBase):
         fname: str | None = None,
         iname: str | None = None,
         regex: str | None = None,
+        path_match: str | None = None,
         args: list[str] | None = None,
         quote_path=True,
     ):
@@ -507,6 +527,9 @@ class FindFilesBase(FactBase):
 
         @param iname: Like -name, but the match is case insensitive.
         @param regex: True if the whole path of the file matches pattern using regular expression.
+        @param path_match: glob matched against the whole path via ``-path``. The pattern is
+                           always shell-quoted so the shell passes it literally and find itself
+                           does the globbing, which keeps glob matching without an unquoted path.
         @param args: additional arguments to pass to find
         @param quote_path: if the path should be quoted
         @return:
@@ -559,6 +582,10 @@ class FindFilesBase(FactBase):
         if regex is not None and "-regex" not in args:
             command.append("-regex")
             command.append(maybe_quote(regex))
+
+        if path_match is not None and "-path" not in args:
+            command.append("-path")
+            command.append(QuoteString(path_match))
 
         command.extend(args)
 

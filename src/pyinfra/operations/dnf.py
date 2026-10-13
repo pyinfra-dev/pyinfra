@@ -37,7 +37,7 @@ def key(src: str):
 
     """
 
-    yield f"rpm --import {src}"
+    yield StringCommand("rpm --import", QuoteString(src))
 
 
 @operation()

@@ -7,6 +7,6 @@
         "rpm.RpmPackages": {}
     },
     "commands": [
-        "zypper --non-interactive install -y --foo docker-ce"
+        "zypper --non-interactive --gpg-auto-import-keys install -y --foo docker-ce"
     ]
 }

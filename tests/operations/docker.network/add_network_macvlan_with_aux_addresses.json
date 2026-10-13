@@ -16,6 +16,6 @@
         }
     },
     "commands": [
-        "docker network create nginx -d macvlan --gateway 192.168.1.1 --ip-range 192.168.1.192/27 --subnet 192.168.1.1/24 --aux-address 'host=192.168.1.223'"
+        "docker network create nginx -d macvlan --gateway 192.168.1.1 --ip-range 192.168.1.192/27 --subnet 192.168.1.1/24 --aux-address host=192.168.1.223"
     ]
 }

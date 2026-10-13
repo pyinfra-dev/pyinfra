@@ -1,0 +1,21 @@
+{
+    "args": ["x; reboot"],
+    "kwargs": {
+        "enabled": true
+    },
+    "facts": {
+        "openrc.OpenrcStatus": {
+            "runlevel=default": {
+                "x; reboot": true
+            }
+        },
+        "openrc.OpenrcEnabled": {
+            "runlevel=default": {
+                "x; reboot": false
+            }
+        }
+    },
+    "commands": [
+        "rc-update add 'x; reboot' default"
+    ]
+}

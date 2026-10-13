@@ -1,0 +1,9 @@
+{
+    "kwargs": {
+        "server": "x; reboot"
+    },
+    "commands": [
+        "puppet agent -t '--server=x; reboot'"
+    ],
+    "idempotent": false
+}

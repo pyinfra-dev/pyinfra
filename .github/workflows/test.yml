@@ -24,9 +24,11 @@ jobs:
         uses: astral-sh/setup-uv@v6
       - uses: astral-sh/ruff-action@v3
         with:
+          version-file: "pyproject.toml"
           args: "check --diff --unsafe-fixes"
       - uses: astral-sh/ruff-action@v3
         with:
+          version-file: "pyproject.toml"
           args: "format --diff"
 
   type-check:

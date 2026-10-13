@@ -245,6 +245,22 @@ def adjust_regex(line: str, escape_regex_characters: bool) -> str:
     return match_line
 
 
+def strip_regex_anchors(line: str) -> str:
+    """
+    Strip a leading ``^`` and trailing ``$`` regex anchor from a line.
+
+    Used when appending a missing line to a file: the user-supplied ``line`` is a
+    regex used to find existing matches, but the text written to the file must be
+    literal. Anchors that only have meaning while matching must not leak into the
+    file. An escaped trailing anchor (``\\$``) is left untouched.
+    """
+    if line.startswith("^"):
+        line = line[1:]
+    if line.endswith("$") and not line.endswith("\\$"):
+        line = line[:-1]
+    return line
+
+
 def generate_color_diff(
     current_lines: list[str], desired_lines: list[str]
 ) -> Generator[str, None, None]:

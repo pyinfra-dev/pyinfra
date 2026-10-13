@@ -1,0 +1,15 @@
+require_platform:
+  - Darwin
+  - Linux
+args:
+  - tmp/testfile
+  - tmp/renamed
+facts:
+  files.File:
+    path=tmp/testfile:
+      mode: 600
+    path=tmp/renamed:
+      mode: 600
+exception:
+  name: OperationError
+  message: dest tmp/renamed already exists and `overwrite` is unset

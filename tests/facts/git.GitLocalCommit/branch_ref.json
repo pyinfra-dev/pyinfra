@@ -3,7 +3,7 @@
         "repo": "myrepo",
         "ref": "mybranch"
     },
-    "command": "! test -d myrepo || (cd myrepo && git rev-parse mybranch 2>/dev/null)",
+    "command": "! test -d myrepo || (cd myrepo && git rev-parse mybranch 2>/dev/null) || true",
     "requires_command": "git",
     "output": [
         "1a2b3c4d5e6f7890abcdef1234567890abcdef12"

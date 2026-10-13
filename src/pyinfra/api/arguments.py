@@ -16,12 +16,15 @@ from typing_extensions import TypedDict
 from pyinfra.api.exceptions import ArgumentTypeError
 from pyinfra.api.util import raise_if_bad_type
 from pyinfra.context import ctx_config
+from pyinfra.api.hiddenvalue import HiddenValue
 
 if TYPE_CHECKING:
     from pyinfra.api import Config, Host, State
 
 T = TypeVar("T")
 default_sentinel = object()
+
+EnvValue = str | HiddenValue
 
 
 class ArgumentMeta(Generic[T]):
@@ -49,6 +52,7 @@ class ConnectorArguments(TypedDict, total=False):
     _use_sudo_login: bool
     _sudo_password: str
     _preserve_sudo_env: bool
+    _sudo_set_home: bool
     _su_user: str
     _use_su_login: bool
     _preserve_su_env: bool
@@ -62,7 +66,7 @@ class ConnectorArguments(TypedDict, total=False):
     # Shell arguments
     _shell_executable: str
     _chdir: str
-    _env: Mapping[str, str]
+    _env: Mapping[str, EnvValue]
 
     # Connector control (outside of command generation)
     _success_exit_codes: Iterable[int]
@@ -79,10 +83,13 @@ class ConnectorArguments(TypedDict, total=False):
     _temp_dir: str
 
 
-def generate_env(config: Config, value: dict) -> dict:
-    env = {key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ}
+def generate_env(config: Config, value: Mapping[str, EnvValue] | None) -> dict[str, EnvValue]:
+    env: dict[str, EnvValue] = {
+        key: os.environ[key] for key in config.INHERIT_ENV if key in os.environ
+    }
     env.update(config.ENV)
-    env.update(value)
+    if value is not None:
+        env.update(value)
     return env
 
 
@@ -106,6 +113,10 @@ auth_argument_meta: dict[str, ArgumentMeta] = {
     "_preserve_sudo_env": ArgumentMeta(
         "Preserve the shell environment of the connecting user when using sudo.",
         default=lambda config: config.PRESERVE_SUDO_ENV,
+    ),
+    "_sudo_set_home": ArgumentMeta(
+        "Set ``HOME`` to the target user's home directory when using sudo (``sudo -H``).",
+        default=lambda config: config.SUDO_SET_HOME,
     ),
     "_su_user": ArgumentMeta(
         "Execute/apply any changes with this user using su.",

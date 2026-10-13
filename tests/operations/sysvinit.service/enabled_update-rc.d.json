@@ -8,7 +8,7 @@
             "nginx": true
         },
         "files.FindLinks": {
-            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/etc/rc*.d/S*nginx, quote_path=False, regex=None, size=None": []
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/etc, path_match=/etc/rc*.d/S*nginx, quote_path=True, regex=None, size=None": []
         },
         "server.LinuxDistribution": {
             "name": "Ubuntu"

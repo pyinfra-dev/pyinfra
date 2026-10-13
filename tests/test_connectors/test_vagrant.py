@@ -67,7 +67,7 @@ class TestVagrantConnector(TestCase):
         mock_open(read_data=FAKE_VAGRANT_OPTIONS_DATA),
         create=True,
     )
-    @patch("pyinfra.connectors.vagrant.path.exists", lambda path: True)
+    @patch("pyinfra.connectors.vagrant.Path.exists", lambda self: True)
     def test_make_names_data_with_options(self):
         data = list(VagrantInventoryConnector.make_names_data())
 

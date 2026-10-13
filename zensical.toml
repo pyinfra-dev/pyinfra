@@ -20,6 +20,7 @@ nav = [
         { "Using Operations" = "using-operations.md" },
         { "Inventory & Data" = "inventory-data.md" },
         { "Using the CLI" = "cli.md" },
+        { "Debugging Deploys" = "debugging.md" },
         { "FAQ" = "faq.md" },
     ] },
     { "Deploy Reference" = [
@@ -41,6 +42,7 @@ nav = [
         { "Contributing" = "contributing.md" },
         { "Compatibility" = "compatibility.md" },
         { "Performance" = "performance.md" },
+        { "LLM-friendly docs" = "llms.md" },
         { "Changelog" = "changes.md" },
         { "API Reference" = "api/reference.md" },
     ] },
@@ -80,7 +82,6 @@ accent = "pyinfra"
 
 [project.extra]
 generator = false
-docs_version = "latest"
 primary_doc_version = "3.x"
 doc_versions = ["3.x", "2.x", "1.x", "0.x", "latest"]
 docs_language = "en"

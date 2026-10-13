@@ -1,0 +1,6 @@
+{
+  "args": [1234],
+  "kwargs": {"signal": "9; rm -rf /"},
+  "commands": ["kill '-9; rm -rf /' 1234"],
+  "idempotent": false
+}

@@ -1,0 +1,9 @@
+args:
+  - /opt/app
+kwargs:
+  package_import_method: hardlink
+facts:
+  pnpm.PnpmModulesUpToDate:
+    directory=/opt/app: true
+commands: []
+noop_description: "node_modules in /opt/app is up to date"

@@ -2,7 +2,8 @@ import json
 from os import path
 from unittest import TestCase
 
-from pyinfra_cli.cli import _main
+from pyinfra.api import Host, Inventory
+from pyinfra_cli.cli import _apply_inventory_exclude, _apply_inventory_limit, _main
 
 from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli
@@ -226,6 +227,107 @@ class TestJsonOutput(PatchSSHTestCase):
         assert payload["results"] is not None
         assert set(payload["results"].keys()) == {"operations", "totals", "failed_hosts"}
 
+    def test_json_deploy_with_exclude(self):
+        result = run_cli(
+            "-y",
+            "--json",
+            "--exclude",
+            "somehost",
+            self.inventory,
+            "exec",
+            "--",
+            "echo hi",
+        )
+        payload = self._parse_stdout(result)
+        operation = payload["results"]["operations"][0]
+        assert operation["hosts"] == 1
+        assert operation["success"] == ["anotherhost"]
+
+
+class TestCliLimitExclude(TestCase):
+    def setUp(self):
+        self.inventory = Inventory(
+            (
+                [
+                    "app-1.net",
+                    "app-2.net",
+                    "db-1.net",
+                    "db-2.net",
+                ],
+                {},
+            ),
+            app_servers=(["app-1.net", "app-2.net"], {}),
+            db_servers=(["db-1.net", "db-2.net"], {}),
+        )
+
+    def _host_names(self, hosts: list[Host] | None) -> set[str]:
+        assert hosts is not None
+        return {host.name for host in hosts}
+
+    def test_apply_inventory_exclude_host(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(
+            self.inventory,
+            initial_limit,
+            ("app-2.net",),
+        )
+
+        assert self._host_names(limited_hosts) == {
+            "app-1.net",
+            "db-1.net",
+            "db-2.net",
+        }
+
+    def test_apply_inventory_exclude_glob(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(self.inventory, initial_limit, ("db*",))
+
+        assert self._host_names(limited_hosts) == {"app-1.net", "app-2.net"}
+
+    def test_apply_inventory_exclude_group(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(
+            self.inventory,
+            initial_limit,
+            ("db_servers",),
+        )
+
+        assert self._host_names(limited_hosts) == {"app-1.net", "app-2.net"}
+
+    def test_apply_inventory_limit_then_exclude(self):
+        initial_limit = _apply_inventory_limit(self.inventory, ("app_servers",))
+        limited_hosts = _apply_inventory_exclude(
+            self.inventory,
+            initial_limit,
+            ("app-2.net",),
+        )
+
+        assert self._host_names(limited_hosts) == {"app-1.net"}
+
+    def test_apply_inventory_exclude_no_match_warns(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+
+        with self.assertLogs("pyinfra", level="WARNING") as logs:
+            limited_hosts = _apply_inventory_exclude(
+                self.inventory,
+                initial_limit,
+                ("missing-host",),
+            )
+
+        assert self._host_names(limited_hosts) == {
+            "app-1.net",
+            "app-2.net",
+            "db-1.net",
+            "db-2.net",
+        }
+        assert "No host matches found for --exclude pattern: missing-host" in "\n".join(logs.output)
+
+    def test_apply_inventory_exclude_all_hosts(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(self.inventory, initial_limit, ("*",))
+
+        assert limited_hosts == []
+
 
 class TestDirectMainExecution(PatchSSHTestCase):
     """
@@ -260,6 +362,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 dry=False,
                 yes=True,
                 limit=None,
+                exclude=tuple(),
                 no_wait=False,
                 serial=False,
                 shell_executable=None,

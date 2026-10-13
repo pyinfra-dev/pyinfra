@@ -10,6 +10,10 @@ from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
 
+# Digest of the committed image, as printed by `docker commit` / `podman commit`. Docker
+# prefixes it with the algorithm, podman prints it bare.
+FAKE_IMAGE_DIGEST = "0d05fac3b9bc6d8d5fc7b323a35a23daf0ab61fc38685de569ce69f6feb7fbe6"
+
 
 class TestContainerConnector(TestCase):
     # we use this class as a template to prevent the decorators from being invoked twice on
@@ -59,6 +63,18 @@ class TestContainerConnector(TestCase):
         assert len(state.active_hosts) == 0
         host.disconnect()
 
+    def test_disconnect_host_logs_short_image_id(self):
+        inventory = make_inventory(hosts=(f"@{self.connector_name}/not-an-image",))
+        State(inventory, Config())
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        host.connect(reason=True)
+
+        with patch("pyinfra.connectors.docker.logger") as fake_logger:
+            host.disconnect()
+
+        message = fake_logger.info.call_args[0][0]
+        assert message.endswith(f"image ID: {FAKE_IMAGE_DIGEST[:12]}")
+
     def test_run_shell_command(self):
         inventory = make_inventory(hosts=(f"@{self.connector_name}/not-an-image",))
         State(inventory, Config())
@@ -80,6 +96,34 @@ class TestContainerConnector(TestCase):
         command = make_unix_command(command).get_raw_value()
         command = shlex.quote(command)
         docker_command = f"{self.cli_cmd} exec -it containerid sh -c {command}"
+        shell_command = make_unix_command(docker_command).get_raw_value()
+
+        self.fake_popen_mock.assert_called_with(
+            shell_command,
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
+        )
+
+    def test_run_shell_command_with_user(self):
+        inventory = make_inventory(
+            hosts=(f"@{self.connector_name}/not-an-image",),
+            override_data={"docker_user": "myuser"},
+        )
+        State(inventory, Config())
+
+        command = "echo hi"
+        self.fake_popen_mock().returncode = 0
+
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        host.connect()
+        out = host.run_shell_command(command, _get_pty=True)
+        assert out[0] is True
+
+        command = make_unix_command(command).get_raw_value()
+        command = shlex.quote(command)
+        docker_command = f"{self.cli_cmd} exec --user myuser -it containerid sh -c {command}"
         shell_command = make_unix_command(docker_command).get_raw_value()
 
         self.fake_popen_mock.assert_called_with(
@@ -233,7 +277,7 @@ def fake_docker_shell(command, splitlines=None):
         return ["containerid"]
 
     if command == "docker commit containerid":
-        return ["sha256:blahsomerandomstringdata"]
+        return [f"sha256:{FAKE_IMAGE_DIGEST}"]
 
     if command == "docker rm -f containerid":
         return []
@@ -264,7 +308,7 @@ def fake_podman_shell(command, splitlines=None):
         return ["containerid"]
 
     if command == "podman commit containerid":
-        return ["sha256:blahsomerandomstringdata"]
+        return [FAKE_IMAGE_DIGEST]
 
     if command == "podman rm -f containerid":
         return []

@@ -60,6 +60,19 @@ class DebPackages(FactBase):
 class DebPackage(FactBase):
     """
     Returns information on a .deb archive or installed package.
+
+    Package resolution depends on the remote current working directory and is
+    therefore not idempotent:
+
+    * Names that do not match the shell pattern ``*.deb`` query the installed
+      package database.
+    * Names that match ``*.deb`` inspect the archive only when that file exists
+      in the current working directory. Otherwise they query the installed
+      package database.
+
+    Consequently, archive names such as ``package.deb.old`` and
+    ``package.deb~`` cannot be queried as files. Older pyinfra versions tried
+    to inspect any existing path as an archive instead.
     """
 
     _regexes = {
@@ -74,7 +87,7 @@ class DebPackage(FactBase):
     @override
     def command(self, package):
         return make_formatted_string_command(
-            "! test -e {0} && (dpkg -s {0} 2>/dev/null || true) || dpkg -I {0}",
+            "test -f {0} && case {0} in *.deb) dpkg -I {0} ;; *) dpkg -s {0} 2>/dev/null || true ;; esac || dpkg -s {0} 2>/dev/null || true",
             QuoteString(package),
         )
 

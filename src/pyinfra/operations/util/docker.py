@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-from pyinfra.api import OperationError
+from pyinfra.api import OperationError, QuoteString, StringCommand
 
 
 @dataclass
@@ -179,34 +179,38 @@ class ContainerSpec:
     dns: list[str] = field(default_factory=list)
     command: str | None = None
 
-    def container_create_args(self):
-        args = []
+    def container_create_args(self) -> list[str | QuoteString]:
+        # Each user-supplied value is wrapped in QuoteString so it is shell-escaped
+        # as a single argument. `command` is the container's command line, which
+        # Docker splits into argv, so it is left raw (quoting it would collapse it
+        # into a single arg); `extra_args` elements are each a single token already.
+        args: list[str | QuoteString] = []
         for network in self.networks:
-            args.append(f"--network {network}")
+            args += ["--network", QuoteString(network)]
 
         for port in self.ports:
-            args.append(f"-p {port}")
+            args += ["-p", QuoteString(port)]
 
         for volume in self.volumes:
-            args.append(f"-v {volume}")
+            args += ["-v", QuoteString(volume)]
 
         for mount in self.mounts:
-            args.append(f"--mount {mount}")
+            args += ["--mount", QuoteString(mount)]
 
         for env_var in self.env_vars:
-            args.append(f"-e {env_var}")
+            args += ["-e", QuoteString(env_var)]
 
         for env_file in self.env_files:
-            args.append(f"--env-file {env_file}")
+            args += ["--env-file", QuoteString(env_file)]
 
         for label in self.labels:
-            args.append(f"--label {label}")
+            args += ["--label", QuoteString(label)]
 
         if self.pull_always:
             args.append("--pull always")
 
         if self.restart_policy:
-            args.append(f"--restart {self.restart_policy}")
+            args += ["--restart", QuoteString(self.restart_policy)]
 
         if self.auto_remove:
             args.append("--rm")
@@ -215,27 +219,27 @@ class ContainerSpec:
             args.append("--privileged")
 
         if self.hostname is not None:
-            args.append(f"--hostname {self.hostname}")
+            args += ["--hostname", QuoteString(self.hostname)]
 
         if self.entrypoint is not None:
-            args.append(f"--entrypoint {self.entrypoint}")
+            args += ["--entrypoint", QuoteString(self.entrypoint)]
 
         if self.user is not None:
-            args.append(f"--user {self.user}")
+            args += ["--user", QuoteString(self.user)]
 
         if self.cpus is not None:
-            args.append(f"--cpus {self.cpus}")
+            args += ["--cpus", QuoteString(str(self.cpus))]
 
         if self.memory is not None:
-            args.append(f"--memory {self.memory}")
+            args += ["--memory", QuoteString(self.memory)]
 
         for extra_arg in self.extra_args:
-            args.append(extra_arg)
+            args.append(QuoteString(extra_arg))
 
         for dns in self.dns:
-            args.append(f"--dns {dns}")
+            args += ["--dns", QuoteString(dns)]
 
-        args.append(self.image)
+        args.append(QuoteString(self.image))
         if self.command:
             args.append(self.command)
 
@@ -259,94 +263,98 @@ def _create_container(**kwargs):
     if not spec.image:
         raise OperationError("Docker image not specified")
 
-    command = [
-        f"docker container create --name {kwargs['container']}"
-    ] + spec.container_create_args()
+    command: list[str | QuoteString] = [
+        "docker container create --name",
+        QuoteString(kwargs["container"]),
+    ]
+    command += spec.container_create_args()
 
-    return " ".join(command)
-
-
-def _remove_container(**kwargs):
-    return f"docker container rm -f {kwargs['container']}"
+    return StringCommand(*command)
 
 
-def _start_container(**kwargs):
-    return f"docker container start {kwargs['container']}"
+def _remove_container(**kwargs) -> StringCommand:
+    return StringCommand("docker container rm -f", QuoteString(kwargs["container"]))
 
 
-def _stop_container(**kwargs):
-    return f"docker container stop {kwargs['container']}"
+def _start_container(**kwargs) -> StringCommand:
+    return StringCommand("docker container start", QuoteString(kwargs["container"]))
 
 
-def _pull_image(**kwargs):
-    return f"docker image pull {kwargs['image']}"
+def _stop_container(**kwargs) -> StringCommand:
+    return StringCommand("docker container stop", QuoteString(kwargs["container"]))
 
 
-def _remove_image(**kwargs):
-    return f"docker image rm {kwargs['image']}"
+def _pull_image(**kwargs) -> StringCommand:
+    return StringCommand("docker image pull", QuoteString(kwargs["image"]))
 
 
-def _prune_command(**kwargs):
-    command = ["docker system prune"]
+def _remove_image(**kwargs) -> StringCommand:
+    return StringCommand("docker image rm", QuoteString(kwargs["image"]))
+
+
+def _prune_command(**kwargs) -> StringCommand:
+    command: list[str | QuoteString] = ["docker system prune"]
 
     if kwargs["all"]:
         command.append("-a")
 
     if kwargs["filter"] != "":
-        command.append(f"--filter={kwargs['filter']}")
+        command.append(QuoteString(f"--filter={kwargs['filter']}"))
 
     if kwargs["volumes"]:
         command.append("--volumes")
 
     command.append("-f")
 
-    return " ".join(command)
+    return StringCommand(*command)
 
 
-def _create_volume(**kwargs):
-    command = []
+def _create_volume(**kwargs) -> StringCommand:
     labels = kwargs["labels"] if kwargs["labels"] else []
+    options = kwargs["options"] if kwargs["options"] else []
 
-    command.append(f"docker volume create {kwargs['volume']}")
+    command: list[str | QuoteString] = ["docker volume create", QuoteString(kwargs["volume"])]
 
     if kwargs["driver"] != "":
-        command.append(f"-d {kwargs['driver']}")
+        command += ["-d", QuoteString(kwargs["driver"])]
 
     for label in labels:
-        command.append(f"--label {label}")
+        command += ["--label", QuoteString(label)]
 
-    return " ".join(command)
+    for option in options:
+        command += ["--opt", QuoteString(option)]
+
+    return StringCommand(*command)
 
 
-def _remove_volume(**kwargs):
-    return f"docker volume rm {kwargs['volume']}"
+def _remove_volume(**kwargs) -> StringCommand:
+    return StringCommand("docker volume rm", QuoteString(kwargs["volume"]))
 
 
-def _create_network(**kwargs):
-    command = []
+def _create_network(**kwargs) -> StringCommand:
     aux_addresses = kwargs["aux_addresses"] if kwargs["aux_addresses"] else {}
     opts = kwargs["opts"] if kwargs["opts"] else []
     ipam_opts = kwargs["ipam_opts"] if kwargs["ipam_opts"] else []
     labels = kwargs["labels"] if kwargs["labels"] else []
 
-    command.append(f"docker network create {kwargs['network']}")
+    command: list[str | QuoteString] = ["docker network create", QuoteString(kwargs["network"])]
     if kwargs["driver"] != "":
-        command.append(f"-d {kwargs['driver']}")
+        command += ["-d", QuoteString(kwargs["driver"])]
 
     if kwargs["gateway"] != "":
-        command.append(f"--gateway {kwargs['gateway']}")
+        command += ["--gateway", QuoteString(kwargs["gateway"])]
 
     if kwargs["ip_range"] != "":
-        command.append(f"--ip-range {kwargs['ip_range']}")
+        command += ["--ip-range", QuoteString(kwargs["ip_range"])]
 
     if kwargs["ipam_driver"] != "":
-        command.append(f"--ipam-driver {kwargs['ipam_driver']}")
+        command += ["--ipam-driver", QuoteString(kwargs["ipam_driver"])]
 
     if kwargs["subnet"] != "":
-        command.append(f"--subnet {kwargs['subnet']}")
+        command += ["--subnet", QuoteString(kwargs["subnet"])]
 
     if kwargs["scope"] != "":
-        command.append(f"--scope {kwargs['scope']}")
+        command += ["--scope", QuoteString(kwargs["scope"])]
 
     if kwargs["ingress"]:
         command.append("--ingress")
@@ -355,60 +363,64 @@ def _create_network(**kwargs):
         command.append("--attachable")
 
     for host, address in aux_addresses.items():
-        command.append(f"--aux-address '{host}={address}'")
+        command += ["--aux-address", QuoteString(f"{host}={address}")]
 
     for opt in opts:
-        command.append(f"--opt {opt}")
+        command += ["--opt", QuoteString(opt)]
 
     for opt in ipam_opts:
-        command.append(f"--ipam-opt {opt}")
+        command += ["--ipam-opt", QuoteString(opt)]
 
     for label in labels:
-        command.append(f"--label {label}")
-    return " ".join(command)
+        command += ["--label", QuoteString(label)]
+    return StringCommand(*command)
 
 
-def _remove_network(**kwargs):
-    return f"docker network rm {kwargs['network']}"
+def _remove_network(**kwargs) -> StringCommand:
+    return StringCommand("docker network rm", QuoteString(kwargs["network"]))
 
 
-def _install_plugin(**kwargs):
-    command = [f"docker plugin install {kwargs['plugin']} --grant-all-permissions"]
+def _install_plugin(**kwargs) -> StringCommand:
+    command: list[str | QuoteString] = [
+        "docker plugin install",
+        QuoteString(kwargs["plugin"]),
+        "--grant-all-permissions",
+    ]
 
     plugin_options = kwargs["plugin_options"] if kwargs["plugin_options"] else {}
 
     if kwargs["alias"]:
-        command.append(f"--alias {kwargs['alias']}")
+        command += ["--alias", QuoteString(kwargs["alias"])]
 
     if not kwargs["enabled"]:
         command.append("--disable")
 
     for option, value in plugin_options.items():
-        command.append(f"{option}={value}")
+        command.append(QuoteString(f"{option}={value}"))
 
-    return " ".join(command)
-
-
-def _remove_plugin(**kwargs):
-    return f"docker plugin rm -f {kwargs['plugin']}"
+    return StringCommand(*command)
 
 
-def _enable_plugin(**kwargs):
-    return f"docker plugin enable {kwargs['plugin']}"
+def _remove_plugin(**kwargs) -> StringCommand:
+    return StringCommand("docker plugin rm -f", QuoteString(kwargs["plugin"]))
 
 
-def _disable_plugin(**kwargs):
-    return f"docker plugin disable {kwargs['plugin']}"
+def _enable_plugin(**kwargs) -> StringCommand:
+    return StringCommand("docker plugin enable", QuoteString(kwargs["plugin"]))
 
 
-def _set_plugin_options(**kwargs):
-    command = [f"docker plugin set {kwargs['plugin']}"]
+def _disable_plugin(**kwargs) -> StringCommand:
+    return StringCommand("docker plugin disable", QuoteString(kwargs["plugin"]))
+
+
+def _set_plugin_options(**kwargs) -> StringCommand:
+    command: list[str | QuoteString] = ["docker plugin set", QuoteString(kwargs["plugin"])]
     existent_options = kwargs.get("existing_options", {})
     required_options = kwargs.get("required_options", {})
     options_to_set = existent_options | required_options
     for option, value in options_to_set.items():
-        command.append(f"{option}={value}")
-    return " ".join(command)
+        command.append(QuoteString(f"{option}={value}"))
+    return StringCommand(*command)
 
 
 def handle_docker(resource: str, command: str, **kwargs):

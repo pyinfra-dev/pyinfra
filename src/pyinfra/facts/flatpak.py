@@ -47,7 +47,7 @@ class FlatpakPackage(FlatpakBaseFact):
                 matches = re.match(regex, line)
                 if matches:
                     data[regex_name] = matches.group(1)
-
+                    break
         return data
 
 

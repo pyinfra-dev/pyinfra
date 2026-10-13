@@ -1,8 +1,9 @@
 import ast
 import socket
 from collections import defaultdict
-from os import listdir, path
-from typing import Any, TypeVar, Union
+from os import listdir
+from pathlib import Path
+from typing import Any, TypeVar
 from collections.abc import Callable
 
 from pyinfra import logger
@@ -13,7 +14,7 @@ from pyinfra.context import ctx_inventory
 from .exceptions import CliError
 from .util import exec_file, try_import_module_attribute
 
-HostType = Union[str, tuple[str, dict]]
+HostType = str | tuple[str, dict]
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = (str, tuple)
@@ -87,17 +88,17 @@ def _get_group_data(dirname_or_filename: str):
 
     logger.debug("Checking possible group_data at: %s", dirname_or_filename)
 
-    if path.exists(dirname_or_filename):
-        if path.isfile(dirname_or_filename):
+    if Path(dirname_or_filename).exists():
+        if Path(dirname_or_filename).is_file():
             files = [dirname_or_filename]
         else:
-            files = [path.join(dirname_or_filename, file) for file in listdir(dirname_or_filename)]
+            files = [str(Path(dirname_or_filename) / file) for file in listdir(dirname_or_filename)]
 
         for file in files:
             if not file.endswith(".py"):
                 continue
 
-            group_name = path.basename(file)[:-3]
+            group_name = Path(file).stem
 
             logger.debug("Looking for group data in: %s", file)
 
@@ -185,7 +186,7 @@ def make_inventory(
     # (1) an inventory file is a common use case and (2) no other option can have a comma or an @
     # symbol in them.
     is_path_or_host_list_or_connector = (
-        path.exists(inventory)
+        Path(inventory).exists()
         or "," in inventory
         or "@" in inventory
         # Special case: passing an arbitrary name and specifying --data ssh_hostname=a.b.c
@@ -311,7 +312,7 @@ def make_inventory_from_files(
     groups: dict[str, list[str] | tuple[list[str], dict[str, Any]]]
 
     # If we're not a valid file we assume a list of comma separated hostnames
-    if not path.exists(inventory_filename):
+    if not Path(inventory_filename).exists():
         groups = {
             "all": inventory_filename.split(","),
         }
@@ -319,7 +320,7 @@ def make_inventory_from_files(
         groups = _get_groups_from_filename(inventory_filename)
         # Used to set all the hosts to an additional group - that of the filename
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
-        file_groupname = path.basename(inventory_filename).rsplit(".", 1)[0]
+        file_groupname = Path(inventory_filename).name.rsplit(".", 1)[0]
 
     all_data: dict[str, Any] = {}
 
@@ -364,10 +365,10 @@ def make_inventory_from_files(
 
     possible_group_data_folders = []
     if cwd:
-        possible_group_data_folders.append(path.join(cwd, "group_data"))
-    inventory_dirname = path.abspath(path.dirname(inventory_filename))
+        possible_group_data_folders.append(str(Path(cwd) / "group_data"))
+    inventory_dirname = str(Path(inventory_filename).parent.resolve())
     if inventory_dirname != cwd:
-        possible_group_data_folders.append(path.join(inventory_dirname, "group_data"))
+        possible_group_data_folders.append(str(Path(inventory_dirname) / "group_data"))
 
     if group_data_directories:
         possible_group_data_folders.extend(group_data_directories)

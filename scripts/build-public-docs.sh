@@ -20,7 +20,7 @@ build_docs() {
 
     echo "Building zensical site for version: ${docs_version}"
     rm -rf "$build_dir"
-    DOCS_VERSION=$docs_version uv run zensical build --clean
+    uv run zensical build --clean
     mkdir -p "$(dirname "$build_dir")"
     mv build/docs "$build_dir"
 }

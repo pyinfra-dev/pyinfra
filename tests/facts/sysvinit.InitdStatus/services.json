@@ -3,11 +3,13 @@
     "output": [
         "rpcsvcgssd=0",
         "rsyslog=4",
-        "saslauthd=3"
+        "saslauthd=3",
+        "node_exporter=0"
     ],
     "fact": {
         "rpcsvcgssd": true,
         "rsyslog": null,
-        "saslauthd": false
+        "saslauthd": false,
+        "node_exporter": true
     }
 }
