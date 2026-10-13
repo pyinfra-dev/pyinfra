@@ -174,7 +174,10 @@ class VagrantInventoryConnector(BaseConnector):
 
         if not hosts:
             if name:
-                raise InventoryError(f"No running Vagrant instances matching `{name}` found!")
-            raise InventoryError("No running Vagrant instances found!")
+                # A named VM that is not running may be excluded by --limit, so
+                # warn and skip rather than break the whole inventory build.
+                logger.warning("No running Vagrant instances matching `%s` found!", name)
+            else:
+                raise InventoryError("No running Vagrant instances found!")
 
         yield from hosts
