@@ -330,7 +330,7 @@ def _get_fact(
         key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS
     }
 
-    if executor_kwargs["_su_user"]:
+    if executor_kwargs.get("_su_user"):
         command = StringCommand("printf", QuoteString(_SU_OUTPUT_MARKER), "&&", command)
 
     try:
@@ -348,7 +348,7 @@ def _get_fact(
         )
 
     stdout_lines, stderr_lines = output.stdout_lines, output.stderr_lines
-    if executor_kwargs["_su_user"]:
+    if executor_kwargs.get("_su_user"):
         for index, line in enumerate(stdout_lines):
             if _SU_OUTPUT_MARKER in line:
                 stdout_lines = stdout_lines[index:].copy()
@@ -390,9 +390,9 @@ def _get_fact(
         # This allows for users that don't currently but may be created during
         # other operations.
         first_line = stderr_lines[0]
-        if executor_kwargs["_sudo_user"] and re.match(SUDO_REGEX, first_line):
+        if executor_kwargs.get("_sudo_user") and re.match(SUDO_REGEX, first_line):
             status = True
-        if executor_kwargs["_su_user"] and any(re.match(regex, first_line) for regex in SU_REGEXES):
+        if executor_kwargs.get("_su_user") and any(re.match(regex, first_line) for regex in SU_REGEXES):
             status = True
 
     if status:
