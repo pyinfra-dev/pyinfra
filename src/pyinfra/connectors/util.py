@@ -472,7 +472,11 @@ def make_unix_command(
         )
 
     if _sudo:
-        command_bits.append("sudo")
+        # Pin the C locale so sudo output (eg the password prompt) is always in
+        # English and matches SUDO_PASSWORD_REQUIRED_LINES regardless of the remote
+        # locale. A plain assignment prefix works here and on the askpass path above,
+        # where `env` treats it as another assignment.
+        command_bits.extend(["LC_ALL=C", "sudo"])
 
         if _sudo_set_home:
             command_bits.append("-H")

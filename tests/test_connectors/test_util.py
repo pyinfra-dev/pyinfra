@@ -45,37 +45,39 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_sudo_command(self):
         command = make_unix_command("uptime", _sudo=True)
-        assert command.get_raw_value() == "sudo -H -n sh -c uptime"
+        assert command.get_raw_value() == "LC_ALL=C sudo -H -n sh -c uptime"
 
     def test_sudo_multi_arg_command(self):
         command = make_unix_command("echo hi", _sudo=True, _preserve_sudo_env=True)
-        assert command.get_raw_value() == "sudo -H -n -E sh -c 'echo hi'"
+        assert command.get_raw_value() == "LC_ALL=C sudo -H -n -E sh -c 'echo hi'"
 
     def test_sudo_preserve_env_command(self):
         command = make_unix_command("uptime", _sudo=True, _preserve_sudo_env=True)
-        assert command.get_raw_value() == "sudo -H -n -E sh -c uptime"
+        assert command.get_raw_value() == "LC_ALL=C sudo -H -n -E sh -c uptime"
 
     def test_sudo_without_set_home_command(self):
         command = make_unix_command("uptime", _sudo=True, _sudo_set_home=False)
-        assert command.get_raw_value() == "sudo -n sh -c uptime"
+        assert command.get_raw_value() == "LC_ALL=C sudo -n sh -c uptime"
 
     def test_sudo_without_set_home_preserve_env_command(self):
         command = make_unix_command(
             "uptime", _sudo=True, _sudo_set_home=False, _preserve_sudo_env=True
         )
-        assert command.get_raw_value() == "sudo -n -E sh -c uptime"
+        assert command.get_raw_value() == "LC_ALL=C sudo -n -E sh -c uptime"
 
     def test_use_sudo_login_command(self):
         command = make_unix_command("uptime", _sudo=True, _use_sudo_login=True)
-        assert command.get_raw_value() == "sudo -H -n -i sh -c uptime"
+        assert command.get_raw_value() == "LC_ALL=C sudo -H -n -i sh -c uptime"
 
     def test_sudo_user_command(self):
         command = make_unix_command("uptime", _sudo=True, _sudo_user="pyinfra")
-        assert command.get_raw_value() == "sudo -H -n -u pyinfra sh -c uptime"
+        assert command.get_raw_value() == "LC_ALL=C sudo -H -n -u pyinfra sh -c uptime"
 
     def test_sudo_user_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _sudo=True, _sudo_user="root; touch /tmp/pwn")
-        assert command.get_raw_value() == ("sudo -H -n -u 'root; touch /tmp/pwn' sh -c uptime")
+        assert command.get_raw_value() == (
+            "LC_ALL=C sudo -H -n -u 'root; touch /tmp/pwn' sh -c uptime"
+        )
 
     def test_sudo_password_askpass_path_quoted(self):
         command = make_unix_command(
@@ -87,6 +89,24 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         # The askpass path contains shell metacharacters and must be quoted
         # so it cannot inject commands into the SUDO_ASKPASS env assignment.
         assert "SUDO_ASKPASS='/tmp/weird path; id'" in command.get_raw_value()
+
+    def test_sudo_command_pins_c_locale(self):
+        # sudo output is string-matched in English (SUDO_PASSWORD_REQUIRED_LINES),
+        # so the generated command must pin the C locale regardless of the remote
+        # locale, on both the plain and askpass variants (#1125).
+        command = make_unix_command("uptime", _sudo=True)
+        assert command.get_raw_value() == "LC_ALL=C sudo -H -n sh -c uptime"
+
+        command = make_unix_command(
+            "uptime",
+            _sudo=True,
+            _sudo_password="secret",
+            _sudo_askpass_path="/tmp/pyinfra-sudo-askpass",
+        )
+        assert command.get_raw_value() == (
+            "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass PYINFRA_SUDO_PASSWORD=secret "
+            "LC_ALL=C sudo -H -A -k sh -c uptime"
+        )
 
     def test_su_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra")
@@ -215,7 +235,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             _shell_executable="bash",
         )
         assert command.get_raw_value() == (
-            "sudo -H -n -E -u root "  # sudo bit
+            "LC_ALL=C sudo -H -n -E -u root "  # sudo bit
             "su pyinfra -c "  # su bit
             "'bash -c '\"'\"'cd /opt/somedir && export key=value "  # shell and export bit
             "&& echo hi'\"'\"''"  # command bit
@@ -492,7 +512,7 @@ class TestUseSudoPassword(TestCase):
         command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
         assert command.get_raw_value() == (
             "env SUDO_ASKPASS=/tmp/askpass-XYZ PYINFRA_SUDO_PASSWORD=supersecret "
-            "sudo -H -A -k sh -c uptime"
+            "LC_ALL=C sudo -H -A -k sh -c uptime"
         )
 
         # The prompted password is reused for later commands
@@ -506,7 +526,7 @@ class TestUseSudoPassword(TestCase):
         command = make_unix_command_for_host(
             host.state, host, "uptime", _sudo=True, _sudo_password="configured"
         )
-        assert "sudo -H -A -k" in command.get_raw_value()
+        assert "LC_ALL=C sudo -H -A -k" in command.get_raw_value()
         fake_getpass.assert_not_called()
 
     @patch("pyinfra.connectors.util.getpass")
@@ -514,5 +534,5 @@ class TestUseSudoPassword(TestCase):
         host = self._make_host(Config())
 
         command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
-        assert command.get_raw_value() == "sudo -H -n sh -c uptime"
+        assert command.get_raw_value() == "LC_ALL=C sudo -H -n sh -c uptime"
         fake_getpass.assert_not_called()
