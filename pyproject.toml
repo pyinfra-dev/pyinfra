@@ -16,6 +16,7 @@ dependencies = [
     "paramiko>=3.2,<6", # 3.2 adds PKey.from_type_string and pkey.UnknownKeyType, used by connectors.sshuserclient (#1290)
     "click>2",
     "cyclopts>=4,<5",
+    "rich>=13",
     "jinja2>3,<4",
     "python-dateutil>2,<3",
     "typeguard>=4,<5",
@@ -50,7 +51,6 @@ repository = "https://github.com/pyinfra-dev/pyinfra"
 
 [dependency-groups]
 test = [
-    "click>=8.2",
     "pytest>=8.3.5,<9",
     "freezegun>=1.5.5",
     "coverage>=7.7.1,<8",
