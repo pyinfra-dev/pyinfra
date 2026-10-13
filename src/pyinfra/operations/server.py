@@ -1069,10 +1069,12 @@ def user(
         a public key file which pyinfra will read.
 
     Password lock:
-        New users created without a ``password`` have a locked password on most Linux
-        systems. ``password_lock=False`` unlocks the password, or deletes it (making it
-        empty) when there is no password hash to unlock, so the user can set one with
-        ``passwd``. Only supported on Linux and FreeBSD.
+        New users created without a ``password`` have a locked (Linux) or disabled
+        (FreeBSD, ``*``) password. ``password_lock=False`` unlocks the password, or
+        deletes it (making it empty) when there is no password hash to unlock, so the
+        user can set one with ``passwd``. When ``password_lock`` is set, ``password`` is
+        compared ignoring the lock prefix. Only supported on Linux and FreeBSD, and
+        ignored when ``present=False``.
 
     **Examples:**
 
@@ -1110,7 +1112,7 @@ def user(
     existing_user = users.get(user)
     os_type = host.get_fact(Os)
 
-    if password_lock is not None and os_type not in ("Linux", "FreeBSD"):
+    if present and password_lock is not None and os_type not in ("Linux", "FreeBSD"):
         raise OperationError("password_lock is only supported on Linux and FreeBSD")
 
     if groups is None:
@@ -1211,8 +1213,9 @@ def user(
                 raise OperationError("useradd is not installed")
             yield StringCommand("useradd", *args, QuoteString(user))
 
-        # useradd (but not pw useradd) leaves users without a password locked
+        # useradd leaves users without a password locked, pw useradd leaves them disabled
         current_password = password or ("*" if os_type == "FreeBSD" else "!")
+        user_changed = True
 
     # User exists and we want them, check home/shell/keys/password
     else:
@@ -1249,8 +1252,14 @@ def user(
             mod_args.extend(["-c", QuoteString(comment)])
 
         current_password = existing_user.get("password") or ""
+        existing_password = current_password
+        if password_lock is not None:
+            # The lock state is managed by password_lock, so compare the hash itself
+            existing_password = _strip_password_lock(current_password, os_type)
 
-        if password and existing_user["password"] != password:
+        password_changed = False
+        if password and existing_password != password:
+            password_changed = True
             current_password = password
             if os_type == "FreeBSD":
                 yield StringCommand(
@@ -1267,6 +1276,8 @@ def user(
             else:
                 mod_args.extend(["-p", QuoteString(password)])
 
+        user_changed = password_changed or bool(mod_args)
+
         # Need to mod the user?
         if mod_args:
             if os_type == "FreeBSD":
@@ -1281,7 +1292,13 @@ def user(
                 yield StringCommand("usermod", *mod_args, QuoteString(user))
 
     if password_lock is not None:
-        yield from _user_password_lock(user, current_password, password_lock, os_type)
+        yield from _user_password_lock(
+            user,
+            current_password,
+            password_lock,
+            os_type,
+            user_changed,
+        )
 
     # Ensure home directory ownership
     if ensure_home and home:
@@ -1305,33 +1322,65 @@ def user(
         )
 
 
+def _password_lock_prefix(os_type: str) -> str:
+    return "*LOCKED*" if os_type == "FreeBSD" else "!"
+
+
+def _strip_password_lock(password: str, os_type: str) -> str:
+    lock_prefix = _password_lock_prefix(os_type)
+    while password.startswith(lock_prefix):
+        password = password[len(lock_prefix) :]
+    return password
+
+
 def _user_password_lock(
     user: str,
     current_password: str,
     password_lock: bool,
     os_type: str,
+    user_changed: bool,
 ) -> Generator[StringCommand, None, None]:
-    lock_prefix = "*LOCKED*" if os_type == "FreeBSD" else "!"
-    is_locked = current_password.startswith(lock_prefix)
-
-    if password_lock is is_locked:
-        host.noop(f"password for user {user} is already {'locked' if is_locked else 'unlocked'}")
-        return
-
-    if os_type == "FreeBSD":
-        yield StringCommand("pw", "lock" if password_lock else "unlock", QuoteString(user))
-        return
+    is_locked = current_password.startswith(_password_lock_prefix(os_type))
+    # No usable hash: either nothing behind the lock, or a disabled (`*`) password
+    has_hash = _strip_password_lock(current_password, os_type) not in ("", "*")
 
     if password_lock:
-        yield StringCommand("usermod", "-L", QuoteString(user))
+        if is_locked:
+            if not user_changed:
+                host.noop(f"password for user {user} is already locked")
+            return
+        if os_type == "FreeBSD":
+            yield StringCommand("pw", "lock", QuoteString(user))
+        else:
+            _check_usermod_installed(os_type)
+            yield StringCommand("usermod", "-L", QuoteString(user))
         return
 
-    # `usermod -U` refuses to unlock a password with no hash behind the lock, as that
-    # would leave an empty password, so delete the password instead.
-    if current_password.lstrip("!") in ("", "*"):
-        yield StringCommand("passwd", "-d", QuoteString(user))
+    if has_hash or current_password == "":
+        if not is_locked:
+            if not user_changed:
+                host.noop(f"password for user {user} is already unlocked")
+            return
+        if os_type == "FreeBSD":
+            yield StringCommand("pw", "unlock", QuoteString(user))
+        else:
+            _check_usermod_installed(os_type)
+            yield StringCommand("usermod", "-U", QuoteString(user))
+        return
+
+    # There is no hash to unlock (`usermod -U` refuses to leave an empty password), so
+    # delete the password instead, letting the user set one with `passwd`.
+    if os_type == "FreeBSD":
+        yield StringCommand("pw", "usermod", "-n", QuoteString(user), "-w", "none")
     else:
-        yield StringCommand("usermod", "-U", QuoteString(user))
+        yield StringCommand("passwd", "-d", QuoteString(user))
+
+
+def _check_usermod_installed(os_type: str) -> None:
+    if os_type == "Linux" and not host.get_fact(Which, command="usermod"):
+        if host.get_fact(LinuxName) == "Alpine":
+            raise OperationError("usermod is not installed (install the shadow package)")
+        raise OperationError("usermod is not installed")
 
 
 @operation()
