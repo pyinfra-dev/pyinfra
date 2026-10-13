@@ -1,4 +1,4 @@
-command: brew list --versions
+command: 'if brew --version | grep -q -E "Homebrew 0\."; then brew list --versions; else brew info --json --installed; fi'
 requires_command: brew
 output: []
 fact: {}
