@@ -69,7 +69,7 @@ class FactBase(Generic[T]):
         """
         return None
 
-    def check_preconditions(self, state: State, host: Host) -> str | None:
+    def check_preconditions(self, state: State, host: Host, *args, **kwargs) -> str | None:
         """Check that this fact's prerequisites are satisfied before running.
 
         Override this method to call ``host.get_fact(...)`` and return:
@@ -79,6 +79,15 @@ class FactBase(Generic[T]):
 
         The framework handles raising ``FactPreconditionError`` and phase-awareness
         automatically; fact authors never need to import exception classes.
+
+        A fact that takes parameters receives them here, named as its ``command`` declares
+        them, so a precondition can depend on which project or pool is being asked about. A
+        fact whose ``command`` takes none is called with none, which is what every existing
+        implementation already expects.
+
+        The trailing ``*args``/``**kwargs`` are what let an implementation declare only what it
+        needs — ``(self, state, host)``, or ``(self, state, host, pool=None)`` for one that
+        depends on its own parameters — the way ``requires_command``'s implementations do.
         """
         return None
 
@@ -285,8 +294,11 @@ def _get_fact(
     if fact.shell_executable:
         global_kwargs["_shell_executable"] = fact.shell_executable
 
-    # Check preconditions before running this fact's command.
-    if reason := fact.check_preconditions(state, host):
+    # Check preconditions before running this fact's command. The fact's own arguments go
+    # with it, minus the `self` that `getcallargs` collected alongside them — `_make_command`
+    # drops it the same way before calling `command`.
+    precondition_kwargs = {key: value for key, value in fact_kwargs.items() if key != "self"}
+    if reason := fact.check_preconditions(state, host, **precondition_kwargs):
         raise FactPreconditionError(cls, reason)
 
     command = _make_command(fact.command, fact_kwargs)
