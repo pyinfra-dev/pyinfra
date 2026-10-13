@@ -1,0 +1,18 @@
+arg: fortune
+command: apt-cache showpkg fortune
+requires_command: apt-cache
+output: |
+  Package: fortune
+  Versions:
+
+  Reverse Depends:
+    fortunes,fortune 1:1.99.1-7build1
+    fortunes-min,fortune
+    fortune-zh,fortune
+  Dependencies:
+  Provides:
+  Reverse Provides:
+  fortune-mod 1:1.99.1-7build1
+fact:
+  - - fortune-mod
+    - "1:1.99.1-7build1"

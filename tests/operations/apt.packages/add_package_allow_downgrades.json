@@ -4,7 +4,10 @@
         "allow_downgrades": true
     },
     "facts": {
-        "deb.DebPackages": {}
+        "deb.DebPackages": {},
+        "apt.AptPackageProvides": {
+            "package=git": []
+        }
     },
     "commands": [
         "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" install --allow-downgrades git"
