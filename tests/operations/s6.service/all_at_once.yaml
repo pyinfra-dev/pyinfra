@@ -7,6 +7,8 @@ kwargs:
   enabled: true
   the_set: webserver
   enabled_rx: active
+  do_commit: true
+  do_install: true
 facts:
   server.Command:
     'command=printf %s "$S6_CONF"': ""
@@ -37,3 +39,4 @@ commands:
   - s6 set enable -p -s webserver nftables php-fpm tipidee
   - s6-rc-set-fix webserver
   - s6-rc-set-commit webserver
+  - s6 live install -s webserver

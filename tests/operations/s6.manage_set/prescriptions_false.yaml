@@ -16,5 +16,3 @@ facts:
       mysqld: active
 commands:
   - s6 set mask -p -s default tipidee nftables mysqld
-  - s6-rc-set-fix default
-  - s6-rc-set-commit default

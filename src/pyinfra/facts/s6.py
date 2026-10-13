@@ -12,7 +12,6 @@ class S6RepositoryList(FactBase[list[str]]):
         if repodir is None:
             return "s6"
         return "s6-rc-repo-list"
-        # and envfile, but that comes bundled in execline dependency of s6
 
     @override
     def command(self, repodir=None):
@@ -35,6 +34,10 @@ class S6RepositoryList(FactBase[list[str]]):
             return output
 
 
+# TODO bundle support
+# attention has been drawn recently (Sep 29, 2026) to including bundles in `s6 set status output`.
+# such a change would cleanly enable this fact to see bundles.
+# reference: https://www.skarnet.org/lists/supervision/3432.html
 class S6SetStatus(FactBase[dict[str, str]]):
     """Returns a dict of name -> rx (prescription) for each service in a given set."""
 
@@ -43,7 +46,6 @@ class S6SetStatus(FactBase[dict[str, str]]):
         if repodir is None:
             return "s6"
         return "s6-rc-set-status"
-        # and sh
 
     @override
     def command(self, the_set="current", repodir=None):
@@ -62,6 +64,7 @@ class S6SetStatus(FactBase[dict[str, str]]):
         # terminal does not have a user behind it and fall back to the "service/rx" per line output,
         # but if there are output processing bugs, this behavior could be the cause.
         return make_formatted_string_command("s6 set status -s {0}", QuoteString(the_set))
+
         # extra escaping needed for make_formatted_string_command, but not in StringCommand
         # return make_formatted_string_command(
         #    '[ ! -z \\"$S6_CONF\\" ] || S6_CONF=/etc/s6.conf && envfile \\"$S6_CONF\\" sh -c \\\'s6-rc-set-status -r \\"$repodir\\" {0}\\\'; echo EXIT CODE: $?',
@@ -85,7 +88,7 @@ class S6SetStatus(FactBase[dict[str, str]]):
 class S6LiveStatus(FactBase[dict[str, bool]]):
     """Returns a dict of name -> status for each service in the live state.
 
-    True when the service is "running", meaning the service is managed by an `s6-supervise`s, False
+    True when the service is "running", meaning the service is managed by an `s6-supervise`, False
     otherwise.
     """
 

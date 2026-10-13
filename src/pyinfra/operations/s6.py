@@ -210,7 +210,6 @@ def _make_set_change_command(
     return None
 
 
-# TODO should an empty prescriptions dict mean to mask everything?
 def _make_all_set_change_commands(
     prescriptions: dict,
     repodir: str | None = None,
@@ -282,6 +281,9 @@ def _make_all_set_change_commands(
     ]
 
 
+# TODO there is no s6-frontend command equivalent to create a set (only copy,
+# at the time of writing), so repodir must be given or it will fall back to
+# compiled-in default, not the frontend-configured repodir
 @operation(is_idempotent=False)
 def set_create(name: str, repodir: str | None = None):
     """Create a new set.
@@ -294,8 +296,6 @@ def set_create(name: str, repodir: str | None = None):
             "s6-rc-set-new -r {0} {1}", QuoteString(repodir), QuoteString(name)
         )
     else:
-        # TODO there is no s6-frontend command equivalent, so repodir must be given or it will fall
-        # back to compiled-in default, not frontend repodir
         yield make_formatted_string_command("s6-rc-set-new {0}", QuoteString(name))
 
 
@@ -441,16 +441,14 @@ def live_install(repodir: str | None = None, the_set: str = "current", livedir: 
 
 @operation(
     is_idempotent=False,
-    # TODO verify idempotency paths
-    idempotent_notice="Not idempotent by default. If `do_commit=False` and `do_install=False`, then the operation is idempotent.",
+    idempotent_notice="Idempotent so long as `do_commit in {False, None}` and `do_install=False`.",
 )
-# TODO add option to install a set
 def manage_set(
     the_set: str = "current",
     present: bool = True,
     prescriptions: Literal[False] | dict[str, str] | None = None,
     # force_prescriptions: bool = True,
-    do_commit: bool = True,
+    do_commit: bool = False,
     do_install: bool = False,
     repodir: str | None = None,
     livedir: str | None = None,
@@ -459,23 +457,23 @@ def manage_set(
 
     .. important::
         This operation is in alpha. Things may break if you use it. Additionally, there is no
-        support for bundles at this time, as they break the operation's idempotency logic.
+        support for bundles at this time; manage them at your own risk.
 
-    The repository is automatically found by inspecting the `S6_CONF` environment variable or
-    trying the hardcoded path `/etc/s6.conf`, in line with `s6-frontend` behavior. `manage_set`
-    combines smaller operations into one:
-        - ensuring existence or non-existence, like `files.file` does
-        - ensuring specific prescriptions within sets, with support for ensuring only prescriptions
-          on only a subset of the services in a set
-        - committing a set, which is a stateless operation
+    `manage_set` combines smaller operations into one:
+        + ensuring existence or non-existence of sets, like `files.file` does
+        + ensuring specific prescriptions for subsets of services within sets
+        + committing a set, which is a stateless operation
+        + installing a set, which is a stateless operation
+
+    Due to the stateless nature of commit and install, those execution paths are disabled by default.
 
     + the_set: name of the set to manage.
     + present: whether the set should be present in the repository.
-    + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only. If it is set to `False`, then all services will be masked.
-    + do_commit: whether to commit the set.
+    + prescriptions: the prescriptions to ensure in the set. A map of service name -> prescription, where the prescription is any of "always", "active", "usable", "masked". May be `None`, which allows management of set presence only. If `prescriptions=False`, then all services will be masked.
+    + do_commit: whether to compile a new service database from `the_set` after changing the prescriptions of the service(s) in `the_set`. Default is not to commit.
     + do_install: whether to install the set to the livedir.
-    + repodir: TODO
-    + livedir: TODO
+    + repodir: path to the repository to manage. Uses the one configured for `s6-frontend` by default.
+    + livedir: path to the live state to install a set to when `do_install=True`.
     """
 
     # automatically find the configured s6-frontend repository to use in commands. the value can be
@@ -561,54 +559,53 @@ def manage_set(
             host.noop(f'the set "{the_set}" is already nonexistent')
 
 
-# TODO enabled doesn't work well with bundles
-# TODO verify idempotency paths
 @operation(
     is_idempotent=False,
-    idempotent_notice="Idempotent so long as `restarted`, `reloaded`, and `command` are not specified",
+    idempotent_notice="Idempotent so long as `restarted in {False, None}`, `reloaded in {False, None}`, and `command=None`.",
 )
 def service(
     service: str | Sequence[str],
     running: bool | None = None,
     restarted: bool | None = None,
     reloaded: bool | None = None,
-    command: str | None = None,
     enabled: bool | None = None,
-    repodir: str | None = None,
-    livedir: str | None = None,
-    reload_timeout: float | None = 10,
     the_set: str = "current",
     enabled_rx: str = "active",
     disabled_rx: str = "usable",
+    do_commit: bool | None = None,
+    do_install: bool | None = None,
+    repodir: str | None = None,
+    livedir: str | None = None,
+    reload_timeout: float | None = 10,
+    command: str | None = None,
 ):
     """
     Manage the state of s6-supervise'd services.
 
     .. important::
         This operation is in alpha. Things may break if you use it. Additionally, there is no
-        support for bundles at this time, as they break the operation's idempotency logic.
+        support for bundles at this time; manage them at your own risk.
 
     + service: name(s) of the service(s) to manage.
-    + running: whether the service(s) should be under an s6-supervise.
+    + running: whether the service(s) should be under an `s6-supervise`.
     + restarted: whether the service(s) should be restarted.
-    + reloaded: whether the service(s) should be reloaded by sending a signal, SIGHUP by default. Whether the service is reloaded depends on how it handles the signal.
-    + command: custom command to run after the auto-computed commands. This must be an s6 subcommand, e.g. "system reboot" gives the command "s6 system reboot".
-    + enabled: whether the service should be given an "active" or "usable" prescription.
-    + repodir: path to the repository to manage. Uses the one compiled into s6 by default.
-    + livedir: path to the live state to manage. Uses the one configured for s6-frontend by default.
-    + reload_timeout: how many seconds to wait for a service to reload.
+    + reloaded: whether the service(s) should be reloaded.
+    + enabled: whether the service should be given an `active` or `usable` prescription.
     + the_set: name of the set to use when managing enabled status, using the set named "current" by default.
-    + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either "active" or "always".
-    + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either "usable" or "masked".
-
-
-    Services can be started, stopped, restarted, reloaded, enabled, and disabled.
+    + enabled_rx: name of the prescription to assign to the service(s) when enabled, which could be either `"active"` or `"always"`.
+    + disabled_rx: name of the prescription to assign to the service(s) when disabled, which could be either `"usable"` or `"masked"`.
+    + do_commit: whether to compile a new service database after changing the enabled status of the service(s) in `the_set`. Default is not to commit.
+    + do_install: whether to install the set to the livedir.
+    + repodir: path to the repository to manage when `enabled` is specified. Uses the one configured for `s6-frontend` by default.
+    + livedir: path to the live state to manage when any of `running`, `restarted`, `reloaded` are specified. Uses the one configured for `s6-frontend` by default.
+    + reload_timeout: number of seconds to wait for a service to reload.
+    + command: custom command to run after the auto-computed commands. This must be an s6 subcommand, e.g. `"system reboot"` gives the command `s6 system reboot`.
 
     This operation can manage multiple services at once.
 
-    Note that this operation does not give as granular control over prescriptions as the
-    `manage_set` operation does; all services will be assigned the same prescription if `enabled` is
-    set.
+    Note that this operation does not give as granular control over
+    prescriptions as the `manage_set` operation does; all services speecified
+    will be assigned the same prescription if `enabled` is set.
     """
 
     logger.warning("The `s6.service` operation is in alpha!")
@@ -665,19 +662,23 @@ def service(
             else:
                 host.noop(f"all specified services are down: {', '.join(service)}")
 
-    # TODO: test masked services present in `services` arg on a real system
     if enabled is not None:
         if enabled is True:
-            # TODO do_commit always on here, no option to set it in s6.service()
             yield from manage_set._inner(
-                the_set=the_set, repodir=repodir, prescriptions={srv: enabled_rx for srv in service}
+                the_set=the_set,
+                prescriptions={srv: enabled_rx for srv in service},
+                do_commit=bool(do_commit),
+                do_install=bool(do_install),
+                repodir=repodir,
             )
 
         if enabled is False:
             yield from manage_set._inner(
                 the_set=the_set,
-                repodir=repodir,
                 prescriptions={srv: disabled_rx for srv in service},
+                do_commit=bool(do_commit),
+                do_install=bool(do_install),
+                repodir=repodir,
             )
 
     if command:

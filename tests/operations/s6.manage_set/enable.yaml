@@ -19,5 +19,3 @@ facts:
       tipidee: usable
 commands:
   - s6 set enable -p -s default tipidee
-  - s6-rc-set-fix default
-  - s6-rc-set-commit default

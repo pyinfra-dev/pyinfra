@@ -16,5 +16,3 @@ facts:
       tipidee: usable
 commands:
   - s6 set make-essential -p -s current tipidee
-  - s6-rc-set-fix current
-  - s6-rc-set-commit current

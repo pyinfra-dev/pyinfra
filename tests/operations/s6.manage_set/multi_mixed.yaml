@@ -28,5 +28,3 @@ commands:
   - s6 set enable -p -s default mysqld
   - s6 set disable -p -s default tipidee
   - s6 set mask -p -s default php-fpm
-  - s6-rc-set-fix default
-  - s6-rc-set-commit default
