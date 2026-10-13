@@ -13,7 +13,8 @@ license-files = ["LICENSE.md"]
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "gevent>=1.5",
-    "paramiko>=2.11,<6", # 2.11 (2022) adds Transport.open_channel(timeout=...) for ProxyJump timeout (#971)
+    "paramiko>=3.2,<6", # 3.2 adds PKey.from_type_string and pkey.UnknownKeyType, used by connectors.sshuserclient (#1290)
+    "click>2",
     "cyclopts>=4,<5",
     "rich>=13",
     "jinja2>3,<4",

@@ -5,7 +5,7 @@
 
 ## Inventory Files
 
-Inventory files contain groups of hosts. Groups are defined as a `list` or `tuple`. For example, this inventory creates two groups, `app_servers` and `db_servers`. Note that group names cannot start `_`:
+Inventory files contain groups of hosts. Groups are defined as a `list` or `tuple`. For example, this inventory creates two groups, `app_servers` and `db_servers`. Note that group names cannot start with `_`:
 
 ```python
 app_servers = [

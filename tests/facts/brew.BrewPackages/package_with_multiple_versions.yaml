@@ -2,11 +2,10 @@
 # Homebrew allows multiple versions of certain packages to be installed at once
 # but they look like distinct packages in pyinfra: see notes in BrewPackages and brew.packages
 #
-command: brew list --versions
+command: 'if brew --version | grep -q -E "Homebrew 0\."; then brew list --versions; else brew info --json --installed; fi'
 requires_command: brew
 output:
-  - python@3.13 3.13.2
-  - python@3.14 3.14.3
+  - '[{"name": "python@3.13", "full_name": "python@3.13", "installed": [{"version": "3.13.2"}]}, {"name": "python@3.14", "full_name": "python@3.14", "installed": [{"version": "3.14.3"}]}]'
 fact:
   python@3.13:
     - 3.13.2

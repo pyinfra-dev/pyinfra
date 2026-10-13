@@ -1,8 +1,10 @@
 from base64 import b64decode
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
 import pytest
+from packaging.requirements import Requirement
 from paramiko import PKey, ProxyCommand, SSHException
 from paramiko.ed25519key import Ed25519Key
 
@@ -71,6 +73,22 @@ Host device
     ProxyJump jump
     ConnectTimeout 5
     User deviceuser
+"""
+
+SSH_CONFIG_NESTED_PROXYJUMP = """
+Host first
+    HostName first.example.com
+    User firstuser
+
+Host hop
+    HostName 127.0.0.1
+    User hopuser
+    ProxyJump first
+
+Host target
+    HostName target.example.com
+    User targetuser
+    ProxyJump hop
 """
 
 SSH_CONFIG_CONNECTTIMEOUT = """
@@ -447,6 +465,27 @@ class TestSSHUserConfig(TestCase):
         _, gw_kwargs = fake_gateway.call_args
         assert gw_kwargs["timeout"] == 5
 
+    @patch(
+        "pyinfra.connectors.sshuserclient.client.open",
+        mock_open(read_data=SSH_CONFIG_NESTED_PROXYJUMP),
+        create=True,
+    )
+    @patch(
+        "pyinfra.connectors.sshuserclient.config.open",
+        mock_open(read_data=SSH_CONFIG_NESTED_PROXYJUMP),
+        create=True,
+    )
+    @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
+    @patch("pyinfra.connectors.sshuserclient.SSHClient.gateway")
+    def test_connect_preserves_nested_proxyjump_sock(self, fake_gateway, fake_paramiko_connect):
+        fake_gateway.side_effect = ["inner-sock", "outer-sock"]
+
+        client = SSHClient()
+        client.connect("target")
+
+        assert fake_paramiko_connect.call_args_list[1].args == ("127.0.0.1",)
+        assert fake_paramiko_connect.call_args_list[1].kwargs["sock"] == "inner-sock"
+
     @patch("pyinfra.connectors.sshuserclient.client.open", mock_open(), create=True)
     @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
     def test_test_paramiko_connect_kwargs(self, fake_paramiko_connect):
@@ -719,3 +758,18 @@ def test_parse_config_keeps_key_filename_when_no_real_identityfile(
 
     assert "pkey" not in cfg
     assert cfg["key_filename"] == [str(tmp_path / "does-not-exist")]
+
+
+def test_paramiko_floor_supports_ssh_client():
+    # PKey.from_type_string and pkey.UnknownKeyType were added in paramiko 3.2 (#1290)
+    tomllib = pytest.importorskip("tomllib")
+    pyproject = tomllib.loads(
+        (Path(__file__).parents[2] / "pyproject.toml").read_text(encoding="utf-8"),
+    )
+    spec = next(
+        Requirement(dep)
+        for dep in pyproject["project"]["dependencies"]
+        if Requirement(dep).name == "paramiko"
+    )
+    assert not spec.specifier.contains("3.1.0")
+    assert spec.specifier.contains("3.2.0")
