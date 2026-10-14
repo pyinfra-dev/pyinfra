@@ -45,7 +45,7 @@ class RcdEnabled(FactBase):
         return {line: True for line in output}
 
 
-class ServiceEnabled(FactBase):
+class ServiceEnabled(FactBase[dict[str, bool]]):
     """
     Returns a dict of FreeBSD rc.d services enabled at boot.
     """
@@ -62,4 +62,4 @@ class ServiceEnabled(FactBase):
 
     @override
     def process(self, output: list[str]) -> dict[str, bool]:
-        return {line.removeprefix("/usr/local").removeprefix("/etc/rc.d/"): True for line in output}
+        return {line.split("/")[-1]: True for line in output}
