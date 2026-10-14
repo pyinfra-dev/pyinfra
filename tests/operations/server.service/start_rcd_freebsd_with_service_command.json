@@ -10,7 +10,8 @@
             "command=initctl": false,
             "command=rc-service": false,
             "command=sv": false,
-            "command=service": "/usr/sbin/service"
+            "command=service": "/usr/sbin/service",
+            "command=s6": false
         },
         "files.Directory": {
             "path=/etc/init.d": false,
