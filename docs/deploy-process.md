@@ -18,7 +18,7 @@ pyinfra is, at its core, a translator. Your Python deploy file is not run *on* t
 
 For every host in the inventory pyinfra invokes your deploy code with the `host` context bound to that host. As your code calls operations like `apt.packages(...)`, each operation:
 
-1. Reads the current state from the target by gathering any [facts](facts.md) it needs (e.g. `AptPackages` to see what is already installed). Facts open a channel on the existing connection, run a read-only shell command, and cache the parsed result for the rest of the deploy.
+1. Reads the current state from the target by gathering any [facts](facts.md) it needs (e.g. `AptPackages` to see what is already installed). Facts open a channel on the existing connection, run a read-only shell command, and parse its output. Fact results are **not cached**: every time a fact is requested its command runs on the target again.
 2. Diffs that state against the desired state you've described.
 3. Determines whether it would produce any commands — pyinfra advances the operation just far enough to see its first command, then stops. It does **not** build or keep the full command list at this point.
 4. Returns an `OperationMeta` handle with a `will_change` flag indicating whether the operation would change anything.
@@ -28,6 +28,8 @@ When the deploy file finishes, pyinfra knows the order operations appear in and 
 ### Phase 2: execute
 
 pyinfra then walks the operations in order. For each operation it **re-evaluates** the operation against each host — re-running the operation's logic to generate its commands, then running them on every host that needs them, in parallel, and waiting for that operation to finish on all hosts before moving on to the next. The commands are produced here, at execute time, not replayed from prepare.
+
+Because the operation's logic runs again, any facts it reads are gathered **again** at this point, so they reflect changes made by earlier operations. This is why, with `--debug`, you will see the same fact command run once during prepare and once more during execute. Facts read directly in your deploy code (e.g. `host.get_fact(...)`) are likewise re-run on every call. If you need the same fact several times in your own code, store the result in a variable rather than calling `host.get_fact` repeatedly.
 
 This means a host's connection lifecycle for a deploy is typically: one connection opens at stage 2, stays open for facts (prepare) and command execution (execute), and closes at stage 5. Individual operations open new channels over that single connection rather than fresh sessions per command.
 
