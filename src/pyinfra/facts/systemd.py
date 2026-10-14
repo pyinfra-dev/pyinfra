@@ -145,3 +145,20 @@ class SystemdEnabled(SystemdStatus):
 
     state_key = "UnitFileState"
     state_values = ["enabled", "static"]
+
+
+class SystemdMasked(SystemdStatus):
+    """
+    Returns a dictionary map of systemd units to booleans indicating whether they are masked.
+
+    .. code:: python
+
+        {
+            "ssh.service": False,
+            "containerd.service": False,
+            "x11-common.service": True,
+        }
+    """
+
+    state_key = "UnitFileState"
+    state_values = ["masked", "masked-runtime"]
