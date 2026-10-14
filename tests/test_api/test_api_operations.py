@@ -1437,4 +1437,74 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertTrue(op_meta.retry_succeeded)
 
 
+class TestRunNoWaitOps(PatchSSHTestCase):
+    """
+    `no_wait` runs all of a host's operations in a single greenlet, so a failure leaves that
+    greenlet as an exception rather than as a return value: it has to be read back, or the host
+    is never failed and the run reports success.
+    """
+
+    def _make_state(self, hosts=("somehost",)):
+        inventory = make_inventory(hosts=hosts)
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+        return state, inventory
+
+    def test_no_wait_fails_the_host_and_stops_its_operations(self):
+        state, inventory = self._make_state()
+        somehost = inventory.get_host("somehost")
+
+        add_op(state, server.shell, commands=["/bin/false"])
+        add_op(state, server.shell, commands=["echo second"])
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (False, FakeBuffer("", FakeChannel(1)))
+
+            with self.assertRaises(PyinfraError) as e:
+                run_ops(state, no_wait=True)
+
+        # The only host failed, so there is nothing left to run
+        assert e.exception.args[0] == "No hosts remaining!"
+        assert somehost in state.failed_hosts
+        # The failing operation is counted, the one behind it never ran
+        assert state.results[somehost].error_ops == 1
+        assert state.results[somehost].success_ops == 0
+
+    def test_no_wait_fails_only_the_failing_host(self):
+        state, inventory = self._make_state(hosts=("somehost", "anotherhost"))
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        add_op(state, server.shell, commands=["echo hello"])
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.side_effect = [
+                (False, FakeBuffer("", FakeChannel(1))),
+                (True, FakeBuffer("output", FakeChannel(0))),
+            ]
+
+            # One host failing is not a reason to stop the run for the other one
+            run_ops(state, no_wait=True)
+
+        assert len(state.failed_hosts) == 1
+        assert (somehost in state.failed_hosts) != (anotherhost in state.failed_hosts)
+
+    def test_no_wait_reports_a_connector_error_as_a_host_failure(self):
+        state, inventory = self._make_state()
+        somehost = inventory.get_host("somehost")
+
+        add_op(state, server.shell, commands=["echo hello"])
+
+        def refuse(*args, **kwargs):
+            raise PyinfraError("the connector refused")
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command", refuse):
+            with self.assertRaises(PyinfraError) as e:
+                run_ops(state, no_wait=True)
+
+        assert e.exception.args[0] == "No hosts remaining!"
+        assert somehost in state.failed_hosts
+
+
 this_filename = path.join("tests", "test_api", "test_api_operations.py")
