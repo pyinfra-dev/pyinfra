@@ -7,7 +7,15 @@ on:
       - 2.x
       - 1.x
       - 0.x
+    tags:
+      - "v*"
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Only cancel superseded runs for PRs - branch and tag pushes should always
+  # produce a full result (release tags especially).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Linting
@@ -57,6 +65,7 @@ jobs:
       - type-check
       - spell-check
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-26, macos-15, macos-14, windows-2025, windows-2022, ubuntu-24.04, ubuntu-22.04]
         # Test every OS vs. the default Python version (the newest stable release), and only one for
@@ -94,6 +103,7 @@ jobs:
       - type-check
       - spell-check
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         test-name: [local, ssh, docker, podman]
