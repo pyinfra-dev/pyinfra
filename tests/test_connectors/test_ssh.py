@@ -2,8 +2,9 @@ import importlib
 from pathlib import Path
 from socket import error as socket_error, gaierror
 from tempfile import TemporaryDirectory
-from unittest import TestCase, mock
+from unittest import TestCase, mock, skipUnless
 
+import paramiko
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
 from paramiko.auth_handler import AuthHandler
 
@@ -12,11 +13,17 @@ from pyinfra.api import Config, Host, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.connectors import ssh
-from pyinfra.connectors.ssh_util import _patch_paramiko_sk_key_support
+from pyinfra.connectors.ssh_util import (
+    _patch_paramiko_dss_key_value_error,
+    _patch_paramiko_sk_key_support,
+)
 from pyinfra.connectors.sshuserclient.client import SSHClient as SSHUserClient
 from pyinfra.context import ctx_state
 
 from ..util import make_inventory
+
+# DSA support was removed in paramiko 4, where the DSSKey patch is a no-op.
+DSSKey = getattr(paramiko, "DSSKey", None)
 
 
 def make_raise_exception_function(cls, *args, **kwargs):
@@ -59,6 +66,15 @@ class FakeBlobKey:
 
     def get_name(self):
         return "ssh-ed25519"
+
+
+# Matches the ``cryptography`` rejection paramiko/paramiko#1839 lets escape.
+def value_error_sign_ssh_data(self, data, algorithm=None):
+    raise ValueError("q must be exactly 160, 224, or 256 bits long")
+
+
+def working_sign_ssh_data(self, data, algorithm=None):
+    return f"signed:{data!r}"
 
 
 class TestParamikoSkKeyPatch(TestCase):
@@ -171,6 +187,83 @@ class TestParamikoSkKeyPatch(TestCase):
             AuthHandler._get_key_type_and_bits = original_method
 
 
+@skipUnless(DSSKey is not None, "paramiko no longer ships DSSKey (paramiko 4+)")
+class TestParamikoDssKeyPatch(TestCase):
+    def test_patch_paramiko_dss_key_value_error_reraises_as_ssh_exception(self):
+        original_method = DSSKey.sign_ssh_data
+        try:
+            DSSKey.sign_ssh_data = value_error_sign_ssh_data
+
+            _patch_paramiko_dss_key_value_error()
+
+            with self.assertRaises(SSHException) as raised:
+                DSSKey.sign_ssh_data(mock.Mock(), b"blob")
+            self.assertEqual(
+                str(raised.exception),
+                "q must be exactly 160, 224, or 256 bits long",
+            )
+        finally:
+            DSSKey.sign_ssh_data = original_method
+
+    def test_patch_paramiko_dss_key_value_error_passes_through_valid_key(self):
+        original_method = DSSKey.sign_ssh_data
+        try:
+            DSSKey.sign_ssh_data = working_sign_ssh_data
+
+            _patch_paramiko_dss_key_value_error()
+
+            self.assertEqual(
+                DSSKey.sign_ssh_data(mock.Mock(), b"blob"),
+                "signed:b'blob'",
+            )
+        finally:
+            DSSKey.sign_ssh_data = original_method
+
+    def test_patch_paramiko_dss_key_value_error_is_idempotent(self):
+        original_method = DSSKey.sign_ssh_data
+        try:
+            DSSKey.sign_ssh_data = value_error_sign_ssh_data
+
+            _patch_paramiko_dss_key_value_error()
+            patched_method = DSSKey.sign_ssh_data
+
+            _patch_paramiko_dss_key_value_error()
+
+            self.assertIs(DSSKey.sign_ssh_data, patched_method)
+            self.assertTrue(getattr(patched_method, "_pyinfra_dss_patch", False))
+        finally:
+            DSSKey.sign_ssh_data = original_method
+
+    def test_patch_paramiko_dss_key_value_error_noop_without_dss_key(self):
+        original_method = DSSKey.sign_ssh_data
+
+        with mock.patch("paramiko.DSSKey", None):
+            _patch_paramiko_dss_key_value_error()
+
+        self.assertIs(DSSKey.sign_ssh_data, original_method)
+
+    def test_sshuserclient_connect_patches_paramiko_dss_key_value_error(self):
+        original_method = DSSKey.sign_ssh_data
+        try:
+            DSSKey.sign_ssh_data = value_error_sign_ssh_data
+
+            client = SSHUserClient()
+            with (
+                mock.patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect"),
+                mock.patch("pyinfra.connectors.sshuserclient.client.get_host_keys"),
+                mock.patch(
+                    "pyinfra.connectors.sshuserclient.client.get_ssh_config",
+                    return_value=None,
+                ),
+            ):
+                client.connect("somehost", allow_agent=False, look_for_keys=False)
+
+            with self.assertRaises(SSHException):
+                DSSKey.sign_ssh_data(mock.Mock(), b"blob")
+        finally:
+            DSSKey.sign_ssh_data = original_method
+
+
 class TestSSHConnector(TestCase):
     def setUp(self):
         self.fake_connect_patch = mock.patch("pyinfra.connectors.ssh.SSHClient.connect")
@@ -208,6 +301,21 @@ class TestSSHConnector(TestCase):
             )
         finally:
             AuthHandler._get_key_type_and_bits = original_method
+
+    @skipUnless(DSSKey is not None, "paramiko no longer ships DSSKey (paramiko 4+)")
+    def test_connect_patches_paramiko_dss_key_value_error(self):
+        original_method = DSSKey.sign_ssh_data
+        try:
+            DSSKey.sign_ssh_data = value_error_sign_ssh_data
+
+            inventory = make_inventory(hosts=("somehost",))
+            state = State(inventory, Config())
+            connect_all(state)
+
+            with self.assertRaises(SSHException):
+                DSSKey.sign_ssh_data(mock.Mock(), b"blob")
+        finally:
+            DSSKey.sign_ssh_data = original_method
 
     def test_connect_all_password(self):
         inventory = make_inventory(override_data={"ssh_password": "test"})
