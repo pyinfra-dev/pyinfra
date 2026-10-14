@@ -6,6 +6,7 @@ from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
     _ensure_askpass_set_for_host,
+    execute_command_with_sudo_retry,
     make_unix_command,
     make_unix_command_for_host,
     remove_any_sudo_askpass_file,
@@ -268,6 +269,108 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         host = state.inventory.get_host("somehost")
         command = make_unix_command_for_host(state, host, "echo Šablony")
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
+
+
+class TestExecuteCommandWithSudoRetry(TestCase):
+    """
+    A command failing with a sudo password required line should only be re-executed
+    when the command itself runs with sudo. Without `_sudo` the prompted password
+    cannot change the outcome, so the failed result is returned as-is and the usual
+    failure handling (fail_hosts, _ignore_errors, --fail-percent) applies
+    (issue #940).
+    """
+
+    def _make_host(self):
+        state = State(make_inventory(hosts=("somehost",)), Config())
+        host = state.inventory.get_host("somehost")
+        host.init(state)
+        return host
+
+    @staticmethod
+    def _sudo_required_output():
+        return CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_on_ordinary_failure(self, fake_getpass):
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, CommandOutput([OutputLine("stderr", "boom")])))
+
+        return_code, output = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        assert output.output == "boom"
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_without_sudo(self, fake_getpass, fake_logger):
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, self._sudo_required_output()))
+
+        return_code, output = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        assert output.output == "sudo: a password is required"
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+        assert "`_sudo=True`" in fake_logger.warning.call_args.args[0]
+        # The warning carries the host prefix so it can be attributed on multi-host runs
+        assert fake_logger.warning.call_args.args[1] == host.print_prefix
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_with_sudo_disabled(self, fake_getpass, fake_logger):
+        # The rsync path passes an explicit `_sudo=False`
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, self._sudo_required_output()))
+
+        return_code, output = execute_command_with_sudo_retry(
+            host, {"_sudo": False}, execute_command
+        )
+
+        assert return_code == 1
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_without_sudo_sudo_rs(self, fake_getpass, fake_logger):
+        host = self._make_host()
+        execute_command = MagicMock(
+            return_value=(
+                1,
+                CommandOutput(
+                    [OutputLine("stderr", "sudo-rs: interactive authentication is required")]
+                ),
+            )
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+
+    @patch("pyinfra.connectors.util.getpass", return_value="password")
+    def test_retry_with_sudo(self, fake_getpass):
+        host = self._make_host()
+        execute_command = MagicMock(
+            side_effect=[
+                (1, self._sudo_required_output()),
+                (0, CommandOutput([])),
+            ]
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+
+        assert return_code == 0
+        assert execute_command.call_count == 2
+        fake_getpass.assert_called_once()
+        assert host.connector_data["prompted_sudo_password"] == "password"
 
 
 class TestRemoveAnySudoAskpassFile(TestCase):
