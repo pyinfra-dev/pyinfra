@@ -421,6 +421,7 @@ def make_unix_command(
     _sudo_password="",
     _sudo_askpass_path=None,
     _preserve_sudo_env=False,
+    _sudo_set_home=True,
     # Doas config
     _doas=False,
     _doas_user=None,
@@ -483,7 +484,10 @@ def make_unix_command(
         )
 
     if _sudo:
-        command_bits.extend(["sudo", "-H"])
+        command_bits.append("sudo")
+
+        if _sudo_set_home:
+            command_bits.append("-H")
 
         if _sudo_password:
             command_bits.extend(["-A", "-k"])  # use askpass, disable cache

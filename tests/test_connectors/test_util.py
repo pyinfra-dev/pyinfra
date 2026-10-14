@@ -56,6 +56,16 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         command = make_unix_command("uptime", _sudo=True, _preserve_sudo_env=True)
         assert command.get_raw_value() == "sudo -H -n -E sh -c uptime"
 
+    def test_sudo_without_set_home_command(self):
+        command = make_unix_command("uptime", _sudo=True, _sudo_set_home=False)
+        assert command.get_raw_value() == "sudo -n sh -c uptime"
+
+    def test_sudo_without_set_home_preserve_env_command(self):
+        command = make_unix_command(
+            "uptime", _sudo=True, _sudo_set_home=False, _preserve_sudo_env=True
+        )
+        assert command.get_raw_value() == "sudo -n -E sh -c uptime"
+
     def test_use_sudo_login_command(self):
         command = make_unix_command("uptime", _sudo=True, _use_sudo_login=True)
         assert command.get_raw_value() == "sudo -H -n -i sh -c uptime"
