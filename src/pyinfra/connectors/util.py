@@ -221,9 +221,10 @@ def execute_command_with_sudo_retry(
                 # https://github.com/pyinfra-dev/pyinfra/issues/940
                 if not command_arguments.get("_sudo"):
                     logger.warning(
-                        "sudo is asking for a password but the command was not run with "
+                        "%ssudo is asking for a password but the command was not run with "
                         "`_sudo`, not re-running it. Run the operation with `_sudo=True` "
-                        "so the whole command (or script) runs as root."
+                        "so the whole command (or script) runs as root.",
+                        host.print_prefix,
                     )
                     break
                 # If we need a password, ask the user for it and attach to the host

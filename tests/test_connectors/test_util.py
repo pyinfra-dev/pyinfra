@@ -316,6 +316,8 @@ class TestExecuteCommandWithSudoRetry(TestCase):
         fake_getpass.assert_not_called()
         fake_logger.warning.assert_called_once()
         assert "`_sudo=True`" in fake_logger.warning.call_args.args[0]
+        # The warning carries the host prefix so it can be attributed on multi-host runs
+        assert fake_logger.warning.call_args.args[1] == host.print_prefix
 
     @patch("pyinfra.connectors.util.logger")
     @patch("pyinfra.connectors.util.getpass")
