@@ -19,6 +19,7 @@ from typeguard import TypeCheckError, check_type
 import pyinfra
 from pyinfra import logger
 from pyinfra.api.output import format_text
+from pyinfra.api.hiddenvalue import HiddenValue
 
 if TYPE_CHECKING:
     from pyinfra.api.host import Host
@@ -155,6 +156,10 @@ def get_template(
     """
     if jinja_env_kwargs is None:
         jinja_env_kwargs = {}
+    else:
+        # below we pop 'finalize' from the dictionary, copy the dict first to not affect the caller
+        jinja_env_kwargs = jinja_env_kwargs.copy()
+
     file_data = get_file_io(filename_or_io, mode="r")
     cache_key = file_data.cache_key
 
@@ -165,10 +170,21 @@ def get_template(
         template_string = file_io.read()
 
     default_loader = FileSystemLoader(getcwd())
+    user_finalize = jinja_env_kwargs.pop('finalize', None)
+
+    def finalize(v):
+        if user_finalize:
+            v = user_finalize(v)
+        if isinstance(v, HiddenValue):
+            return v.unmask()
+        else:
+            return v
+
     template = Environment(
         undefined=StrictUndefined,
         keep_trailing_newline=True,
         loader=jinja_env_kwargs.pop("loader", default_loader),
+        finalize=finalize,
         **jinja_env_kwargs,
     ).from_string(template_string)
 
