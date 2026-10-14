@@ -170,7 +170,7 @@ def get_template(
         template_string = file_io.read()
 
     default_loader = FileSystemLoader(getcwd())
-    user_finalize = jinja_env_kwargs.pop('finalize', None)
+    user_finalize = jinja_env_kwargs.pop("finalize", None)
 
     def finalize(v):
         if user_finalize:
