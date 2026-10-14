@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import io
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from urllib.parse import urlparse
 
 from pyinfra import host
@@ -506,7 +506,7 @@ def update(cache_time: int | None = None, wait_for_lock: bool | int = False):
             # timezone and consider it as UTC to have correct comparison with
             # cache_info["mtime].
             host_utc_current_time = datetime.fromtimestamp(
-                host.get_fact(Date).timestamp(), timezone.utc
+                host.get_fact(Date).timestamp(), UTC
             ).replace(tzinfo=None)
             host_cache_time = host_utc_current_time - timedelta(seconds=cache_time)
             if cache_info["mtime"] > host_cache_time:
