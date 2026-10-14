@@ -10,7 +10,14 @@ from paramiko import SSHException
 
 from pyinfra import logger
 from pyinfra.api.output import format_text
-from pyinfra.connectors.util import CommandOutput, OutputLine
+from pyinfra.connectors.util import (
+    CommandOutput,
+    OutputLine,
+    check_stdin_is_rewindable,
+    get_stdin_position_for_retry,
+    reset_stdout_for_retry,
+    rewind_stdin_for_retry,
+)
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
@@ -77,6 +84,12 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
         ConnectorArguments,
         {key: global_arguments[key] for key in executor_kwarg_keys if key in global_arguments},  # type: ignore[literal-required] # noqa
     )
+    stdin = base_connector_arguments.get("_stdin")
+    stdin_position = None
+    if retries:
+        # Checked before any command runs: the first attempt would consume the stream.
+        check_stdin_is_rewindable(stdin)
+        stdin_position = get_stdin_position_for_retry(stdin)
 
     retry_attempt = 0
     did_error = False
@@ -90,6 +103,13 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
         executed_commands = 0
         commands = []
         all_output_lines = []
+
+        if retry_attempt:
+            # The previous attempt consumed the `_stdin` payload and filled the `_stdout`
+            # sink: put both back, or the retry sends an empty stdin and appends its output
+            # to the previous attempt's.
+            rewind_stdin_for_retry(stdin, stdin_position)
+            reset_stdout_for_retry(base_connector_arguments.get("_stdout"))
 
         for command in op_data.command_generator():
             commands.append(command)
