@@ -5,6 +5,9 @@
         "delete_keys": true
     },
     "facts": {
+        "files.Link": {
+            "path=/home/someuser/.ssh/authorized_keys": false
+        },
         "server.Home": {
             "user=someuser": "/home/someuser"
         },
