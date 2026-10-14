@@ -197,7 +197,7 @@ screen.
 
 When implementing `run_shell_command`, connectors should use pyinfra's command wrapping utilities rather than manually constructing commands. The `make_unix_command_for_host()` function from `pyinfra.connectors.util` handles shell wrapping, sudo elevation, environment variables, working directory changes, command retries and shell executable selection.
 
-Its worth being aware that when passing `arguments` to `make_unix_command_for_host()`, connector control parameters must be filtered out. These parameters (`_success_exit_codes`, `_timeout`, `_get_pty`, `_stdin`) are defined in `pyinfra.api.arguments.ConnectorArguments` and are meant for the connector's internal logic after command generation, not for command construction itself.
+Its worth being aware that when passing `arguments` to `make_unix_command_for_host()`, connector control parameters must be filtered out. These parameters (`_success_exit_codes`, `_timeout`, `_get_pty`, `_stdin`, `_stdout`) are defined in `pyinfra.api.arguments.ConnectorArguments` and are meant for the connector's internal logic after command generation, not for command construction itself.
 
 The recommended approach is to use `extract_control_arguments()` from `pyinfra.connectors.util` which handles this filtering for you:
 
@@ -245,6 +245,49 @@ class MyConnector(BaseConnector):
 Without proper command wrapping, shell operators and complex commands will fail. For example `timeout 60 bash -c 'command' || true` executed without shell wrapping will result in `bash: ||: command not found`. PyInfra operations and fact gathering rely on shell operators (`&&`, `||`, pipes, redirects) so using `make_unix_command_for_host()` ensures your connector handles these correctly.
 
 For complete examples see pyinfra's built-in connectors in `pyinfra/connectors/docker.py`, `pyinfra/connectors/chroot.py`, `pyinfra/connectors/ssh.py` and `pyinfra/connectors/local.py`, as well as the command wrapping utilities in `pyinfra/connectors/util.py`.
+
+## Making a connector chain-compatible
+
+To allow a connector to be used as an **inner** layer in a :doc:`chain </connectors/chain>`,
+it must implement a command wrapper and declare how to resolve its runtime identifier.
+
+### Runtime identifier
+
+Set the `runtime_id_field` class attribute to the data key that holds the connector's
+runtime identifier (container name, chroot directory, etc.). The default
+`get_runtime_id()` implementation reads `self.data[self.runtime_id_field]`:
+
+```py
+class MyConnector(BaseConnector):
+    runtime_id_field = "my_container_id"
+```
+
+For more complex resolution (e.g. combining multiple data keys), override
+`get_runtime_id()` directly:
+
+```py
+class MyConnector(BaseConnector):
+    def get_runtime_id(self) -> str:
+        return f"{self.data['remote']}:{self.data['name']}"
+```
+
+`get_runtime_id()` is called *before* `connect()`, so it must work solely from data
+available at construction time.
+
+### Command wrapping
+
+```py
+def wrap_exec_command(self, command: StringCommand, container_id: str) -> StringCommand:
+    """Return a command that runs ``command`` inside this connector's target."""
+    return StringCommand("my-tool", "exec", container_id, "--", "sh", "-c", QuoteString(command))
+```
+
+The `container_id` parameter is the value returned by `get_runtime_id()`. The returned
+command will be executed in the *parent* connector's context.
+
+The wrapped command must forward stdin to the target: file uploads through a chain are
+streamed into a `cat` running in the innermost target, rather than staged as a temporary
+copy on each layer. This is why the Docker connector passes `-i` to `docker exec`.
 
 
 ## pyproject.toml
