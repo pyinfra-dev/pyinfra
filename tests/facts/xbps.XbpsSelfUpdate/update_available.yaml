@@ -1,0 +1,6 @@
+command: xbps-install -n -u xbps
+requires_command: xbps-install
+output: |
+  xbps-0.60.5_1 update x86_64 https://repo-default.voidlinux.org/current 1858672 607744
+fact:
+  - xbps-0.60.5_1
