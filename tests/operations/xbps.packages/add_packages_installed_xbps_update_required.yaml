@@ -1,0 +1,8 @@
+args:
+  - curl
+facts:
+  xbps.XbpsPackages:
+    curl: ["1"]
+  xbps.XbpsSelfUpdate: ["xbps-0.60.5_1"]
+commands: []
+noop_description: package curl is installed (1)
