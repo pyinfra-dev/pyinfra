@@ -1,0 +1,14 @@
+# latest needs up to date lists to know whether there is anything to upgrade.
+args:
+  - git
+kwargs:
+  update: true
+  latest: true
+facts:
+  deb.DebPackages:
+    git: ["1.0"]
+commands:
+  - apt-get update
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install git'
+idempotent: false
+disable_idempotent_warning_reason: package upgrades are always executed
