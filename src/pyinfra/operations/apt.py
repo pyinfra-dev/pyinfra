@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.apt import (
+    AptPackageProvides,
     AptSourcesFile,
     AptSources,
     SimulateOperationWillChange,
@@ -701,4 +702,6 @@ def packages(
         ),
         version_join="=",
         latest=latest,
+        expand_package_fact=lambda package: host.get_fact(AptPackageProvides, package=package),
+        expand_match_any=True,
     )

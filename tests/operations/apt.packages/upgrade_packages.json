@@ -6,6 +6,10 @@
     "facts": {
         "deb.DebPackages": {
             "git": ["1.0"]
+        },
+        "apt.AptPackageProvides": {
+            "package=git": [],
+            "package=another": []
         }
     },
     "commands": [

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from typing_extensions import TypedDict, override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString, StringCommand
 
 from .gpg import GpgKeyrings
 from .util.packaging import parse_packages
@@ -436,6 +436,44 @@ class AptPackages(FactBase):
     @override
     def process(self, output):
         return parse_packages(self.regex, output)
+
+
+class AptPackageProvides(FactBase):
+    """
+    Returns a list of packages that provide the specified (virtual) package name:
+
+    .. code:: python
+
+        [
+            ["package_name", "version"],
+        ]
+    """
+
+    default = list
+
+    @override
+    def command(self, package: str) -> StringCommand:
+        return StringCommand("apt-cache showpkg", QuoteString(package))
+
+    @override
+    def requires_command(self, package: str) -> str:
+        return "apt-cache"
+
+    @override
+    def process(self, output: list[str]) -> list[list[str]]:
+        packages: list[list[str]] = []
+        in_reverse_provides = False
+
+        for line in output:
+            line = line.strip()
+            if line == "Reverse Provides:":
+                in_reverse_provides = True
+                continue
+            if in_reverse_provides and line:
+                name, version = line.split()[:2]
+                packages.append([name, version])
+
+        return packages
 
 
 class AptKeys(GpgKeyrings):
