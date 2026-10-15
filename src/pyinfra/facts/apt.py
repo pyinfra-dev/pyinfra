@@ -470,8 +470,8 @@ class AptPackageProvides(FactBase):
                 in_reverse_provides = True
                 continue
             if in_reverse_provides and line:
-                name, _, version = line.partition(" ")
-                packages.append([name, version.strip()])
+                name, version = line.split()[:2]
+                packages.append([name, version])
 
         return packages
 

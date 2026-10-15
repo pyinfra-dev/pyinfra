@@ -6,13 +6,13 @@ output: |
   Versions:
 
   Reverse Depends:
-    fortunes,fortune 1:1.99.1-7build1
-    fortunes-min,fortune
-    fortune-zh,fortune
+    fortune-mod,fortune
+    xscreensaver,fortune
+    fortune-mod,fortune
   Dependencies:
   Provides:
   Reverse Provides:
-  fortune-mod 1:1.99.1-7build1
+  fortune-mod 1:1.99.1-7.3 (= )
 fact:
   - - fortune-mod
-    - "1:1.99.1-7build1"
+    - "1:1.99.1-7.3"

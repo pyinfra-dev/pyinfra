@@ -3,10 +3,10 @@ args:
 facts:
   deb.DebPackages:
     fortune-mod:
-      - "1:1.99.1-7build1"
+      - "1:1.99.1-7.3"
   apt.AptPackageProvides:
     "package=fortune":
       - - fortune-mod
-        - "1:1.99.1-7build1"
+        - "1:1.99.1-7.3"
 commands: []
 noop_description: package fortune is installed
