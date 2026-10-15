@@ -7,5 +7,5 @@
     "flatpak.FlatpakPackage": {},
     "flatpak.FlatpakPackages": []
   },
-  "commands": ["flatpak install --noninteractive flathub 'x; reboot'"]
+  "commands": ["flatpak install --noninteractive --system flathub 'x; reboot'"]
 }

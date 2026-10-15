@@ -13,7 +13,8 @@ from pyinfra.facts.flatpak import FlatpakPackages
 def packages(
     packages: str | list[str] | None = None,
     remote: str | None = None,
-    present=True,
+    present: bool = True,
+    user: bool = False,
 ):
     """
     Install/remove a flatpak package
@@ -21,6 +22,7 @@ def packages(
     + packages: List of packages
     + remote: Source to install the application or runtime from
     + present: whether the package should be installed
+    + user: whether to install the package for the current user or system-wide
 
     **Examples:**
 
@@ -38,6 +40,14 @@ def packages(
             name="Install vlc",
             packages="org.videolan.VLC",
             remote="flathub",
+        )
+
+        # Install vlc flatpak as for the current user
+        flatpak.package(
+            name="Install vlc",
+            packages="org.videolan.VLC",
+            remote="flathub",
+            user=True,
         )
 
         # Install multiple flatpaks
@@ -86,7 +96,9 @@ def packages(
                 host.noop(f"flatpak package {package} is not installed")
 
     if install_packages:
-        command: list[str | QuoteString] = ["flatpak install --noninteractive"]
+        command: list[str | QuoteString] = [
+            f"flatpak install --noninteractive{' --user' if user else ' --system'}"
+        ]
         if remote:
             command.append(QuoteString(remote))
         command += [QuoteString(package) for package in install_packages]
@@ -94,6 +106,6 @@ def packages(
 
     if remove_packages:
         yield StringCommand(
-            "flatpak uninstall --noninteractive",
+            f"flatpak uninstall --noninteractive{' --user' if user else ' --system'}",
             *[QuoteString(package) for package in remove_packages],
         )

@@ -6,5 +6,5 @@
     "flatpak.FlatpakPackage": {},
     "flatpak.FlatpakPackages": []
   },
-  "commands": ["flatpak install --noninteractive org.videolan.VLC"]
+  "commands": ["flatpak install --noninteractive --system org.videolan.VLC"]
 }
