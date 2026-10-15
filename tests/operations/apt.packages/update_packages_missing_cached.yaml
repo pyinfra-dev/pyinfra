@@ -1,0 +1,13 @@
+args:
+  - vim
+kwargs:
+  update: true
+  cache_time: 3600
+facts:
+  deb.DebPackages: {}
+  server.Date: datetime:2015-01-01T00:00:00+00:00
+  files.File:
+    path=/var/lib/apt/periodic/update-success-stamp:
+      mtime: datetime:2015-01-01T00:00:00
+commands:
+  - DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install vim

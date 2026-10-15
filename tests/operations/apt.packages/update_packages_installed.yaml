@@ -1,0 +1,10 @@
+# Nothing to install, so the package lists aren't updated.
+args:
+  - git
+kwargs:
+  update: true
+facts:
+  deb.DebPackages:
+    git: ["1.0"]
+commands: []
+noop_description: package git is installed (1.0)
