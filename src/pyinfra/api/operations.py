@@ -342,8 +342,6 @@ def _run_single_op(state: State, op_hash: str):
     op_meta = state.get_op_meta(op_hash)
     log_operation_start(op_meta)
 
-    failed_hosts = set()
-
     if op_meta.global_arguments["_serial"]:
         with progress_spinner(state.inventory.get_active_hosts()) as progress:
             # For each host, run the op
@@ -351,8 +349,10 @@ def _run_single_op(state: State, op_hash: str):
                 result = _run_host_op_with_context(state, host, op_hash)
                 progress(host)
 
+                # Fail each host straight away so the fail percent can stop the
+                # operation before it runs on the remaining hosts.
                 if not result:
-                    failed_hosts.add(host)
+                    state.fail_hosts({host})
 
     else:
         # Start with the whole inventory in one batch
@@ -380,12 +380,13 @@ def _run_single_op(state: State, op_hash: str):
                     progress(host)
 
                 # Get all the results
-                for greenlet, host in greenlet_to_host.items():
-                    if not greenlet.get():
-                        failed_hosts.add(host)
+                failed_hosts = {
+                    host for greenlet, host in greenlet_to_host.items() if not greenlet.get()
+                }
 
-    # Now all the batches/hosts are complete, fail any failures
-    state.fail_hosts(failed_hosts)
+            # Fail each batch's hosts before starting the next batch, so the fail
+            # percent can stop the operation part way through.
+            state.fail_hosts(failed_hosts)
 
     state.trigger_callbacks("operation_end", op_hash)
 
