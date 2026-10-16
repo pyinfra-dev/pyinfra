@@ -144,7 +144,9 @@ def read_buffer(
     for line in io:
         # Handle local Popen shells returning list of bytes, not strings
         if not isinstance(line, str):
-            line = line.decode("utf-8")
+            # Binary stdout (e.g. cat of a binary file during --diff) must not
+            # kill the reader greenlet with UnicodeDecodeError.
+            line = line.decode("utf-8", errors="replace")
 
         line = line.rstrip("\n")
         output_queue.put(OutputLine(name, line))
