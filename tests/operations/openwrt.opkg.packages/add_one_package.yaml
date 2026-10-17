@@ -1,0 +1,8 @@
+args:
+  - curl
+kwargs:
+  update: false
+facts:
+  opkg.OpkgPackages: {}
+commands:
+  - opkg install curl
