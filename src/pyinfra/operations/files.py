@@ -1217,8 +1217,7 @@ def put(
 
                     current_contents = host.get_fact(FileContents, path=dest)
                     if current_contents:
-                        current_lines = [line + "
-" for line in current_contents]
+                        current_lines = [line + "\n" for line in current_contents]
                     else:
                         current_lines = []
 
