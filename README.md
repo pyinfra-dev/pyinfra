@@ -1,3 +1,5 @@
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 <p align="center">
     <a href="https://pyinfra.com">
         <img src="https://pyinfra.com/static/logo_readme.png" alt="pyinfra" />
