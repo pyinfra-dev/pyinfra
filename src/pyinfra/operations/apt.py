@@ -164,7 +164,7 @@ def key(
         return
 
     # Resolve destination path under /etc/apt/keyrings/
-    if dest and not dest.startswith("/"):
+    if dest and not str(dest).startswith("/"):
         dest = f"/etc/apt/keyrings/{dest}"
     elif not dest:
         if src:

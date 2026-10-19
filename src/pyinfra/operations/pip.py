@@ -167,7 +167,7 @@ def packages(
         yield from _virtualenv(virtualenv, **virtualenv_kwargs)
 
         # And update pip path
-        virtualenv = virtualenv.rstrip("/")
+        virtualenv = str(virtualenv).rstrip("/")
         pip = StringCommand(QuoteString(virtualenv), "/bin/", pip, _separator="").get_raw_value()
 
     install_command_args = [pip, "install"]
