@@ -1,0 +1,10 @@
+args:
+  - tipidee
+kwargs:
+  reloaded: true
+facts:
+  s6.S6LiveStatus:
+    livedir=None:
+      tipidee: true
+commands:
+  - s6 live reload -t 10 tipidee

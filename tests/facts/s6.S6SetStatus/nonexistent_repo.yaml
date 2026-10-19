@@ -1,0 +1,6 @@
+arg:
+  repodir: /fake/path
+command: s6-rc-set-status -r /fake/path current
+requires_command: s6-rc-set-status
+output: "s6-rc-set-status: fatal: set current does not exist in repository /fake/path"
+fact: null
