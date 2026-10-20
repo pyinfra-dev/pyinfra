@@ -1,0 +1,12 @@
+kwargs:
+  path: /some/virtualenv
+  python: python3.14
+  venv: true
+facts:
+  files.File:
+    path=/some/virtualenv/bin/activate: true
+  pip.PythonVersion:
+    python=/some/virtualenv/bin/python: [3, 12, 11]
+    python=python3.14: [3, 14, 7]
+commands: []
+noop_description: virtualenv /some/virtualenv exists but runs Python 3.12 while python3.14 is Python 3.14

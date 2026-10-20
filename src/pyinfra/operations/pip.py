@@ -5,13 +5,17 @@ a virtualenv (virtual environment).
 
 from __future__ import annotations
 
-from pyinfra import host
+from collections.abc import Generator
+from typing import Any, Literal
+
+from pyinfra import host, logger
 from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.files import File
-from pyinfra.facts.pip import PipPackages
+from pyinfra.facts.pip import PipPackages, PythonVersion
 
 from . import files
 from .util.packaging import PkgInfo, ensure_packages
+from .util.venv import check_existing_venv
 
 
 @operation()
@@ -22,6 +26,7 @@ def virtualenv(
     site_packages=False,
     always_copy=False,
     present=True,
+    on_mismatch: Literal["warn", "recreate", "ignore"] = "warn",
 ):
     """
     Add/remove Python virtualenvs.
@@ -31,6 +36,16 @@ def virtualenv(
     + site_packages: give access to the global site-packages
     + always_copy: always copy files rather than symlinking
     + present: whether the virtualenv should exist
+    + on_mismatch: what to do with an existing virtualenv whose Python version differs from
+      ``python``: ``warn`` keeps it and logs a warning, ``recreate`` deletes and recreates it,
+      ``ignore`` skips the check
+
+    Existing virtualenvs:
+        A virtualenv whose interpreter can no longer be executed, typically because the Python
+        it was created from was upgraded or removed, is deleted and created again. When
+        ``python`` is given its major.minor version is also compared with the interpreter inside
+        the virtualenv, and ``on_mismatch`` decides what happens when they differ. Set
+        ``on_mismatch="ignore"`` to skip both checks.
 
     **Example:**
 
@@ -43,43 +58,80 @@ def virtualenv(
         )
     """
 
+    yield from _virtualenv(
+        path=path,
+        python=python,
+        venv=venv,
+        site_packages=site_packages,
+        always_copy=always_copy,
+        present=present,
+        on_mismatch=on_mismatch,
+    )
+
+
+def _virtualenv(
+    path: str,
+    python: str | None = None,
+    venv: bool = False,
+    site_packages: bool = False,
+    always_copy: bool = False,
+    present: bool = True,
+    on_mismatch: Literal["warn", "recreate", "ignore"] = "warn",
+) -> Generator[Any, None, bool]:
+    """
+    Yield the commands that make the virtualenv at ``path`` match the arguments, returning
+    whether it is being (re)created. Shared by the virtualenv, venv and packages operations.
+    """
+
     # Check for *contents* of a virtualenv, ie don't accept an empty directory
     # as a valid virtualenv but ensure the activate script exists.
-    activate_script_path = f"{path}/bin/activate"
+    exists = host.get_fact(File, path=f"{path}/bin/activate")
 
-    if present is False:
-        if host.get_fact(File, path=activate_script_path):
+    if not present:
+        if exists:
             yield from files.directory._inner(path, present=False)
         else:
             host.noop(f"virtualenv {path} does not exist")
+        return False
 
-    if present:
-        if not host.get_fact(File, path=activate_script_path):
-            # Create missing virtualenv
-            command: list[str | QuoteString] = ["virtualenv"]
+    if exists:
+        recreate, reason = False, None
+        if on_mismatch != "ignore":
+            current = host.get_fact(PythonVersion, python=f"{path}/bin/python")
+            wanted = None
+            if current is not None and python is not None:
+                wanted = host.get_fact(PythonVersion, python=python)
+            recreate, reason = check_existing_venv(
+                f"virtualenv {path}", current, wanted, python, on_mismatch
+            )
 
-            if venv:
-                command = [QuoteString(python) if python else "python", "-m", "venv"]
+        if not recreate:
+            host.noop(f"virtualenv {path} exists" + (f" but {reason}" if reason else ""))
+            return False
 
-            if python and not venv:
-                command.extend(["-p", QuoteString(python)])
+        logger.info(f"virtualenv {path}: {reason}, recreating")
+        yield from files.directory._inner(path, present=False)
 
-            if site_packages:
-                command.append("--system-site-packages")
+    command: list[str | QuoteString] = ["virtualenv"]
 
-            if always_copy and not venv:
-                command.append("--always-copy")
-            elif always_copy and venv:
-                command.append("--copies")
+    if venv:
+        command = [QuoteString(python) if python else "python", "-m", "venv"]
 
-            command.append(QuoteString(path))
+    if python and not venv:
+        command.extend(["-p", QuoteString(python)])
 
-            yield StringCommand(*command)
-        else:
-            host.noop(f"virtualenv {path} exists")
+    if site_packages:
+        command.append("--system-site-packages")
 
+    if always_copy and not venv:
+        command.append("--always-copy")
+    elif always_copy and venv:
+        command.append("--copies")
 
-_virtualenv = virtualenv._inner  # noqa
+    command.append(QuoteString(path))
+
+    yield StringCommand(*command)
+    return True
 
 
 @operation()
@@ -89,6 +141,7 @@ def venv(
     site_packages=False,
     always_copy=False,
     present=True,
+    on_mismatch: Literal["warn", "recreate", "ignore"] = "warn",
 ):
     """
     Add/remove Python virtualenvs.
@@ -97,6 +150,8 @@ def venv(
     + site_packages: give access to the global site-packages
     + always_copy: always copy files rather than symlinking
     + present: whether the virtualenv should exist
+    + on_mismatch: what to do with an existing virtualenv whose Python version differs from
+      ``python``, see ``pip.virtualenv``
 
     **Example:**
 
@@ -115,6 +170,7 @@ def venv(
         site_packages=site_packages,
         always_copy=always_copy,
         present=present,
+        on_mismatch=on_mismatch,
     )
 
 
@@ -142,9 +198,9 @@ def packages(
     + extra_install_args: additional arguments to the pip install command
 
     Virtualenv:
-        This will be created if it does not exist already. ``virtualenv_kwargs``
-        will be passed to ``pip.virtualenv`` which can be used to control how
-        the env is created.
+        This will be created if it does not exist already, and recreated when its Python no
+        longer matches (see ``pip.virtualenv``). ``virtualenv_kwargs`` will be passed to
+        ``pip.virtualenv`` which can be used to control how the env is created.
 
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``.
@@ -161,10 +217,11 @@ def packages(
     """
 
     virtualenv_kwargs = virtualenv_kwargs or {}
+    virtualenv_created = False
 
     # Ensure any virtualenv
     if virtualenv:
-        yield from _virtualenv(virtualenv, **virtualenv_kwargs)
+        virtualenv_created = yield from _virtualenv(virtualenv, **virtualenv_kwargs)
 
         # And update pip path
         virtualenv = virtualenv.rstrip("/")
@@ -191,10 +248,15 @@ def packages(
     if packages:
         if isinstance(packages, str):
             packages = [packages]
-        # PEP-0426 states that Python packages should be compared using lowercase, so lowercase the
-        # current packages. PkgInfo.from_pep508 takes care of the package name
-        current_packages = host.get_fact(PipPackages, pip=pip)
-        current_packages = {pkg.lower(): versions for pkg, versions in current_packages.items()}
+
+        if virtualenv_created:
+            # The fact would describe the virtualenv being replaced, the new one is empty
+            current_packages = {}
+        else:
+            # PEP-0426 states that Python packages should be compared using lowercase, so
+            # lowercase the current packages. PkgInfo.from_pep508 takes care of the package name
+            current_packages = host.get_fact(PipPackages, pip=pip)
+            current_packages = {pkg.lower(): versions for pkg, versions in current_packages.items()}
 
         yield from ensure_packages(
             host,
