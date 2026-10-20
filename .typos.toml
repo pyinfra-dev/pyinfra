@@ -23,3 +23,7 @@ extend-ignore-re = [
 
 [default.extend-words]
 datas = "datas"
+requiere = "requiere"
+ein = "ein"
+ist = "ist"
+passord = "passord"
