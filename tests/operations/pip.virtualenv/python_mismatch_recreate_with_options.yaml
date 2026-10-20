@@ -1,0 +1,17 @@
+kwargs:
+  path: /some/virtualenv
+  python: /opt/python 3.14/bin/python3
+  site_packages: true
+  always_copy: true
+  on_mismatch: recreate
+facts:
+  files.File:
+    path=/some/virtualenv/bin/activate: true
+  files.Directory:
+    path=/some/virtualenv: true
+  pip.PythonVersion:
+    python=/some/virtualenv/bin/python: [3, 12, 11]
+    python=/opt/python 3.14/bin/python3: [3, 14, 7]
+commands:
+  - rm -rf /some/virtualenv
+  - virtualenv -p '/opt/python 3.14/bin/python3' --system-site-packages --always-copy /some/virtualenv

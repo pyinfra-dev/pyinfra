@@ -1,0 +1,6 @@
+arg:
+  request: /somewhere/useful/.venv/bin/python
+command: uv python find --system --show-version /somewhere/useful/.venv/bin/python || true
+requires_command: uv
+output: []
+fact: null

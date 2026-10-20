@@ -1,0 +1,13 @@
+args:
+  - /somewhere/useful
+kwargs:
+  python: "3.15"
+  on_mismatch: recreate
+facts:
+  files.File:
+    path=/somewhere/useful/.venv/bin/activate: true
+  uv.UvPythonVersion:
+    request=/somewhere/useful/.venv/bin/python: [3, 13, 4]
+    request=3.15: null
+commands: []
+noop_description: venv already exists at /somewhere/useful but the requested Python 3.15 was not found, so its version was not checked

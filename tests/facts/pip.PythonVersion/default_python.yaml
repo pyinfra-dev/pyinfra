@@ -1,0 +1,4 @@
+command: "python -c 'import sys; print(sys.version.split()[0])' || true"
+output:
+  - 3.14.7
+fact: [3, 14, 7]
