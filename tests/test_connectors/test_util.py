@@ -1,8 +1,11 @@
 from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pyinfra.api import Config, State
 from pyinfra.connectors.util import (
+    CommandOutput,
+    OutputLine,
+    execute_command_with_sudo_retry,
     make_unix_command,
     make_unix_command_for_host,
     remove_any_sudo_askpass_file,
@@ -18,15 +21,15 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_doas_command(self):
         command = make_unix_command("uptime", _doas=True)
-        assert command.get_raw_value() == "env LC_ALL=C doas -n sh -c uptime"
+        assert command.get_raw_value() == "doas -n sh -c uptime"
 
     def test_doas_user_command(self):
         command = make_unix_command("uptime", _doas=True, _doas_user="pyinfra")
-        assert command.get_raw_value() == "env LC_ALL=C doas -n -u pyinfra sh -c uptime"
+        assert command.get_raw_value() == "doas -n -u pyinfra sh -c uptime"
 
     def test_doas_user_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _doas=True, _doas_user="root; rm -rf /")
-        assert command.get_raw_value() == ("env LC_ALL=C doas -n -u 'root; rm -rf /' sh -c uptime")
+        assert command.get_raw_value() == ("doas -n -u 'root; rm -rf /' sh -c uptime")
 
     def test_dzdo_command(self):
         command = make_unix_command("uptime", _dzdo=True)
@@ -42,29 +45,27 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_sudo_command(self):
         command = make_unix_command("uptime", _sudo=True)
-        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n sh -c uptime"
+        assert command.get_raw_value() == "sudo -H -n sh -c uptime"
 
     def test_sudo_multi_arg_command(self):
         command = make_unix_command("echo hi", _sudo=True, _preserve_sudo_env=True)
-        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -E sh -c 'echo hi'"
+        assert command.get_raw_value() == "sudo -H -n -E sh -c 'echo hi'"
 
     def test_sudo_preserve_env_command(self):
         command = make_unix_command("uptime", _sudo=True, _preserve_sudo_env=True)
-        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -E sh -c uptime"
+        assert command.get_raw_value() == "sudo -H -n -E sh -c uptime"
 
     def test_use_sudo_login_command(self):
         command = make_unix_command("uptime", _sudo=True, _use_sudo_login=True)
-        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -i sh -c uptime"
+        assert command.get_raw_value() == "sudo -H -n -i sh -c uptime"
 
     def test_sudo_user_command(self):
         command = make_unix_command("uptime", _sudo=True, _sudo_user="pyinfra")
-        assert command.get_raw_value() == "env LC_ALL=C sudo -H -n -u pyinfra sh -c uptime"
+        assert command.get_raw_value() == "sudo -H -n -u pyinfra sh -c uptime"
 
     def test_sudo_user_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _sudo=True, _sudo_user="root; touch /tmp/pwn")
-        assert command.get_raw_value() == (
-            "env LC_ALL=C sudo -H -n -u 'root; touch /tmp/pwn' sh -c uptime"
-        )
+        assert command.get_raw_value() == ("sudo -H -n -u 'root; touch /tmp/pwn' sh -c uptime")
 
     def test_sudo_password_askpass_path_quoted(self):
         command = make_unix_command(
@@ -79,38 +80,34 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
     def test_su_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra")
-        assert command.get_raw_value() == "env LC_ALL=C su pyinfra -c 'sh -c uptime'"
+        assert command.get_raw_value() == "su pyinfra -c 'sh -c uptime'"
 
     def test_su_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _su_user="root$(id)")
-        assert command.get_raw_value() == ("env LC_ALL=C su 'root$(id)' -c 'sh -c uptime'")
+        assert command.get_raw_value() == ("su 'root$(id)' -c 'sh -c uptime'")
 
     def test_su_multi_arg_command(self):
         command = make_unix_command("echo hi", _su_user="pyinfra")
-        assert command.get_raw_value() == "env LC_ALL=C su pyinfra -c 'sh -c '\"'\"'echo hi'\"'\"''"
+        assert command.get_raw_value() == "su pyinfra -c 'sh -c '\"'\"'echo hi'\"'\"''"
 
     def test_use_su_login_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _use_su_login=True)
-        assert command.get_raw_value() == "env LC_ALL=C su -l pyinfra -c 'sh -c uptime'"
+        assert command.get_raw_value() == "su -l pyinfra -c 'sh -c uptime'"
 
     def test_preserve_su_env_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _preserve_su_env=True)
-        assert command.get_raw_value() == "env LC_ALL=C su -m pyinfra -c 'sh -c uptime'"
+        assert command.get_raw_value() == "su -m pyinfra -c 'sh -c uptime'"
 
     def test_su_shell_command(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _su_shell="bash")
-        assert (
-            command.get_raw_value()
-            == "env LC_ALL=C su -s $(command -v bash) pyinfra -c 'sh -c uptime'"
-        )
+        assert command.get_raw_value() == "su -s $(command -v bash) pyinfra -c 'sh -c uptime'"
 
     def test_su_shell_command_with_injection_attempt(self):
         command = make_unix_command("uptime", _su_user="pyinfra", _su_shell="bash$(id)")
         # The injected `$(id)` must be safely quoted as a literal argument to
         # `command -v` rather than executed as a subshell.
         assert (
-            command.get_raw_value()
-            == "env LC_ALL=C su -s $(command -v 'bash$(id)') pyinfra -c 'sh -c uptime'"
+            command.get_raw_value() == "su -s $(command -v 'bash$(id)') pyinfra -c 'sh -c uptime'"
         )
 
     def test_su_password_command(self):
@@ -121,7 +118,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             _su_askpass_path="/tmp/pyinfra-su-askpass-XXXX",
         )
         assert command.get_raw_value() == (
-            "env LC_ALL=C PYINFRA_SU_PASSWORD=mypassword /tmp/pyinfra-su-askpass-XXXX "
+            "env PYINFRA_SU_PASSWORD=mypassword /tmp/pyinfra-su-askpass-XXXX "
             "| su pyinfra -c 'sh -c uptime'"
         )
 
@@ -174,7 +171,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             _shell_executable="bash",
         )
         assert command.get_raw_value() == (
-            "env LC_ALL=C sudo -H -n -E -u root "  # sudo bit
+            "sudo -H -n -E -u root "  # sudo bit
             "su pyinfra -c "  # su bit
             "'bash -c '\"'\"'cd /opt/somedir && export key=value "  # shell and export bit
             "&& echo hi'\"'\"''"  # command bit
@@ -284,3 +281,89 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         remove_any_sudo_askpass_file(host)
 
         host.run_shell_command.assert_not_called()
+
+
+class TestExecuteCommandWithSudoRetry(TestCase):
+    @patch("pyinfra.connectors.util.getpass")
+    def test_success_first_try(self, fake_getpass):
+        host = MagicMock()
+        host.connector_data = {}
+        output = CommandOutput([OutputLine("stdout", "ok")])
+        mock_execute = MagicMock(return_value=(0, output))
+
+        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
+        assert return_code == 0
+        assert res_output == output
+        fake_getpass.assert_not_called()
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_password_required_english(self, fake_getpass):
+        fake_getpass.return_value = "secret"
+        host = MagicMock()
+        host.connector_data = {}
+        host.print_prefix = "[test] "
+
+        fail_output = CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+        success_output = CommandOutput([OutputLine("stdout", "done")])
+        mock_execute = MagicMock(side_effect=[(1, fail_output), (0, success_output)])
+
+        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
+        assert return_code == 0
+        assert res_output == success_output
+        fake_getpass.assert_called_once_with("[test] sudo password: ")
+        assert host.connector_data["prompted_sudo_password"] == "secret"
+        assert mock_execute.call_count == 2
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_password_required_portuguese(self, fake_getpass):
+        fake_getpass.return_value = "secret"
+        host = MagicMock()
+        host.connector_data = {}
+        host.print_prefix = "[test] "
+
+        fail_output = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
+        success_output = CommandOutput([OutputLine("stdout", "done")])
+        mock_execute = MagicMock(side_effect=[(1, fail_output), (0, success_output)])
+
+        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
+        assert return_code == 0
+        assert res_output == success_output
+        fake_getpass.assert_called_once()
+        assert host.connector_data["prompted_sudo_password"] == "secret"
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_incorrect_password_attempt(self, fake_getpass):
+        fake_getpass.side_effect = ["wrong", "correct"]
+        host = MagicMock()
+        host.connector_data = {}
+        host.print_prefix = "[test] "
+
+        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+        fail_output_2 = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
+        success_output = CommandOutput([OutputLine("stdout", "done")])
+        mock_execute = MagicMock(
+            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, success_output)]
+        )
+
+        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
+        assert return_code == 0
+        assert res_output == success_output
+        assert fake_getpass.call_count == 2
+        assert host.connector_data["prompted_sudo_password"] == "correct"
+        assert mock_execute.call_count == 3
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_max_attempts_exhausted(self, fake_getpass):
+        fake_getpass.return_value = "wrong"
+        host = MagicMock()
+        host.connector_data = {}
+        host.print_prefix = "[test] "
+
+        fail_output = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
+        mock_execute = MagicMock(return_value=(1, fail_output))
+
+        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
+        assert return_code == 1
+        assert res_output == fail_output
+        assert fake_getpass.call_count == 3
+        assert mock_execute.call_count == 4

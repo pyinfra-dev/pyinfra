@@ -30,6 +30,7 @@ temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
 if [ -f "$0.${{PPID}}.called" ]; then
+    rm -f "$0.${{PPID}}.called"
     echo "sudo: 1 incorrect password attempt" >&2
     exit 1
 fi
@@ -39,6 +40,30 @@ __EOF__
 chmod 755 "$temp"
 echo "$temp"
 """
+
+SUDO_PASSWORD_REQUIRED_PHRASES = {
+    "sudo: a password is required",
+    "sudo: uma senha é necessária",
+    "sudo: se requiere una contraseña",
+    "sudo: un mot de passe est requis",
+    "sudo: ein passwort ist erforderlich",
+    "sudo: è richiesta una password",
+    "sudo: требуется пароль",
+    "sudo: wymagane jest hasło",
+    "sudo: 需要密码",
+    "sudo: 需要密碼",
+    "sudo: パスワードが必要です",
+    "sudo: het wachtwoord is vereist",
+    "sudo: ett lösenord krävs",
+    "sudo: adgangskode er påkrævet",
+    "sudo: salasanan antamista vaaditaan",
+    "sudo: et passord er påkrevd",
+    "sudo: bir parola gerekli",
+    "sudo: 암호가 필요합니다",
+    "sudo: je vyžadováno heslo",
+    "sudo: jelszó szükséges",
+    "sudo: cal una contrasenya",
+}
 
 
 def run_local_process(
@@ -205,20 +230,18 @@ def execute_command_with_sudo_retry(
     return_code, output = execute_command()
 
     attempts = 0
+    max_attempts = 3
     # If we failed look for a sudo password prompt line and re-submit using the sudo password. Look
     # at all lines here in case anything else gets printed, eg in:
     # https://github.com/pyinfra-dev/pyinfra/issues/1292
-    while return_code != 0 and output and output.combined_lines:
+    while return_code != 0 and output and output.combined_lines and attempts < max_attempts:
         requires_password = False
         for line in reversed(output.combined_lines):
             line_stripped = line.line.strip()
 
-            if line_stripped.startswith("sudo:") and "incorrect password attempt" in line_stripped:
-                break
-
-            if line_stripped == "sudo: a password is required":
-                if attempts != 0:
-                    break
+            if (
+                line_stripped.startswith("sudo:") and "incorrect password attempt" in line_stripped
+            ) or line_stripped.lower() in SUDO_PASSWORD_REQUIRED_PHRASES:
                 requires_password = True
                 break
 
@@ -227,8 +250,8 @@ def execute_command_with_sudo_retry(
             # internal connector data for use when executing future commands.
             sudo_password = getpass(f"{host.print_prefix}sudo password: ")
             host.connector_data["prompted_sudo_password"] = sudo_password
-            return_code, output = execute_command()
             attempts += 1
+            return_code, output = execute_command()
         else:
             break
 
@@ -337,10 +360,9 @@ def make_unix_command_for_host(
 ) -> StringCommand:
     # Handle sudo password
     if command_arguments.get("_sudo"):
-        # If the sudo password is not set in the direct arguments,
-        # set it from the connector data value.
-        if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
-            command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
+        # If a sudo password was prompted, use it; otherwise fall back to direct arguments.
+        if host.connector_data.get("prompted_sudo_password"):
+            command_arguments["_sudo_password"] = host.connector_data["prompted_sudo_password"]
 
         if command_arguments.get("_sudo_password"):
             # Ensure the askpass path is correctly set and passed through
@@ -416,7 +438,7 @@ def make_unix_command(
     command_bits: list[str | StringCommand | QuoteString] = []
 
     if _doas:
-        command_bits.extend(["env", "LC_ALL=C", "doas", "-n"])
+        command_bits.extend(["doas", "-n"])
 
         if _doas_user:
             command_bits.extend(["-u", QuoteString(_doas_user)])
@@ -431,15 +453,12 @@ def make_unix_command(
         command_bits.extend(
             [
                 "env",
-                "LC_ALL=C",
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
                 MaskString(
                     f"{SUDO_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_sudo_password)).get_raw_value()}"
                 ),
             ],
         )
-    elif _sudo:
-        command_bits.extend(["env", "LC_ALL=C"])
 
     if _sudo:
         command_bits.extend(["sudo", "-H"])
@@ -463,7 +482,6 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
-                    "LC_ALL=C",
                     MaskString(
                         f"{SU_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_su_password)).get_raw_value()}"
                     ),
@@ -471,8 +489,6 @@ def make_unix_command(
                     "|",
                 ],
             )
-        elif not _sudo and not _doas:
-            command_bits.extend(["env", "LC_ALL=C"])
 
         command_bits.append("su")
 
