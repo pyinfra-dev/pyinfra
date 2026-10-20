@@ -353,6 +353,29 @@ class TestExecuteCommandWithSudoRetry(TestCase):
         assert mock_execute.call_count == 3
 
     @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_incorrect_password_attempt_portuguese(self, fake_getpass):
+        fake_getpass.side_effect = ["wrong", "correct"]
+        host = MagicMock()
+        host.connector_data = {}
+        host.print_prefix = "[test] "
+
+        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
+        fail_output_2 = CommandOutput(
+            [OutputLine("stderr", "sudo: 1 tentativa de senha incorreta")]
+        )
+        success_output = CommandOutput([OutputLine("stdout", "done")])
+        mock_execute = MagicMock(
+            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, success_output)]
+        )
+
+        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
+        assert return_code == 0
+        assert res_output == success_output
+        assert fake_getpass.call_count == 2
+        assert host.connector_data["prompted_sudo_password"] == "correct"
+        assert mock_execute.call_count == 3
+
+    @patch("pyinfra.connectors.util.getpass")
     def test_max_attempts_exhausted(self, fake_getpass):
         fake_getpass.return_value = "wrong"
         host = MagicMock()

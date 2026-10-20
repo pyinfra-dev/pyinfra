@@ -41,29 +41,75 @@ chmod 755 "$temp"
 echo "$temp"
 """
 
-SUDO_PASSWORD_REQUIRED_PHRASES = {
-    "sudo: a password is required",
-    "sudo: uma senha é necessária",
-    "sudo: se requiere una contraseña",
-    "sudo: un mot de passe est requis",
-    "sudo: ein passwort ist erforderlich",
-    "sudo: è richiesta una password",
-    "sudo: требуется пароль",
-    "sudo: wymagane jest hasło",
-    "sudo: 需要密码",
-    "sudo: 需要密碼",
-    "sudo: パスワードが必要です",
-    "sudo: het wachtwoord is vereist",
-    "sudo: ett lösenord krävs",
-    "sudo: adgangskode er påkrævet",
-    "sudo: salasanan antamista vaaditaan",
-    "sudo: et passord er påkrevd",
-    "sudo: bir parola gerekli",
-    "sudo: 암호가 필요합니다",
-    "sudo: je vyžadováno heslo",
-    "sudo: jelszó szükséges",
-    "sudo: cal una contrasenya",
-}
+SUDO_PASSWORD_REQUIRED_PHRASES = (
+    "a password is required",
+    "uma senha é necessária",
+    "se requiere una contraseña",
+    "un mot de passe est requis",
+    "ein passwort ist erforderlich",
+    "è richiesta una password",
+    "richiesta una password",
+    "требуется пароль",
+    "wymagane jest hasło",
+    "需要密码",
+    "需要密碼",
+    "パスワードが必要です",
+    "het wachtwoord is vereist",
+    "ett lösenord krävs",
+    "adgangskode er påkrævet",
+    "salasanan antamista vaaditaan",
+    "et passord er påkrevd",
+    "bir parola gerekli",
+    "암호가 필요합니다",
+    "je vyžadováno heslo",
+    "jelszó szükséges",
+    "cal una contrasenya",
+)
+
+SUDO_INCORRECT_PASSWORD_PHRASES = (
+    "incorrect password attempt",
+    "tentativa de senha incorreta",
+    "tentativas de senha incorreta",
+    "intento de contraseña incorrecto",
+    "intentos de contraseña incorrectos",
+    "intento incorrecto de contraseña",
+    "intentos incorrectos de contraseña",
+    "tentative de mot de passe incorrecte",
+    "tentatives de mot de passe incorrectes",
+    "fehlerhafter versuch der passworteingabe",
+    "fehlerhafte versuche der passworteingabe",
+    "fehlgeschlagener passwortversuch",
+    "falscher passwortversuch",
+    "tentativo di password non valida",
+    "tentativo errato",
+    "tentativi errati",
+    "неверная попытка ввода пароля",
+    "неверных попыток ввода пароля",
+    "błędna próba podania hasła",
+    "błędne próby podania hasła",
+    "错误密码尝试",
+    "錯誤密碼嘗試",
+    "パスワードを間違えた回数",
+    "onjuiste wachtwoordpoging",
+    "felaktigt lösenordsförsök",
+    "forkert adgangskodeforsøg",
+    "virheellinen salasanayritys",
+    "feil passordforsøk",
+)
+
+
+def _is_sudo_password_required(line: str) -> bool:
+    line_lower = line.lower()
+    if not line_lower.startswith("sudo:"):
+        return False
+    return any(phrase in line_lower for phrase in SUDO_PASSWORD_REQUIRED_PHRASES)
+
+
+def _is_sudo_incorrect_password(line: str) -> bool:
+    line_lower = line.lower()
+    if not line_lower.startswith("sudo:"):
+        return False
+    return any(phrase in line_lower for phrase in SUDO_INCORRECT_PASSWORD_PHRASES)
 
 
 def run_local_process(
@@ -239,9 +285,9 @@ def execute_command_with_sudo_retry(
         for line in reversed(output.combined_lines):
             line_stripped = line.line.strip()
 
-            if (
-                line_stripped.startswith("sudo:") and "incorrect password attempt" in line_stripped
-            ) or line_stripped.lower() in SUDO_PASSWORD_REQUIRED_PHRASES:
+            if _is_sudo_incorrect_password(line_stripped) or _is_sudo_password_required(
+                line_stripped
+            ):
                 requires_password = True
                 break
 
