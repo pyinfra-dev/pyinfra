@@ -5,5 +5,5 @@
         "files.File": {"path=/somewhere/useful/.venv/bin/activate": null},
         "files.Directory": {"path=/somewhere/useful.venv": null},
     },
-    "commands": ["uv venv --offline --native-tls /somewhere/useful"],
+    "commands": ["uv venv --offline --native-tls /somewhere/useful/.venv"],
 }

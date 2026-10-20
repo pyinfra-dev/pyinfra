@@ -1,0 +1,12 @@
+args:
+  - /somewhere/useful
+kwargs:
+  python: "3.15"
+facts:
+  files.File:
+    path=/somewhere/useful/.venv/bin/activate: true
+  uv.UvPythonVersion:
+    request=/somewhere/useful/.venv/bin/python: [3, 13, 4]
+    request=3.15: [3, 15, 0]
+commands: []
+noop_description: venv already exists at /somewhere/useful but runs Python 3.13 while 3.15 is Python 3.15

@@ -11,5 +11,5 @@
         "files.File": {"path=/somewhere/useful/.venv/bin/activate": null},
         "files.Directory": {"path=/somewhere/useful.venv": null},
     },
-    "commands": ["uv venv --clear --link-mode symlink --site-packages --offline /somewhere/useful"],
+    "commands": ["uv venv --clear --link-mode symlink --site-packages --offline /somewhere/useful/.venv"],
 }
