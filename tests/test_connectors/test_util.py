@@ -256,7 +256,7 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
         remove_any_sudo_askpass_file(host)
 
-        assert commands == ["rm -f '/tmp/weird path; id'"]
+        assert commands == ["rm -f '/tmp/weird path; id' '/tmp/weird path; id'.*.called"]
         assert host.connector_data["sudo_askpass_path__/tmp"] is None
 
     def test_command_exists_su_config_only(self):
@@ -372,6 +372,68 @@ class TestExecuteCommandWithSudoRetry(TestCase):
         fake_getpass.assert_called_once()
         assert host.connector_data["prompted_sudo_password"] == "password"
 
+    @patch("pyinfra.connectors.util.getpass", return_value="secret")
+    def test_retry_on_password_required_portuguese(self, fake_getpass):
+        host = self._make_host()
+        fail_output = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
+        execute_command = MagicMock(side_effect=[(1, fail_output), (0, CommandOutput([]))])
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+        assert return_code == 0
+        assert execute_command.call_count == 2
+        fake_getpass.assert_called_once()
+        assert host.connector_data["prompted_sudo_password"] == "secret"
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_incorrect_password_attempt(self, fake_getpass):
+        fake_getpass.side_effect = ["wrong", "correct"]
+        host = self._make_host()
+
+        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+        fail_output_2 = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
+        execute_command = MagicMock(
+            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, CommandOutput([]))]
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+        assert return_code == 0
+        assert fake_getpass.call_count == 2
+        assert host.connector_data["prompted_sudo_password"] == "correct"
+        assert execute_command.call_count == 3
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_incorrect_password_attempt_portuguese(self, fake_getpass):
+        fake_getpass.side_effect = ["wrong", "correct"]
+        host = self._make_host()
+
+        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
+        fail_output_2 = CommandOutput(
+            [OutputLine("stderr", "sudo: 1 tentativa de senha incorreta")]
+        )
+        execute_command = MagicMock(
+            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, CommandOutput([]))]
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+        assert return_code == 0
+        assert fake_getpass.call_count == 2
+        assert host.connector_data["prompted_sudo_password"] == "correct"
+        assert execute_command.call_count == 3
+
+    @patch("pyinfra.connectors.util.getpass", return_value="wrong")
+    def test_max_attempts_exhausted(self, fake_getpass):
+        host = self._make_host()
+        fail_output = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
+        execute_command = MagicMock(return_value=(1, fail_output))
+
+        return_code, output = execute_command_with_sudo_retry(
+            host, {"_sudo": True}, execute_command
+        )
+        assert return_code == 1
+        assert output == fail_output
+        assert fake_getpass.call_count == 3
+        assert execute_command.call_count == 4
+
 
 class TestRemoveAnySudoAskpassFile(TestCase):
     def test_clears_state_and_runs_rm(self):
@@ -386,8 +448,8 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         remove_any_sudo_askpass_file(host)
 
         assert sorted(commands) == [
-            "rm -f /tmp/su-askpass",
-            "rm -f /tmp/sudo-askpass",
+            "rm -f /tmp/su-askpass /tmp/su-askpass.*.called",
+            "rm -f /tmp/sudo-askpass /tmp/sudo-askpass.*.called",
         ]
         assert host.connector_data["sudo_askpass_path__/tmp"] is None
         assert host.connector_data["su_askpass_path__/tmp"] is None
@@ -405,9 +467,9 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         remove_any_sudo_askpass_file(host)
 
         assert sorted(commands) == [
-            "rm -f /dev/shm/su-askpass",
-            "rm -f /tmp/sudo-askpass",
-            "rm -f /var/tmp/sudo-askpass",
+            "rm -f /dev/shm/su-askpass /dev/shm/su-askpass.*.called",
+            "rm -f /tmp/sudo-askpass /tmp/sudo-askpass.*.called",
+            "rm -f /var/tmp/sudo-askpass /var/tmp/sudo-askpass.*.called",
         ]
         assert host.connector_data["sudo_askpass_path__/tmp"] is None
         assert host.connector_data["sudo_askpass_path__/var/tmp"] is None
