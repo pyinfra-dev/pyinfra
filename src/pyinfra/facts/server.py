@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-import os
+import pathlib
 import re
 import shutil
 from datetime import datetime
+from pathlib import PurePosixPath
 from tempfile import mkdtemp
-from typing import Optional, Union
 from collections.abc import Iterable
 
 from dateutil.parser import parse as parse_date
@@ -14,11 +14,29 @@ from distro import distro
 from typing_extensions import TypedDict, override
 
 from pyinfra import host
-from pyinfra.api import FactBase, ShortFactBase
+from pyinfra.api import FactBase, ShortFactBase, StringCommand
+from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.util import try_int
 from pyinfra.facts import crontab
 
 ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+
+# Usernames used in shell tilde expansion (``~user``) cannot be quoted without
+# disabling the expansion, so the value must be a plain, shell-safe word.
+_SAFE_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._][a-zA-Z0-9._-]*$")
+_OPENBSD_MOUNT_V_RE = re.compile(
+    r"""
+        (\S+) (?:\ \(.*\))?\  # the (diskname.label) part isn't always there, hence optional group
+        on\ (/.*)\            # *, not +, since root path "/" will be mounted
+        type\ (\w+)\          # types from /sbin/mount_*
+        \((.+)\)              # flags are in this group""",
+    flags=re.VERBOSE,
+)
+
+
+def _check_tilde_username(user: str) -> None:
+    if user and not _SAFE_USERNAME_RE.match(user):
+        raise ValueError(f"Unsafe username for shell tilde expansion: {user!r}")
 
 
 class User(FactBase):
@@ -31,14 +49,17 @@ class User(FactBase):
         return "echo $USER"
 
 
-class Home(FactBase[Optional[str]]):
+class Home(FactBase[str | None]):
     """
     Returns the home directory of the given user, or the current user if no user is given.
     """
 
     @override
-    def command(self, user=""):
-        return f"echo ~{user}"
+    def command(self, user="") -> StringCommand:
+        # `~user` must stay an unquoted bare word for the shell to expand it, so
+        # validate the username instead of quoting it.
+        _check_tilde_username(user)
+        return StringCommand(f"echo ~{user}")
 
 
 class Path(FactBase):
@@ -107,6 +128,27 @@ class KernelVersion(FactBase):
         return "uname -r"
 
 
+class Uptime(FactBase[int]):
+    """
+    Returns the number of seconds the system has been up.
+    """
+
+    @override
+    def command(self) -> str:
+        self._kernel = host.get_fact(Kernel)
+        if self._kernel in ("Darwin", "FreeBSD"):
+            return "date +%s; sysctl -n kern.boottime | awk '{print $4}' | tr -d ','"
+
+        return "cut -d. -f1 /proc/uptime"
+
+    @override
+    def process(self, output: list[str]) -> int:
+        if self._kernel in ("Darwin", "FreeBSD"):
+            return int(output[0]) - int(output[1])
+
+        return int(output[0])
+
+
 # Deprecated/renamed -> Kernel
 class Os(FactBase[str]):
     """
@@ -171,14 +213,14 @@ class Timezone(FactBase[str]):
         return output[0]
 
 
-class Which(FactBase[Optional[str]]):
+class Which(FactBase[str | None]):
     """
     Returns the path of a given command according to `command -v`, if available.
     """
 
     @override
-    def command(self, command):
-        return f"command -v {command} || true"
+    def command(self, command) -> StringCommand:
+        return StringCommand("command -v", QuoteString(command), "|| true")
 
 
 class Date(FactBase[datetime]):
@@ -248,10 +290,12 @@ class Mounts(FactBase[dict[str, MountsDict]]):
 
     @override
     def command(self) -> str:
-        self._kernel = host.get_fact(Kernel)
+        self._kernel = host.get_fact(Kernel).strip()
 
-        if self._kernel.strip() == "FreeBSD":
+        if self._kernel == "FreeBSD":
             return "mount -p --libxo json"
+        if self._kernel == "OpenBSD":
+            return "mount -v"
         else:
             return "cat /proc/self/mountinfo"
 
@@ -281,6 +325,18 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                 options = [option.strip() for option in entry["opts"].split(",")]
 
                 devices[path] = {"device": device, "type": type_, "options": options}
+
+            return devices
+
+        if self._kernel == "OpenBSD":
+            for line in output:
+                if m := _OPENBSD_MOUNT_V_RE.fullmatch(line):
+                    path = m[2]
+                    device = m[1]
+                    type_ = m[3]
+                    options = [opt.strip(" ") for opt in m[4].split(",") if "ctime=" not in opt]
+
+                    devices[path] = {"device": device, "type": type_, "options": options}
 
             return devices
 
@@ -320,7 +376,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
+class Port(FactBase[tuple[str, int] | tuple[None, None]]):
     """
     Returns the process occupying a port and its PID.
 
@@ -336,23 +392,27 @@ class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
     """
 
     @override
-    def command(self, port: int, protocol: str = "tcp") -> str:
+    def command(self, port: int, protocol: str = "tcp") -> StringCommand:
         self._kernel = host.get_fact(Kernel)
 
         if self._kernel.strip() == "FreeBSD":
             self._tool = "sockstat"
-            return f"sockstat -l -p {port} -P {protocol}"
+            return StringCommand(
+                "sockstat -l -p", QuoteString(str(port)), "-P", QuoteString(protocol)
+            )
 
         # Linux - prefer ss, fall back to netstat
         self._has_ss = host.get_fact(Which, "ss")
         if self._has_ss:
             self._tool = "ss"
             proto_flag = "t" if protocol == "tcp" else "u"
-            return f"ss -lp{proto_flag}n | grep ':{port} ' || true"
+            return StringCommand(f"ss -lp{proto_flag}n | grep", QuoteString(f":{port} "), "|| true")
         else:
             self._tool = "netstat"
             proto_flag = "t" if protocol == "tcp" else "u"
-            return f"netstat -{proto_flag}lnp 2>/dev/null | awk '$4 ~ /:{port}$/'"
+            return StringCommand(
+                f"netstat -{proto_flag}lnp 2>/dev/null | awk", QuoteString(f"$4 ~ /:{port}$/")
+            )
 
     @override
     def process(self, output: Iterable[str]) -> tuple[str, int] | tuple[None, None]:
@@ -545,28 +605,45 @@ class KernelModules(FactBase):
 
     @override
     def command(self):
-        return "! test -f /proc/modules || cat /proc/modules"
+        self._kernel = host.get_fact(Kernel)
+
+        if self._kernel.strip() == "FreeBSD":
+            return "kldstat | tail +2"
+        else:
+            return "! test -f /proc/modules || cat /proc/modules"
 
     default = dict
 
     @override
     def process(self, output):
         modules = {}
+        if self._kernel.strip() == "FreeBSD":
+            for line in output:
+                id, refs, address, size, name = line.split(None, 4)
 
-        for line in output:
-            name, size, instances, depends, state, _ = line.split(" ", 5)
-            instances = int(instances)
+                module = {
+                    "address": address,
+                    "id": id,
+                    "refs": refs,
+                    "size": size,
+                }
 
-            module = {
-                "size": size,
-                "instances": instances,
-                "state": state,
-            }
+                modules[name] = module
+        else:
+            for line in output:
+                name, size, instances, depends, state, _ = line.split(" ", 5)
+                instances = int(instances)
 
-            if depends != "-":
-                module["depends"] = [value for value in depends.split(",") if value]
+                module = {
+                    "size": size,
+                    "instances": instances,
+                    "state": state,
+                }
 
-            modules[name] = module
+                if depends != "-":
+                    module["depends"] = [value for value in depends.split(",") if value]
+
+                modules[name] = module
 
         return modules
 
@@ -667,10 +744,10 @@ class Sysctl(FactBase):
     default = dict
 
     @override
-    def command(self, keys=None):
+    def command(self, keys=None) -> StringCommand:
         if keys is None:
-            return "sysctl -a 2>/dev/null || true"
-        return f"sysctl {' '.join(keys)} 2>/dev/null || true"
+            return StringCommand("sysctl -a 2>/dev/null || true")
+        return StringCommand("sysctl", *[QuoteString(key) for key in keys], "2>/dev/null || true")
 
     @override
     def process(self, output):
@@ -828,10 +905,13 @@ class AuthorizedKeys(FactBase[list[str]]):
     default = list
 
     @override
-    def command(self, user: str, path: str | None = None) -> str:
+    def command(self, user: str, path: str | None = None) -> StringCommand:
+        if path is not None:
+            return StringCommand("cat", QuoteString(path), "2>/dev/null || true")
         # Tilde expansion resolves the user's home without another fact round-trip.
-        target = path if path is not None else f"~{user}/.ssh/authorized_keys"
-        return f"cat {target} 2>/dev/null || true"
+        # `~user` must stay an unquoted bare word, so validate the username instead.
+        _check_tilde_username(user)
+        return StringCommand("cat", f"~{user}/.ssh/authorized_keys", "2>/dev/null || true")
 
     @override
     def process(self, output: Iterable[str]) -> list[str]:
@@ -856,6 +936,11 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
     Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
     Fedora & Gentoo currently. Also contains any key/value items located in
     release files.
+
+    ``major`` and ``minor`` resolved from the most precise source available, when
+    ``/etc/os-release`` exposes only major version (e.g. CentOS 8's ``VERSION_ID="8"``),
+    ``major.minor`` is read from distro-specific release file (e.g. ``/etc/centos-release``)
+    instead. ``minor`` is ``None`` when no source provides it (e.g. CentOS Stream).
 
     .. code:: python
 
@@ -920,16 +1005,12 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
 
         temp_root = mkdtemp()
         try:
-            temp_etc_dir = os.path.join(temp_root, "etc")
-            os.mkdir(temp_etc_dir)
+            temp_etc_dir = pathlib.Path(temp_root) / "etc"
+            temp_etc_dir.mkdir()
 
             for filename, content in parts.items():
-                with open(
-                    os.path.join(temp_etc_dir, os.path.basename(filename)),
-                    "w",
-                    encoding="utf-8",
-                ) as fp:
-                    fp.write(content)
+                target = temp_etc_dir / PurePosixPath(filename).name
+                target.write_text(content, encoding="utf-8")
 
             parsed = distro.LinuxDistribution(
                 root_dir=temp_root,
@@ -942,11 +1023,15 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
             # TODO: fix this!
             release_meta.pop("RELEASE_CODENAME", None)
 
+            # try_int returns its input on failure, so a missing version part comes back as ""
+            major = try_int(parsed.major_version(best=True))
+            minor = try_int(parsed.minor_version(best=True))
+
             release_info.update(
                 {
                     "name": self.name_to_pretty_name.get(parsed.id(), parsed.name()),
-                    "major": try_int(parsed.major_version()) or None,
-                    "minor": try_int(parsed.minor_version()) or None,
+                    "major": major if isinstance(major, int) else None,
+                    "minor": minor if isinstance(minor, int) else None,
                     "release_meta": release_meta,
                 },
             )
@@ -1220,6 +1305,10 @@ echo "no_reboot_required"
         return list(output)[0].strip() == "reboot_required"
 
 
+_DARWIN_ARGS_FIELDS = "pid,user,stat,%cpu,%mem,args"
+_DARWIN_COMM_MARKER = "===PYINFRA-PROCESSES-COMM==="
+
+
 class Processes(FactBase[dict[int, ProcessDict]]):
     """
     Returns a dictionary of running processes keyed by PID.
@@ -1241,9 +1330,11 @@ class Processes(FactBase[dict[int, ProcessDict]]):
     default = dict
 
     @override
-    def command(self, pid: int | None = None) -> str:
+    def command(self, pid: int | None = None) -> str | StringCommand:
         self._kernel = host.get_fact(Kernel)
-        is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
+        kernel = self._kernel.strip()
+        self._is_darwin = kernel == "Darwin"
+        is_bsd = kernel in ("FreeBSD", "Darwin")
 
         # BusyBox ps (Alpine) only supports limited columns.
         # Detect by checking if busybox exists on the system.
@@ -1251,6 +1342,26 @@ class Processes(FactBase[dict[int, ProcessDict]]):
             self._is_busybox = bool(host.get_fact(Which, "busybox"))
         else:
             self._is_busybox = False
+
+        if self._is_darwin:
+            # macOS ps truncates any non-last text column (comm to 16 bytes, args to 64),
+            # so run ps twice with each of those columns last and join by pid.
+            if pid is not None:
+                return StringCommand(
+                    "LANG=C ps -p",
+                    QuoteString(str(pid)),
+                    f"-o {_DARWIN_ARGS_FIELDS} -ww &&",
+                    "echo",
+                    f"{_DARWIN_COMM_MARKER} &&",
+                    "LANG=C ps -p",
+                    QuoteString(str(pid)),
+                    "-o pid,comm -ww",
+                )
+            return (
+                f"LANG=C ps -eo {_DARWIN_ARGS_FIELDS} -ww && "
+                f"echo {_DARWIN_COMM_MARKER} && "
+                "LANG=C ps -eo pid,comm -ww"
+            )
 
         if not self._is_busybox:
             fields = "pid,user,stat,%cpu,%mem,comm,args"
@@ -1260,8 +1371,10 @@ class Processes(FactBase[dict[int, ProcessDict]]):
 
         if pid is not None:
             if self._is_busybox:
-                return f"LANG=C ps -o {fields} | awk 'NR==1 || $1=={pid}'"
-            return f"LANG=C ps -p {pid} -o {fields}"
+                return StringCommand(
+                    f"LANG=C ps -o {fields} | awk", QuoteString(f"NR==1 || $1=={pid}")
+                )
+            return StringCommand("LANG=C ps -p", QuoteString(str(pid)), "-o", fields)
 
         if is_bsd:
             return f"LANG=C ps -eo {fields}"
@@ -1270,8 +1383,70 @@ class Processes(FactBase[dict[int, ProcessDict]]):
         else:
             return f"LANG=C ps -eo {fields} --no-headers"
 
+    def _process_darwin(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        args_lines: list[str] = []
+        comm_lines: list[str] = []
+        current = args_lines
+        marker_seen = False
+
+        for line in output:
+            if line.strip() == _DARWIN_COMM_MARKER:
+                marker_seen = True
+                current = comm_lines
+                continue
+            current.append(line)
+
+        if not marker_seen:
+            raise Exception(
+                f"server.Processes: did not find the {_DARWIN_COMM_MARKER!r} marker in "
+                "the ps output; the ps -eo/-p pipeline may have produced unexpected output"
+            )
+
+        processes: dict[int, ProcessDict] = {}
+
+        for line in args_lines:
+            line = line.strip()
+            if not line or line.startswith("PID"):
+                continue
+            parts = line.split(None, 5)
+            if len(parts) < 6:
+                continue
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+            processes[pid] = {
+                "user": parts[1],
+                "state": parts[2],
+                "cpu_percent": float(parts[3]),
+                "mem_percent": float(parts[4]),
+                "command": "",
+                "args": parts[5],
+            }
+
+        for line in comm_lines:
+            line = line.strip()
+            if not line or line.startswith("PID"):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) < 2:
+                continue
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+            if pid in processes:
+                processes[pid]["command"] = parts[1]
+
+        # A pid without a matched `comm` row means it vanished between the two `ps`
+        # snapshots: drop it rather than return a record with an empty command.
+        return {pid: proc for pid, proc in processes.items() if proc["command"]}
+
     @override
     def process(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        if self._is_darwin:
+            return self._process_darwin(output)
+
         processes: dict[int, ProcessDict] = {}
 
         for line in output:
@@ -1319,3 +1494,211 @@ class Processes(FactBase[dict[int, ProcessDict]]):
                 }
 
         return processes
+
+
+class EtcHosts(FactBase[dict[str, list[str]]]):
+    """
+    Returns ``/etc/hosts`` (or the file at ``path``) parsed as a mapping of IP address
+    to the list of hostnames declared on the matching lines. Comments and empty lines
+    are ignored; when the same IP is listed more than once, hostnames are merged in
+    file order.
+
+    .. code:: python
+
+        {
+            "127.0.0.1": ["localhost", "localhost.localdomain"],
+            "::1": ["localhost"],
+            "192.168.1.10": ["db.internal"],
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self, path: str = "/etc/hosts") -> StringCommand:
+        return make_formatted_string_command("cat {0} 2>/dev/null || true", QuoteString(path))
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[str, list[str]]:
+        entries: dict[str, list[str]] = {}
+        for raw in output:
+            line = raw.split("#", 1)[0].strip()
+            if not line:
+                continue
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            ip, hostnames = parts[0], parts[1:]
+            existing = entries.setdefault(ip, [])
+            for name in hostnames:
+                if name not in existing:
+                    existing.append(name)
+        return entries
+
+
+class LastRecordDict(TypedDict):
+    user: str
+    tty: str
+    host: str
+    time: str
+
+
+class Last(FactBase[list[LastRecordDict]]):
+    """
+    Returns login records parsed from ``last`` as a list of dicts.
+
+    Parsing is intentionally light: ``time`` holds the raw trailing string from the
+    ``last`` output (e.g. ``"Thu Apr 17 14:00   still logged in"``) so that callers can
+    re-parse the date format that matches their system if needed.
+
+    .. code:: python
+
+        [
+            {
+                "user": "alice",
+                "tty": "pts/0",
+                "host": "192.168.1.5",
+                "time": "Thu Apr 17 14:00   still logged in",
+            },
+            {
+                "user": "reboot",
+                "tty": "system boot",
+                "host": "6.19.10-arch1-1",
+                "time": "Thu Apr 17 11:00 - 12:00  (01:00)",
+            },
+        ]
+    """
+
+    default = list
+
+    _WEEKDAYS = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+
+    @override
+    def requires_command(self) -> str:
+        return "last"
+
+    @override
+    def command(self) -> str:
+        # -Fwi (util-linux): full timestamps, wide columns, IPs instead of hostnames.
+        # -w alone works on FreeBSD; busybox last rejects all flags, so also fall back
+        # to the bare command.
+        return "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true"
+
+    @override
+    def process(self, output: Iterable[str]) -> list[LastRecordDict]:
+        records: list[LastRecordDict] = []
+        for raw in output:
+            line = raw.rstrip()
+            if not line:
+                continue
+
+            lower = line.lower()
+            if lower.startswith(("wtmp begins", "btmp begins")):
+                continue
+            # util-linux may emit a "user tty ..." header with -x; skip it
+            if lower.startswith(("user ", "username ")):
+                continue
+
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+
+            user = parts[0]
+            if user == "reboot" and parts[1] == "system" and parts[2] == "boot":
+                tty = "system boot"
+                rest = parts[3:]
+            else:
+                tty = parts[1]
+                rest = parts[2:]
+
+            if not rest:
+                continue
+
+            if rest[0] in self._WEEKDAYS:
+                host = ""
+                time_parts = rest
+            else:
+                host = rest[0]
+                time_parts = rest[1:]
+
+            records.append(
+                {
+                    "user": user,
+                    "tty": tty,
+                    "host": host,
+                    "time": " ".join(time_parts),
+                }
+            )
+
+        return records
+
+
+class LoadAverage(FactBase[dict[str, float]]):
+    """
+    Returns the system load average keyed by window (1, 5 and 15 minutes).
+
+    Reads ``/proc/loadavg`` when available (Linux) and falls back to parsing
+    ``uptime`` output on systems without procfs (e.g. FreeBSD).
+
+    .. code:: python
+
+        {
+            "1": 0.12,
+            "5": 0.21,
+            "15": 0.22,
+        }
+    """
+
+    default = dict
+
+    @override
+    def command(self) -> str:
+        return "cat /proc/loadavg 2>/dev/null || uptime"
+
+    @override
+    def process(self, output: Iterable[str]) -> dict[str, float]:
+        for raw in output:
+            line = raw.strip()
+            if not line:
+                continue
+
+            tokens = line.split()
+            # /proc/loadavg: "0.00 0.00 0.00 1/145 71536"
+            if len(tokens) >= 3:
+                try:
+                    return {
+                        "1": float(tokens[0]),
+                        "5": float(tokens[1]),
+                        "15": float(tokens[2]),
+                    }
+                except ValueError:
+                    pass
+
+            # uptime: "... load average[s]: 0.12, 0.21, 0.22"
+            match = re.search(r"load averages?:\s*([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)", line)
+            if match:
+                return {
+                    "1": float(match.group(1)),
+                    "5": float(match.group(2)),
+                    "15": float(match.group(3)),
+                }
+
+        return {}
+
+
+class Lastb(Last):
+    """
+    Returns failed login records parsed from ``lastb`` (``/var/log/btmp``).
+
+    Output shape matches :class:`Last`; see that fact for details. ``lastb`` usually
+    requires root to read ``/var/log/btmp``.
+    """
+
+    @override
+    def requires_command(self) -> str:
+        return "lastb"
+
+    @override
+    def command(self) -> str:
+        # lastb only ships with util-linux; -Fwi matches the Last fact.
+        return "lastb -Fwi 2>/dev/null || lastb 2>/dev/null || true"

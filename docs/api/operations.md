@@ -51,11 +51,11 @@ remote file based on the ``present`` kwargs:
 
 ```py
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.files import File
 
 @operation()
-def file(path, present=True):
+def file(path: str, present: bool = True):
     '''
     Manage the state of files.
 
@@ -65,15 +65,21 @@ def file(path, present=True):
 
     info = host.get_fact(File, path=path)
 
-    # Not a file?!
+    # Path exists but isn't a regular file
     if info is False:
-        raise OperationError("{0} exists and is not a file".format(path))
+        raise OperationError(f"{path} exists and is not a file")
 
     # Doesn't exist & we want it
     if info is None and present:
-        yield "touch {0}".format(path)
+        yield StringCommand("touch", QuoteString(path))
 
     # It exists and we don't want it
     elif info and not present:
-        yield "rm -f {0}".format(path)
+        yield StringCommand("rm", "-f", QuoteString(path))
 ```
+
+!!! warning "Compose shell commands with `StringCommand` and `QuoteString`"
+    Never build shell commands with plain string formatting or f-strings that include user-supplied values — that opens you to shell injection. Wrap every interpolated argument in `QuoteString` (paths, names, even integers) and combine the parts with `StringCommand`. See [`pyinfra.api.command`](reference.md) for the full set of command primitives.
+
+!!! note "Contributing an operation to pyinfra itself?"
+    Operations shipped in the pyinfra repo must also be registered in `pyinfra-metadata.toml` at the repo root (with a `type = "operation"` entry and one or more tags). Omitting it won't break the operation at runtime, but the docs site won't pick it up. This only applies to in-tree contributions; external pyinfra packages don't need this file.

@@ -14,7 +14,7 @@ class OpenrcStatus(FactBase):
 
     default = dict
     regex = (
-        r"\s+([a-zA-Z0-9\-_]+)"
+        r"\s+([a-zA-Z0-9\-_.]+)"
         r"\s+\[\s+"
         r"([a-z]+)"
         r"(?:\s(?:[0-9]+\sday\(s\)\s)?"

@@ -1,0 +1,76 @@
+{
+    "command": "mount -v",
+    "output": [
+        "/dev/sd0a (b486026f5c43e172.a) on / type ffs (rw, local, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0k (b486026f5c43e172.k) on /home type ffs (rw, local, nodev, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0d (b486026f5c43e172.d) on /tmp type ffs (rw, local, nodev, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0f (b486026f5c43e172.f) on /usr type ffs (rw, local, nodev, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0g (b486026f5c43e172.g) on /usr/X11R6 type ffs (rw, local, nodev, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0h (b486026f5c43e172.h) on /usr/local type ffs (rw, local, nodev, wxallowed, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0j (b486026f5c43e172.j) on /usr/obj type ffs (rw, local, nodev, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0i (b486026f5c43e172.i) on /usr/src type ffs (rw, local, nodev, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
+        "/dev/sd0e on /var type ffs (rw, local, nosuid, ctime=Thu Jan  1 12:00:00 1970)",
+        "skynet:/sys on /sys type nfs (rw, nodev, nosuid, ctime=Mon Aug  4 16:21:19 1997, tcp, soft, intr)",
+        "mfs:75 on /run type mfs (rw, noexec, nosuid, ctime=Thu Jan  1 12:00:00 1970)"
+    ],
+    "facts": {
+        "server.Kernel": "OpenBSD"
+    },
+    "fact": {
+        "/": {
+            "device": "/dev/sd0a",
+            "type": "ffs",
+            "options": ["rw", "local"]
+        },
+        "/home": {
+            "device": "/dev/sd0k",
+            "type": "ffs",
+            "options": ["rw", "local", "nodev", "nosuid"]
+        },
+        "/tmp": {
+            "device": "/dev/sd0d",
+            "type": "ffs",
+            "options": ["rw", "local", "nodev", "nosuid"]
+        },
+        "/usr": {
+            "device": "/dev/sd0f",
+            "type": "ffs",
+            "options": ["rw", "local", "nodev"]
+        },
+        "/usr/X11R6": {
+            "device": "/dev/sd0g",
+            "type": "ffs",
+            "options": ["rw", "local", "nodev"]
+        },
+        "/usr/local": {
+            "device": "/dev/sd0h",
+            "type": "ffs",
+            "options": ["rw", "local", "nodev", "wxallowed"]
+        },
+        "/usr/obj": {
+            "device": "/dev/sd0j",
+            "type": "ffs",
+            "options": ["rw", "local", "nodev", "nosuid"]
+        },
+        "/usr/src": {
+            "device": "/dev/sd0i",
+            "type": "ffs",
+            "options": ["rw", "local", "nodev", "nosuid"]
+        },
+        "/var": {
+            "device": "/dev/sd0e",
+            "type": "ffs",
+            "options": ["rw", "local", "nosuid"]
+        },
+        "/sys": {
+            "device": "skynet:/sys",
+            "type": "nfs",
+            "options": ["rw", "nodev", "nosuid", "tcp", "soft", "intr"]
+        },
+        "/run": {
+            "device": "mfs:75",
+            "type": "mfs",
+            "options": ["rw", "noexec", "nosuid"]
+        }
+    }
+}

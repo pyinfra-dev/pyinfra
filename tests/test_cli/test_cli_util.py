@@ -9,7 +9,7 @@ import pytest
 from pyinfra.operations import server
 from pyinfra_cli.commands import get_func_and_args
 from pyinfra_cli.exceptions import CliError
-from pyinfra_cli.util import json_encode
+from pyinfra_cli.util import json_encode, parse_cli_arg, try_import_module_attribute
 
 
 class TestCliUtil(TestCase):
@@ -54,6 +54,17 @@ class TestCliUtil(TestCase):
             (["one", "two"], {"hello": "world"}),
         )
 
+    def test_setup_op_and_python_literal_list_kwarg(self):
+        commands = ("server.user", "one", "groups=['wheel', 'docker']")
+
+        assert get_func_and_args(commands) == (
+            server.user,
+            (["one"], {"groups": ["wheel", "docker"]}),
+        )
+
+    def test_parse_cli_arg_preserves_unwrapped_comma_values(self):
+        assert parse_cli_arg("80,443") == "80,443"
+
 
 @pytest.fixture(scope="function")
 def user_sys_path():
@@ -83,3 +94,30 @@ def test_user_op(user_sys_path):
     import test_ops
 
     assert res == (test_ops.dummy_op, (["arg1", "arg2"], {}))
+
+
+def test_try_import_module_attribute_falls_through_when_attr_missing(monkeypatch, tmp_path):
+    # Regression for pyinfra-dev/pyinfra#1747: when a top-level module that
+    # collides with a pyinfra fact/operation is importable but lacks the
+    # requested attribute, the bare candidate must not short-circuit the
+    # prefixed candidate.
+    stub_pip = tmp_path / "pip"
+    stub_pip.mkdir()
+    (stub_pip / "__init__.py").write_text("")
+
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.delitem(sys.modules, "pip", raising=False)
+
+    from pyinfra.facts.pip import Pip3Packages
+
+    result = try_import_module_attribute("pip.Pip3Packages", prefix="pyinfra.facts")
+
+    assert result is Pip3Packages
+
+
+def test_try_import_module_attribute_preserves_windows_path_in_error():
+    with pytest.raises(CliError, match=r"^No such module: D:/non_existing_script\.py$"):
+        try_import_module_attribute("D:/non_existing_script.py")
+
+    with pytest.raises(CliError, match=r"^No such module: D:\\non_existing_script\.py$"):
+        try_import_module_attribute(r"D:\non_existing_script.py")

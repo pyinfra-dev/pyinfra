@@ -5,6 +5,7 @@
         "             bootmisc | boot",
         "              cgroups |",
         "                crond |      default",
+        "     nftables.default | boot",
         "            hwdrivers |                                 sysinit",
         " virtualbox-guest-additions |      default"
     ],
@@ -12,6 +13,7 @@
         "bootmisc": false,
         "cgroups": false,
         "crond": true,
+        "nftables.default": false,
         "hwdrivers": false,
         "virtualbox-guest-additions": true
     }

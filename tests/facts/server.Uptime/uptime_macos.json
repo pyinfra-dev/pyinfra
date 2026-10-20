@@ -1,0 +1,8 @@
+{
+    "command": "date +%s; sysctl -n kern.boottime | awk '{print $4}' | tr -d ','",
+    "facts": {
+        "server.Kernel": "Darwin"
+    },
+    "output": ["1746748800", "1746662400"],
+    "fact": 86400
+}

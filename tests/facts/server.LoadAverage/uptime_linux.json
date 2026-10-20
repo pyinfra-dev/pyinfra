@@ -1,0 +1,9 @@
+{
+    "command": "cat /proc/loadavg 2>/dev/null || uptime",
+    "output": [" 12:03:01 up 16 days,  6:34,  0 users,  load average: 1.50, 2.00, 3.25"],
+    "fact": {
+        "1": 1.5,
+        "5": 2.0,
+        "15": 3.25
+    }
+}

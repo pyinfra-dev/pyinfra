@@ -1,0 +1,6 @@
+args:
+  - "github.com/foo/bar"
+facts:
+  go.GoPackages: {}
+commands:
+  - go install github.com/foo/bar@latest

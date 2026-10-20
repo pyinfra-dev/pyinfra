@@ -1,0 +1,20 @@
+{
+    "output": [
+        "##PYINFRA_FILE /etc/apt/sources.list.d/nvidia-container-toolkit.list",
+        "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/ubuntu18.04/amd64 /",
+        "#deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/experimental/ubuntu18.04/amd64 /"
+    ],
+    "command": "sh -c 'for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do [ -e \"$f\" ] || continue; echo \"##PYINFRA_FILE $f\"; cat \"$f\"; echo; done'",
+    "requires_command": "apt",
+    "fact": [
+        {
+            "url": "https://nvidia.github.io/libnvidia-container/stable/ubuntu18.04/amd64",
+            "distribution": "/",
+            "type": "deb",
+            "components": [],
+            "options": {
+                "signed-by": "/etc/apt/keyrings/nvidia-container-toolkit-keyring.gpg"
+            }
+        }
+    ]
+}

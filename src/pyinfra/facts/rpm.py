@@ -87,13 +87,13 @@ class RpmPackageProvides(FactBase):
 
     @override
     def requires_command(self, *args, **kwargs) -> str:
-        return "repoquery"
+        return "dnf"
 
     @override
     def command(self, package):
         # Accept failure here (|| true) for invalid/unknown packages
         return make_formatted_string_command(
-            "repoquery --queryformat {0} --whatprovides {1} || true",
+            "dnf repoquery --quiet --queryformat {0} --whatprovides {1} || true",
             QuoteString(rpm_query_format),
             QuoteString(package),
         )

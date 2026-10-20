@@ -1,8 +1,8 @@
 {
     "arg": ["myuser", "mypassword", "myhost", "myport"],
     "command": {
-        "raw": "PGPASSWORD=\"mypassword\" psql -U myuser -h myhost -p myport -Ac 'SELECT * FROM pg_catalog.pg_roles'",
-        "masked": "*** psql -U myuser -h myhost -p myport -Ac 'SELECT * FROM pg_catalog.pg_roles'"
+        "raw": "PGPASSWORD=mypassword psql -U myuser -h myhost -p myport -Ac 'SELECT * FROM pg_catalog.pg_roles'",
+        "masked": "PGPASSWORD='*MASKED*' psql -U myuser -h myhost -p myport -Ac 'SELECT * FROM pg_catalog.pg_roles'"
     },
     "requires_command": "psql",
     "output": [

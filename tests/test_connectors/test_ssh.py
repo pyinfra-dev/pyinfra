@@ -1,14 +1,20 @@
+import importlib
+from pathlib import Path
 from socket import error as socket_error, gaierror
+from tempfile import TemporaryDirectory
 from unittest import TestCase, mock
 
 from paramiko import AuthenticationException, PasswordRequiredException, SSHException
+from paramiko.auth_handler import AuthHandler
 
 import pyinfra
-from pyinfra.api import Config, Host, MaskString, State, StringCommand
+from pyinfra.api import Config, Host, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
-from pyinfra.context import ctx_state
 from pyinfra.connectors import ssh
+from pyinfra.connectors.ssh_util import _patch_paramiko_sk_key_support
+from pyinfra.connectors.sshuserclient.client import SSHClient as SSHUserClient
+from pyinfra.context import ctx_state
 
 from ..util import make_inventory
 
@@ -18,6 +24,151 @@ def make_raise_exception_function(cls, *args, **kwargs):
         raise cls(*args, **kwargs)
 
     return handler
+
+
+# Matches Paramiko's pre-paramiko/paramiko#2475 helper shape.
+def buggy_get_key_type_and_bits(self, key):
+    if key.public_blob:
+        return key.public_blob.key_type, key.public_blob.key_blob
+    return key.get_name(), key
+
+
+def self_touching_get_key_type_and_bits(self, key):
+    if self is None:
+        raise RuntimeError("self is required")
+    return key.get_name(), key
+
+
+class FakeSkKey:
+    @property
+    def public_blob(self):
+        raise AttributeError("public_blob")
+
+    def get_name(self):
+        return "sk-ssh-ed25519@openssh.com"
+
+
+class FakePublicBlob:
+    key_type = "ssh-ed25519-cert-v01@openssh.com"
+    key_blob = b"public-key-blob"
+
+
+class FakeBlobKey:
+    def __init__(self, public_blob):
+        self.public_blob = public_blob
+
+    def get_name(self):
+        return "ssh-ed25519"
+
+
+class TestParamikoSkKeyPatch(TestCase):
+    def test_patch_paramiko_sk_key_support_handles_missing_public_blob(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+
+            key = FakeSkKey()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, key),
+                (key.get_name(), key),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_patch_paramiko_sk_key_support_preserves_public_blob(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+
+            public_blob = FakePublicBlob()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, FakeBlobKey(public_blob)),
+                (public_blob.key_type, public_blob.key_blob),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_patch_paramiko_sk_key_support_is_idempotent(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+            patched_method = AuthHandler._get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+
+            self.assertIs(AuthHandler._get_key_type_and_bits, patched_method)
+            self.assertTrue(getattr(patched_method, "_pyinfra_sk_patch", False))
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_patch_paramiko_sk_key_support_does_not_probe_current_method(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = self_touching_get_key_type_and_bits
+
+            _patch_paramiko_sk_key_support()
+
+            key = FakeSkKey()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, key),
+                (key.get_name(), key),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_patch_paramiko_sk_key_support_ignores_missing_paramiko_method(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = None
+
+            _patch_paramiko_sk_key_support()
+
+            self.assertIsNone(AuthHandler._get_key_type_and_bits)
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
+    def test_importing_ssh_and_building_inventory_does_not_patch_paramiko_sk_key_support(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            importlib.reload(ssh)
+            make_inventory()
+
+            self.assertIs(AuthHandler._get_key_type_and_bits, buggy_get_key_type_and_bits)
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+            importlib.reload(ssh)
+
+    def test_sshuserclient_connect_patches_paramiko_sk_key_support(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            client = SSHUserClient()
+            with (
+                mock.patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect"),
+                mock.patch("pyinfra.connectors.sshuserclient.client.get_host_keys"),
+                mock.patch(
+                    "pyinfra.connectors.sshuserclient.client.get_ssh_config",
+                    return_value=None,
+                ),
+            ):
+                client.connect("somehost", allow_agent=False, look_for_keys=False)
+
+            key = FakeSkKey()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, key),
+                (key.get_name(), key),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
 
 
 class TestSSHConnector(TestCase):
@@ -41,6 +192,23 @@ class TestSSHConnector(TestCase):
         host.connect(reason=True)
         assert len(state.active_hosts) == 0
 
+    def test_connect_patches_paramiko_sk_key_support(self):
+        original_method = AuthHandler._get_key_type_and_bits
+        try:
+            AuthHandler._get_key_type_and_bits = buggy_get_key_type_and_bits
+
+            inventory = make_inventory(hosts=("somehost",))
+            state = State(inventory, Config())
+            connect_all(state)
+
+            key = FakeSkKey()
+            self.assertEqual(
+                AuthHandler._get_key_type_and_bits(None, key),
+                (key.get_name(), key),
+            )
+        finally:
+            AuthHandler._get_key_type_and_bits = original_method
+
     def test_connect_all_password(self):
         inventory = make_inventory(override_data={"ssh_password": "test"})
 
@@ -53,7 +221,7 @@ class TestSSHConnector(TestCase):
 
         assert len(state.active_hosts) == 2
 
-    @mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True)
+    @mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True)
     @mock.patch("pyinfra.connectors.ssh_util.RSAKey.from_private_key_file")
     def test_connect_exceptions(self, fake_key_open):
         for exception_class in (
@@ -79,7 +247,7 @@ class TestSSHConnector(TestCase):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -92,7 +260,7 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
             # And check the Paramiko SSH call was correct
             self.fake_connect_mock.assert_called_with(
@@ -220,7 +388,7 @@ class TestSSHConnector(TestCase):
         )
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -239,13 +407,13 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_password_from_prompt(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.getpass",
                 lambda *args, **kwargs: "testpass",
@@ -270,13 +438,13 @@ class TestSSHConnector(TestCase):
             # Check the key was created properly
             fake_key_open.assert_called_with(filename="testkey", password="testpass")
             # Check the certificate file was then loaded
-            fake_key.load_certificate.assert_called_with("testkey.pub")
+            fake_key.load_certificate.assert_called_with("testkey-cert.pub")
 
     def test_connect_with_rsa_ssh_key_missing_password(self):
         state = State(make_inventory(hosts=(("somehost", {"ssh_key": "testkey"}),)), Config())
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.RSAKey.from_private_key_file",
             ) as fake_key_open,
@@ -310,7 +478,7 @@ class TestSSHConnector(TestCase):
         fake_fail_from_private_key_file.side_effect = make_raise_exception_function(SSHException)
 
         with (
-            mock.patch("pyinfra.connectors.ssh_util.path.isfile", lambda *args, **kwargs: True),
+            mock.patch("pyinfra.connectors.ssh_util.Path.is_file", lambda *args, **kwargs: True),
             mock.patch(
                 "pyinfra.connectors.ssh_util.ECDSAKey.from_private_key_file",
                 fake_fail_from_private_key_file,
@@ -403,7 +571,7 @@ class TestSSHConnector(TestCase):
         host = inventory.get_host("somehost")
         host.connect()
 
-        command = StringCommand("echo", MaskString("top-secret-stuff"))
+        command = StringCommand("echo", HiddenValue("top-secret-stuff"))
         fake_stdout.channel.recv_exit_status.return_value = 0
 
         out = host.run_shell_command(command, print_output=True, print_input=True)
@@ -418,7 +586,7 @@ class TestSSHConnector(TestCase):
         )
 
         fake_echo.assert_called_with(
-            f"{host.print_prefix}>>> sh -c 'echo ***'",
+            f"{host.print_prefix}>>> sh -c 'echo *MASKED*'",
             err=True,
         )
 
@@ -620,7 +788,46 @@ class TestSSHConnector(TestCase):
         state = State(inventory, Config())
         host = inventory.get_host("somehost")
         host.connect(state)
-        host.connector_data["sudo_askpass_path"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
+
+        command = "echo hi"
+        return_values = [1, 0]  # return 0 on the second call
+        fake_stdout.channel.recv_exit_status.side_effect = lambda: return_values.pop(0)
+
+        out = host.run_shell_command(command, _sudo=True)
+        assert len(out) == 2
+        assert out[0] is True
+        assert fake_getpass.called
+        fake_ssh.exec_command.assert_called_with(
+            "env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX "
+            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k sh -c 'echo hi'",
+            get_pty=False,
+        )
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    @mock.patch("pyinfra.connectors.util.getpass")
+    def test_run_shell_command_retry_for_sudo_rs_password(
+        self,
+        fake_getpass,
+        fake_ssh_client,
+    ):
+        # sudo-rs (the Rust replacement, default in Ubuntu 25.10+) prints a different message
+        # when it cannot prompt non-interactively; the retry path should recognize it too.
+        fake_getpass.return_value = "PASSWORD"
+
+        fake_ssh = mock.MagicMock()
+        fake_stdin = mock.MagicMock()
+        fake_stdout = mock.MagicMock()
+        fake_stderr = ["sudo-rs: interactive authentication is required"]
+        fake_ssh.exec_command.return_value = fake_stdin, fake_stdout, fake_stderr
+
+        fake_ssh_client.return_value = fake_ssh
+
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect(state)
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass-XXXXXXXXXXXX"
 
         command = "echo hi"
         return_values = [1, 0]  # return 0 on the second call
@@ -720,6 +927,78 @@ class TestSSHConnector(TestCase):
         #     fake_open(),
         #     "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24",
         # )
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    @mock.patch("pyinfra.connectors.ssh.SFTPClient")
+    def test_put_file_sudo_retries_freebsd_nfsv4_acl(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=("anotherhost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("anotherhost")
+        host.connect()
+
+        def make_command_result(return_code, stderr_lines=None):
+            stdout_mock = mock.MagicMock()
+            stdout_mock.channel.recv_exit_status.return_value = return_code
+            stdout_mock.__iter__.return_value = iter([])
+            stderr_mock = mock.MagicMock()
+            stderr_mock.__iter__.return_value = iter(stderr_lines or [])
+            return mock.MagicMock(), stdout_mock, stderr_mock
+
+        fake_ssh_client().exec_command.side_effect = [
+            make_command_result(
+                1,
+                [
+                    "setfacl: /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24: "
+                    "branding mismatch; existing ACL is NFSv4, entry to be merged is POSIX.1e",
+                ],
+            ),
+            make_command_result(0),
+            make_command_result(0),
+            make_command_result(0),
+        ]
+
+        fake_open = mock.mock_open(read_data="test!")
+        with mock.patch("pyinfra.api.util.open", fake_open, create=True):
+            with ctx_state.use(state):
+                status = host.put_file(
+                    "not-a-file",
+                    "not another file",
+                    remote_temp_filename="/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24",
+                    print_output=True,
+                    _sudo=True,
+                    _sudo_user="root",
+                )
+
+        assert status is True
+
+        fake_ssh_client().exec_command.assert_has_calls(
+            [
+                mock.call(
+                    (
+                        "sh -c 'setfacl -m u:root:r "
+                        "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"
+                    ),
+                    get_pty=False,
+                ),
+                mock.call(
+                    (
+                        "sh -c 'setfacl -m u:root:r::allow "
+                        "/tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"
+                    ),
+                    get_pty=False,
+                ),
+                mock.call(
+                    (
+                        "sudo -H -n -u root sh -c 'cp /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24 '\"'\"'not another file'\"'\"''"  # noqa: E501
+                    ),
+                    get_pty=False,
+                ),
+                mock.call(
+                    ("sh -c 'rm -f /tmp/pyinfra-de01e82cb691e8a31369da3c7c8f17341c44ac24'"),
+                    get_pty=False,
+                ),
+            ],
+        )
 
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     @mock.patch("pyinfra.connectors.ssh.SFTPClient")
@@ -933,6 +1212,29 @@ class TestSSHConnector(TestCase):
         #     "not-a-file",
         #     fake_open(),
         # )
+
+    @mock.patch("pyinfra.connectors.ssh.SSHClient")
+    @mock.patch("pyinfra.connectors.ssh.SFTPClient")
+    def test_get_file_failure_leaves_local_file_alone(self, fake_sftp_client, fake_ssh_client):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        host = inventory.get_host("somehost")
+        host.connect()
+
+        fake_sftp_client.from_transport().getfo.side_effect = PermissionError(
+            13,
+            "Permission denied",
+        )
+
+        with TemporaryDirectory() as temp_dir:
+            local_file = Path(temp_dir) / "existing-file"
+            local_file.write_bytes(b"do not truncate me")
+
+            with ctx_state.use(state):
+                with self.assertRaises(PermissionError):
+                    host.get_file("not-a-file", str(local_file))
+
+            assert local_file.read_bytes() == b"do not truncate me"
 
     @mock.patch("pyinfra.connectors.ssh.SSHClient")
     @mock.patch("pyinfra.connectors.ssh.SFTPClient")

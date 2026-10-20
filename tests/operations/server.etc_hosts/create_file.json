@@ -1,0 +1,24 @@
+{
+    "args": ["127.0.0.1"],
+    "kwargs": {
+        "hostnames": "localhost"
+    },
+    "facts": {
+        "server.EtcHosts": {
+            "path=/etc/hosts": {}
+        },
+        "files.FileContents": {
+            "path=/etc/hosts": null
+        },
+        "files.File": {
+            "path=/etc/hosts": {}
+        },
+        "files.Directory": {
+            "path=/etc": true,
+            "path=/etc/hosts": false
+        }
+    },
+    "commands": [
+        ["upload", "127.0.0.1 localhost\n", "/etc/hosts"]
+    ]
+}

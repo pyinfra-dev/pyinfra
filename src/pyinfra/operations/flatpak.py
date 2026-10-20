@@ -5,7 +5,7 @@ Manage flatpak packages. See https://www.flatpak.org/
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.flatpak import FlatpakPackages
 
 
@@ -65,11 +65,8 @@ def packages(
     install_packages = []
     remove_packages = []
 
-    if remote is None:
-        remote = ""
-    else:
-        # ensure we have a space between the remote and packages
-        remote = remote.strip() + " "
+    if remote is not None:
+        remote = remote.strip()
 
     for package in packages:
         # it's installed
@@ -89,7 +86,14 @@ def packages(
                 host.noop(f"flatpak package {package} is not installed")
 
     if install_packages:
-        yield f"flatpak install --noninteractive {remote}{' '.join(install_packages)}"
+        command: list[str | QuoteString] = ["flatpak install --noninteractive"]
+        if remote:
+            command.append(QuoteString(remote))
+        command += [QuoteString(package) for package in install_packages]
+        yield StringCommand(*command)
 
     if remove_packages:
-        yield f"flatpak uninstall --noninteractive {' '.join(remove_packages)}"
+        yield StringCommand(
+            "flatpak uninstall --noninteractive",
+            *[QuoteString(package) for package in remove_packages],
+        )

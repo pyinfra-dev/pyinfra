@@ -1,0 +1,23 @@
+{
+  "command": "LANG=C ps -eo pid,user,stat,%cpu,%mem,args -ww && echo ===PYINFRA-PROCESSES-COMM=== && LANG=C ps -eo pid,comm -ww",
+  "facts": {
+    "server.Kernel": "Darwin"
+  },
+  "output": [
+    "  PID USER             STAT  %CPU %MEM ARGS",
+    "36470 karlicos         S      0.0  0.0 ./Example Application 120",
+    "===PYINFRA-PROCESSES-COMM===",
+    "  PID COMM",
+    "36470 ./Example Application"
+  ],
+  "fact": {
+    "36470": {
+      "user": "karlicos",
+      "state": "S",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.0,
+      "command": "./Example Application",
+      "args": "./Example Application 120"
+    }
+  }
+}

@@ -1,10 +1,11 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from pyinfra.api import Config, State
+from pyinfra.api import Config, State, HiddenValue
 from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
+    _ensure_askpass_set_for_host,
     execute_command_with_sudo_retry,
     make_unix_command,
     make_unix_command_for_host,
@@ -54,6 +55,16 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
     def test_sudo_preserve_env_command(self):
         command = make_unix_command("uptime", _sudo=True, _preserve_sudo_env=True)
         assert command.get_raw_value() == "sudo -H -n -E sh -c uptime"
+
+    def test_sudo_without_set_home_command(self):
+        command = make_unix_command("uptime", _sudo=True, _sudo_set_home=False)
+        assert command.get_raw_value() == "sudo -n sh -c uptime"
+
+    def test_sudo_without_set_home_preserve_env_command(self):
+        command = make_unix_command(
+            "uptime", _sudo=True, _sudo_set_home=False, _preserve_sudo_env=True
+        )
+        assert command.get_raw_value() == "sudo -n -E sh -c uptime"
 
     def test_use_sudo_login_command(self):
         command = make_unix_command("uptime", _sudo=True, _use_sudo_login=True)
@@ -147,6 +158,40 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             == "sh -c 'export '\"'\"'KEY=value\"; id; echo \"'\"'\"' && uptime'"
         )
 
+    def test_command_env_hidden_value(self):
+        command = make_unix_command(
+            "uptime",
+            _env={
+                "KEY": HiddenValue("super-secret"),
+            },
+        )
+
+        raw = command.get_raw_value()
+        masked = command.get_masked_value()
+        assert "super-secret" in raw
+        assert "super-secret" not in masked
+        assert "*MASKED*" in masked
+        assert "KEY=*MASKED*" in masked
+
+    def test_command_env_hidden_value_with_shell_chars(self):
+        command = make_unix_command(
+            "uptime",
+            _env={
+                "KEY": HiddenValue("abc; id; echo bad"),
+            },
+        )
+
+        raw = command.get_raw_value()
+        masked = command.get_masked_value()
+
+        assert "abc; id; echo bad" in raw
+        assert "abc; id; echo bad" not in masked
+        assert "*MASKED*" in masked
+        assert "KEY=*MASKED*" in masked
+
+        # The raw command should still quote the assignment as one shell token.
+        assert "'\"'\"'KEY=abc; id; echo bad'\"'\"'" in raw
+
     def test_command_chdir(self):
         command = make_unix_command("uptime", _chdir="/opt/somedir")
         assert command.get_raw_value() == "sh -c 'cd /opt/somedir && uptime'"
@@ -205,15 +250,14 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
 
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": "/tmp/weird path; id",
-            "su_askpass_path": None,
+            "sudo_askpass_path__/tmp": "/tmp/weird path; id",
         }
         host.run_shell_command = lambda cmd: commands.append(cmd.get_raw_value())
 
         remove_any_sudo_askpass_file(host)
 
         assert commands == ["rm -f '/tmp/weird path; id' '/tmp/weird path; id'.*.called"]
-        assert host.connector_data["sudo_askpass_path"] is None
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
 
     def test_command_exists_su_config_only(self):
         """
@@ -227,36 +271,221 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
 
 
+class TestExecuteCommandWithSudoRetry(TestCase):
+    """
+    A command failing with a sudo password required line should only be re-executed
+    when the command itself runs with sudo. Without `_sudo` the prompted password
+    cannot change the outcome, so the failed result is returned as-is and the usual
+    failure handling (fail_hosts, _ignore_errors, --fail-percent) applies
+    (issue #940).
+    """
+
+    def _make_host(self):
+        state = State(make_inventory(hosts=("somehost",)), Config())
+        host = state.inventory.get_host("somehost")
+        host.init(state)
+        return host
+
+    @staticmethod
+    def _sudo_required_output():
+        return CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_on_ordinary_failure(self, fake_getpass):
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, CommandOutput([OutputLine("stderr", "boom")])))
+
+        return_code, output = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        assert output.output == "boom"
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_without_sudo(self, fake_getpass, fake_logger):
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, self._sudo_required_output()))
+
+        return_code, output = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        assert output.output == "sudo: a password is required"
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+        assert "`_sudo=True`" in fake_logger.warning.call_args.args[0]
+        # The warning carries the host prefix so it can be attributed on multi-host runs
+        assert fake_logger.warning.call_args.args[1] == host.print_prefix
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_with_sudo_disabled(self, fake_getpass, fake_logger):
+        # The rsync path passes an explicit `_sudo=False`
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, self._sudo_required_output()))
+
+        return_code, output = execute_command_with_sudo_retry(
+            host, {"_sudo": False}, execute_command
+        )
+
+        assert return_code == 1
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_without_sudo_sudo_rs(self, fake_getpass, fake_logger):
+        host = self._make_host()
+        execute_command = MagicMock(
+            return_value=(
+                1,
+                CommandOutput(
+                    [OutputLine("stderr", "sudo-rs: interactive authentication is required")]
+                ),
+            )
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+
+    @patch("pyinfra.connectors.util.getpass", return_value="password")
+    def test_retry_with_sudo(self, fake_getpass):
+        host = self._make_host()
+        execute_command = MagicMock(
+            side_effect=[
+                (1, self._sudo_required_output()),
+                (0, CommandOutput([])),
+            ]
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+
+        assert return_code == 0
+        assert execute_command.call_count == 2
+        fake_getpass.assert_called_once()
+        assert host.connector_data["prompted_sudo_password"] == "password"
+
+    @patch("pyinfra.connectors.util.getpass", return_value="secret")
+    def test_retry_on_password_required_portuguese(self, fake_getpass):
+        host = self._make_host()
+        fail_output = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
+        execute_command = MagicMock(side_effect=[(1, fail_output), (0, CommandOutput([]))])
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+        assert return_code == 0
+        assert execute_command.call_count == 2
+        fake_getpass.assert_called_once()
+        assert host.connector_data["prompted_sudo_password"] == "secret"
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_incorrect_password_attempt(self, fake_getpass):
+        fake_getpass.side_effect = ["wrong", "correct"]
+        host = self._make_host()
+
+        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+        fail_output_2 = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
+        execute_command = MagicMock(
+            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, CommandOutput([]))]
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+        assert return_code == 0
+        assert fake_getpass.call_count == 2
+        assert host.connector_data["prompted_sudo_password"] == "correct"
+        assert execute_command.call_count == 3
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_retry_on_incorrect_password_attempt_portuguese(self, fake_getpass):
+        fake_getpass.side_effect = ["wrong", "correct"]
+        host = self._make_host()
+
+        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
+        fail_output_2 = CommandOutput(
+            [OutputLine("stderr", "sudo: 1 tentativa de senha incorreta")]
+        )
+        execute_command = MagicMock(
+            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, CommandOutput([]))]
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+        assert return_code == 0
+        assert fake_getpass.call_count == 2
+        assert host.connector_data["prompted_sudo_password"] == "correct"
+        assert execute_command.call_count == 3
+
+    @patch("pyinfra.connectors.util.getpass", return_value="wrong")
+    def test_max_attempts_exhausted(self, fake_getpass):
+        host = self._make_host()
+        fail_output = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
+        execute_command = MagicMock(return_value=(1, fail_output))
+
+        return_code, output = execute_command_with_sudo_retry(
+            host, {"_sudo": True}, execute_command
+        )
+        assert return_code == 1
+        assert output == fail_output
+        assert fake_getpass.call_count == 3
+        assert execute_command.call_count == 4
+
+
 class TestRemoveAnySudoAskpassFile(TestCase):
     def test_clears_state_and_runs_rm(self):
         commands = []
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": "/tmp/sudo-askpass",
-            "su_askpass_path": "/tmp/su-askpass",
+            "sudo_askpass_path__/tmp": "/tmp/sudo-askpass",
+            "su_askpass_path__/tmp": "/tmp/su-askpass",
         }
         host.run_shell_command = lambda cmd: commands.append(cmd.get_raw_value())
 
         remove_any_sudo_askpass_file(host)
 
-        assert commands == [
-            "rm -f /tmp/sudo-askpass /tmp/sudo-askpass.*.called",
+        assert sorted(commands) == [
             "rm -f /tmp/su-askpass /tmp/su-askpass.*.called",
+            "rm -f /tmp/sudo-askpass /tmp/sudo-askpass.*.called",
         ]
-        assert host.connector_data["sudo_askpass_path"] is None
-        assert host.connector_data["su_askpass_path"] is None
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
+        assert host.connector_data["su_askpass_path__/tmp"] is None
+
+    def test_clears_multiple_temp_dir_variants(self):
+        commands = []
+        host = MagicMock()
+        host.connector_data = {
+            "sudo_askpass_path__/tmp": "/tmp/sudo-askpass",
+            "sudo_askpass_path__/var/tmp": "/var/tmp/sudo-askpass",
+            "su_askpass_path__/dev/shm": "/dev/shm/su-askpass",
+        }
+        host.run_shell_command = lambda cmd: commands.append(cmd.get_raw_value())
+
+        remove_any_sudo_askpass_file(host)
+
+        assert sorted(commands) == [
+            "rm -f /dev/shm/su-askpass /dev/shm/su-askpass.*.called",
+            "rm -f /tmp/sudo-askpass /tmp/sudo-askpass.*.called",
+            "rm -f /var/tmp/sudo-askpass /var/tmp/sudo-askpass.*.called",
+        ]
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
+        assert host.connector_data["sudo_askpass_path__/var/tmp"] is None
+        assert host.connector_data["su_askpass_path__/dev/shm"] is None
 
     def test_swallows_errors_and_clears_state(self):
         """
-        Regression test for #1645: `host.disconnect()` → `remove_any_sudo_askpass_file`
+        Regression test for #1645: `host.disconnect()` -> `remove_any_sudo_askpass_file`
         is called after ``server.reboot`` when the SSH session is already dead.
         The remote ``rm`` must fail gracefully and the stored path must still
         be cleared so a reconnect will regenerate a fresh askpass file.
         """
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": "/tmp/sudo-askpass",
-            "su_askpass_path": "/tmp/su-askpass",
+            "sudo_askpass_path__/tmp": "/tmp/sudo-askpass",
+            "su_askpass_path__/tmp": "/tmp/su-askpass",
         }
 
         def failing_run(cmd):
@@ -264,17 +493,17 @@ class TestRemoveAnySudoAskpassFile(TestCase):
 
         host.run_shell_command = failing_run
 
-        # Must not raise — this is a best-effort cleanup.
+        # Must not raise, this is a best-effort cleanup.
         remove_any_sudo_askpass_file(host)
 
-        assert host.connector_data["sudo_askpass_path"] is None
-        assert host.connector_data["su_askpass_path"] is None
+        assert host.connector_data["sudo_askpass_path__/tmp"] is None
+        assert host.connector_data["su_askpass_path__/tmp"] is None
 
     def test_noop_when_no_state(self):
         host = MagicMock()
         host.connector_data = {
-            "sudo_askpass_path": None,
-            "su_askpass_path": None,
+            "sudo_askpass_path__/tmp": None,
+            "su_askpass_path__/tmp": None,
         }
         host.run_shell_command = MagicMock()
 
@@ -283,110 +512,172 @@ class TestRemoveAnySudoAskpassFile(TestCase):
         host.run_shell_command.assert_not_called()
 
 
-class TestExecuteCommandWithSudoRetry(TestCase):
-    @patch("pyinfra.connectors.util.getpass")
-    def test_success_first_try(self, fake_getpass):
-        host = MagicMock()
-        host.connector_data = {}
-        output = CommandOutput([OutputLine("stdout", "ok")])
-        mock_execute = MagicMock(return_value=(0, output))
+class TestEnsureAskpassTempDir(TestCase):
+    """
+    The askpass helper must honour the resolved temp directory (issue #1623):
+    operation-level ``_temp_dir`` > ``config.TEMP_DIR`` > ``config.DEFAULT_TEMP_DIR``.
+    Per-host defaults for ``_temp_dir`` come through the standard global-argument
+    cascade (``host.data._temp_dir``), not via a separate code path here.
+    """
 
-        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
-        assert return_code == 0
-        assert res_output == output
+    _counter = 0
+
+    @classmethod
+    def _next_host(cls):
+        cls._counter += 1
+        return f"askpass-temp-dir-test-host-{cls._counter}"
+
+    def _make_host(self, config=None):
+        name = self._next_host()
+        state = State(make_inventory(hosts=(name,)), config or Config())
+        host = state.inventory.get_host(name)
+        host.init(state)
+        return host
+
+    def _captured_script_run(self, host, temp_dir=None, stdout="/some/askpass/path"):
+        """
+        Call ``_ensure_askpass_set_for_host`` with ``host.run_shell_command``
+        patched so we can assert on the remote script text (whose first
+        argument to the mkstemp template is the temp directory).
+        """
+        captured = {}
+
+        def fake_run(command, *args, **kwargs):
+            captured["command"] = command
+            return (True, CommandOutput([OutputLine("stdout", stdout)]))
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+        _ensure_askpass_set_for_host(
+            host,
+            key="sudo_askpass_path",
+            env_var="PYINFRA_SUDO_PASSWORD",
+            temp_dir=temp_dir,
+        )
+        return captured["command"]
+
+    def test_default_temp_dir(self):
+        host = self._make_host()
+        script = self._captured_script_run(host)
+        assert "${TMPDIR:=/tmp}" in script
+
+    def test_config_temp_dir(self):
+        host = self._make_host(Config(TEMP_DIR="/var/tmp"))
+        script = self._captured_script_run(host)
+        assert "${TMPDIR:=/var/tmp}" in script
+
+    def test_op_temp_dir_wins_over_config(self):
+        host = self._make_host(Config(TEMP_DIR="/var/tmp"))
+        script = self._captured_script_run(host, temp_dir="/dev/shm/pyinfra")
+        assert "${TMPDIR:=/dev/shm/pyinfra}" in script
+
+    def test_distinct_temp_dirs_get_distinct_cache_entries(self):
+        host = self._make_host()
+        first = self._captured_script_run(host, temp_dir="/a", stdout="/a/askpass")
+        assert "${TMPDIR:=/a}" in first
+        second = self._captured_script_run(host, temp_dir="/b", stdout="/b/askpass")
+        assert "${TMPDIR:=/b}" in second
+        assert host.connector_data["sudo_askpass_path__/a"] == "/a/askpass"
+        assert host.connector_data["sudo_askpass_path__/b"] == "/b/askpass"
+
+    def test_same_temp_dir_reuses_cache(self):
+        host = self._make_host()
+        calls = {"count": 0}
+
+        def fake_run(command, *args, **kwargs):
+            calls["count"] += 1
+            return (True, CommandOutput([OutputLine("stdout", "/tmp/askpass-XYZ")]))
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+
+        first = _ensure_askpass_set_for_host(
+            host,
+            key="sudo_askpass_path",
+            env_var="PYINFRA_SUDO_PASSWORD",
+            temp_dir="/tmp",
+        )
+        second = _ensure_askpass_set_for_host(
+            host,
+            key="sudo_askpass_path",
+            env_var="PYINFRA_SUDO_PASSWORD",
+            temp_dir="/tmp",
+        )
+
+        assert first == second == "/tmp/askpass-XYZ"
+        assert calls["count"] == 1
+
+    def test_make_unix_command_for_host_threads_temp_dir(self):
+        host = self._make_host()
+        host.connector_data["prompted_sudo_password"] = "supersecret"
+
+        captured = {}
+
+        def fake_run(command, *args, **kwargs):
+            captured["command"] = command
+            return (
+                True,
+                CommandOutput([OutputLine("stdout", "/op/tmp/pyinfra-askpass-XYZ")]),
+            )
+
+        host.run_shell_command = fake_run  # type: ignore[method-assign]
+
+        with patch("pyinfra.connectors.util.make_unix_command") as fake_make:
+            fake_make.return_value = "mocked"
+            make_unix_command_for_host(
+                host.state,
+                host,
+                "uptime",
+                _sudo=True,
+                _sudo_password="supersecret",
+                _temp_dir="/op/tmp",
+            )
+
+        assert "${TMPDIR:=/op/tmp}" in captured["command"]
+
+
+class TestUseSudoPassword(TestCase):
+    """
+    With ``config.USE_SUDO_PASSWORD`` (``--use-sudo-password``) set, pyinfra should prompt for the
+    sudo password before the first sudo command rather than first trying passwordless sudo
+    (issue #1850).
+    """
+
+    def _make_host(self, config):
+        state = State(make_inventory(hosts=("somehost",)), config)
+        host = state.inventory.get_host("somehost")
+        host.init(state)
+        host.run_shell_command = MagicMock(  # type: ignore[method-assign]
+            return_value=(True, CommandOutput([OutputLine("stdout", "/tmp/askpass-XYZ")])),
+        )
+        return host
+
+    @patch("pyinfra.connectors.util.getpass", return_value="supersecret")
+    def test_prompts_before_first_sudo_command(self, fake_getpass):
+        host = self._make_host(Config(USE_SUDO_PASSWORD=True))
+
+        command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        assert command.get_raw_value() == (
+            "env SUDO_ASKPASS=/tmp/askpass-XYZ PYINFRA_SUDO_PASSWORD=supersecret "
+            "sudo -H -A -k sh -c uptime"
+        )
+
+        # The prompted password is reused for later commands
+        make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        fake_getpass.assert_called_once()
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_prompt_when_password_given(self, fake_getpass):
+        host = self._make_host(Config(USE_SUDO_PASSWORD=True, SUDO_PASSWORD="configured"))
+
+        command = make_unix_command_for_host(
+            host.state, host, "uptime", _sudo=True, _sudo_password="configured"
+        )
+        assert "sudo -H -A -k" in command.get_raw_value()
         fake_getpass.assert_not_called()
 
     @patch("pyinfra.connectors.util.getpass")
-    def test_retry_on_password_required_english(self, fake_getpass):
-        fake_getpass.return_value = "secret"
-        host = MagicMock()
-        host.connector_data = {}
-        host.print_prefix = "[test] "
+    def test_no_prompt_without_use_sudo_password(self, fake_getpass):
+        host = self._make_host(Config())
 
-        fail_output = CommandOutput([OutputLine("stderr", "sudo: a password is required")])
-        success_output = CommandOutput([OutputLine("stdout", "done")])
-        mock_execute = MagicMock(side_effect=[(1, fail_output), (0, success_output)])
-
-        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
-        assert return_code == 0
-        assert res_output == success_output
-        fake_getpass.assert_called_once_with("[test] sudo password: ")
-        assert host.connector_data["prompted_sudo_password"] == "secret"
-        assert mock_execute.call_count == 2
-
-    @patch("pyinfra.connectors.util.getpass")
-    def test_retry_on_password_required_portuguese(self, fake_getpass):
-        fake_getpass.return_value = "secret"
-        host = MagicMock()
-        host.connector_data = {}
-        host.print_prefix = "[test] "
-
-        fail_output = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
-        success_output = CommandOutput([OutputLine("stdout", "done")])
-        mock_execute = MagicMock(side_effect=[(1, fail_output), (0, success_output)])
-
-        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
-        assert return_code == 0
-        assert res_output == success_output
-        fake_getpass.assert_called_once()
-        assert host.connector_data["prompted_sudo_password"] == "secret"
-
-    @patch("pyinfra.connectors.util.getpass")
-    def test_retry_on_incorrect_password_attempt(self, fake_getpass):
-        fake_getpass.side_effect = ["wrong", "correct"]
-        host = MagicMock()
-        host.connector_data = {}
-        host.print_prefix = "[test] "
-
-        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: a password is required")])
-        fail_output_2 = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
-        success_output = CommandOutput([OutputLine("stdout", "done")])
-        mock_execute = MagicMock(
-            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, success_output)]
-        )
-
-        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
-        assert return_code == 0
-        assert res_output == success_output
-        assert fake_getpass.call_count == 2
-        assert host.connector_data["prompted_sudo_password"] == "correct"
-        assert mock_execute.call_count == 3
-
-    @patch("pyinfra.connectors.util.getpass")
-    def test_retry_on_incorrect_password_attempt_portuguese(self, fake_getpass):
-        fake_getpass.side_effect = ["wrong", "correct"]
-        host = MagicMock()
-        host.connector_data = {}
-        host.print_prefix = "[test] "
-
-        fail_output_1 = CommandOutput([OutputLine("stderr", "sudo: uma senha é necessária")])
-        fail_output_2 = CommandOutput(
-            [OutputLine("stderr", "sudo: 1 tentativa de senha incorreta")]
-        )
-        success_output = CommandOutput([OutputLine("stdout", "done")])
-        mock_execute = MagicMock(
-            side_effect=[(1, fail_output_1), (1, fail_output_2), (0, success_output)]
-        )
-
-        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
-        assert return_code == 0
-        assert res_output == success_output
-        assert fake_getpass.call_count == 2
-        assert host.connector_data["prompted_sudo_password"] == "correct"
-        assert mock_execute.call_count == 3
-
-    @patch("pyinfra.connectors.util.getpass")
-    def test_max_attempts_exhausted(self, fake_getpass):
-        fake_getpass.return_value = "wrong"
-        host = MagicMock()
-        host.connector_data = {}
-        host.print_prefix = "[test] "
-
-        fail_output = CommandOutput([OutputLine("stderr", "sudo: 1 incorrect password attempt")])
-        mock_execute = MagicMock(return_value=(1, fail_output))
-
-        return_code, res_output = execute_command_with_sudo_retry(host, {}, mock_execute)
-        assert return_code == 1
-        assert res_output == fail_output
-        assert fake_getpass.call_count == 3
-        assert mock_execute.call_count == 4
+        command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        assert command.get_raw_value() == "sudo -H -n sh -c uptime"
+        fake_getpass.assert_not_called()

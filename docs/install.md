@@ -97,6 +97,21 @@ First install [pipx](https://pipx.pypa.io/stable/installation/) if you haven't a
 
 ## Platform-Specific Instructions
 
+### BSD Installation
+
+Regardless of your installation method, you will need to preface commands with some environmental variables that prevent `gevent` (a dependency) from building embedded versions of some libraries.
+
+    ```sh
+    # Example for installing pyinfra as a tool under a BSD
+    env C_INCLUDE_PATH='/usr/local/include/' \
+        GEVENTSETUP_EMBED_CARES=0 \
+        GEVENTSETUP_EMBED_LIBEV=0 \
+        GEVENTSETUP_EMBED_LIBUV=0 \
+        uv tool install pyinfra
+    ```
+
+Note that you'll still need `c-ares`, `libev` and `libuv` in your system.
+
 ### Windows Installation
 
 #### Install Python

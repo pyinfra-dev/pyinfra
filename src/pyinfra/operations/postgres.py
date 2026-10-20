@@ -17,7 +17,7 @@ See example/postgresql.py for detailed example
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import MaskString, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, QuoteString, StringCommand, operation
 from pyinfra.facts.postgres import (
     PostgresDatabases,
     PostgresRoles,
@@ -141,7 +141,7 @@ def role(
 
     # If we want the user and they don't exist
     if not is_present:
-        sql_bits = [f'CREATE ROLE "{role}"']
+        sql_bits: list[str | StringCommand] = [f'CREATE ROLE "{role}"']
 
         for key, value in (
             ("LOGIN", login),
@@ -158,7 +158,11 @@ def role(
             sql_bits.append(f"CONNECTION LIMIT {connection_limit}")
 
         if password:
-            sql_bits.append(MaskString(f"PASSWORD '{password}'"))
+            sql_bits.append(
+                StringCommand(
+                    "PASSWORD", StringCommand("'", HiddenValue(password), "'", _separator="")
+                )
+            )
 
         yield make_execute_psql_command(
             StringCommand(*sql_bits),
@@ -196,7 +200,11 @@ def role(
             sql_bits.append(f"CONNECTION LIMIT {connection_limit}")
             should_execute = True
         if password:
-            sql_bits.append(MaskString(f"PASSWORD '{password}'"))
+            sql_bits.append(
+                StringCommand(
+                    "PASSWORD", StringCommand("'", HiddenValue(password), "'", _separator="")
+                )
+            )
             should_execute = True
 
         if should_execute:

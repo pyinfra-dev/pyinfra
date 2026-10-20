@@ -1,0 +1,25 @@
+require_platform:
+- Darwin
+- Linux
+args:
+- /home/someone/something
+kwargs:
+  content: |-
+    alias l="lsd -la"
+    export _ZO_ECHO='1'
+    eval "$(zoxide init --cmd cd bash)"
+  before: false
+  after: false
+facts:
+  files.Block:
+    begin=None, end=None, marker=None, path=/home/someone/something: null
+commands:
+- |-
+  OUT="$(TMPDIR=_tempdir_ mktemp -t pyinfra.XXXXXX)" &&  ( awk '{{print}}' /dev/null  -  > "$OUT" <<'PYINFRAHERE'
+  # BEGIN PYINFRA BLOCK
+  alias l="lsd -la"
+  export _ZO_ECHO='1'
+  eval "$(zoxide init --cmd cd bash)"
+  # END PYINFRA BLOCK
+  PYINFRAHERE
+   )  && mv "$OUT" /home/someone/something

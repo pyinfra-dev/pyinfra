@@ -1,0 +1,24 @@
+{
+    "kwargs": {
+        "filename": "docker",
+        "types": ["deb"],
+        "uris": ["https://download.docker.com/linux/debian"],
+        "suites": ["bookworm"],
+        "components": ["stable"],
+        "architectures": ["amd64"],
+        "signed_by": "/etc/apt/keyrings/docker.gpg"
+    },
+    "facts": {
+        "apt.AptSources": [
+            {
+                "type": "deb",
+                "url": "https://download.docker.com/linux/debian",
+                "distribution": "bookworm",
+                "components": ["stable"],
+                "options": {"arch": "amd64", "signed-by": "/etc/apt/keyrings/docker.gpg"}
+            }
+        ]
+    },
+    "commands": [],
+    "noop_description": "apt sources file \"/etc/apt/sources.list.d/docker.sources\" is already configured"
+}

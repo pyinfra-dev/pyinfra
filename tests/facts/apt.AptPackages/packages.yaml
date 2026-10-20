@@ -1,0 +1,20 @@
+command: apt list --installed 2>/dev/null
+requires_command: apt
+output: |
+  Listing...
+  adduser/jammy,jammy,now 3.118ubuntu5 all [installed,automatic]
+  docker-ce/jammy,now 5:24.0.7-1~ubuntu.22.04~jammy amd64 [installed]
+  htop/jammy 3.0.5-7build2 amd64 [installed,automatic]
+  libc6:i386/jammy,now 2.35-0ubuntu3.4 i386 [installed,automatic]
+  zabbix-agent2/jammy,now 1:6.4.7-1+ubuntu22.04 amd64 [installed,automatic]
+fact:
+  adduser:
+    - 3.118ubuntu5
+  docker-ce:
+    - 5:24.0.7-1~ubuntu.22.04~jammy
+  htop:
+    - 3.0.5-7build2
+  libc6:i386:
+    - 2.35-0ubuntu3.4
+  zabbix-agent2:
+    - 1:6.4.7-1+ubuntu22.04

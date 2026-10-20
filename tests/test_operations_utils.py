@@ -1,9 +1,12 @@
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 import pytest
 
+from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
-from pyinfra.operations.util.files import unix_path_join
+from pyinfra.operations.util.files import ensure_mode_int, unix_path_join
+from pyinfra.operations.util.packaging import ensure_packages
 
 
 class TestUnixPathJoin(TestCase):
@@ -18,6 +21,40 @@ class TestUnixPathJoin(TestCase):
 
     def test_end_slash_path(self):
         assert unix_path_join("/", "home", "pyinfra/") == "/home/pyinfra/"
+
+
+class TestEnsureModeInt(TestCase):
+    def test_int_passes_through(self):
+        assert ensure_mode_int(644) == 644
+
+    def test_plain_string(self):
+        assert ensure_mode_int("644") == 644
+
+    def test_zero_prefixed_string(self):
+        assert ensure_mode_int("0644") == 644
+
+    def test_octal_prefixed_string(self):
+        assert ensure_mode_int("0o644") == 644
+
+    def test_uppercase_octal_prefixed_string(self):
+        assert ensure_mode_int("0O644") == 644
+
+    def test_none_passes_through(self):
+        assert ensure_mode_int(None) is None
+
+    def test_symbolic_mode_passes_through(self):
+        assert ensure_mode_int("u+x") == "u+x"
+
+    def test_setuid_mode(self):
+        assert ensure_mode_int("4755") == 4755
+
+    def test_non_octal_int_raises(self):
+        with pytest.raises(ValueError, match="non-octal digits"):
+            ensure_mode_int(899)
+
+    def test_non_octal_string_raises(self):
+        with pytest.raises(ValueError, match="non-octal digits"):
+            ensure_mode_int("0o899")
 
 
 class TestParseRegistry(TestCase):
@@ -295,3 +332,216 @@ class TestParseImageReference(TestCase):
         assert ref.tag == "v1.2.3"
         assert ref.registry_port is None
         assert ref.digest is None
+
+
+class TestEnsurePackagesDualFormat(TestCase):
+    """ensure_packages must accept both dict[str, set[str]] and dict[str, PackageInfo]."""
+
+    def _run(self, current_packages, packages=("vim",), latest=False, present=True):
+        host = MagicMock()
+        return list(
+            ensure_packages(
+                host,
+                list(packages),
+                current_packages,
+                present=present,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=latest,
+                upgrade_command="upgrade",
+            )
+        ), host
+
+    def test_old_format_installed_no_latest(self):
+        commands, host = self._run({"vim": {"9.0"}}, latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0)")
+
+    def test_old_format_multiple_versions_noop_is_sorted(self):
+        # Sets are hash-randomized; the noop string must be deterministic.
+        commands, host = self._run({"vim": {"9.0-1", "9.0"}}, latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0,9.0-1)")
+
+    def test_old_format_latest_blindly_upgrades(self):
+        commands, _ = self._run({"vim": {"9.0"}}, latest=True)
+        assert commands == ["upgrade vim"]
+
+    def test_old_format_missing_installs(self):
+        commands, _ = self._run({}, latest=False)
+        assert commands == ["install vim"]
+
+    def test_new_format_installed_uses_status(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
+        }
+        commands, host = self._run(current, latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0)")
+
+    def test_new_format_latest_only_upgrades_upgradeable(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim",
+                installed_versions=("9.0",),
+                available_version="9.1",
+                status=PackageStatus.UPGRADEABLE,
+            ),
+            "git": PackageInfo(
+                name="git", installed_versions=("2.40",), status=PackageStatus.INSTALLED
+            ),
+        }
+        commands, host = self._run(current, packages=("vim", "git"), latest=True)
+        assert commands == ["upgrade vim"]
+        host.noop.assert_any_call("package git is up to date (2.40)")
+
+    def test_new_format_held_is_noop_even_when_latest(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim",
+                installed_versions=("9.0",),
+                available_version="9.1",
+                status=PackageStatus.HELD,
+            )
+        }
+        commands, host = self._run(current, latest=True)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is held")
+
+    def test_new_format_missing_installs(self):
+        commands, _ = self._run({}, latest=False)
+        assert commands == ["install vim"]
+
+    def test_new_format_versioned_match_is_noop(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["vim=9.0"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=False,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is installed (9.0)")
+
+    def test_new_format_versioned_mismatch_installs_pinned(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["vim=9.1"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=False,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        assert commands == ["install vim=9.1"]
+
+    def test_new_format_upgradeable_with_pinned_version_installs_not_upgrades(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim",
+                installed_versions=("9.0",),
+                available_version="9.1",
+                status=PackageStatus.UPGRADEABLE,
+            )
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["vim=9.1"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=True,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        # Pinned-version request: install path, never upgrade path.
+        assert commands == ["install vim=9.1"]
+
+    def test_new_format_uninstall_removes_installed_package(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+            )
+        }
+        commands, _ = self._run(current, present=False)
+        assert commands == ["uninstall vim"]
+
+    def test_new_format_uninstall_held_package_proceeds(self):
+        # HELD blocks auto-upgrade, not explicit removal: uninstall must still proceed.
+        current = {
+            "vim": PackageInfo(name="vim", installed_versions=("9.0",), status=PackageStatus.HELD)
+        }
+        commands, _ = self._run(current, present=False)
+        assert commands == ["uninstall vim"]
+
+    def test_new_format_uninstall_missing_package_is_noop(self):
+        commands, host = self._run({}, present=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package vim is not installed")
+
+    def test_new_format_multi_version_noop_lists_all_versions(self):
+        # rpm-family installonly packages can have multiple installed versions.
+        current = {
+            "kernel": PackageInfo(
+                name="kernel",
+                installed_versions=("5.10.0-26", "6.1.0-13"),
+                status=PackageStatus.INSTALLED,
+            )
+        }
+        commands, host = self._run(current, packages=("kernel",), latest=False)
+        assert commands == []
+        host.noop.assert_called_once_with("package kernel is installed (5.10.0-26,6.1.0-13)")
+
+    def test_new_format_multi_version_pinned_match_against_any_version(self):
+        # Pinning to a non-highest installed version still counts as installed.
+        current = {
+            "kernel": PackageInfo(
+                name="kernel",
+                installed_versions=("5.10.0-26", "6.1.0-13"),
+                status=PackageStatus.INSTALLED,
+            )
+        }
+        host = MagicMock()
+        commands = list(
+            ensure_packages(
+                host,
+                ["kernel=5.10.0-26"],
+                current,
+                present=True,
+                install_command="install",
+                uninstall_command="uninstall",
+                latest=False,
+                upgrade_command="upgrade",
+                version_join="=",
+            )
+        )
+        assert commands == []
+        host.noop.assert_called_once_with("package kernel is installed (5.10.0-26,6.1.0-13)")

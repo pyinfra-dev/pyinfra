@@ -1,0 +1,7 @@
+args:
+  - cowsay
+facts:
+  pnpm.PnpmPackages:
+    directory=None: {}
+commands:
+  - pnpm --global add cowsay

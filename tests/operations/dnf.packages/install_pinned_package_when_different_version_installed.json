@@ -1,0 +1,29 @@
+{
+    "args": [
+        [
+            "kernel-devel=4.18.0-240.el8"
+        ]
+    ],
+    "facts": {
+        "rpm.RpmPackages": {
+            "kernel-devel": [
+                "4.18.0-553.150.1.el8_10"
+            ]
+        },
+        "rpm.RpmPackageProvides": {
+            "package=kernel-devel": [
+                [
+                    "kernel-devel",
+                    "4.18.0-240.el8"
+                ],
+                [
+                    "kernel-devel",
+                    "4.18.0-553.150.1.el8_10"
+                ]
+            ]
+        }
+    },
+    "commands": [
+        "dnf install -y kernel-devel=4.18.0-240.el8"
+    ]
+}

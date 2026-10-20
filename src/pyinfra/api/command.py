@@ -5,11 +5,12 @@ from inspect import getfullargspec
 from string import Formatter
 from typing import IO, TYPE_CHECKING
 from collections.abc import Callable
-
 import gevent
 from typing_extensions import Unpack, override
 
 from pyinfra.context import LocalContextObject, ctx_config, ctx_host
+from pyinfra import logger
+from .hiddenvalue import HiddenValue
 
 from .arguments import ConnectorArguments
 
@@ -55,13 +56,15 @@ def make_formatted_string_command(string: str, *args, **kwargs) -> StringCommand
 
 
 class MaskString(str):
-    pass
+    def __new__(cls, s):
+        logger.warning("MaskString is deprecated please switch to HiddenValue")
+        return super().__new__(cls, s)
 
 
 class QuoteString:
-    obj: str | StringCommand
+    obj: str | StringCommand | HiddenValue
 
-    def __init__(self, obj: str | StringCommand):
+    def __init__(self, obj: str | StringCommand | HiddenValue):
         self.obj = obj
 
     @override
@@ -104,7 +107,7 @@ class StringCommand(PyinfraCommand):
     def __repr__(self) -> str:
         return f"StringCommand({self.get_masked_value()})"
 
-    def _get_all_bits(self, bit_accessor):
+    def _get_all_bits(self, bit_accessor, *, unmask=False):
         all_bits = []
 
         for bit in self.bits:
@@ -115,6 +118,13 @@ class StringCommand(PyinfraCommand):
 
             if isinstance(bit, StringCommand):
                 bit = bit_accessor(bit)
+
+            if unmask:
+                if isinstance(bit, HiddenValue):
+                    bit = bit.unmask()
+            else:
+                if isinstance(bit, MaskString):
+                    bit = "*MASKED*"
 
             if not isinstance(bit, str):
                 bit = f"{bit}"
@@ -128,18 +138,11 @@ class StringCommand(PyinfraCommand):
 
     def get_raw_value(self) -> str:
         return self.separator.join(
-            self._get_all_bits(
-                lambda bit: bit.get_raw_value(),
-            ),
+            self._get_all_bits(lambda bit: bit.get_raw_value(), unmask=True),
         )
 
     def get_masked_value(self) -> str:
-        return self.separator.join(
-            [
-                "***" if isinstance(bit, MaskString) else bit
-                for bit in self._get_all_bits(lambda bit: bit.get_masked_value())
-            ],
-        )
+        return self.separator.join(self._get_all_bits(lambda bit: bit.get_masked_value()))
 
     @override
     def execute(self, state: State, host: Host, connector_arguments: ConnectorArguments):

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterator
 
 import click
+from rich.cells import cell_len
 
 from pyinfra import __version__, logger
 from pyinfra.api.host import Host
@@ -23,6 +24,16 @@ ANSI_RE = re.compile(r"\033\[((?:\d|;)*)([a-zA-Z])")
 
 def _strip_ansi(value):
     return ANSI_RE.sub("", value)
+
+
+def _display_width(value: str) -> int:
+    """
+    Return the number of terminal cells ``value`` occupies once ANSI codes are
+    removed: wide characters such as CJK take two cells, combining marks take
+    none.
+    """
+
+    return cell_len(_strip_ansi(value))
 
 
 def _get_group_combinations(inventory: Iterator[Host]):
@@ -51,6 +62,142 @@ def _stringify_host_keys(data):
 def jsonify(data, *args, **kwargs):
     data = _stringify_host_keys(data)
     return json.dumps(data, *args, **kwargs)
+
+
+def print_json(payload) -> None:
+    click.echo(jsonify(payload, default=json_encode))
+
+
+def _host_to_dict(host: Host) -> dict:
+    """
+    Serialise a host for ``debug-inventory --json``.
+
+    ``data`` is the host's inventory data passed through as-is. It is
+    dumped by ``print_json`` (with ``json_encode`` as the fallback
+    encoder), so any value that is neither natively JSON-serialisable nor
+    handled by ``json_encode`` (arbitrary Python objects, etc.) will raise
+    when the payload is written. Keep inventory data JSON-friendly when
+    you intend to consume this output.
+    """
+    return {
+        "name": host.name,
+        "groups": list(host.groups),
+        "data": host.data,
+    }
+
+
+def print_inventory_json(state: State) -> None:
+    print_json([_host_to_dict(host) for host in state.inventory])
+
+
+def print_facts_json(fact_data: dict) -> None:
+    print_json(fact_data)
+
+
+def print_state_operations_json(state: State) -> None:
+    state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
+    payload = {
+        "operations": state_ops,
+        "op_meta": state.op_meta,
+        "op_order": [
+            {
+                "op_hash": op_hash,
+                "names": sorted(state.op_meta[op_hash].names),
+                "hosts": sorted(host.name for host, ops in state.ops.items() if op_hash in ops),
+            }
+            for op_hash in state.get_op_order()
+        ],
+    }
+    print_json(payload)
+
+
+def build_plan_json(state: State) -> list[dict]:
+    operations: list[dict] = []
+    for op_hash in state.get_op_order():
+        hosts_in_op: list[str] = []
+        hosts_maybe_in_op: list[str] = []
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash not in state.ops[host]:
+                continue
+            op_data = state.get_op_data_for_host(host, op_hash)
+            if not op_data.operation_meta._maybe_is_change:
+                continue
+            if op_data.global_arguments["_if"]:
+                hosts_maybe_in_op.append(host.name)
+            else:
+                hosts_in_op.append(host.name)
+
+        meta = state.op_meta[op_hash]
+        operations.append(
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(meta),
+                "names": sorted(meta.names),
+                "args": list(meta.args),
+                "hosts_with_change": sorted(hosts_in_op),
+                "hosts_with_conditional_change": sorted(hosts_maybe_in_op),
+            }
+        )
+    return operations
+
+
+def build_results_json(state: State) -> dict:
+    operations: list[dict] = []
+    totals = {"hosts": 0, "success": 0, "error": 0, "no_change": 0}
+
+    for op_hash in state.get_op_order():
+        hosts_in_op = 0
+        success: list[str] = []
+        error: list[str] = []
+        no_change: list[str] = []
+
+        for host in state.inventory.iter_activated_hosts():
+            if op_hash not in state.ops[host]:
+                continue
+
+            hosts_in_op += 1
+            op_meta = state.ops[host][op_hash].operation_meta
+            if op_meta.did_succeed(_raise_if_not_complete=False):
+                if op_meta.did_change():
+                    success.append(host.name)
+                else:
+                    no_change.append(host.name)
+            else:
+                error.append(host.name)
+
+        meta = state.op_meta[op_hash]
+        operations.append(
+            {
+                "op_hash": op_hash,
+                "name": pretty_op_name(meta),
+                "names": sorted(meta.names),
+                "args": list(meta.args),
+                "hosts": hosts_in_op,
+                "success": sorted(success),
+                "error": sorted(error),
+                "no_change": sorted(no_change),
+            }
+        )
+
+        totals["hosts"] += hosts_in_op
+        totals["success"] += len(success)
+        totals["error"] += len(error)
+        totals["no_change"] += len(no_change)
+
+    return {
+        "operations": operations,
+        "totals": totals,
+        "failed_hosts": sorted(host.name for host in state.failed_hosts),
+    }
+
+
+def print_run_json(state: State, dry: bool) -> None:
+    payload: dict = {"plan": build_plan_json(state)}
+    if dry:
+        payload["results"] = None
+    else:
+        payload["results"] = build_results_json(state)
+    print_json(payload)
 
 
 def print_state_operations(state: State):
@@ -178,8 +325,8 @@ def print_rows(rows):
             if i >= len(row_column_widths):
                 row_column_widths.append([])
 
-            # Length of the column (with ansi codes removed)
-            width = len(_strip_ansi(column.strip()))
+            # Display width of the column (with ansi codes removed)
+            width = _display_width(column.strip())
             row_column_widths[i].append(width)
 
     # Get the max width of each column and add 4 padding spaces
@@ -193,9 +340,8 @@ def print_rows(rows):
             justified = []
 
             for i, column in enumerate(columns):
-                stripped = _strip_ansi(column)
                 desired_width = column_widths[i]
-                padding = desired_width - len(stripped)
+                padding = desired_width - _display_width(column)
 
                 justified.append(
                     f"{column}{' '.join('' for _ in range(padding))}",

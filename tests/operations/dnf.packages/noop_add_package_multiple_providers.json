@@ -1,0 +1,13 @@
+{
+    "args": [["wget"]],
+    "facts": {
+        "rpm.RpmPackages": {
+            "wget2-wget": ["2.2.1-1.fc43"]
+        },
+        "rpm.RpmPackageProvides": {
+            "package=wget": [["wget1-wget", "1.25.0-2.fc43"], ["wget2-wget", "2.2.1-1.fc43"]]
+        }
+    },
+    "commands": [],
+    "noop_description": "package wget is installed"
+}

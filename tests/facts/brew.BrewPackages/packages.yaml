@@ -1,0 +1,11 @@
+command: 'if brew --version | grep -q -E "Homebrew 0\."; then brew list --versions; else brew info --json --installed; fi'
+requires_command: brew
+output:
+  - '[{"name": "tokyo-cabinet", "full_name": "tokyo-cabinet", "installed": [{"version": "1.4.48"}]}, {"name": "unbound", "full_name": "unbound", "installed": [{"version": "1.9.5"}]}, {"name": "python@3.13", "full_name": "python@3.13", "installed": [{"version": "3.13.2"}]}]'
+fact:
+  tokyo-cabinet:
+    - 1.4.48
+  unbound:
+    - 1.9.5
+  python@3.13:
+    - 3.13.2

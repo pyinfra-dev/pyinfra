@@ -1,0 +1,13 @@
+{
+    "arg": "some-directory",
+    "command": "test -f some-directory && case some-directory in *.deb) dpkg -I some-directory ;; *) dpkg -s some-directory 2>/dev/null || true ;; esac || dpkg -s some-directory 2>/dev/null || true",
+    "requires_command": "dpkg",
+    "output": [
+        "Package: some-directory",
+        "Version: 2.0"
+    ],
+    "fact": {
+        "name": "some-directory",
+        "version": "2.0"
+    }
+}

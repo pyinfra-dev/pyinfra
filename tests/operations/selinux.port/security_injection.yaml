@@ -1,0 +1,12 @@
+args:
+  - "tcp; rm -rf /"
+  - 80
+  - "http_port_t; whoami"
+kwargs:
+  present: true
+facts:
+  selinux.SEPorts: {}
+  server.Which:
+    command=sepolicy: null
+commands:
+  - semanage port -a -t 'http_port_t; whoami' -p 'tcp; rm -rf /' 80

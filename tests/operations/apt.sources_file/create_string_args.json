@@ -1,0 +1,25 @@
+{
+    "kwargs": {
+        "filename": "debian",
+        "types": "deb deb-src",
+        "uris": "http://deb.debian.org/debian",
+        "suites": "bookworm bookworm-updates"
+    },
+    "facts": {
+        "apt.AptSources": [],
+        "files.File": {
+            "path=/etc/apt/sources.list.d/debian.sources": null
+        },
+        "files.Directory": {
+            "path=/etc/apt/sources.list.d": {"mode": "755"},
+            "path=/etc/apt/sources.list.d/debian.sources": null
+        },
+        "files.Sha1File": {
+            "path=/etc/apt/sources.list.d/debian.sources": null
+        }
+    },
+    "commands": [
+        ["upload", "Types: deb deb-src\nURIs: http://deb.debian.org/debian\nSuites: bookworm bookworm-updates\n", "/etc/apt/sources.list.d/debian.sources"],
+        "chmod 644 /etc/apt/sources.list.d/debian.sources"
+    ]
+}

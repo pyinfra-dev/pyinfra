@@ -1,0 +1,7 @@
+{
+    "arg": "random-file.txt",
+    "command": "test -f random-file.txt && case random-file.txt in *.deb) dpkg -I random-file.txt ;; *) dpkg -s random-file.txt 2>/dev/null || true ;; esac || dpkg -s random-file.txt 2>/dev/null || true",
+    "requires_command": "dpkg",
+    "output": [],
+    "fact": {}
+}

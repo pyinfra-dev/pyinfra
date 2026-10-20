@@ -1,0 +1,9 @@
+args:
+  - "tank/x; reboot"
+kwargs:
+  present: true
+  compression: lz4
+facts:
+  zfs.ZfsDatasets: {}
+commands:
+  - "zfs create -o compression=lz4 'tank/x; reboot'"

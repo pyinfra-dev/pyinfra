@@ -1,0 +1,11 @@
+{
+    "kwargs": {
+        "filename": "docker",
+        "suites": ["bookworm"]
+    },
+    "facts": {},
+    "exception": {
+        "name": "OperationError",
+        "message": "apt.sources_file requires at least one URI and one suite"
+    }
+}

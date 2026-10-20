@@ -1,0 +1,13 @@
+arg: "x; reboot"
+command: "crontab -l -u 'x; reboot' || true"
+requires_command: crontab
+output:
+  - "* * * * * apt update"
+fact:
+  - command: apt update
+    minute: "*"
+    hour: "*"
+    month: "*"
+    day_of_month: "*"
+    day_of_week: "*"
+    comments: []

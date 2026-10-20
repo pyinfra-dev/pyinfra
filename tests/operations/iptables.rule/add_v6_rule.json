@@ -11,7 +11,5 @@
             "table=nat": []
         }
     },
-    "commands": [
-        "ip6tables -t nat -A PREROUTING -p tcp -s 0.0.0.0 -j OUTPUT"
-    ]
+    "commands": ["ip6tables -t nat -A PREROUTING -p tcp -s 0.0.0.0 -j OUTPUT"]
 }

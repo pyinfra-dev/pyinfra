@@ -3,7 +3,7 @@ Manage ZFS filesystems.
 """
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.zfs import ZfsDatasets, ZfsSnapshots
 
 
@@ -14,7 +14,7 @@ def dataset(
     recursive=False,
     sparse=None,
     volume_size=None,
-    properties={},
+    properties=None,
     **extra_props,
 ):
     """
@@ -47,45 +47,53 @@ def dataset(
 
     noop_msg = f"{dataset_name} is already {'present' if present else 'absent'}"
 
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
 
     datasets = host.get_fact(ZfsDatasets)
 
     existing_dataset = datasets.get(dataset_name)
 
     if present and not existing_dataset:
-        args = [f"-o {prop}={value}" for prop, value in properties.items()]
+        bits: list[str | QuoteString] = ["zfs create"]
+        for prop, value in properties.items():
+            bits += ["-o", QuoteString(f"{prop}={value}")]
         if recursive:
-            args.append("-p")
+            bits.append("-p")
         if sparse:
-            args.append("-s")
+            bits.append("-s")
         if volume_size:
-            args.append(f"-V {volume_size}")
-
-        args.sort()  # dicts are unordered, so make sure the test results are deterministic
-
-        yield f"zfs create {' '.join(args)} {dataset_name}"
+            bits += ["-V", QuoteString(str(volume_size))]
+        bits.append(QuoteString(dataset_name))
+        yield StringCommand(*bits)
 
     elif present and existing_dataset:
         prop_args = [
-            f"{prop}={value}" for prop, value in properties.items() - existing_dataset.items()
+            f"{prop}={value}"
+            for prop, value in properties.items()
+            if existing_dataset.get(prop) != value
         ]
-        prop_args.sort()
         if prop_args:
-            yield f"zfs set {' '.join(prop_args)} {dataset_name}"
+            yield StringCommand(
+                "zfs set",
+                *[QuoteString(prop_arg) for prop_arg in prop_args],
+                QuoteString(dataset_name),
+            )
         else:
             host.noop(noop_msg)
 
     elif existing_dataset and not present:
-        recursive_arg = "-r" if recursive else ""
-        yield f"zfs destroy {recursive_arg} {dataset_name}"
+        destroy_bits: list[str | QuoteString] = ["zfs destroy"]
+        if recursive:
+            destroy_bits.append("-r")
+        destroy_bits.append(QuoteString(dataset_name))
+        yield StringCommand(*destroy_bits)
 
     else:
         host.noop(noop_msg)
 
 
 @operation()
-def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extra_props):
+def snapshot(snapshot_name, present=True, recursive=False, properties=None, **extra_props):
     """
     Create or destroy a ZFS snapshot, or modify its properties.
 
@@ -102,22 +110,25 @@ def snapshot(snapshot_name, present=True, recursive=False, properties={}, **extr
         zfs.snapshot("tank/home@weekly_backup")
 
     """
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
     snapshots = host.get_fact(ZfsSnapshots)
 
     if snapshot_name in snapshots or not present:
         yield from dataset._inner(snapshot_name, present=present, properties=properties)
 
     else:
-        args = [f"-o {prop}={value}" for prop, value in properties.items()]
+        bits: list[str | QuoteString] = ["zfs snap"]
+        for prop, value in properties.items():
+            bits += ["-o", QuoteString(f"{prop}={value}")]
         if recursive:
-            args.append("-r")
-        yield f"zfs snap {' '.join(args)} {snapshot_name}"
+            bits.append("-r")
+        bits.append(QuoteString(snapshot_name))
+        yield StringCommand(*bits)
 
 
 @operation()
 def volume(
-    volume_name, size, sparse=False, present=True, recursive=False, properties={}, **extra_props
+    volume_name, size, sparse=False, present=True, recursive=False, properties=None, **extra_props
 ):
     """
     Create or destroy a ZFS volume, or modify its properties.
@@ -137,7 +148,7 @@ def volume(
         zfs.volume("tank/vm-disks/db_srv_04", "32G")
 
     """
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
     yield from dataset._inner(
         volume_name,
         volume_size=size,
@@ -149,7 +160,7 @@ def volume(
 
 
 @operation()
-def filesystem(fs_name, present=True, recursive=False, properties={}, **extra_props):
+def filesystem(fs_name, present=True, recursive=False, properties=None, **extra_props):
     """
     Create or destroy a ZFS filesystem, or modify its properties.
 
@@ -166,7 +177,7 @@ def filesystem(fs_name, present=True, recursive=False, properties={}, **extra_pr
         zfs.filesystem("tank/vm-disks/db_srv_04", "32G")
 
     """
-    properties.update(extra_props)
+    properties = {**(properties or {}), **extra_props}
     yield from dataset._inner(
         fs_name,
         present=present,

@@ -1,4 +1,4 @@
-from os import path
+from pathlib import Path
 
 import pyinfra
 from pyinfra import config, host, logger, state
@@ -32,7 +32,13 @@ def include(filename: str, data: dict | None = None):
 
         from pyinfra_cli.util import exec_file
 
-        with host.deploy(path.relpath(filename, state.cwd), None, data, in_deploy=False):
+        deploy_name = filename
+        if state.cwd:
+            try:
+                deploy_name = str(Path(filename).relative_to(state.cwd))
+            except ValueError:
+                pass
+        with host.deploy(deploy_name, None, data, in_deploy=False):
             exec_file(filename)
 
         # One potential solution to the above is to add local as an actual

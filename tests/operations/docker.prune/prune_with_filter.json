@@ -1,0 +1,8 @@
+{
+    "kwargs": {
+        "filter": "until=2160h"
+    },
+    "commands": [
+        "docker system prune --filter=until=2160h -f"
+    ]
+}

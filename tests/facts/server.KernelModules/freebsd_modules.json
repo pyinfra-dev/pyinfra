@@ -1,0 +1,45 @@
+{
+    "command": "kldstat | tail +2",
+    "facts": {
+        "server.Kernel": "FreeBSD"
+    },
+    "output": [
+        " 1   46 0xffffffff80200000  1f4dad0 kernel",
+        " 2    1 0xffffffff8214f000   620c10 zfs.ko",
+        " 3    1 0xffffffff82770000     8808 cryptodev.ko",
+        " 4    1 0xffffffff83018000     3570 fdescfs.ko",
+        " 5    1 0xffffffff8301c000     21e8 hms.ko"
+    ],
+    "fact": {
+        "kernel": {
+            "address": "0xffffffff80200000",
+            "id": "1",
+            "refs": "46",
+            "size": "1f4dad0"
+        },
+        "zfs.ko": {
+            "address": "0xffffffff8214f000",
+            "id": "2",
+            "refs": "1",
+            "size": "620c10"
+        },
+        "cryptodev.ko": {
+            "address": "0xffffffff82770000",
+            "id": "3",
+            "refs": "1",
+            "size": "8808"
+        },
+        "fdescfs.ko": {
+            "address": "0xffffffff83018000",
+            "id": "4",
+            "refs": "1",
+            "size": "3570"
+        },
+        "hms.ko": {
+            "address": "0xffffffff8301c000",
+            "id": "5",
+            "refs": "1",
+            "size": "21e8"
+        }
+    }
+}

@@ -10,7 +10,7 @@ import gevent
 from gevent.subprocess import PIPE, Popen
 
 from pyinfra import logger
-from pyinfra.api import MaskString, QuoteString, StringCommand
+from pyinfra.api import HiddenValue, QuoteString, StringCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.output import echo, format_text
 from pyinfra.api.util import memoize
@@ -23,6 +23,15 @@ if TYPE_CHECKING:
 
 SUDO_ASKPASS_ENV_VAR = "PYINFRA_SUDO_PASSWORD"
 SU_ASKPASS_ENV_VAR = "PYINFRA_SU_PASSWORD"
+
+# Output lines that indicate sudo could not prompt for a password and we should retry with one.
+# - sudo (Todd C. Miller's): "sudo: a password is required"
+# - sudo-rs (Trifecta Tech): "sudo-rs: interactive authentication is required"
+#   https://github.com/trifectatechfoundation/sudo-rs (default sudo on Ubuntu 25.10+)
+SUDO_PASSWORD_REQUIRED_LINES = (
+    "sudo: a password is required",
+    "sudo-rs: interactive authentication is required",
+)
 
 
 ASKPASS_COMMAND = r"""
@@ -64,6 +73,7 @@ SUDO_PASSWORD_REQUIRED_PHRASES = (
     "je vyžadováno heslo",
     "jelszó szükséges",
     "cal una contrasenya",
+    "interactive authentication is required",  # sudo-rs
 )
 
 SUDO_INCORRECT_PASSWORD_PHRASES = (
@@ -100,14 +110,14 @@ SUDO_INCORRECT_PASSWORD_PHRASES = (
 
 def _is_sudo_password_required(line: str) -> bool:
     line_lower = line.lower()
-    if not line_lower.startswith("sudo:"):
+    if not line_lower.startswith(("sudo:", "sudo-rs:")):
         return False
     return any(phrase in line_lower for phrase in SUDO_PASSWORD_REQUIRED_PHRASES)
 
 
 def _is_sudo_incorrect_password(line: str) -> bool:
     line_lower = line.lower()
-    if not line_lower.startswith("sudo:"):
+    if not line_lower.startswith(("sudo:", "sudo-rs:")):
         return False
     return any(phrase in line_lower for phrase in SUDO_INCORRECT_PASSWORD_PHRASES)
 
@@ -288,7 +298,21 @@ def execute_command_with_sudo_retry(
             if _is_sudo_incorrect_password(line_stripped) or _is_sudo_password_required(
                 line_stripped
             ):
+                # Re-running only helps when the command is executed with sudo, otherwise
+                # the prompted password cannot be applied and the command just runs (and
+                # fails) a second time. Return the failed result so the usual failure
+                # handling (fail_hosts, _ignore_errors, --fail-percent) applies:
+                # https://github.com/pyinfra-dev/pyinfra/issues/940
+                if not command_arguments.get("_sudo"):
+                    logger.warning(
+                        "%ssudo is asking for a password but the command was not run with "
+                        "`_sudo`, not re-running it. Run the operation with `_sudo=True` "
+                        "so the whole command (or script) runs as root.",
+                        host.print_prefix,
+                    )
+                    break
                 requires_password = True
+                break
                 break
 
         if requires_password:
@@ -318,34 +342,44 @@ def write_stdin(stdin, buffer):
     buffer.close()
 
 
+ASKPASS_PATH_KEYS = ("sudo_askpass_path", "su_askpass_path")
+
+
+def _iter_askpass_cache_keys(host) -> list[str]:
+    # Cache keys are either the bare base ("sudo_askpass_path") or the base
+    # joined with the resolved temp_dir ("sudo_askpass_path__/tmp"). Match
+    # both so cleanup covers every askpass file ever generated for the host.
+    return [
+        cache_key
+        for cache_key in list(host.connector_data.keys())
+        for base in ASKPASS_PATH_KEYS
+        if cache_key == base or cache_key.startswith(base + "__")
+    ]
+
+
 def remove_any_sudo_askpass_file(host) -> None:
     # Best-effort cleanup: this is called from host.disconnect(), and the
     # connection may already be broken (e.g. after `server.reboot`). Swallow
     # any errors from the remote ``rm`` and still clear the local state so a
     # reconnect will regenerate a fresh askpass file.
-    sudo_askpass_path = host.connector_data.get("sudo_askpass_path")
-    if sudo_askpass_path:
+    for cache_key in _iter_askpass_cache_keys(host):
+        path = host.connector_data.get(cache_key)
+        if not path:
+            continue
         try:
-            wildcard_path = StringCommand(
-                QuoteString(sudo_askpass_path), ".*.called", _separator=""
-            )
-            host.run_shell_command(
-                StringCommand("rm", "-f", QuoteString(sudo_askpass_path), wildcard_path)
-            )
+            wildcard_path = StringCommand(QuoteString(path), ".*.called", _separator="")
+            host.run_shell_command(StringCommand("rm", "-f", QuoteString(path), wildcard_path))
         except Exception as e:
-            logger.debug("Could not remove sudo askpass file %s: %s", sudo_askpass_path, e)
-        host.connector_data["sudo_askpass_path"] = None
+            logger.debug("Could not remove askpass file %s: %s", path, e)
+        host.connector_data[cache_key] = None
 
-    su_askpass_path = host.connector_data.get("su_askpass_path")
-    if su_askpass_path:
-        try:
-            wildcard_path = StringCommand(QuoteString(su_askpass_path), ".*.called", _separator="")
-            host.run_shell_command(
-                StringCommand("rm", "-f", QuoteString(su_askpass_path), wildcard_path)
-            )
-        except Exception as e:
-            logger.debug("Could not remove su askpass file %s: %s", su_askpass_path, e)
-        host.connector_data["su_askpass_path"] = None
+
+def clear_askpass_cache(host) -> None:
+    # Drop every cached askpass path without touching the remote, used after
+    # ``server.reboot`` where the previous connection (and therefore any
+    # askpass scripts under its temp dir) is gone.
+    for cache_key in _iter_askpass_cache_keys(host):
+        host.connector_data[cache_key] = None
 
 
 @memoize
@@ -374,18 +408,35 @@ def extract_control_arguments(arguments: ConnectorArguments) -> ConnectorArgumen
     return control_arguments
 
 
-def _ensure_sudo_askpass_set_for_host(host: Host):
-    return _ensure_askpass_set_for_host(host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR)
+def _ensure_sudo_askpass_set_for_host(host: Host, temp_dir: str | None = None) -> str:
+    return _ensure_askpass_set_for_host(
+        host, "sudo_askpass_path", SUDO_ASKPASS_ENV_VAR, temp_dir=temp_dir
+    )
 
 
-def _ensure_su_askpass_set_for_host(host: Host):
-    return _ensure_askpass_set_for_host(host, "su_askpass_path", SU_ASKPASS_ENV_VAR)
+def _ensure_su_askpass_set_for_host(host: Host, temp_dir: str | None = None) -> str:
+    return _ensure_askpass_set_for_host(
+        host, "su_askpass_path", SU_ASKPASS_ENV_VAR, temp_dir=temp_dir
+    )
 
 
-def _ensure_askpass_set_for_host(host: Host, key: str, env_var: str):
-    if host.connector_data.get(key):
-        return
-    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(host.get_temp_dir_config(), env_var))
+def _ensure_askpass_set_for_host(
+    host: Host, key: str, env_var: str, temp_dir: str | None = None
+) -> str:
+    # Operation-level _temp_dir (if any) overrides the host-level/global
+    # temp directory resolution so `server.shell(..., _temp_dir=X)` places
+    # the askpass script under X rather than /tmp. Encoding the resolved
+    # temp_dir in the cache key gives every (host, temp_dir) pair its own
+    # entry, so switching dirs across calls just misses the cache instead
+    # of needing an explicit invalidation step.
+    effective_temp_dir = temp_dir or host.get_temp_dir_config()
+    cache_key = f"{key}__{effective_temp_dir}"
+
+    cached = host.connector_data.get(cache_key)
+    if cached:
+        return cached
+
+    ok, output = host.run_shell_command(ASKPASS_COMMAND.format(effective_temp_dir, env_var))
 
     if not ok:
         raise PyinfraError(f"Failed to create sudo_askpass command: {output.output}")
@@ -395,7 +446,9 @@ def _ensure_askpass_set_for_host(host: Host, key: str, env_var: str):
             f"Failed to create sudo_askpass command: no output produced by command: {output.output}"
         )
 
-    host.connector_data[key] = output.stdout_lines[0]
+    path = output.stdout_lines[0]
+    host.connector_data[cache_key] = path
+    return path
 
 
 def make_unix_command_for_host(
@@ -404,22 +457,35 @@ def make_unix_command_for_host(
     command: StringCommand,
     **command_arguments,
 ) -> StringCommand:
+    # Operation-level temp directory override, if any. Passed through to the
+    # askpass helpers so the generated SUDO_ASKPASS / SU_ASKPASS script lands
+    # under the same directory the operation asked for.
+    op_temp_dir = command_arguments.get("_temp_dir")
+
     # Handle sudo password
     if command_arguments.get("_sudo"):
         # If a sudo password was prompted, use it; otherwise fall back to direct arguments.
         if host.connector_data.get("prompted_sudo_password"):
             command_arguments["_sudo_password"] = host.connector_data["prompted_sudo_password"]
 
+        # If we know a password is needed, ask for it up front rather than first trying
+        # passwordless sudo and prompting on failure.
+        if not command_arguments.get("_sudo_password") and state.config.USE_SUDO_PASSWORD:
+            sudo_password = getpass(f"{host.print_prefix}sudo password: ")
+            host.connector_data["prompted_sudo_password"] = sudo_password
+            command_arguments["_sudo_password"] = sudo_password
+
         if command_arguments.get("_sudo_password"):
-            # Ensure the askpass path is correctly set and passed through
-            _ensure_sudo_askpass_set_for_host(host)
-            command_arguments["_sudo_askpass_path"] = host.connector_data["sudo_askpass_path"]
+            command_arguments["_sudo_askpass_path"] = _ensure_sudo_askpass_set_for_host(
+                host, temp_dir=op_temp_dir
+            )
 
     # Handle su password
     if command_arguments.get("_su_user"):
         if command_arguments.get("_su_password"):
-            _ensure_su_askpass_set_for_host(host)
-            command_arguments["_su_askpass_path"] = host.connector_data["su_askpass_path"]
+            command_arguments["_su_askpass_path"] = _ensure_su_askpass_set_for_host(
+                host, temp_dir=op_temp_dir
+            )
 
     return make_unix_command(command, **command_arguments)
 
@@ -447,6 +513,7 @@ def make_unix_command(
     _sudo_password="",
     _sudo_askpass_path=None,
     _preserve_sudo_env=False,
+    _sudo_set_home=True,
     # Doas config
     _doas=False,
     _doas_user=None,
@@ -473,7 +540,7 @@ def make_unix_command(
             # Quote the whole `key=value` pair so arbitrary values cannot break
             # out into additional shell tokens. Invalid identifiers in `key` will
             # fail safely when the shell rejects the resulting `export` statement.
-            env_bits.append(QuoteString(f"{key}={value}"))
+            env_bits.append(QuoteString(StringCommand(key, value, _separator="=")))
         env_bits.append("&&")
         env_bits.append(command)
         command = StringCommand(*env_bits)
@@ -500,14 +567,19 @@ def make_unix_command(
             [
                 "env",
                 StringCommand("SUDO_ASKPASS=", QuoteString(_sudo_askpass_path), _separator=""),
-                MaskString(
-                    f"{SUDO_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_sudo_password)).get_raw_value()}"
+                StringCommand(
+                    SUDO_ASKPASS_ENV_VAR,
+                    QuoteString(HiddenValue(_sudo_password)),
+                    _separator="=",
                 ),
             ],
         )
 
     if _sudo:
-        command_bits.extend(["sudo", "-H"])
+        command_bits.append("sudo")
+
+        if _sudo_set_home:
+            command_bits.append("-H")
 
         if _sudo_password:
             command_bits.extend(["-A", "-k"])  # use askpass, disable cache
@@ -528,8 +600,10 @@ def make_unix_command(
             command_bits.extend(
                 [
                     "env",
-                    MaskString(
-                        f"{SU_ASKPASS_ENV_VAR}={StringCommand(QuoteString(_su_password)).get_raw_value()}"
+                    StringCommand(
+                        SU_ASKPASS_ENV_VAR,
+                        QuoteString(HiddenValue(_su_password)),
+                        _separator="=",
                     ),
                     QuoteString(_su_askpass_path),
                     "|",

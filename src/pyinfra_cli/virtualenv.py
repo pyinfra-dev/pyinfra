@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 import click
 
@@ -22,31 +23,36 @@ def init_virtualenv() -> None:
         # Not in a virtualenv
         return
 
-    p = os.path.normcase(sys.executable)
-    p_venv = os.path.normcase(os.environ["VIRTUAL_ENV"])
+    p = Path(sys.executable)
+    p_venv = Path(os.environ["VIRTUAL_ENV"])
 
     # executable path should end like /bin/python or \\scripts\\python.exe
-    p_exe_up2 = os.path.dirname(os.path.dirname(p))
-    if p_exe_up2 and os.path.samefile(p_exe_up2, p_venv):
-        # Our exe is inside the virtualenv, don't need to do anything.
-        return
+    p_exe_up2 = p.parent.parent
+    try:
+        if p_exe_up2.samefile(p_venv):
+            # Our exe is inside the virtualenv, don't need to do anything.
+            return
+    except OSError:
+        pass
 
     # fallback venv detection:
     # stdlib venv may symlink sys.executable, so we can't use realpath.
     # but others can symlink *to* the venv Python, so we can't just use sys.executable.
     # So we just check every item in the symlink tree (generally <= 3)
     paths = [p]
-    while os.path.islink(p):
-        p = os.path.normcase(os.path.join(os.path.dirname(p), os.readlink(p)))
+    while p.is_symlink():
+        target = p.readlink()
+        p = target if target.is_absolute() else p.parent / target
         paths.append(p)
 
+    p_venv_str = str(p_venv)
     # In Cygwin paths like 'c:\...' and '\cygdrive\c\...' are possible
-    if p_venv.startswith("\\cygdrive"):
-        p_venv = p_venv[11:]
-    elif len(p_venv) >= 2 and p_venv[1] == ":":
-        p_venv = p_venv[2:]
+    if p_venv_str.startswith("\\cygdrive"):
+        p_venv_str = p_venv_str[11:]
+    elif len(p_venv_str) >= 2 and p_venv_str[1] == ":":
+        p_venv_str = p_venv_str[2:]
 
-    if any(p_venv in p for p in paths):
+    if any(p_venv_str in str(candidate) for candidate in paths):
         # Running properly in the virtualenv, don't need to do anything
         return
 
@@ -59,17 +65,13 @@ def init_virtualenv() -> None:
     click.echo(err=True)
 
     if sys.platform == "win32":
-        virtual_env = os.path.join(
-            os.environ["VIRTUAL_ENV"],
-            "Lib",
-            "site-packages",
-        )
+        virtual_env = str(Path(os.environ["VIRTUAL_ENV"]) / "Lib" / "site-packages")
     else:
-        virtual_env = os.path.join(
-            os.environ["VIRTUAL_ENV"],
-            "lib",
-            "python%d.%d" % sys.version_info[:2],
-            "site-packages",
+        virtual_env = str(
+            Path(os.environ["VIRTUAL_ENV"])
+            / "lib"
+            / f"python{sys.version_info[0]}.{sys.version_info[1]}"
+            / "site-packages"
         )
 
     import site

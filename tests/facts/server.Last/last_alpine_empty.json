@@ -1,0 +1,8 @@
+{
+    "command": "last -Fwi 2>/dev/null || last -w 2>/dev/null || last 2>/dev/null || true",
+    "requires_command": "last",
+    "output": [
+        "USER       TTY            HOST               LOGIN        TIME"
+    ],
+    "fact": []
+}
