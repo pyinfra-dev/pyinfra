@@ -1,0 +1,6 @@
+arg:
+  python: python3.15
+command: "python3.15 -c 'import sys; print(sys.version.split()[0])' || true"
+output:
+  - 3.15.0rc1
+fact: [3, 15, 0]
