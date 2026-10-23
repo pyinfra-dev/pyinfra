@@ -5,7 +5,9 @@
   },
   "facts": {
     "flatpak.FlatpakPackage": {},
-    "flatpak.FlatpakPackages": ["org.videolan.VLC"]
+    "flatpak.FlatpakPackages": {
+      "user=False": ["org.videolan.VLC"]
+    }
   },
   "commands": ["flatpak uninstall --noninteractive org.videolan.VLC"],
   "noop_description": "flatpak package tv.kodi.Kodi is not installed"

@@ -10,7 +10,9 @@
         "version": "3.0.21"
       }
     },
-    "flatpak.FlatpakPackages": ["org.videolan.VLC"]
+    "flatpak.FlatpakPackages": {
+      "user=False": ["org.videolan.VLC"]
+    }
   },
   "commands": ["flatpak install --noninteractive tv.kodi.Kodi"]
 }
