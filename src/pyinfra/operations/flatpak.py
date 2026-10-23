@@ -22,7 +22,7 @@ def packages(
     + packages: List of packages
     + remote: Source to install the application or runtime from
     + present: whether the package should be installed
-    + user: whether to install the package for the current user or system-wide
+    + user: use the current user's installation instead of Flatpak's default
 
     **Examples:**
 
@@ -42,7 +42,7 @@ def packages(
             remote="flathub",
         )
 
-        # Install vlc flatpak as for the current user
+        # Install vlc flatpak for the current user
         flatpak.package(
             name="Install vlc",
             packages="org.videolan.VLC",
@@ -70,7 +70,7 @@ def packages(
     if isinstance(packages, str):
         packages = [packages]
 
-    flatpak_packages = host.get_fact(FlatpakPackages)
+    flatpak_packages = host.get_fact(FlatpakPackages, user=user)
 
     install_packages = []
     remove_packages = []
@@ -97,7 +97,7 @@ def packages(
 
     if install_packages:
         command: list[str | QuoteString] = [
-            f"flatpak install --noninteractive{' --user' if user else ' --system'}"
+            f"flatpak install --noninteractive{' --user' if user else ''}"
         ]
         if remote:
             command.append(QuoteString(remote))
@@ -106,6 +106,6 @@ def packages(
 
     if remove_packages:
         yield StringCommand(
-            f"flatpak uninstall --noninteractive{' --user' if user else ' --system'}",
+            f"flatpak uninstall --noninteractive{' --user' if user else ''}",
             *[QuoteString(package) for package in remove_packages],
         )
