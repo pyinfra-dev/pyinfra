@@ -1,0 +1,4 @@
+#!/bin/execlineb -P
+foreground { install -d -g s6log -o s6log /var/log/polkit }
+fdmove -c 2 1
+s6-setuidgid s6log exec -c s6-log -d 3 -b -- T /var/log/polkit
