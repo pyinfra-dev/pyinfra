@@ -183,6 +183,18 @@ For additional debug info, use one of these options:
 + `--debug-operations` Print operations after generating and exit.
 
 
+## Progress output
+
+On a terminal, deploys show a live progress tree with per-operation and per-host
+status. Set `PYINFRA_PROGRESS=off` to disable the live tree and progress spinners
+and use streaming log output instead:
+
+```sh
+PYINFRA_PROGRESS=off pyinfra inventory.py deploy.py
+```
+
+Non-terminal output, `--json` and `--debug` also use the non-live output paths.
+
 ## JSON output
 
 Pass `--json` to emit machine-readable JSON on stdout instead of the usual pretty printer. This works with `debug-inventory`, `fact`, `--debug-operations`, `--dry` runs and regular deploys so the output can be piped into other tools.

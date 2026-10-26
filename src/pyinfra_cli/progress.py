@@ -17,6 +17,7 @@ and rendering happens from the Live refresh ticker between mutations.
 
 from __future__ import annotations
 
+import os
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
@@ -242,8 +243,7 @@ class Node:
                 lines = [item for item in lines if item.is_renderable or id(item) in kept_plain]
             detail_indent = "  " * (self.depth + 1)
             for item in lines:
-                if item.is_renderable:
-                    assert item.descriptor is not None
+                if item.descriptor is not None:
                     table.add_row(
                         Text(""),
                         to_renderable(item.descriptor, indent=len(detail_indent)),
@@ -295,6 +295,7 @@ class DeployProgress(BaseStateCallback):
         self._prepare_nodes: dict[str, Node] = {}
         # The most recent node for each host; verbose detail lines attach here.
         self._active_host_node: dict[str, Node] = {}
+        self._host_op_stack: dict[str, list[tuple[str, Node]]] = {}
         self._paused = False
         self._live = self._new_live()
 
@@ -365,6 +366,17 @@ class DeployProgress(BaseStateCallback):
                 op_node.fail()
             else:
                 op_node.succeed()
+        self._finalize_file_nodes()
+
+    def _finalize_file_nodes(self) -> None:
+        """Conclude grouping nodes only after all their children have finished."""
+        for node in self._file_nodes.values():
+            if any(child.status == NodeStatus.RUNNING for child in node.children):
+                continue
+            if any(child.status == NodeStatus.ERROR for child in node.children):
+                node.fail()
+            else:
+                node.succeed()
 
     def pause(self) -> bool:
         """Clear and stop the live region (e.g. before an interactive prompt).
@@ -394,17 +406,13 @@ class DeployProgress(BaseStateCallback):
         node = self._active_host_node.get(host_name)
         if node is None:
             return
-        # The per-host terminal status ("Success" / "No changes", optionally
-        # "... on retry N") is shown inline on the host node — green for a
-        # change, cyan for no change — mirroring the connect/prepare nodes,
-        # rather than as a dimmed detail line below.
-        if text.startswith("Success"):
-            node.succeed(text, detail_style="green")
-            return
-        if text.startswith("No changes"):
-            node.succeed(text, detail_style="cyan")
-            return
         node.add_detail_line(text, is_error=is_error)
+
+    def add_host_status(self, host_name: str, text: str, changed: bool) -> None:
+        """Set inline status only for explicitly tagged operation-result records."""
+        node = self._active_host_node.get(host_name)
+        if node is not None:
+            node.succeed(text, detail_style="green" if changed else "cyan")
 
     def add_host_renderable(self, host_name: str, descriptor: OutputBlock) -> None:
         """Attach a rich renderable block to the host's current tree node."""
@@ -541,6 +549,7 @@ class DeployProgress(BaseStateCallback):
 
         if filename:
             parent = self._file_node(filename)
+            parent.status = NodeStatus.RUNNING
             op_node = parent.add(name, kind=NodeKind.OPERATION, total=total or None)
         else:
             op_node = self.add_step(name, total=total or None, kind=NodeKind.OPERATION)
@@ -557,12 +566,25 @@ class DeployProgress(BaseStateCallback):
         node = parent.add(host.name, kind=NodeKind.HOST)
         self._op_host_nodes[(op_hash, host.name)] = node
         self._active_host_node[host.name] = node
+        self._host_op_stack.setdefault(host.name, []).append((op_hash, node))
+
+    def _restore_host_route(self, host_name: str, op_hash: str) -> None:
+        """Return nested operation output to its still-running parent."""
+        stack = self._host_op_stack.get(host_name)
+        if not stack:
+            return
+        stack[:] = [(key, node) for key, node in stack if key != op_hash]
+        if stack:
+            self._active_host_node[host_name] = stack[-1][1]
+        else:
+            self._host_op_stack.pop(host_name, None)
 
     @override
     def operation_host_skipped(self, state: State, host: Host, op_hash) -> None:  # type: ignore[override]
         # The host doesn't run this operation. By default drop the row entirely
         # so it doesn't linger; in verbose mode keep it with a "skipped" glyph.
         key = (op_hash, host.name)
+        self._restore_host_route(host.name, op_hash)
         node = self._op_host_nodes.get(key)
         parent = self._op_nodes.get(op_hash)
         if node is None or parent is None:
@@ -582,18 +604,25 @@ class DeployProgress(BaseStateCallback):
         node = self._op_host_nodes.get((op_hash, host.name))
         if node:
             # The inline status ("Success"/"No changes") is set from the routed
-            # status log line in add_host_detail (which fires first); mark the
+            # status log line in add_host_status (which fires first); mark the
             # node OK without clobbering that detail.
             node.succeed(node.detail, detail_style=node.detail_style)
+        self._restore_host_route(host.name, op_hash)
 
     @override
     def operation_host_error(  # type: ignore[override]
         self, state: State, host: Host, op_hash, retry_count: int = 0, max_retries: int = 0
     ) -> None:
         node = self._op_host_nodes.get((op_hash, host.name))
-        if node:
-            node.fail("failed")
-        self._error_hosts.append((op_hash, host))
+        ignored = state.get_op_data_for_host(host, op_hash).global_arguments["_ignore_errors"]
+        if ignored:
+            if node:
+                node.succeed("error ignored", detail_style="yellow")
+        else:
+            if node:
+                node.fail("failed")
+            self._error_hosts.append((op_hash, host))
+        self._restore_host_route(host.name, op_hash)
 
     @staticmethod
     def _host_error_detail(state: State, host: Host, op_hash) -> str:
@@ -626,12 +655,13 @@ class DeployProgress(BaseStateCallback):
             op_node.fail()
         else:
             op_node.succeed()
+        self._finalize_file_nodes()
 
 
 def is_tree_active(json_output: bool) -> bool:
     """The live tree is used on a TTY outside ``--json`` mode (all verbosity
     levels — verbose detail lines nest under the host nodes)."""
-    if json_output:
+    if json_output or os.environ.get("PYINFRA_PROGRESS") == "off":
         return False
     return console.is_terminal
 

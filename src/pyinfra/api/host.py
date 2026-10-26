@@ -234,8 +234,12 @@ class Host:
         ``extra``; the CLI turns the descriptor into a rich renderable and routes
         it to this host's tree node (or the console in flat mode). Keeping the
         descriptor plain lets the core stay decoupled from any rendering library.
+        The record message includes a plain-text fallback for API log handlers.
         """
-        log_func("", extra={"pyinfra_rich": descriptor, "pyinfra_host": self.name})
+        log_func(
+            f"{self.print_prefix}{descriptor}",
+            extra={"pyinfra_rich": descriptor, "pyinfra_host": self.name},
+        )
 
     def log_diff(self, diff_text: str) -> None:
         """Log a whole (plain) diff block for syntax-highlighted rendering."""

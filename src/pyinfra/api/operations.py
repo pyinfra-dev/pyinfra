@@ -206,7 +206,14 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
             _status_text = f"{_status_text} on retry {retry_attempt}"
 
         _log_status = format_text(_status_text, "green" if executed_commands > 0 else "cyan")
-        logger.info(f"{host.print_prefix}{_log_status}")
+        logger.info(
+            f"{host.print_prefix}{_log_status}",
+            extra={
+                "pyinfra_status_changed": executed_commands > 0,
+                "pyinfra_status_text": _status_text,
+                "pyinfra_host": host.name,
+            },
+        )
 
         state.trigger_callbacks("operation_host_success", host, op_hash, retry_attempt)
     else:
