@@ -2,6 +2,7 @@ from os import path
 
 from pyinfra import inventory
 from pyinfra.context import ctx_inventory, ctx_state
+from pyinfra_cli.inventory import make_inventory
 
 from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli
@@ -142,3 +143,15 @@ class TestCliInventory(PatchSSHTestCase):
         assert result.exit_code == 0, result.stdout
         assert 'Ignoring host group "issue_662"' in result.stderr, result.stdout
         assert inventory.hosts == {}
+
+    def test_make_inventory_without_cli_state(self):
+        # API programs may call make_inventory directly, with no state/inventory
+        # context set (#1432).
+        ctx_state.reset()
+        ctx_inventory.reset()
+
+        inv = make_inventory(
+            path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
+        )
+
+        assert set(inv.hosts) == {"somehost", "anotherhost"}
