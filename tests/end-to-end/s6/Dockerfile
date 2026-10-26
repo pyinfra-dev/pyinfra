@@ -6,10 +6,13 @@ RUN apk add --no-cache dbus polkit nix darkhttpd
 # for debugging
 RUN apk add --no-cache bash
 
-RUN mkdir -p /var/lib/s6-rc/repository
+RUN mkdir -p /usr/share/s6/sources
 RUN mkdir -p /etc/s6/sources
+RUN echo "scandir=/run/service" >> /etc/s6.conf
 RUN echo "livedir=/run/s6-rc" >> /etc/s6.conf
-#RUN printf >> /etc/s6.conf
+RUN echo "repodir=/var/lib/s6-rc/repository" >> /etc/s6.conf
+RUN echo "bootdb=/run/s6/db" >> /etc/s6.conf
+RUN echo "storelist=/etc/s6-overlay/s6-rc.d:/etc/s6-overlay/user-bundles.d:/package/admin/s6-overlay/etc/s6-rc/sources" >> /etc/s6.conf
 
 RUN addgroup -S s6log
 RUN adduser -S -H -D -G s6log -s /sbin/nologin s6log
@@ -28,5 +31,11 @@ RUN touch /etc/s6-overlay/user-bundles.d/user/contents.d/polkit
 # service disabled
 #RUN touch /etc/s6-overlay/user-bundles.d/user/contents.d/nix-daemon
 #RUN touch /etc/s6-overlay/user-bundles.d/user/contents.d/darkhttpd
+
+RUN s6 repo init
+RUN s6 set enable dbus polkit
+# default bundle for s6-overlay is called "top"
+# TODO does committing in the image mess with up-to-date checking in s6 set commit?
+#RUN s6 set commit
 
 ENTRYPOINT ["/init"]
