@@ -9,7 +9,7 @@ facts:
       redis-server.service: true
   systemd.SystemdMasked:
     "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
-      redis-server.service: false
+      redis-server.service: null
 commands:
   - systemctl stop redis-server.service
   - systemctl mask redis-server.service

@@ -9,7 +9,7 @@ facts:
       redis-server.service: false
   systemd.SystemdMasked:
     "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
-      redis-server.service: true
+      redis-server.service: masked
   systemd.SystemdEnabled:
     "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
       redis-server.service: false

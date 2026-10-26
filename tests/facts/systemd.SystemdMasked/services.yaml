@@ -13,7 +13,7 @@ output:
   - Id=cups.service
   - UnitFileState=masked-runtime
 fact:
-  vboxadd.service: false
-  vgauth.timer: false
-  x11-common.service: true
-  cups.service: true
+  vboxadd.service: null
+  vgauth.timer: null
+  x11-common.service: masked
+  cups.service: masked-runtime

@@ -8,6 +8,6 @@ facts:
       redis-server.service: true
   systemd.SystemdMasked:
     "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
-      redis-server.service: false
+      redis-server.service: null
 commands: []
 noop_description: service redis-server.service is running

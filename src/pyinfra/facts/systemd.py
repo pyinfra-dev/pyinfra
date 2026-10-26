@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+
+from typing import TypeVar
 
 from typing_extensions import override
 
 from pyinfra.api import FactBase, QuoteString, StringCommand
+
+T = TypeVar("T")
 
 # Valid unit names consist of a "name prefix" and a dot and a suffix specifying the unit type.
 # The "unit prefix" must consist of one or more valid characters
@@ -41,30 +45,18 @@ def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
     return StringCommand(*systemctl_cmd)
 
 
-class SystemdStatus(FactBase[dict[str, bool]]):
+class SystemdUnitPropertyFactBase(FactBase[T]):
     """
-    Returns a dictionary map of systemd units to booleans indicating whether they are active.
-
-    + user_mode: whether to use user mode
-    + machine: machine name
-
-    .. code:: python
-
-        {
-            "ssh.service": True,
-            "containerd.service": True,
-            "apt-daily.timer": False,
-        }
+    Base for facts reading one ``systemctl show`` property of each unit.
     """
+
+    abstract = True
 
     @override
     def requires_command(self, *args, **kwargs) -> str:
         return "systemctl"
 
-    default = dict
-
-    state_key = "SubState"
-    state_values = ["running", "waiting", "exited", "listening", "mounted", "active", "plugged"]
+    state_key: str
 
     @override
     def command(
@@ -106,10 +98,7 @@ class SystemdStatus(FactBase[dict[str, bool]]):
 
         return cmd
 
-    @override
-    def process(self, output) -> dict[str, bool]:
-        services: dict[str, bool] = {}
-
+    def _iter_unit_states(self, output: list[str]) -> Iterator[tuple[str, str]]:
         current_unit = None
         for line in output:
             line = line.strip()
@@ -125,9 +114,33 @@ class SystemdStatus(FactBase[dict[str, bool]]):
                 continue
 
             if key == self.state_key and current_unit:
-                services[current_unit] = value in self.state_values
+                yield current_unit, value
 
-        return services
+
+class SystemdStatus(SystemdUnitPropertyFactBase[dict[str, bool]]):
+    """
+    Returns a dictionary map of systemd units to booleans indicating whether they are active.
+
+    + user_mode: whether to use user mode
+    + machine: machine name
+
+    .. code:: python
+
+        {
+            "ssh.service": True,
+            "containerd.service": True,
+            "apt-daily.timer": False,
+        }
+    """
+
+    default = dict
+
+    state_key = "SubState"
+    state_values = ["running", "waiting", "exited", "listening", "mounted", "active", "plugged"]
+
+    @override
+    def process(self, output) -> dict[str, bool]:
+        return {unit: value in self.state_values for unit, value in self._iter_unit_states(output)}
 
 
 class SystemdEnabled(SystemdStatus):
@@ -147,18 +160,29 @@ class SystemdEnabled(SystemdStatus):
     state_values = ["enabled", "static"]
 
 
-class SystemdMasked(SystemdStatus):
+class SystemdMasked(SystemdUnitPropertyFactBase[dict[str, str | None]]):
     """
-    Returns a dictionary map of systemd units to booleans indicating whether they are masked.
+    Returns a dictionary map of systemd units to how they are masked: ``"masked"``
+    (persistently, until unmasked), ``"masked-runtime"`` (until the next reboot) or
+    ``None`` when not masked.
 
     .. code:: python
 
         {
-            "ssh.service": False,
-            "containerd.service": False,
-            "x11-common.service": True,
+            "ssh.service": None,
+            "x11-common.service": "masked",
+            "cups.service": "masked-runtime",
         }
     """
 
+    default = dict
+
     state_key = "UnitFileState"
     state_values = ["masked", "masked-runtime"]
+
+    @override
+    def process(self, output) -> dict[str, str | None]:
+        return {
+            unit: value if value in self.state_values else None
+            for unit, value in self._iter_unit_states(output)
+        }
