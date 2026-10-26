@@ -13,7 +13,7 @@ from collections.abc import Callable
 import click
 import gevent
 
-from pyinfra import logger, state
+from pyinfra import logger
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
@@ -25,7 +25,7 @@ from pyinfra.api.state import (
     StateOperationHostData,
     StateOperationMeta,
 )
-from pyinfra.context import ctx_config, ctx_host
+from pyinfra.context import ctx_config, ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
@@ -49,8 +49,12 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
     Execute a Python file and optionally return it's attributes as a dict.
     """
 
-    old_current_exec_filename = state.current_exec_filename
-    state.current_exec_filename = filename
+    # The state context may be unset (eg when called via the API with no
+    # `ctx_state.use(state)`) - skip tracking the executing file then (#1432).
+    state = ctx_state.get()
+    if state is not None:
+        old_current_exec_filename = state.current_exec_filename
+        state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
         with open(filename, encoding="utf-8") as f:
@@ -72,7 +76,8 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
         # Wrap & re-raise errors in user code so we highlight filename/etc
         raise UnexpectedExternalError(e, filename)
     finally:
-        state.current_exec_filename = old_current_exec_filename
+        if state is not None:
+            state.current_exec_filename = old_current_exec_filename
 
     return data
 
