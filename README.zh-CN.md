@@ -1,4 +1,4 @@
-[English](README.md) | 简体中文
+[English](https://github.com/pyinfra-dev/pyinfra/blob/3.x/README.md) | [简体中文](https://github.com/pyinfra-dev/pyinfra/blob/3.x/README.zh-CN.md)
 
 > 本文是 [README.md](README.md) 的简体中文翻译。若与英文版存在差异，请以英文版为准。
 
