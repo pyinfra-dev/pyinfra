@@ -612,7 +612,7 @@ def packages(
     + packages: list of packages to ensure
     + present: whether the packages should be installed
     + latest: whether to upgrade packages without a specified version
-    + update: run ``apt update`` before installing packages
+    + update: run ``apt update`` before installing packages, see below
     + cache_time: when used with ``update``, cache for this many seconds
     + upgrade: run ``apt upgrade`` before installing packages
     + force: whether to force package installs by passing `--force-yes` to apt
@@ -627,6 +627,13 @@ def packages(
 
     Versions:
         Package versions can be pinned like apt: ``<pkg>=<version>``
+
+    Update:
+        When ``packages`` are given, ``update`` only runs ``apt update`` if a package needs
+        installing, or if ``latest`` or ``upgrade`` are set, since those need up to date lists
+        to tell whether anything can be upgraded. Without ``packages`` it always updates.
+        To always refresh the package lists, for example for later operations, use
+        ``apt.update``.
 
     Cache time:
         When ``cache_time`` is set the ``/var/lib/apt/periodic/update-success-stamp`` file
@@ -659,12 +666,6 @@ def packages(
         )
     """
 
-    if update:
-        yield from _update._inner(cache_time=cache_time, wait_for_lock=wait_for_lock)
-
-    if upgrade:
-        yield from _upgrade._inner(wait_for_lock=wait_for_lock)
-
     install_command_args = ["install"]
     if no_recommends is True:
         install_command_args.append("--no-install-recommends")
@@ -684,21 +685,39 @@ def packages(
 
     uninstall_command = " ".join(uninstall_command_args)
 
-    # Compare/ensure packages are present/not
-    yield from ensure_packages(
-        host,
-        packages,
-        host.get_fact(DebPackages),
-        present,
-        install_command=noninteractive_apt(
-            install_command, force=force, wait_for_lock=wait_for_lock
-        ),
-        uninstall_command=noninteractive_apt(
-            uninstall_command, force=force, wait_for_lock=wait_for_lock
-        ),
-        upgrade_command=noninteractive_apt(
-            upgrade_command, force=force, wait_for_lock=wait_for_lock
-        ),
-        version_join="=",
-        latest=latest,
-    )
+    def _ensure_packages():
+        # Compare/ensure packages are present/not
+        return ensure_packages(
+            host,
+            packages,
+            host.get_fact(DebPackages),
+            present,
+            install_command=noninteractive_apt(
+                install_command, force=force, wait_for_lock=wait_for_lock
+            ),
+            uninstall_command=noninteractive_apt(
+                uninstall_command, force=force, wait_for_lock=wait_for_lock
+            ),
+            upgrade_command=noninteractive_apt(
+                upgrade_command, force=force, wait_for_lock=wait_for_lock
+            ),
+            version_join="=",
+            latest=latest,
+        )
+
+    # Without latest/upgrade, updating the lists can't change which packages need
+    # installing, so only update when something is about to be installed. The
+    # upgrade does change the installed packages, so with it the package commands
+    # are worked out afterwards instead.
+    commands = None
+    if update and packages and not latest and not upgrade:
+        commands = list(_ensure_packages())
+        update = present and len(commands) > 0
+
+    if update:
+        yield from _update._inner(cache_time=cache_time, wait_for_lock=wait_for_lock)
+
+    if upgrade:
+        yield from _upgrade._inner(wait_for_lock=wait_for_lock)
+
+    yield from commands if commands is not None else _ensure_packages()

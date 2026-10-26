@@ -1,0 +1,10 @@
+args:
+  - [git, vim]
+kwargs:
+  update: true
+facts:
+  deb.DebPackages:
+    git: ["1.0"]
+commands:
+  - apt-get update
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install vim'

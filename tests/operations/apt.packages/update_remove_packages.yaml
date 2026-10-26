@@ -1,0 +1,11 @@
+# Removing packages doesn't need up to date package lists.
+args:
+  - git
+kwargs:
+  present: false
+  update: true
+facts:
+  deb.DebPackages:
+    git: ["1.0"]
+commands:
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" remove git'

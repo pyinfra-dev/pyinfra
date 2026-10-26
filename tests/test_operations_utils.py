@@ -3,7 +3,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from pyinfra.context import ctx_host
+from pyinfra.facts.apt import SimulateOperationWillChange
+from pyinfra.facts.deb import DebPackages
 from pyinfra.facts.util.packages import PackageInfo, PackageStatus
+from pyinfra.operations import apt
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
 from pyinfra.operations.util.files import ensure_mode_int, unix_path_join
 from pyinfra.operations.util.packaging import ensure_packages
@@ -545,3 +549,38 @@ class TestEnsurePackagesDualFormat(TestCase):
         )
         assert commands == []
         host.noop.assert_called_once_with("package kernel is installed (5.10.0-26,6.1.0-13)")
+
+
+class TestAptPackagesUpgradeOrdering(TestCase):
+    """
+    Commands are executed as the operation yields them, so ``apt.packages`` must read the
+    installed packages after ``upgrade=True`` has run, or it misses what the upgrade changed.
+    Static fixtures can't change a fact part way through, hence this test.
+    """
+
+    def test_package_state_is_read_after_upgrade(self):
+        installed = {"foo": ["1.0"]}
+
+        def get_fact(fact_cls, *args, **kwargs):
+            if fact_cls is DebPackages:
+                return installed
+            if fact_cls is SimulateOperationWillChange:
+                return {}
+            raise AssertionError(f"unexpected fact: {fact_cls}")
+
+        host = MagicMock()
+        host.get_fact.side_effect = get_fact
+
+        with ctx_host.use(host):
+            commands = apt.packages._inner(packages=["foo=1.0"], update=True, upgrade=True)
+
+            assert next(commands) == "apt-get update"
+            assert "upgrade" in str(next(commands))
+
+            # The upgrade moves foo past the requested version
+            installed["foo"] = ["2.0"]
+
+            remaining = [str(command) for command in commands]
+
+        assert len(remaining) == 1
+        assert remaining[0].endswith("install foo=1.0")
