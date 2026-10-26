@@ -1,0 +1,5 @@
+commands:
+  - xbps-install -y -u xbps
+  - xbps-install -y -u
+idempotent: false
+disable_idempotent_warning_reason: package upgrades are always executed
