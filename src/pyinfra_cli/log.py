@@ -54,6 +54,10 @@ class LogHandler(logging.Handler):
             tree = routing.get_tree()
             if tree is not None:
                 if host_name is not None and tree.is_active:
+                    changed = getattr(record, "pyinfra_status_changed", None)
+                    if changed is not None:
+                        tree.add_host_status(host_name, record.pyinfra_status_text, changed=changed)
+                        return
                     # Host warnings/errors always nest under the host's tree
                     # node. INFO lines are routed too, EXCEPT known lifecycle
                     # noise (Connected/Ready/...) which the node status already

@@ -4,12 +4,14 @@ The live tree is only active on a TTY, which pytest cannot easily provide, so
 these exercise the routing logic directly rather than through a subprocess.
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from pyinfra_cli.log import _is_lifecycle_noise
 from pyinfra.api.renderable import Diff
 
-from pyinfra_cli.progress import DeployProgress, DetailItem, NodeKind, NodeStatus
+from pyinfra_cli.progress import DeployProgress, DetailItem, NodeKind, NodeStatus, is_tree_active
 
 
 def _make_progress(verbose: bool = False) -> DeployProgress:
@@ -46,6 +48,7 @@ class TestSerialNoWaitLazyNodes:
         state.get_op_meta.return_value = op_meta
         state.inventory.get_active_hosts.return_value = [host]
         state.ops = {host: {op_hash: object()}}
+        state.get_op_data_for_host.return_value.global_arguments = {"_ignore_errors": False}
         return state
 
     def test_operation_host_start_creates_op_node_without_operation_start(self):
@@ -135,7 +138,7 @@ class TestInlineHostStatus:
 
     def test_success_is_inline_and_green(self):
         progress, node = self._host_node()
-        progress.add_host_detail("@fake/web-1", "Success")
+        progress.add_host_status("@fake/web-1", "Success", changed=True)
         assert node.status == NodeStatus.OK
         assert node.detail == "Success"
         assert node.detail_style == "green"
@@ -144,7 +147,7 @@ class TestInlineHostStatus:
 
     def test_no_changes_is_inline_and_cyan(self):
         progress, node = self._host_node()
-        progress.add_host_detail("@fake/web-1", "No changes")
+        progress.add_host_status("@fake/web-1", "No changes", changed=False)
         assert node.detail == "No changes"
         assert node.detail_style == "cyan"
         assert node.detail_lines == []
@@ -157,7 +160,7 @@ class TestInlineHostStatus:
     def test_operation_host_success_keeps_inline_detail(self):
         progress, node = self._host_node()
         # Status line arrives first, then the success callback fires.
-        progress.add_host_detail("@fake/web-1", "Success")
+        progress.add_host_status("@fake/web-1", "Success", changed=True)
         state = MagicMock()
         host = MagicMock()
         host.name = "@fake/web-1"
@@ -165,6 +168,14 @@ class TestInlineHostStatus:
         # The callback must not clobber the inline detail.
         assert node.detail == "Success"
         assert node.detail_style == "green"
+
+    @pytest.mark.parametrize("text", ["Success", "Success: deployed", "No changes required"])
+    def test_command_output_matching_status_is_retained(self, text):
+        progress, node = self._host_node()
+        progress.add_host_detail("@fake/web-1", text)
+        progress.add_host_status("@fake/web-1", "Success", changed=True)
+        assert node.detail_lines == [DetailItem(text=text)]
+        assert node.detail == "Success"
 
 
 class TestHostRenderable:
@@ -219,3 +230,109 @@ class TestHostRenderable:
         # Plain lines were tail-truncated (at most RUNNING_DETAIL_LINES kept).
         plain_kept = sum(1 for cols in rendered if "line " in str(cols))
         assert plain_kept <= 5
+
+
+@pytest.mark.parametrize(
+    ("terminal", "json_output", "setting", "expected"),
+    [
+        (True, False, "off", False),
+        (True, False, "on", True),
+        (True, True, "on", False),
+        (False, False, "on", False),
+    ],
+)
+def test_tree_respects_output_mode_and_progress_opt_out(
+    monkeypatch, terminal, json_output, setting, expected
+):
+    monkeypatch.setenv("PYINFRA_PROGRESS", setting)
+    with patch("pyinfra_cli.progress.console") as console:
+        console.is_terminal = terminal
+        assert is_tree_active(json_output) is expected
+
+
+class TestOperationLifecycle:
+    def _setup(self):
+        host = MagicMock()
+        host.name = "@fake/web-1"
+        state = MagicMock()
+        state.get_op_meta.return_value.names = ["deploy.py | operation"]
+        state.inventory.get_active_hosts.return_value = [host]
+        state.ops = {host: {"parent": object(), "child": object()}}
+        state.get_op_data_for_host.return_value.global_arguments = {"_ignore_errors": False}
+        return DeployProgress(state), state, host
+
+    @pytest.mark.parametrize("outcome", ["success", "error", "skipped"])
+    def test_nested_operation_restores_parent_output_route(self, outcome):
+        progress, state, host = self._setup()
+        progress.operation_host_start(state, host, "parent")
+        parent = progress._active_host_node[host.name]
+        progress.operation_host_start(state, host, "child")
+        child = progress._active_host_node[host.name]
+        progress.add_host_detail(host.name, "child output")
+
+        getattr(progress, f"operation_host_{outcome}")(state, host, "child")
+        progress.add_host_detail(host.name, "parent output")
+        progress.add_host_renderable(host.name, Diff("parent diff"))
+        progress.add_host_status(host.name, "Success", changed=True)
+        progress.operation_host_success(state, host, "parent")
+
+        assert child.detail_lines == [DetailItem(text="child output")]
+        assert parent.detail_lines == [
+            DetailItem(text="parent output"),
+            DetailItem(descriptor=Diff("parent diff")),
+        ]
+        assert parent.detail == "Success"
+        assert not progress._host_op_stack
+
+    def test_ignored_error_does_not_fail_operation_or_file(self):
+        progress, state, host = self._setup()
+        state.get_op_data_for_host.return_value.global_arguments["_ignore_errors"] = True
+        progress.operation_host_start(state, host, "parent")
+        node = progress._active_host_node[host.name]
+        progress.add_host_detail(host.name, "command failed", is_error=True)
+        progress.operation_host_error(state, host, "parent")
+        progress.operation_end(state, "parent")
+
+        assert node.status == NodeStatus.OK
+        assert node.detail == "error ignored"
+        assert node.detail_style == "yellow"
+        assert node.detail_lines == [DetailItem(text="command failed", is_error=True)]
+        assert progress._op_nodes["parent"].status == NodeStatus.OK
+        assert progress._file_nodes["deploy.py"].status == NodeStatus.OK
+        assert not progress._error_hosts
+
+    def test_file_group_runs_again_when_another_operation_starts(self):
+        progress, state, host = self._setup()
+        progress.operation_host_start(state, host, "parent")
+        progress.operation_host_success(state, host, "parent")
+        progress.operation_end(state, "parent")
+        group = progress._file_nodes["deploy.py"]
+        assert group.status == NodeStatus.OK
+
+        progress.operation_host_start(state, host, "child")
+        assert group.status == NodeStatus.RUNNING
+        progress.operation_host_success(state, host, "child")
+        progress._finalize_pending_ops()
+        assert group.status == NodeStatus.OK
+
+    @pytest.mark.parametrize("failed", [False, True])
+    @pytest.mark.parametrize("finalize", ["operation_end", "region_exit"])
+    def test_file_groups_finish_with_their_children(self, failed, finalize):
+        progress, state, host = self._setup()
+        progress.operation_host_start(state, host, "parent")
+        progress.operation_host_start(state, host, "child")
+        progress.operation_host_success(state, host, "child")
+        progress.operation_end(state, "child")
+        group = progress._file_nodes["deploy.py"]
+        assert group.status == NodeStatus.RUNNING
+
+        if failed:
+            progress.operation_host_error(state, host, "parent")
+        else:
+            progress.operation_host_success(state, host, "parent")
+        if finalize == "operation_end":
+            progress.operation_end(state, "parent")
+        else:
+            progress.__exit__()
+
+        assert group.status == (NodeStatus.ERROR if failed else NodeStatus.OK)

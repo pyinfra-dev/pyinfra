@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from typing_extensions import override
+
 
 @dataclass(frozen=True)
 class OutputBlock:
@@ -26,6 +28,10 @@ class Diff(OutputBlock):
 
     text: str
 
+    @override
+    def __str__(self) -> str:
+        return self.text
+
 
 @dataclass(frozen=True)
 class CodeBlock(OutputBlock):
@@ -36,3 +42,7 @@ class CodeBlock(OutputBlock):
 
     text: str
     lexer: str = "text"
+
+    @override
+    def __str__(self) -> str:
+        return self.text
