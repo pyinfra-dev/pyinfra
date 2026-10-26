@@ -1,4 +1,4 @@
-[English](README.md) | [简体中文](README.zh-CN.md)
+[English](https://github.com/pyinfra-dev/pyinfra/blob/3.x/README.md) | [简体中文](https://github.com/pyinfra-dev/pyinfra/blob/3.x/README.zh-CN.md)
 
 <p align="center">
     <a href="https://pyinfra.com">
