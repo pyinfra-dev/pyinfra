@@ -441,7 +441,7 @@ class AptPackages(FactBase):
 class AptHeldPackages(FactBase[list[str]]):
     """
     Returns a list of apt packages marked as held (``apt-mark showhold``). Held
-    packages are not upgraded, removed or changed by ``apt``.
+    packages are not automatically upgraded, removed or changed by ``apt``.
 
     .. code:: python
 

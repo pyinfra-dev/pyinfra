@@ -709,8 +709,8 @@ def packages(
 @operation()
 def hold(packages: str | list[str], present: bool = True):
     """
-    Hold or unhold apt packages, using ``apt-mark``. Held packages are not upgraded,
-    removed or changed by ``apt``, for example to pin a package at a specific version.
+    Hold or unhold apt packages, using ``apt-mark``. Held packages are not automatically
+    upgraded, removed or changed by ``apt``, for example to pin a package at a specific version.
 
     + packages: package or list of packages to hold/unhold
     + present: whether the packages should be held (``True``) or not (``False``)
