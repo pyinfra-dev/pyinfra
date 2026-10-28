@@ -312,7 +312,7 @@ def line(
     present=True,
     replace: str | None = None,
     flags: list[str] | None = None,
-    backup=False,
+    backup: bool | str = False,
     interpolate_variables=False,
     escape_regex_characters=False,
     ensure_newline=False,
@@ -457,7 +457,7 @@ def line(
         )
 
     if backup:
-        backup_filename = f"{path}.{get_timestamp()}"
+        backup_filename = f"{path}.{backup if isinstance(backup, str) else get_timestamp()}"
         echo_command = StringCommand(
             make_formatted_string_command(
                 "cp {0} {1} && ",
@@ -539,7 +539,7 @@ def replace(
     text: str | None = None,
     replace: str | None = None,
     flags: list[str] | None = None,
-    backup=False,
+    backup: bool | str = False,
     interpolate_variables=False,
     extended_regex=False,
     match=None,  # deprecated
@@ -1984,7 +1984,7 @@ def block(
     content: str | list[str] | None = None,
     present=True,
     line: str | None = None,
-    backup=False,
+    backup: bool | str = False,
     escape_regex_characters=False,
     try_prevent_shell_expansion=False,
     before=False,
@@ -2140,10 +2140,11 @@ def block(
     real_out = StringCommand(' && mv "$OUT"', q_path, *meta_restore)
 
     if backup and (current is not None):  # can't back up something that doesn't exist
+        backup_extension = backup if isinstance(backup, str) else get_timestamp()
         out_prep = StringCommand(
             "cp",
             q_path,
-            QuoteString(f"{path}.{get_timestamp()}"),
+            QuoteString(f"{path}.{backup_extension}"),
             "&&",
             out_prep,
         )

@@ -78,7 +78,7 @@ def sed_delete(
     line: str,
     replace: str,
     flags: list[str] | None = None,
-    backup=False,
+    backup: bool | str = False,
     interpolate_variables=False,
     extended_regex=False,
 ) -> StringCommand:
@@ -99,7 +99,7 @@ def sed_replace(
     line: str,
     replace: str,
     flags: list[str] | None = None,
-    backup=False,
+    backup: bool | str = False,
     interpolate_variables=False,
     extended_regex=False,
 ) -> StringCommand:
@@ -111,7 +111,7 @@ def _sed_command(
     line: str,
     replace: str,
     flags: list[str] | None = None,
-    backup=False,
+    backup: bool | str = False,
     interpolate_variables=False,
     extended_regex=False,
     # Python requires a default value here, so use _sed_replace_builder for
@@ -124,7 +124,7 @@ def _sed_command(
     replace = str(replace)
     replace = replace.replace("/", r"\/")
     replace = replace.replace("&", r"\&")
-    backup_extension = get_timestamp()
+    backup_extension = backup if isinstance(backup, str) else get_timestamp()
 
     if interpolate_variables:
         line = line.replace('"', '\\"')
@@ -137,10 +137,12 @@ def _sed_command(
 
     sed_script = sed_script_builder(line, replace, flags_str, interpolate_variables)
 
-    sed_args: list[str] = ["sed"]
+    sed_args: list[str | QuoteString] = ["sed"]
     if extended_regex:
         sed_args.append("-E")
-    sed_args.append(f"-i.{backup_extension}")
+    in_place_arg = f"-i.{backup_extension}"
+    # User-supplied extensions need quoting, unlike the generated timestamp
+    sed_args.append(QuoteString(in_place_arg) if isinstance(backup, str) else in_place_arg)
 
     sed_command = StringCommand(
         *sed_args,
