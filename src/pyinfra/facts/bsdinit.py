@@ -43,3 +43,23 @@ class RcdEnabled(FactBase):
     @override
     def process(self, output: list[str]) -> dict[str, bool]:
         return {line: True for line in output}
+
+
+class ServiceEnabled(FactBase[dict[str, bool]]):
+    """
+    Returns a dict of FreeBSD rc.d services enabled at boot.
+    """
+
+    default = dict
+
+    @override
+    def requires_command(self) -> str:
+        return "service"
+
+    @override
+    def command(self) -> str:
+        return "service -e"
+
+    @override
+    def process(self, output: list[str]) -> dict[str, bool]:
+        return {line.split("/")[-1]: True for line in output}

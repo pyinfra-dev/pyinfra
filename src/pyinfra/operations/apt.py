@@ -11,7 +11,9 @@ from urllib.parse import urlparse
 
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
+from pyinfra.api.exceptions import OperationValueError
 from pyinfra.facts.apt import (
+    AptHeldPackages,
     AptSourcesFile,
     AptSources,
     SimulateOperationWillChange,
@@ -701,4 +703,54 @@ def packages(
         ),
         version_join="=",
         latest=latest,
+    )
+
+
+@operation()
+def hold(packages: str | list[str], present: bool = True):
+    """
+    Hold or unhold apt packages, using ``apt-mark``. Held packages are not automatically
+    upgraded, removed or changed by ``apt``, for example to pin a package at a specific version.
+
+    + packages: package or list of packages to hold/unhold
+    + present: whether the packages should be held (``True``) or not (``False``)
+
+    Version specifiers (``name=version``) are accepted and ignored, so the same list
+    passed to ``apt.packages`` can be passed here.
+
+    **Example:**
+
+    .. code:: python
+
+        apt.packages(
+            name="Install nomad 1.9.7",
+            packages=["nomad=1.9.7-1"],
+            allow_downgrades=True,
+        )
+
+        apt.hold(
+            name="Hold nomad so it isn't upgraded",
+            packages=["nomad=1.9.7-1"],
+        )
+    """
+
+    package_list = packages if isinstance(packages, list) else [packages]
+    names = sorted({package.split("=", 1)[0].strip() for package in package_list})
+    if not names or any(not name for name in names):
+        raise OperationValueError("all packages must have non-empty names")
+
+    held_packages: list[str] = host.get_fact(AptHeldPackages)
+    if present:
+        to_change = [name for name in names if name not in held_packages]
+    else:
+        to_change = [name for name in names if name in held_packages]
+
+    if not to_change:
+        host.noop(f"{', '.join(names)} already {'held' if present else 'not held'}")
+        return
+
+    yield StringCommand(
+        "apt-mark",
+        "hold" if present else "unhold",
+        *(QuoteString(name) for name in to_change),
     )

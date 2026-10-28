@@ -19,7 +19,7 @@ def packages(
     Install/remove a flatpak package
 
     + packages: List of packages
-    + remote: Source to install the application or runtime from
+    + remote: Source from which to install the application or runtime
     + present: whether the package should be installed
 
     **Examples:**
@@ -28,26 +28,26 @@ def packages(
 
         from pyinfra.operations import flatpak
         # Install vlc flatpak
-        flatpak.package(
+        flatpak.packages(
             name="Install vlc",
             packages="org.videolan.VLC",
         )
 
         # Install vlc flatpak from flathub
-        flatpak.package(
+        flatpak.packages(
             name="Install vlc",
             packages="org.videolan.VLC",
             remote="flathub",
         )
 
         # Install multiple flatpaks
-        flatpak.package(
+        flatpak.packages(
             name="Install vlc and kodi",
             packages=["org.videolan.VLC", "tv.kodi.Kodi"],
         )
 
         # Remove vlc
-        flatpak.package(
+        flatpak.packages(
             name="Remove vlc",
             packages="org.videolan.VLC",
             present=False,

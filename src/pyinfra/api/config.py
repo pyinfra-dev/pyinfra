@@ -45,6 +45,7 @@ class ConfigDefaults:
     SUDO: bool = False
     SUDO_USER: str | None = None
     PRESERVE_SUDO_ENV: bool = False
+    SUDO_SET_HOME: bool = True
     USE_SUDO_LOGIN: bool = False
     SUDO_PASSWORD: str | None = None
     # Prompt for the sudo password before the first sudo command (if SUDO_PASSWORD isn't set)
