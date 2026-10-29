@@ -31,9 +31,6 @@ from pyinfra.operations.util.venv import check_existing_venv
 
 # see  (see https://docs.astral.sh/uv/) for full details on uv
 
-VENV = ".venv"
-VENV_INDICATOR = f"{VENV}/bin/activate"
-
 
 def addable_extras(extra_args: str | list[str] | None) -> str:
     return f" {' '.join(shlex.quote(e) for e in (extra_args or [])) if not isinstance(extra_args, str) else extra_args}"
@@ -249,7 +246,7 @@ def venv(
     """
     Add/remove a Python venv in the specified location.
 
-    + path: the directory in which to create the ``.venv``
+    + path: where to create the venv
     + present: whether the venv should be created or removed.  Default True
     + python: Python interpreter to use. Defaults to not specified.
     + allow_existing: allow (and retain) existing files in the venv directory. Default False
@@ -277,12 +274,12 @@ def venv(
 
         uv.venv(
             name="Create a venv",
-            path="/my/projects/useful-project",
+            path="/my/projects/useful-project/.venv",
         )
     """
     #    https://docs.astral.sh/uv/reference/cli/#uv-venv
 
-    exists = host.get_fact(File, path=f"{path}/{VENV_INDICATOR}")
+    exists = host.get_fact(File, path=f"{path}/bin/activate")
 
     if present:
         if allow_existing and clear_existing:
@@ -292,7 +289,7 @@ def venv(
         if exists:
             recreate, reason = False, None
             if on_mismatch != "ignore":
-                current = host.get_fact(UvPythonVersion, request=f"{path}/{VENV}/bin/python")
+                current = host.get_fact(UvPythonVersion, request=f"{path}/bin/python")
                 wanted = None
                 if current is not None and python is not None:
                     wanted = host.get_fact(UvPythonVersion, request=python)
@@ -305,7 +302,7 @@ def venv(
                 return
 
             logger.info(f"venv at {path}: {reason}, recreating")
-            yield from files.directory._inner(f"{path}/{VENV}", present=False)  # noqa: SLF001
+            yield from files.directory._inner(path, present=False)  # noqa: SLF001
 
         cmd_list: list[str | QuoteString] = [UV_CMD, "venv"]
         if allow_existing:
@@ -324,10 +321,10 @@ def venv(
             QuoteString(e)
             for e in ((extra_args or []) if not isinstance(extra_args, str) else [extra_args])
         )
-        cmd_list.append(QuoteString(f"{path}/{VENV}"))
+        cmd_list.append(QuoteString(path))
         yield StringCommand(*cmd_list)
     else:
         if not exists:
             host.noop(f"venv does not exist at {path}")
         else:
-            yield from files.directory._inner(f"{path}/{VENV}", present=False)  # noqa: SLF001
+            yield from files.directory._inner(path, present=False)  # noqa: SLF001

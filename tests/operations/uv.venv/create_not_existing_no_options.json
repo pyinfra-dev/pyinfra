@@ -1,5 +1,5 @@
 {
-    "args": ["/somewhere/useful"],
+    "args": ["/somewhere/useful/.venv"],
     "kwargs": {"present": true, "extra_args": ["--offline", "--native-tls"]},
     "facts": {
         "files.File": {"path=/somewhere/useful/.venv/bin/activate": null},

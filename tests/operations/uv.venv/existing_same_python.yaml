@@ -1,5 +1,5 @@
 args:
-  - /somewhere/useful
+  - /somewhere/useful/.venv
 kwargs:
   python: "3.13"
 facts:
@@ -9,4 +9,4 @@ facts:
     request=/somewhere/useful/.venv/bin/python: [3, 13, 4]
     request=3.13: [3, 13, 9]
 commands: []
-noop_description: venv already exists at /somewhere/useful
+noop_description: venv already exists at /somewhere/useful/.venv

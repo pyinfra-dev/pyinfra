@@ -1,5 +1,5 @@
 args:
-  - /somewhere/useful
+  - /somewhere/useful/.venv
 facts:
   files.File:
     path=/somewhere/useful/.venv/bin/activate: true

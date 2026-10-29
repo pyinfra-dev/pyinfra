@@ -1,5 +1,5 @@
 {
-    "args": ["/somewhere/useful"],
+    "args": ["/somewhere/useful/.venv"],
     "kwargs": {
         "present": false
     },
@@ -13,5 +13,5 @@
     },
     "commands": [
     ],
-    "noop_description": "venv does not exist at /somewhere/useful"
+    "noop_description": "venv does not exist at /somewhere/useful/.venv"
 }
