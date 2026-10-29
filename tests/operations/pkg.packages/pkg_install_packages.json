@@ -4,7 +4,7 @@
         "server.Os": "os",
         "server.OsVersion": "os_version",
         "server.Arch": "arch",
-        "pkg.PkgPackages": {},
+        "pkg.PkgPackages": [],
         "server.Which": {
             "command=pkg": "/bin/pkg"
         },

@@ -1,9 +1,0 @@
-{
-    "command": "pkg info || pkg_info || true",
-    "output": [
-        "nano-3.48"
-    ],
-    "fact": {
-        "nano": ["3.48"]
-    }
-}

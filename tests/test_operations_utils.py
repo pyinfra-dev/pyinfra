@@ -414,6 +414,20 @@ class TestEnsurePackagesDualFormat(TestCase):
         commands, _ = self._run({}, latest=False)
         assert commands == ["install vim"]
 
+    def test_list_format_is_keyed_by_name(self):
+        current = [
+            PackageInfo(
+                name="vim",
+                installed_versions=("9.0",),
+                available_version="9.1",
+                status=PackageStatus.UPGRADEABLE,
+            ),
+            PackageInfo(name="git", installed_versions=("2.40",), status=PackageStatus.INSTALLED),
+        ]
+        commands, host = self._run(current, packages=("vim", "git", "curl"), latest=True)
+        assert commands == ["install curl", "upgrade vim"]
+        host.noop.assert_any_call("package git is up to date (2.40)")
+
     def test_new_format_versioned_match_is_noop(self):
         current = {
             "vim": PackageInfo(
