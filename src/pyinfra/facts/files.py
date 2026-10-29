@@ -24,14 +24,19 @@ from pyinfra.api.facts import FactBase
 from pyinfra.api.util import try_int
 from pyinfra.facts.util.units import parse_size
 
-LINUX_STAT_COMMAND = "stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N'"
-BSD_STAT_COMMAND = "stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY'"
+LINUX_STAT_COMMAND = (
+    "stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s uid=%u gid=%g %N'"
+)
+BSD_STAT_COMMAND = (
+    "stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z uid=%u gid=%g %N%SY'"
+)
 LS_COMMAND = "ls -ld"
+LS_ID_COMMAND = "ls -ldn"
 
 STAT_REGEX = (
     r"user=(.*) group=(.*) mode=(.*) "
     r"atime=(-?[0-9]*) mtime=(-?[0-9]*) ctime=(-?[0-9]*) "
-    r"size=([0-9]*) (.*)"
+    r"size=([0-9]*) uid=([0-9]+) gid=([0-9]+) (.*)"
 )
 
 # ls -ld output: permissions links user group size month day year/time path
@@ -217,6 +222,8 @@ class FileDict(TypedDict):
     ctime: datetime | None
     user: str
     group: str
+    uid: NotRequired[int]
+    gid: NotRequired[int]
     link_target: NotRequired[str]
 
 
@@ -229,6 +236,8 @@ class File(FactBase[FileDict | Literal[False] | None]):
         {
             "user": "pyinfra",
             "group": "pyinfra",
+            "uid": 1000,
+            "gid": 1000,
             "mode": 644,
             "size": 3928,
         }
@@ -255,12 +264,14 @@ class File(FactBase[FileDict | Literal[False] | None]):
                 # only stat if the path exists (file or symlink)
                 "! (test -e {0} || test -L {0} ) || "
                 "( {linux_stat_command} {0} 2> /dev/null || "
-                "{bsd_stat_command} {0} || {ls_command} {0} )"
+                "{bsd_stat_command} {0} || "
+                "( {ls_command} {0} && {ls_id_command} {0} ) )"
             ),
             path,
             linux_stat_command=LINUX_STAT_COMMAND,
             bsd_stat_command=BSD_STAT_COMMAND,
             ls_command=LS_COMMAND,
+            ls_id_command=LS_ID_COMMAND,
         )
 
     @override
@@ -274,6 +285,8 @@ class File(FactBase[FileDict | Literal[False] | None]):
             data: FileDict = {
                 "user": match.group(1),
                 "group": match.group(2),
+                "uid": int(match.group(8)),
+                "gid": int(match.group(9)),
                 "mode": _parse_mode(mode[1:]),
                 "atime": _parse_datetime(match.group(4)),
                 "mtime": _parse_datetime(match.group(5)),
@@ -285,7 +298,7 @@ class File(FactBase[FileDict | Literal[False] | None]):
                 return False
 
             if path_type == "link":
-                filename = match.group(8)
+                filename = match.group(10)
                 filename, target = filename.split(" -> ")
                 data["link_target"] = _unquote_stat_name(target)
 
@@ -298,6 +311,16 @@ class File(FactBase[FileDict | Literal[False] | None]):
 
             if path_type != self.type:
                 return False
+
+            if len(output) > 1:
+                numeric_ls_result = _parse_ls_output(output[1])
+                if numeric_ls_result is not None:
+                    numeric_data, _ = numeric_ls_result
+                    numeric_user = numeric_data["user"]
+                    numeric_group = numeric_data["group"]
+                    if numeric_user.isdigit() and numeric_group.isdigit():
+                        data["uid"] = int(numeric_user)
+                        data["gid"] = int(numeric_group)
 
             return data
 
@@ -313,6 +336,8 @@ class Link(File):
         {
             "user": "pyinfra",
             "group": "pyinfra",
+            "uid": 1000,
+            "gid": 1000,
             "link_target": "/path/to/link/target"
         }
 
@@ -335,6 +360,8 @@ class Directory(File):
         {
             "user": "pyinfra",
             "group": "pyinfra",
+            "uid": 1000,
+            "gid": 1000,
             "mode": 644,
         }
 
@@ -357,6 +384,8 @@ class Socket(File):
         {
             "user": "pyinfra",
             "group": "pyinfra",
+            "uid": 1000,
+            "gid": 1000,
         }
 
     If the path does not exist:

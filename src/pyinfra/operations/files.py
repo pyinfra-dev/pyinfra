@@ -49,6 +49,7 @@ from pyinfra.facts.files import (
     Directory,
     File,
     FileContents,
+    FileDict,
     FindFiles,
     FindInFile,
     FindLinks,
@@ -76,12 +77,30 @@ from .util.files import (
 )
 
 
+def _get_ownership_changes(
+    info: FileDict,
+    user: str | int | None,
+    group: str | int | None,
+) -> tuple[bool, bool]:
+    user_changed = (
+        info.get("uid") != user
+        if isinstance(user, int)
+        else user is not None and info["user"] != user
+    )
+    group_changed = (
+        info.get("gid") != group
+        if isinstance(group, int)
+        else group is not None and info["group"] != group
+    )
+    return user_changed, group_changed
+
+
 @operation()
 def download(
     src: str,
     dest: str,
-    user: str | None = None,
-    group: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
     mode: int | str | None = None,
     cache_time: int | None = None,
     force=False,
@@ -102,8 +121,8 @@ def download(
 
     + src: source URL of the file
     + dest: where to save the file
-    + user: user to own the files
-    + group: group to own the files
+    + user: username or UID to own the files
+    + group: group name or GID to own the files
     + mode: permissions of the files
     + cache_time: if the file exists already, re-download after this time (in seconds)
     + force: always download the file, even if it already exists
@@ -240,7 +259,7 @@ def download(
 
         yield StringCommand("mv", QuoteString(temp_file), QuoteString(dest))
 
-        if user or group:
+        if user is not None or group is not None:
             yield file_utils.chown(dest, user, group)
 
         if mode:
@@ -293,7 +312,7 @@ def download(
         assert info is not None  # narrowed: download=True covers info is None
         changed = False
 
-        if (user and info["user"] != user) or (group and info["group"] != group):
+        if any(_get_ownership_changes(info, user, group)):
             yield file_utils.chown(dest, user, group)
             changed = True
 
@@ -1015,8 +1034,8 @@ def _times_differ_in_s(ref, cand):
 def put(
     src: str | IO[Any],
     dest: str,
-    user: str | None = None,
-    group: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
     mode: int | str | bool | None = None,
     add_deploy_dir=True,
     create_remote_dir=True,
@@ -1030,8 +1049,8 @@ def put(
 
     + src: filename or IO-like object to upload
     + dest: remote filename to upload to
-    + user: user to own the files
-    + group: group to own the files
+    + user: username or UID to own the files
+    + group: group name or GID to own the files
     + mode: permissions of the files, use ``True`` to copy the local file
     + add_deploy_dir: src is relative to the deploy directory
     + create_remote_dir: create the remote directory if it doesn't exist
@@ -1182,7 +1201,7 @@ def put(
             remote_temp_filename=host.get_temp_filename(dest, temp_directory=temp_dir),
         )
 
-        if user or group:
+        if user is not None or group is not None:
             yield file_utils.chown(dest, user, group)
 
         if mode:
@@ -1229,7 +1248,7 @@ def put(
                 remote_temp_filename=host.get_temp_filename(dest, temp_directory=temp_dir),
             )
 
-            if user or group:
+            if user is not None or group is not None:
                 yield file_utils.chown(dest, user, group)
 
             if mode:
@@ -1261,16 +1280,17 @@ def put(
                 changed = True
 
             # Check user/group
-            if (user and remote_file["user"] != user) or (group and remote_file["group"] != group):
+            user_changed, group_changed = _get_ownership_changes(remote_file, user, group)
+            if user_changed or group_changed:
                 if state.config.DIFF:
                     old_status = [remote_file["user"], remote_file["group"]]
                     new_status = [user, group]
-                    if user and remote_file["user"] != user:
+                    if user_changed:
                         old_status[0] = format_text(remote_file["user"], "red")
-                        new_status[0] = format_text(user, "green")
-                    if group and remote_file["group"] != group:
+                        new_status[0] = format_text(str(user), "green")
+                    if group_changed:
                         old_status[1] = format_text(remote_file["group"], "red")
-                        new_status[1] = format_text(group, "green")
+                        new_status[1] = format_text(str(group), "green")
 
                     logger.info("chown %s:%s", *old_status)
                     logger.info("chown %s:%s", *new_status)
@@ -1610,8 +1630,8 @@ def link(
     path: str,
     target: str | None = None,
     present=True,
-    user: str | None = None,
-    group: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
     symbolic=True,
     create_remote_dir=True,
     force=False,
@@ -1624,8 +1644,8 @@ def link(
     + path: the name of the link
     + target: the file/directory the link points to
     + present: whether the link should exist
-    + user: user to own the link
-    + group: group to own the link
+    + user: username or UID to own the link
+    + group: group name or GID to own the link
     + symbolic: whether to make a symbolic link (vs hard link)
     + create_remote_dir: create the remote directory if it doesn't exist
     + force: if the target exists and is not a file, move or remove it and continue
@@ -1698,7 +1718,7 @@ def link(
 
         yield add_cmd
 
-        if user or group:
+        if user is not None or group is not None:
             yield file_utils.chown(path, user, group, dereference=False)
 
     else:  # edit
@@ -1711,7 +1731,7 @@ def link(
             yield add_cmd
 
         # Check user/group
-        if (user and info["user"] != user) or (group and info["group"] != group):
+        if any(_get_ownership_changes(info, user, group)):
             yield file_utils.chown(path, user, group, dereference=False)
             changed = True
 
@@ -1723,8 +1743,8 @@ def link(
 def file(
     path: str,
     present=True,
-    user: str | None = None,
-    group: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
     mode: int | str | None = None,
     touch=False,
     create_remote_dir=True,
@@ -1737,8 +1757,8 @@ def file(
 
     + path: name/path of the remote file
     + present: whether the file should exist
-    + user: user to own the files
-    + group: group to own the files
+    + user: username or UID to own the files
+    + group: group name or GID to own the files
     + mode: permissions of the files as an integer, eg: 755
     + touch: whether to touch the file
     + create_remote_dir: create the remote directory if it doesn't exist
@@ -1797,7 +1817,7 @@ def file(
 
         if mode:
             yield file_utils.chmod(path, mode)
-        if user or group:
+        if user is not None or group is not None:
             yield file_utils.chown(path, user, group)
 
     else:  # update
@@ -1813,7 +1833,7 @@ def file(
             changed = True
 
         # Check user/group
-        if (user and info["user"] != user) or (group and info["group"] != group):
+        if any(_get_ownership_changes(info, user, group)):
             yield file_utils.chown(path, user, group)
             changed = True
 
@@ -1825,8 +1845,8 @@ def file(
 def directory(
     path: str,
     present=True,
-    user: str | None = None,
-    group: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
     mode: int | str | None = None,
     recursive=False,
     force=False,
@@ -1840,8 +1860,8 @@ def directory(
 
     + path: path of the remote folder
     + present: whether the folder should exist
-    + user: user to own the folder
-    + group: group to own the folder
+    + user: username or UID to own the folder
+    + group: group name or GID to own the folder
     + mode: permissions of the folder
     + recursive: recursively apply user/group/mode
     + force: if the target exists and is not a file, move or remove it and continue
@@ -1909,7 +1929,7 @@ def directory(
         yield StringCommand("mkdir", "-p", QuoteString(path))
         if mode:
             yield file_utils.chmod(path, mode, recursive=recursive)
-        if user or group:
+        if user is not None or group is not None:
             yield file_utils.chown(path, user, group, recursive=recursive)
 
     else:  # update
@@ -1922,7 +1942,7 @@ def directory(
             yield file_utils.chmod(path, mode, recursive=recursive)
             changed = True
 
-        if (user and info["user"] != user) or (group and info["group"] != group):
+        if any(_get_ownership_changes(info, user, group)):
             yield file_utils.chown(path, user, group, recursive=recursive)
             changed = True
 

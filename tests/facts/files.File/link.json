@@ -1,8 +1,8 @@
 {
     "arg": "/home/pyinfra/mylink",
-    "command": "! (test -e /home/pyinfra/mylink || test -L /home/pyinfra/mylink ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /home/pyinfra/mylink 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /home/pyinfra/mylink || ls -ld /home/pyinfra/mylink )",
+    "command": "! (test -e /home/pyinfra/mylink || test -L /home/pyinfra/mylink ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s uid=%u gid=%g %N' /home/pyinfra/mylink 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z uid=%u gid=%g %N%SY' /home/pyinfra/mylink || ( ls -ld /home/pyinfra/mylink && ls -ldn /home/pyinfra/mylink ) )",
     "output": [
-        "user=root group=root mode=lrwxrwxrwx atime=1594804774 mtime=1594804770 ctime=0 size=6 '/home/pyinfra/mylink' -> 'file.txt'"
+        "user=root group=root mode=lrwxrwxrwx atime=1594804774 mtime=1594804770 ctime=0 size=6 uid=0 gid=0 '/home/pyinfra/mylink' -> 'file.txt'"
     ],
     "fact": false
 }
