@@ -1,12 +1,15 @@
 {
     "arg": "/usr/bin/vi",
-    "command": "! (test -e /usr/bin/vi || test -L /usr/bin/vi ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' /usr/bin/vi 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' /usr/bin/vi || ls -ld /usr/bin/vi )",
+    "command": "! (test -e /usr/bin/vi || test -L /usr/bin/vi ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s uid=%u gid=%g %N' /usr/bin/vi 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z uid=%u gid=%g %N%SY' /usr/bin/vi || ( ls -ld /usr/bin/vi && ls -ldn /usr/bin/vi ) )",
     "output": [
-        "lrwxrwxrwx    1 root     root            12 Apr  2  2025 /usr/bin/vi -> /bin/busybox"
+        "lrwxrwxrwx    1 root     root            12 Apr  2  2025 /usr/bin/vi -> /bin/busybox",
+        "lrwxrwxrwx    1 0        0               12 Apr  2  2025 /usr/bin/vi -> /bin/busybox"
     ],
     "fact": {
         "group": "root",
         "user": "root",
+        "uid": 0,
+        "gid": 0,
         "mode": 777,
         "atime": null,
         "mtime": "2025-04-02T00:00:00",

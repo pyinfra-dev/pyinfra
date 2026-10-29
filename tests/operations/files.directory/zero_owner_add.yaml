@@ -1,0 +1,11 @@
+args:
+  - testdir
+kwargs:
+  user: 0
+  group: 0
+facts:
+  files.Directory:
+    path=testdir: null
+commands:
+  - mkdir -p testdir
+  - chown 0:0 testdir
