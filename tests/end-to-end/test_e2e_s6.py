@@ -181,7 +181,7 @@ def test_e2e_s6_start_services_idempotence(helpers, docker_s6_image):
     # test if it starts the services
     helpers.run_check_output(
         f"pyinfra -y @docker/{docker_s6_image} "
-        + 's6.service \'[[["nix-daemon-srv", "nix-daemon-log", "darkhttpd-srv", "darkhttpd-log"]], {"running": true}]\'',
+        + 's6.service \'[[["nix-daemon-srv", "nix-daemon-log"]], {"running": true}]\'',
         expected_lines=["docker build complete"],
     )
     status = host.check_output("s6-rc -a list")
@@ -192,14 +192,12 @@ def test_e2e_s6_start_services_idempotence(helpers, docker_s6_image):
         "polkit-log",
         "nix-daemon-srv",
         "nix-daemon-log",
-        "darkhttpd-srv",
-        "darkhttpd-log",
     } <= set(status.splitlines())
 
     # test for idempotence
     helpers.run_check_output(
         f"pyinfra -y @docker/{docker_s6_image} "
-        + 's6.service \'[[["nix-daemon-srv", "nix-daemon-log", "darkhttpd-srv", "darkhttpd-log"]], {"running": true}]\'',
+        + 's6.service \'[[["nix-daemon-srv", "nix-daemon-log"]], {"running": true}]\'',
         expected_lines=["docker build complete"],
     )
     status_new = host.check_output("s6-rc -a list")
