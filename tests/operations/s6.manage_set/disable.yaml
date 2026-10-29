@@ -1,0 +1,21 @@
+args:
+  - default
+kwargs:
+  prescriptions:
+    tipidee: "usable"
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repodir=None:
+      - current
+      - default
+      - desktop
+      - kiosk
+  s6.S6SetStatus:
+    repodir=None, the_set=default:
+      tipidee: "active"
+commands:
+  - s6 set disable -p -s default tipidee

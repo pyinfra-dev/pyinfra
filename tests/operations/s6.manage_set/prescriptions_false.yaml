@@ -1,0 +1,18 @@
+args:
+  - default
+kwargs:
+  prescriptions: false
+facts:
+  s6.S6RepositoryList:
+    repodir=None:
+      - current
+      - default
+      - desktop
+      - kiosk
+  s6.S6SetStatus:
+    repodir=None, the_set=default:
+      tipidee: usable
+      nftables: active
+      mysqld: active
+commands:
+  - s6 set mask -p -s default tipidee nftables mysqld
