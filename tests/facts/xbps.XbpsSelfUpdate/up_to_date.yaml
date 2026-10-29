@@ -1,0 +1,5 @@
+# "Package 'xbps' is up to date." goes to stderr, so there's no output.
+command: xbps-install -n -u xbps
+requires_command: xbps-install
+output: ""
+fact: []

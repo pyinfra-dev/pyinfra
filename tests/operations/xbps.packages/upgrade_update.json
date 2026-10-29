@@ -11,6 +11,7 @@
     },
     "commands": [
         "xbps-install -S",
+        "xbps-install -y -u xbps",
         "xbps-install -y -u"
     ],
     "idempotent": false,

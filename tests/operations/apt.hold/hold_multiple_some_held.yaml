@@ -1,0 +1,6 @@
+args:
+  - [nomad, consul, vault]
+facts:
+  apt.AptHeldPackages: [consul]
+commands:
+  - apt-mark hold nomad vault
