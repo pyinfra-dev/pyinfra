@@ -137,7 +137,9 @@ def crontab(
 
     # The existing command is matched literally: escape the characters that are
     # special in a sed basic regular expression (e.g. ``*`` in ``backup-*``).
-    existing_crontab_match = re.sub(r"([\\.*\[\]^$])", r"\\\1", existing_crontab_match)
+    # ``^`` and ``$`` stay as they are: the ``.*`` around the pattern means they
+    # are never at its ends, where they would be anchors.
+    existing_crontab_match = re.sub(r"([\\.*\[\]])", r"\\\1", existing_crontab_match)
     if interpolate_variables:
         # The sed script is then in double quotes, so shell would unescape the
         # backslashes and expand $ and backticks: keep them as they are
