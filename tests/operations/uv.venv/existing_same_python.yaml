@@ -1,0 +1,12 @@
+args:
+  - /somewhere/useful/.venv
+kwargs:
+  python: "3.13"
+facts:
+  files.File:
+    path=/somewhere/useful/.venv/bin/activate: true
+  uv.UvPythonVersion:
+    request=/somewhere/useful/.venv/bin/python: [3, 13, 4]
+    request=3.13: [3, 13, 9]
+commands: []
+noop_description: venv already exists at /somewhere/useful/.venv

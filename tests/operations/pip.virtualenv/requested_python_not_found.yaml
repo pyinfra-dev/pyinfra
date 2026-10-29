@@ -1,0 +1,12 @@
+kwargs:
+  path: /some/virtualenv
+  python: python3.14
+  on_mismatch: recreate
+facts:
+  files.File:
+    path=/some/virtualenv/bin/activate: true
+  pip.PythonVersion:
+    python=/some/virtualenv/bin/python: [3, 12, 11]
+    python=python3.14: null
+commands: []
+noop_description: virtualenv /some/virtualenv exists but the requested Python python3.14 was not found, so its version was not checked

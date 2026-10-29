@@ -11,7 +11,7 @@ from __future__ import annotations
 import shlex
 from typing import Literal
 
-from pyinfra import host
+from pyinfra import host, logger
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.operation import operation
 from pyinfra.facts import server
@@ -21,16 +21,15 @@ from pyinfra.facts.uv import (
     UV_CMD,
     UvInstalledPythonsByVersion,
     UvPipPackages,
+    UvPythonVersion,
     UvToolDir,
     UvTools,
 )
 from pyinfra.operations import files
 from pyinfra.operations.util.packaging import PkgInfo, ensure_packages
+from pyinfra.operations.util.venv import check_existing_venv
 
 # see  (see https://docs.astral.sh/uv/) for full details on uv
-
-VENV = ".venv"
-VENV_INDICATOR = f"{VENV}/bin/activate"
 
 
 def addable_extras(extra_args: str | list[str] | None) -> str:
@@ -242,6 +241,7 @@ def venv(
     seed: bool = False,
     site_packages: bool = False,
     extra_args: str | list[str] | None = None,
+    on_mismatch: Literal["warn", "recreate", "ignore"] = "warn",
 ):
     """
     Add/remove a Python venv in the specified location.
@@ -257,6 +257,16 @@ def venv(
     + link_mode: method to use when installing seed packages: clone, copy, hardlink or symlink.
       Default is platform-dependent
     + extra_args: zero or more additional arguments to the `'uv`' command
+    + on_mismatch: what to do with an existing venv whose Python version differs from
+      ``python``: ``warn`` keeps it and logs a warning, ``recreate`` deletes and recreates it,
+      ``ignore`` skips the check. Default warn
+
+    Existing venvs:
+        A venv whose interpreter can no longer be executed, typically because the Python it
+        was created from was upgraded or removed, is deleted and created again. When ``python``
+        is given, the major.minor version it resolves to is also compared with the interpreter
+        inside the venv, and ``on_mismatch`` decides what happens when they differ. Set
+        ``on_mismatch="ignore"`` to skip both checks.
 
     **Example:**
 
@@ -269,7 +279,7 @@ def venv(
     """
     #    https://docs.astral.sh/uv/reference/cli/#uv-venv
 
-    exists = host.get_fact(File, path=f"{path}/{VENV_INDICATOR}")
+    exists = host.get_fact(File, path=f"{path}/bin/activate")
 
     if present:
         if allow_existing and clear_existing:
@@ -277,29 +287,44 @@ def venv(
         if len(str(path).strip()) == 0:
             raise ValueError("must provide path in which .venv is to be created")
         if exists:
-            host.noop(f"venv already exists at {path}")
-        else:
-            cmd_list: list[str | QuoteString] = [UV_CMD, "venv"]
-            if allow_existing:
-                cmd_list.append("--allow-existing")
-            if clear_existing:
-                cmd_list.append("--clear")
-            if seed:
-                cmd_list.append("--seed")
-            if link_mode:
-                cmd_list.extend(["--link-mode", QuoteString(link_mode)])
-            if site_packages:
-                cmd_list.append("--site-packages")
-            if python:
-                cmd_list.extend(["--python", QuoteString(python)])
-            cmd_list.extend(
-                QuoteString(e)
-                for e in ((extra_args or []) if not isinstance(extra_args, str) else [extra_args])
-            )
-            cmd_list.append(QuoteString(path))
-            yield StringCommand(*cmd_list)
+            recreate, reason = False, None
+            if on_mismatch != "ignore":
+                current = host.get_fact(UvPythonVersion, request=f"{path}/bin/python")
+                wanted = None
+                if current is not None and python is not None:
+                    wanted = host.get_fact(UvPythonVersion, request=python)
+                recreate, reason = check_existing_venv(
+                    f"venv at {path}", current, wanted, python, on_mismatch
+                )
+
+            if not recreate:
+                host.noop(f"venv already exists at {path}" + (f" but {reason}" if reason else ""))
+                return
+
+            logger.info(f"venv at {path}: {reason}, recreating")
+            yield from files.directory._inner(path, present=False)  # noqa: SLF001
+
+        cmd_list: list[str | QuoteString] = [UV_CMD, "venv"]
+        if allow_existing:
+            cmd_list.append("--allow-existing")
+        if clear_existing:
+            cmd_list.append("--clear")
+        if seed:
+            cmd_list.append("--seed")
+        if link_mode:
+            cmd_list.extend(["--link-mode", QuoteString(link_mode)])
+        if site_packages:
+            cmd_list.append("--site-packages")
+        if python:
+            cmd_list.extend(["--python", QuoteString(python)])
+        cmd_list.extend(
+            QuoteString(e)
+            for e in ((extra_args or []) if not isinstance(extra_args, str) else [extra_args])
+        )
+        cmd_list.append(QuoteString(path))
+        yield StringCommand(*cmd_list)
     else:
         if not exists:
             host.noop(f"venv does not exist at {path}")
         else:
-            yield from files.directory._inner(f"{path}/{VENV}", present=False)  # noqa: SLF001
+            yield from files.directory._inner(path, present=False)  # noqa: SLF001

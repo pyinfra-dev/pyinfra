@@ -1,5 +1,5 @@
 {
-    "args": ["/somewhere/useful"],
+    "args": ["/somewhere/useful/.venv"],
     "kwargs": {
         "present": true
     },
@@ -7,11 +7,11 @@
         "files.File": {
             "path=/somewhere/useful/.venv/bin/activate": true
         },
-        "files.Directory": {
-            "path=/somewhere/useful.venv": true
+        "uv.UvPythonVersion": {
+            "request=/somewhere/useful/.venv/bin/python": [3, 13, 4]
         }
     },
     "commands": [
     ],
-    "noop_description": "venv already exists at /somewhere/useful"
+    "noop_description": "venv already exists at /somewhere/useful/.venv"
 }

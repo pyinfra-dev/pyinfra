@@ -5,6 +5,9 @@
     "facts": {
         "files.File": {
             "path=/some/virtualenv/bin/activate": true
+        },
+        "pip.PythonVersion": {
+            "python=/some/virtualenv/bin/python": [3, 12, 11]
         }
     },
     "commands": [],
