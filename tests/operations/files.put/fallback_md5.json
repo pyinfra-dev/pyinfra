@@ -22,7 +22,7 @@
             "path=/home/somefile.txt": "nowt"
         },
         "files.FileContents": {
-            "path=/home/somefile.txt": null 
+            "path=/home/somefile.txt": null
         },
     },
     "commands": [

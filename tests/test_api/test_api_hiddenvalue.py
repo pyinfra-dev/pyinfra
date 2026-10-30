@@ -1,6 +1,11 @@
-from unittest import TestCase
-from pyinfra.api import HiddenValue
 import copy
+from io import StringIO
+from unittest import TestCase
+
+import pytest
+
+from pyinfra.api import HiddenValue
+from pyinfra.api.util import get_template
 
 
 class OtherHiddenValue(HiddenValue):
@@ -50,3 +55,79 @@ class TestHiddenValue(TestCase):
         assert isinstance(new_s, OtherHiddenValue)
         assert new_s.unmask() == "sshpyinfra"
         assert str(new_s) == "FAKE NEWS"
+
+
+@pytest.mark.parametrize("jinja_env_kwargs", [None, {}, {"finalize": None}])
+def test_template_unmasks_hidden_values(jinja_env_kwargs):
+    secret = HiddenValue("top secret")
+    template = get_template(
+        StringIO("{{ secret }}|{{ config.secret }}|{{ secrets[0] }}|{{ ordinary }}"),
+        jinja_env_kwargs,
+    )
+
+    assert (
+        template.render(
+            secret=secret,
+            config={"secret": secret},
+            secrets=[secret],
+            ordinary="public",
+        )
+        == "top secret|top secret|top secret|public"
+    )
+    assert str(secret) == "*MASKED*"
+
+
+def test_template_preserves_explicit_unmask():
+    template = get_template(StringIO("{{ secret.unmask() }}"))
+
+    assert template.render(secret=HiddenValue("top secret")) == "top secret"
+
+
+def test_template_custom_finalize_receives_hidden_value():
+    secret = HiddenValue("top secret")
+    received = []
+
+    def finalize(value):
+        received.append(value)
+        return value.unmask().upper()
+
+    template = get_template(StringIO("{{ secret }}"), {"finalize": finalize})
+
+    assert template.render(secret=secret) == "TOP SECRET"
+    assert received == [secret]
+
+
+def test_template_custom_finalize_can_preserve_mask():
+    template = get_template(StringIO("{{ secret }}"), {"finalize": str})
+
+    assert template.render(secret=HiddenValue("top secret")) == "*MASKED*"
+
+
+def test_template_custom_finalize_handles_ordinary_values():
+    template = get_template(
+        StringIO("{{ value }}|{{ other }}"),
+        {"finalize": lambda value: "" if value is None else value},
+    )
+
+    assert template.render(value=None, other="public") == "|public"
+
+
+def test_template_unmasks_custom_finalize_result():
+    template = get_template(StringIO("{{ value }}"), {"finalize": HiddenValue})
+
+    assert template.render(value="top secret") == "top secret"
+
+
+def test_template_options_can_be_reused():
+    options = {"finalize": lambda value: f"[{value}]"}
+    original_options = options.copy()
+
+    first_template = get_template(StringIO("first:{{ value }}"), options)
+
+    assert first_template.render(value="hello") == "first:[hello]"
+    assert options == original_options
+
+    second_template = get_template(StringIO("second:{{ value }}"), options)
+
+    assert second_template.render(value="hello") == "second:[hello]"
+    assert options == original_options
