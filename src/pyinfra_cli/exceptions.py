@@ -100,7 +100,7 @@ class WrappedError(CliException):
                 name = f"{name} in {info.filename} line {info.lineno}"
 
         logger.warning(
-            f"--> {format_text(name, 'red', bold=True)}: {self}",
+            f"{format_text(name, 'red', bold=True)}: {self}",
         )
 
 
@@ -108,7 +108,7 @@ class CliError(CliException):
     @override
     def show(self) -> None:
         logger.warning(
-            f"--> {format_text('pyinfra error', 'red', bold=True)}: {self}",
+            f"{format_text('pyinfra error', 'red', bold=True)}: {self}",
         )
 
 
@@ -123,7 +123,7 @@ class UnexpectedExternalError(CliException):
     @override
     def show(self) -> None:
         logger.warning(
-            "--> {}:\n".format(
+            "{}:\n".format(
                 format_text(
                     f"An exception occurred in: {self.filename}",
                     "red",
@@ -145,7 +145,7 @@ class UnexpectedInternalError(CliException):
     @override
     def show(self) -> None:
         console.print(
-            "--> {}:\n".format(
+            "{}:\n".format(
                 format_text(
                     "An internal exception occurred",
                     "red",
@@ -165,9 +165,9 @@ class UnexpectedInternalError(CliException):
         logger.debug(str(self.exception))
 
         console.print(
-            f"--> The full traceback has been written to {format_text('pyinfra-debug.log', bold=True)}",
+            f"The full traceback has been written to {format_text('pyinfra-debug.log', bold=True)}",
         )
         console.print(
-            "--> If this is unexpected please consider submitting a bug report "
+            "If this is unexpected please consider submitting a bug report "
             "on GitHub, for more information run `pyinfra --support`."
         )

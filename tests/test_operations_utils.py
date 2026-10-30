@@ -1,12 +1,47 @@
 from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
-from pyinfra.operations.util.files import ensure_mode_int, unix_path_join
+from pyinfra.operations.util.files import (
+    ensure_mode_int,
+    generate_color_diff,
+    generate_diff,
+    unix_path_join,
+)
 from pyinfra.operations.util.packaging import ensure_packages
+
+
+class TestGenerateDiff(TestCase):
+    def test_plain_diff_markers(self):
+        lines = list(generate_diff(["a\n", "b\n", "c\n"], ["a\n", "X\n", "c\n", "d\n"]))
+        text = "\n".join(lines)
+        # Plain markers, no ANSI escapes.
+        assert "\x1b" not in text
+        assert any(line.startswith("@@ ") for line in lines)
+        assert "- b" in lines
+        assert "+ X" in lines
+        assert "+ d" in lines
+        assert "  a" in lines  # context line
+
+    def test_empty_diff(self):
+        assert list(generate_diff(["a\n"], ["a\n"])) == []
+
+
+class TestGenerateColorDiff(TestCase):
+    def test_color_diff_wraps_changes_with_format_text(self):
+        # ``format_text`` is terminal-gated (plain when not a TTY), so assert the
+        # colour wrapping is applied to -/+ lines rather than checking raw ANSI.
+        with patch("pyinfra.operations.util.files.format_text") as fake_format:
+            fake_format.side_effect = lambda text, fg: f"<{fg}>{text}"
+            lines = list(generate_color_diff(["a\n", "b\n"], ["a\n", "X\n"]))
+        assert "<red>- b" in lines
+        assert "<green>+ X" in lines
+        # Hunk header and context stay plain.
+        assert "@@ -1,2 +1,2 @@" in lines
+        assert "  a" in lines
 
 
 class TestUnixPathJoin(TestCase):

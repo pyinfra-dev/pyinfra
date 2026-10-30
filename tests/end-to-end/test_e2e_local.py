@@ -22,13 +22,13 @@ def temp_dir():
 def test_int_local_file_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the file
         "pyinfra -y -v @local files.file _testfile",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # second run = no changes
         "pyinfra -y -v @local files.file _testfile",
-        expected_lines=["@local] No changes"],
+        expected_lines=[r"@local\s+No changes"],
         cwd=temp_dir,
     )
 
@@ -38,25 +38,25 @@ def test_int_local_file_no_changes(helpers, temp_dir):
 def test_int_local_directory_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the directory
         "pyinfra -y -v @local files.directory _testdir",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # second run = no changes
         "pyinfra -y -v @local files.directory _testdir",
-        expected_lines=["@local] No changes"],
+        expected_lines=[r"@local\s+No changes"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # third run (remove) = remove directory
         "pyinfra -y -v @local files.directory _testdir present=False",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # fourth run (remove) = no chances
         "pyinfra -y -v @local files.directory _testdir present=False",
-        expected_lines=["@local] No changes"],
+        expected_lines=[r"@local\s+No changes"],
         cwd=temp_dir,
     )
 
@@ -66,13 +66,13 @@ def test_int_local_directory_no_changes(helpers, temp_dir):
 def test_int_local_link_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the link
         "pyinfra -y -v @local files.link _testlink target=_testfile",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # second run = no changes
         "pyinfra -y -v @local files.link _testlink target=_testfile",
-        expected_lines=["@local] No changes"],
+        expected_lines=[r"@local\s+No changes"],
         cwd=temp_dir,
     )
 
@@ -82,25 +82,25 @@ def test_int_local_link_no_changes(helpers, temp_dir):
 def test_int_local_line_no_changes(helpers, temp_dir):
     helpers.run_check_output(  # first run = create the line
         "pyinfra -y -v @local files.line _testfile someline",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # second run = no changes
         "pyinfra -y -v @local files.line _testfile someline",
-        expected_lines=["@local] No changes"],
+        expected_lines=[r"@local\s+No changes"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # replace the line
         "pyinfra -y -v @local files.line _testfile someline replace=anotherline",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=temp_dir,
     )
 
     helpers.run_check_output(  # second run replace the line = no changes
         "pyinfra -y -v @local files.line _testfile someline replace=anotherline",
-        expected_lines=["@local] No changes"],
+        expected_lines=[r"@local\s+No changes"],
         cwd=temp_dir,
     )
 
@@ -113,7 +113,7 @@ def test_int_local_line_ensure_newline_true(helpers, tmp_path):
     path.write_bytes(b"hello world")
     helpers.run_check_output(
         "pyinfra -y -v @local files.line _testfile someline ensure_newline=true",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=tmp_path,
     )
     assert path.read_bytes() == b"hello world\nsomeline\n"
@@ -121,7 +121,7 @@ def test_int_local_line_ensure_newline_true(helpers, tmp_path):
     path.write_bytes(b"hello world\n")
     helpers.run_check_output(
         "pyinfra -y -v @local files.line _testfile someline ensure_newline=true",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=tmp_path,
     )
     assert path.read_bytes() == b"hello world\nsomeline\n"
@@ -135,7 +135,7 @@ def test_int_local_line_ensure_newline_false(helpers, tmp_path):
     path.write_bytes(b"hello world")
     helpers.run_check_output(
         "pyinfra -y -v @local files.line _testfile someline ensure_newline=false",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=tmp_path,
     )
     assert path.read_bytes() == b"hello worldsomeline\n"
@@ -143,7 +143,7 @@ def test_int_local_line_ensure_newline_false(helpers, tmp_path):
     path.write_bytes(b"hello world\n")
     helpers.run_check_output(
         "pyinfra -y -v @local files.line _testfile someline ensure_newline=false",
-        expected_lines=["@local] Success"],
+        expected_lines=[r"@local\s+Success"],
         cwd=tmp_path,
     )
     assert path.read_bytes() == b"hello world\nsomeline\n"
