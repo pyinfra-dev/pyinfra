@@ -40,7 +40,7 @@ def _put_with_diff(src_path, dest, current_contents):
 
 def test_put_diff_binary_source_does_not_fetch_remote_contents(tmp_path):
     src = tmp_path / "some-binary"
-    src.write_bytes(b"\x9b\xff\x00binary")
+    src.write_bytes(b"\x81\x8d\x8f\x90\x9d")
 
     commands, requested_facts, logged = _put_with_diff(src, "/opt/bin/some-binary", [])
 
