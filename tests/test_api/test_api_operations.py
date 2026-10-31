@@ -455,7 +455,7 @@ class TestOperationsApi(PatchSSHTestCase):
             (
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
-                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'LC_ALL=C sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -500,7 +500,7 @@ class TestOperationsApi(PatchSSHTestCase):
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
                 " --rsync-path 'env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass "
-                "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k -u root rsync' "
+                "PYINFRA_SUDO_PASSWORD=PASSWORD LC_ALL=C sudo -H -A -k -u root rsync' "
                 "src vagrant@somehost:dest"
             ),
             print_output=False,
@@ -534,13 +534,13 @@ class TestOperationsApi(PatchSSHTestCase):
         assert fake_run_local_process.call_args_list[0].args[0] == (
             "rsync -ax --delete --rsh "
             '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
-            " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
+            " --rsync-path 'LC_ALL=C sudo -H -n -u root rsync' src vagrant@somehost:dest"
         )
         assert fake_run_local_process.call_args_list[1].args[0] == (
             "rsync -ax --delete --rsh "
             '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
             " --rsync-path 'env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass "
-            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k -u root rsync' "
+            "PYINFRA_SUDO_PASSWORD=PASSWORD LC_ALL=C sudo -H -A -k -u root rsync' "
             "src vagrant@somehost:dest"
         )
 
@@ -563,7 +563,7 @@ class TestOperationsApi(PatchSSHTestCase):
             (
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=no\\""'
-                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'LC_ALL=C sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -599,7 +599,7 @@ class TestOperationsApi(PatchSSHTestCase):
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes '
                 '-o \\"StrictHostKeyChecking=no\\" -F /home/me/ssh_test_config"'
-                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'LC_ALL=C sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -627,7 +627,7 @@ class TestOperationsApi(PatchSSHTestCase):
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" '
                 "-F '/home/me/ssh_test_config && echo hi'\""
-                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'LC_ALL=C sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
