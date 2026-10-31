@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call, mock_open, patch
 
 from pyinfra.api import Config, HiddenValue, State, StringCommand
 from pyinfra.api.connect import connect_all
+from pyinfra.api.exceptions import PyinfraError
 from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
@@ -229,4 +230,57 @@ class TestLocalConnector(TestCase):
                 call(b"hello\n"),
                 call(b"abc\n"),
             ],
+        )
+
+    def test_run_shell_command_fails_with_unsupported_sudo_rs(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        fake_stdout = MagicMock()
+        fake_stdout.__iter__ = MagicMock(return_value=iter(["sudo-rs 0.2.0"]))
+        fake_process = MagicMock(returncode=0)
+        fake_process.stdout = fake_stdout
+        fake_process.stderr = MagicMock()
+        self.fake_popen_mock.return_value = fake_process
+
+        with self.assertRaises(PyinfraError):
+            host.run_shell_command("echo hi", _sudo=True)
+
+        self.fake_popen_mock.assert_any_call(
+            "sh -c 'sudo --version'",
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
+        )
+
+    def test_run_shell_command_allows_supported_sudo_rs(self):
+        inventory = make_inventory(hosts=("@local",))
+        State(inventory, Config())
+        host = inventory.get_host("@local")
+
+        def make_process(stdout_lines, returncode):
+            fake_stdout = MagicMock()
+            fake_stdout.__iter__ = MagicMock(return_value=iter(stdout_lines))
+            fake_process = MagicMock(returncode=returncode)
+            fake_process.stdout = fake_stdout
+            fake_process.stderr = MagicMock()
+            return fake_process
+
+        self.fake_popen_mock.side_effect = [
+            make_process(["sudo-rs 0.2.13"], 0),
+            make_process([], 0),
+        ]
+
+        out = host.run_shell_command("echo hi", _sudo=True)
+        assert len(out) == 2
+        assert out[0] is True
+
+        self.fake_popen_mock.assert_any_call(
+            "sh -c 'sudo --version'",
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
         )
