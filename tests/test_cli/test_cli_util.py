@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from io import StringIO
 from unittest import TestCase
 
@@ -17,7 +17,7 @@ class TestCliUtil(TestCase):
         assert json_encode(get_func_and_args) == "Function: get_func_and_args"
 
     def test_json_encode_datetime(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         assert json_encode(now) == now.isoformat()
 
     def test_json_encode_file(self):

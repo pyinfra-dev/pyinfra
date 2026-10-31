@@ -9,7 +9,7 @@ import posixpath
 import re
 import sys
 import traceback
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from fnmatch import fnmatch
 from io import StringIO
 from pathlib import Path, PurePosixPath
@@ -975,7 +975,7 @@ def _canonicalize_timespec(field: MetadataTimeField, local_file, timespec):
             if field is MetadataTimeField.ATIME
             else os.stat(local_file).st_mtime
         )
-        return datetime.fromtimestamp(lf_ts, tz=timezone.utc)
+        return datetime.fromtimestamp(lf_ts, tz=UTC)
     else:
         try:
             isodatetime = datetime.fromisoformat(timespec)
@@ -986,17 +986,17 @@ def _canonicalize_timespec(field: MetadataTimeField, local_file, timespec):
         except ValueError:
             try:
                 timestamp = float(timespec)
-                return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                return datetime.fromtimestamp(timestamp, tz=UTC)
             except ValueError:
                 # verify there is a remote file matching path in timesrc
                 ref_file = host.get_fact(File, path=timespec)
                 if ref_file:
                     if field is MetadataTimeField.ATIME:
                         assert ref_file["atime"] is not None
-                        return ref_file["atime"].replace(tzinfo=timezone.utc)
+                        return ref_file["atime"].replace(tzinfo=UTC)
                     else:
                         assert ref_file["mtime"] is not None
-                        return ref_file["mtime"].replace(tzinfo=timezone.utc)
+                        return ref_file["mtime"].replace(tzinfo=UTC)
                 else:
                     ValueError(f"Bad argument for `timesspec`: {timespec}")
 
@@ -1282,9 +1282,7 @@ def put(
             if mtime:
                 canonical_mtime = _canonicalize_timespec(MetadataTimeField.MTIME, src, mtime)
                 assert remote_file["mtime"] is not None
-                if _times_differ_in_s(
-                    canonical_mtime, remote_file["mtime"].replace(tzinfo=timezone.utc)
-                ):
+                if _times_differ_in_s(canonical_mtime, remote_file["mtime"].replace(tzinfo=UTC)):
                     if state.config.DIFF:
                         logger.info("mtime %s", format_text(str(remote_file["mtime"]), "red"))
                         logger.info("mtime %s", format_text(str(canonical_mtime), "green"))
@@ -1296,9 +1294,7 @@ def put(
             if atime:
                 canonical_atime = _canonicalize_timespec(MetadataTimeField.ATIME, src, atime)
                 assert remote_file["atime"] is not None
-                if _times_differ_in_s(
-                    canonical_atime, remote_file["atime"].replace(tzinfo=timezone.utc)
-                ):
+                if _times_differ_in_s(canonical_atime, remote_file["atime"].replace(tzinfo=UTC)):
                     if state.config.DIFF:
                         logger.info("atime %s", format_text(str(remote_file["atime"]), "red"))
                         logger.info("atime %s", format_text(str(canonical_atime), "green"))

@@ -10,7 +10,7 @@ authors = [
 ]
 license = "MIT"
 license-files = ["LICENSE.md"]
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.11,<4.0"
 dependencies = [
     "gevent>=1.5",
     "paramiko>=3.2,<6", # 3.2 adds PKey.from_type_string and pkey.UnknownKeyType, used by connectors.sshuserclient (#1290)
@@ -22,7 +22,7 @@ dependencies = [
     "distro>=1.6,<2",
     "packaging>=16.1",
     "pydantic>=2.11,<3",
-    "typing-extensions; python_version < '3.11'", # Backport of typing for Unpack (added 3.11)
+    "typing-extensions; python_version < '3.12'", # Backport of typing.override (added 3.12)
     "types-paramiko>=2.7,<6",
 ]
 classifiers = [
@@ -33,11 +33,11 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: System :: Systems Administration",
     "Topic :: System :: Installation/Setup",
     "Topic :: Utilities",
@@ -112,7 +112,7 @@ source = "uv-dynamic-versioning"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 extend-exclude = ["*.json", "*.yaml", "*.yml"]
 force-exclude = true
