@@ -1602,7 +1602,10 @@ def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_back
         else:
             yield StringCommand("rm", "-rf", QuoteString(path))
     else:
-        raise OperationError(f"{path} exists and is not a {fs_type}")
+        raise OperationError(
+            f"{path} exists and is not a {fs_type}, set `force=True` to move the "
+            "path aside or `force_backup=False` to remove it"
+        )
 
 
 @operation()
