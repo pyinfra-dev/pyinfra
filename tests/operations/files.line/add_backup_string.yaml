@@ -1,0 +1,10 @@
+args:
+- somefile
+- match_line
+kwargs:
+  backup: bak
+facts:
+  files.FindInFile:
+    extended_regex=False, interpolate_variables=False, path=somefile, pattern=^.*match_line.*$: []
+commands:
+- cp somefile somefile.bak && echo match_line >> somefile

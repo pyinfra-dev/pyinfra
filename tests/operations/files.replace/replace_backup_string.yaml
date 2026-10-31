@@ -1,0 +1,15 @@
+args:
+- filename
+- match
+- replace
+kwargs:
+  flags:
+  - g
+  - i
+  backup: bak
+facts:
+  files.FindInFile:
+    extended_regex=False, interpolate_variables=False, path=filename, pattern=match:
+    - matching line
+commands:
+- sed -i.bak 's/match/replace/gi' filename
