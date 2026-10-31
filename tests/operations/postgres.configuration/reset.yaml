@@ -1,0 +1,14 @@
+args:
+  - work_mem
+kwargs:
+  present: false
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      work_mem:
+        value: "8192"
+        unit: kB
+        source: configuration file
+        context: user
+commands:
+  - "psql -Ac 'ALTER SYSTEM RESET work_mem'"
