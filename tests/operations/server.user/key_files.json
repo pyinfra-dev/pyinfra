@@ -12,6 +12,9 @@
         "dirs": {}
     },
     "facts": {
+        "files.Link": {
+            "path=homedir/.ssh/authorized_keys": false
+        },
         "server.Os": "Linux",
         "server.Users": {
             "someuser": {
