@@ -2,21 +2,20 @@
 
 import sys
 from importlib import import_module
-from inspect import getmembers, isclass, signature
+from inspect import isclass, isfunction, signature
 from os import makedirs, path
 from pathlib import Path
-from types import FunctionType
 
-from pyinfra.api.facts import FactBase
 from pyinfra.api.metadata import ALLOWED_TAGS, parse_plugins
 
 sys.path.append(path.dirname(path.realpath(__file__)))
 from docs_utils import (
     format_doc_line,
+    function_of_interest,
     get_module_names,
-    including_sub_modules,
+    get_objects_from_module,
+    is_fact_class_in_op,
     prepare_docstring,
-    remove_dups,
 )  # noqa: E402
 
 MODULE_DEF_LINE_MAX = 90
@@ -118,39 +117,21 @@ def build_operations_docs():
             lines.append(module_doc)
             lines.append("")
 
-        operation_facts = [
-            (key, value)
-            for m in including_sub_modules(module)
-            for key, value in getmembers(m)
-            if (isclass(value) and issubclass(value, FactBase))
-        ]
+        unique_facts = get_objects_from_module(module, isclass, is_fact_class_in_op)
 
-        unique_facts = remove_dups(operation_facts)
         if unique_facts:
             items = []
             for key, value in unique_facts:
-                fact_module = value.__module__.replace("pyinfra.facts.", "")
+                fact_module = value.__module__.replace("pyinfra.facts.", "").split(".")[0]
                 items.append(
                     f"[`{fact_module}.{key}`](../facts/{fact_module}.md#{fact_module}-{key})"
                 )
             lines.append("Facts used in these operations: {}.".format(", ".join(items)))
             lines.append("")
 
-        all_operation_functions = [
-            (f"{m.__name__.split('.')[-1]}.{key}" if m != module else key, value._inner)
-            for m in including_sub_modules(module)
-            for key, value in getmembers(m)
-            if (
-                isinstance(value, FunctionType)
-                and value.__module__.startswith(m.__name__)
-                and getattr(value, "_inner", False)
-                and not value.__name__.startswith("_")
-                and not key.startswith("_")
-            )
-        ]
-        operation_functions = remove_dups(all_operation_functions)
+        operation_functions = get_objects_from_module(module, isfunction, function_of_interest)
 
-        for name, func in operation_functions:
+        for name, func in sorted(operation_functions, key=lambda x: (x[0].count("."), x[0])):
             decorated_func = getattr(func, "_inner", None)
             while decorated_func:
                 func = decorated_func

@@ -81,6 +81,24 @@ path = "src/pyinfra/facts/freebsd.py"
 type = "fact"
 tags = ["package-manager"]
 
+[pyinfra.plugins."freebsd-ops"]
+name = "freebsd"
+path = "src/pyinfra/operations/freebsd"
+type = "operation"
+tags = ["system"]
+
+[pyinfra.plugins."openwrt-ops"]
+name = "openwrt"
+path = "src/pyinfra/operations/openwrt"
+type = "operation"
+tags = ["system"]
+
+[pyinfra.plugins."openwrt-facts"]
+name = "openwrt"
+path = "src/pyinfra/facts/openwrt"
+type = "fact"
+tags = ["system"]
+
 [pyinfra.plugins."opkg-ops"]
 name = "opkg"
 path = "src/pyinfra/operations/opkg.py"

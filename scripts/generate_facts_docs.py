@@ -2,21 +2,20 @@
 
 import sys
 from importlib import import_module
-from inspect import getfullargspec, getmembers, isclass
+from inspect import getfullargspec, isclass
 from os import makedirs, path
 from pathlib import Path
 from types import FunctionType, MethodType
 
-from pyinfra.api.facts import FactBase, ShortFactBase
 from pyinfra.api.metadata import ALLOWED_TAGS, parse_plugins
 
 sys.path.append(path.dirname(path.realpath(__file__)))
 from docs_utils import (
     format_doc_line,
     get_module_names,
-    including_sub_modules,
+    get_objects_from_module,
+    is_fact_class,
     prepare_docstring,
-    remove_dups,
 )  # noqa: E402
 
 CARD_SCRIPT = """\
@@ -119,20 +118,8 @@ def build_facts_docs():
             lines.append(f"See also: [operations/{module_name}](../operations/{module_name}.md).")
             lines.append("")
 
-        all_fact_classes = [
-            (key, value)
-            for m in including_sub_modules(module)
-            for key, value in getmembers(m)
-            if (
-                isclass(value)
-                and (issubclass(value, FactBase) or issubclass(value, ShortFactBase))
-                and value.__module__.startswith(m.__name__)
-                and value is not FactBase
-                and not value.__name__.endswith("Base")  # hacky!
-            )
-        ]
+        fact_classes = get_objects_from_module(module, isclass, is_fact_class)
 
-        fact_classes = remove_dups(all_fact_classes)
         for fact, cls in fact_classes:
             name = fact
             args_string_and_brackets = ""
