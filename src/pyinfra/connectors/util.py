@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from getpass import getpass
+from io import TextIOBase
 from queue import Queue
-from gevent.subprocess import PIPE, Popen
-from typing import TYPE_CHECKING
+from shutil import copyfileobj
+from gevent.subprocess import PIPE, Popen, TimeoutExpired
+from typing import TYPE_CHECKING, Any, TypeGuard
 from collections.abc import Callable, Iterable
 
 import gevent
@@ -16,7 +18,7 @@ from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
 
 if TYPE_CHECKING:
-    from pyinfra.api.arguments import ConnectorArguments
+    from pyinfra.api.arguments import ConnectorArguments, StdinPayload, StdoutSink
     from pyinfra.api.host import Host
     from pyinfra.api.state import State
 
@@ -47,10 +49,11 @@ echo "$temp"
 
 def run_local_process(
     command: str,
-    stdin=None,
+    stdin: StdinPayload | None = None,
     timeout: int | None = None,
     print_output: bool = False,
     print_prefix: str = "",
+    stdout_sink: StdoutSink | None = None,
 ) -> tuple[int, CommandOutput]:
     process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
@@ -58,28 +61,45 @@ def run_local_process(
     assert process.stderr is not None
     assert process.stdin is not None
 
-    # Write any stdin and then close it
-    if stdin:
-        write_stdin(stdin, process.stdin)
-    process.stdin.close()
+    try:
+        combined_output = read_output_buffers(
+            process.stdout,
+            process.stderr,
+            timeout=timeout,
+            print_output=print_output,
+            print_prefix=print_prefix,
+            stdout_sink=stdout_sink,
+            stdin_buffer=process.stdin,
+            stdin=stdin,
+        )
 
-    combined_output = read_output_buffers(
-        process.stdout,
-        process.stderr,
-        timeout=timeout,
-        print_output=print_output,
-        print_prefix=print_prefix,
-    )
+        logger.debug("--> Waiting for exit status...")
+        process.wait()
+        logger.debug("--> Command exit status: %i", process.returncode)
 
-    logger.debug("--> Waiting for exit status...")
-    process.wait()
-    logger.debug("--> Command exit status: %i", process.returncode)
+        return process.returncode, combined_output
+    except BaseException:
+        # In particular, a failed stdout sink stops draining the pipe. Terminate the child
+        # before re-raising, or it may block forever writing to the now-undrained pipe.
+        try:
+            process.terminate()
+        except OSError:
+            pass
 
-    # Close any open file descriptors
-    process.stdout.close()
-    process.stderr.close()
+        try:
+            process.wait(timeout=1)
+        except TimeoutExpired:
+            try:
+                process.kill()
+            except OSError:
+                pass
+            process.wait()
 
-    return process.returncode, combined_output
+        raise
+    finally:
+        process.stdin.close()
+        process.stdout.close()
+        process.stderr.close()
 
 
 # Command output buffer handling
@@ -154,25 +174,52 @@ def read_buffer(
 
 
 def read_output_buffers(
-    stdout_buffer: Iterable,
-    stderr_buffer: Iterable,
+    # Duck typed file objects: connectors hand us paramiko channel files and gevent file
+    # objects, which are file-like but are not `IO[bytes]`.
+    stdout_buffer: Any,
+    stderr_buffer: Any,
     timeout: int | None,
     print_output: bool,
     print_prefix: str,
+    stdout_sink: StdoutSink | None = None,
+    stdin_buffer: Any | None = None,
+    stdin: StdinPayload | None = None,
 ) -> CommandOutput:
+    """
+    Drive a command's three streams until it closes its output.
+
+    + param stdin_buffer: the command's stdin, closed once ``stdin`` is written (or at once
+      when there is no payload), so the command sees EOF.
+    + param stdin: the ``_stdin`` payload, written concurrently with the output readers - a
+      command that emits output while consuming its input must not deadlock on a full pipe.
+    """
+
     output_queue: Queue[OutputLine] = Queue()
+
+    stdin_writer: gevent.Greenlet | None = None
+    if stdin_buffer is not None:
+        if stdin is None:
+            stdin_buffer.close()
+        else:
+            stdin_writer = gevent.spawn(write_stdin, stdin, stdin_buffer)
 
     # Iterate through outputs to get an exit status and generate desired list
     # output, done in two greenlets so stdout isn't printed before stderr. Not
     # attached to state.pool to avoid blocking it with 2x n-hosts greenlets.
-    stdout_reader = gevent.spawn(
-        read_buffer,
-        "stdout",
-        stdout_buffer,
-        output_queue,
-        print_output=print_output,
-        print_func=lambda line: f"{print_prefix}{line}",
-    )
+    if stdout_sink is not None:
+        # Arbitrary bytes cannot be decoded into lines, so stream stdout out untouched
+        # and leave it out of the returned output. stderr is still captured as text so
+        # that errors remain reportable.
+        stdout_reader = gevent.spawn(copyfileobj, stdout_buffer, stdout_sink)
+    else:
+        stdout_reader = gevent.spawn(
+            read_buffer,
+            "stdout",
+            stdout_buffer,
+            output_queue,
+            print_output=print_output,
+            print_func=lambda line: f"{print_prefix}{line}",
+        )
     stderr_reader = gevent.spawn(
         read_buffer,
         "stderr",
@@ -182,15 +229,41 @@ def read_output_buffers(
         print_func=lambda line: f"{print_prefix}{format_text(line, 'red')}",
     )
 
+    workers: list[gevent.Greenlet] = [stdout_reader, stderr_reader]
+    if stdin_writer is not None:
+        workers.insert(0, stdin_writer)
+
+    if stdout_sink is not None:
+        # A sink that fails stops draining stdout, so a command blocked writing into a
+        # full pipe would never exit: the stderr reader, and a writer still feeding it,
+        # would hang the wait below until the timeout (or forever). Kill the peers so the
+        # wait returns and the error is raised.
+        stdout_reader.link(
+            lambda reader: (
+                gevent.killall([worker for worker in workers if worker is not reader])
+                if reader.exception is not None
+                else None
+            )
+        )
+
     # Wait on output, with our timeout (or None)
-    greenlets = gevent.wait((stdout_reader, stderr_reader), timeout=timeout)
+    finished = gevent.wait(workers, timeout=timeout)
+
+    # gevent.wait returns the greenlets that *finished*, not the ones that succeeded. A
+    # failed stdin write (unreadable payload) or sink write (disk full, closed file) leaves
+    # the command with a truncated stream, so it must win over a successful exit status or
+    # over the timeout below.
+    for worker in (stdin_writer, stdout_reader if stdout_sink is not None else None):
+        if worker is not None and worker.exception is not None:
+            gevent.killall(workers)
+
+            raise worker.exception
 
     # Timeout doesn't raise an exception, but gevent.wait returns the greenlets
-    # which did complete. So if both haven't completed, we kill them and fail
+    # which did complete. So if any hasn't completed, we kill them and fail
     # with a timeout.
-    if len(greenlets) != 2:
-        stdout_reader.kill()
-        stderr_reader.kill()
+    if len(finished) != len(workers):
+        gevent.killall(workers)
 
         raise TimeoutError()
 
@@ -201,11 +274,88 @@ def read_output_buffers(
 #
 
 
+# The two retry helpers and `write_stdin` probe their payload at runtime (`hasattr(stdin,
+# "read")` and friends) rather than assuming a shape, so their annotations stay loose. The
+# contract for callers lives on `StdinPayload` and `StdoutSink` in `pyinfra.api.arguments`.
+def _is_stream(payload: Any | None) -> TypeGuard[Any]:
+    return payload is not None and hasattr(payload, "read")
+
+
+def _is_seekable(stream: Any) -> bool:
+    return getattr(stream, "seekable", lambda: False)()
+
+
+def check_stdin_is_rewindable(stdin: Any | None) -> None:
+    """
+    Raise if a stream ``_stdin`` payload could not be re-sent by a retry.
+
+    String, bytes and sequence payloads are never consumed by an attempt and always pass.
+
+    + param stdin: the payload passed as ``_stdin``, or None.
+    """
+
+    if _is_stream(stdin) and not _is_seekable(stdin):
+        raise PyinfraError(
+            "Cannot retry the command: `_stdin` is a non-seekable stream that an attempt "
+            "consumes. Pass `bytes` or a seekable file object."
+        )
+
+
+def get_stdin_position_for_retry(stdin: Any | None) -> int | None:
+    """Return the initial cursor for a seekable stream payload, if any."""
+
+    if not _is_stream(stdin) or not _is_seekable(stdin):
+        return None
+
+    return stdin.tell()
+
+
+def rewind_stdin_for_retry(stdin: Any | None, position: int | None = None) -> None:
+    """
+    Rewind a stream ``_stdin`` payload so a retried command sends the same bytes again.
+
+    A stream that cannot be rewound cannot be re-sent at all, which is an error rather
+    than silently sending an empty payload.
+
+    + param stdin: the payload passed as ``_stdin``, or None.
+    + param position: the cursor to restore; the start of the stream when not given.
+    """
+
+    if not _is_stream(stdin):
+        return
+
+    check_stdin_is_rewindable(stdin)
+    stdin.seek(position if position is not None else 0)
+
+
+def reset_stdout_for_retry(stdout: Any | None) -> None:
+    """
+    Empty a ``_stdout`` sink so a retried command replaces the first attempt's output.
+
+    + param stdout: the sink passed as ``_stdout``, or None.
+    """
+
+    if stdout is None:
+        return
+
+    if not _is_seekable(stdout):
+        raise PyinfraError(
+            "Cannot retry the command: `_stdout` is a non-seekable sink that already holds "
+            "the first attempt's output."
+        )
+
+    stdout.seek(0)
+    stdout.truncate()
+
+
 def execute_command_with_sudo_retry(
     host: Host,
     command_arguments: ConnectorArguments,
     execute_command: Callable[..., tuple[int, CommandOutput]],
+    stdin: StdinPayload | None = None,
+    stdout: StdoutSink | None = None,
 ) -> tuple[int, CommandOutput]:
+    stdin_position = get_stdin_position_for_retry(stdin)
     return_code, output = execute_command()
 
     # If we failed look for a sudo password prompt line and re-submit using the sudo password. Look
@@ -231,24 +381,78 @@ def execute_command_with_sudo_retry(
                 # internal connector data for use when executing future commands.
                 sudo_password = getpass(f"{host.print_prefix}sudo password: ")
                 host.connector_data["prompted_sudo_password"] = sudo_password
+                # The first attempt consumed the payload and filled the sink: put both back,
+                # or the retry sends an empty stdin (truncating e.g. `cat > dest`) and
+                # appends its output to the first attempt's.
+                rewind_stdin_for_retry(stdin, stdin_position)
+                reset_stdout_for_retry(stdout)
                 return_code, output = execute_command()
                 break
 
     return return_code, output
 
 
-def write_stdin(stdin, buffer):
-    if hasattr(stdin, "readlines"):
-        stdin = stdin.readlines()
-    if not isinstance(stdin, (list, tuple)):
-        stdin = [stdin]
+# Loosely annotated for the same reason: a payload outside `StdinPayload` is diagnosed below,
+# with a message naming the offending type, rather than failing as a type error.
+def write_stdin(stdin: Any, buffer: Any) -> None:
+    """
+    Write ``stdin`` to a command's input ``buffer``.
 
-    for line in stdin:
-        if not line.endswith("\n"):
-            line = f"{line}\n"
-        line = line.encode()
-        buffer.write(line)
-    buffer.close()
+    Text payloads are written line by line, appending a newline to any line missing one; any
+    iterable of lines is iterated, so a generator is consumed as it is written. Bytes and binary
+    file objects are streamed through verbatim instead, so file contents survive unaltered.
+
+    + param stdin: the payload: text, bytes, bytes-like, or a text/binary file object.
+    + param buffer: the binary buffer the command reads stdin from, closed by this function.
+    """
+    try:
+        if isinstance(stdin, (bytes, bytearray, memoryview)):
+            buffer.write(bytes(stdin))
+            return
+
+        # Binary streams are copied in chunks rather than read into memory; text streams
+        # (StringIO, open(..., "r"), ...) fall through to the line based handling below.
+        # Duck typed, like `get_file_io`: the binary buffers that reach here are not
+        # necessarily `io` subclasses - tempfile's wrappers, paramiko's file objects and
+        # gevent's file objects all proxy attribute access. Text streams are recognised by
+        # `TextIOBase` as well as by `encoding`, because `StringIO` has no `encoding`.
+        if (
+            hasattr(stdin, "read")
+            and not isinstance(stdin, TextIOBase)
+            and getattr(stdin, "encoding", None) is None
+        ):
+            copyfileobj(stdin, buffer)
+            return
+
+        if not stdin:
+            # Empty text payload (``""``, ``[]``, ``()``): nothing to send. Unchanged
+            # behaviour, made explicit here so that ``b""`` still writes above.
+            return
+
+        # Text: a file-like is read through, a bare string is a single line, and anything else
+        # iterable is iterated as lines - wrapping the iterable itself would call `endswith` on
+        # a generator.
+        if hasattr(stdin, "readlines"):
+            stdin = stdin.readlines()
+        elif isinstance(stdin, str) or not isinstance(stdin, Iterable):
+            stdin = [stdin]
+
+        for line in stdin:
+            if not isinstance(line, str):
+                # Enforced here rather than by the argument type check, which cannot see inside
+                # an arbitrary iterable: a buffer such as `array('B')` passes it, and used to
+                # fail here with "no attribute 'endswith'".
+                raise PyinfraError(
+                    "`_stdin` must be text or bytes: got "
+                    f"{type(line).__name__} in the payload. Pass `bytes`, a binary file object, "
+                    "or wrap other buffers (eg `array`) in `memoryview()`.",
+                )
+
+            if not line.endswith("\n"):
+                line = f"{line}\n"
+            buffer.write(line.encode())
+    finally:
+        buffer.close()
 
 
 ASKPASS_PATH_KEYS = ("sudo_askpass_path", "su_askpass_path")
@@ -312,6 +516,8 @@ def extract_control_arguments(arguments: ConnectorArguments) -> ConnectorArgumen
         control_arguments["_get_pty"] = arguments.pop("_get_pty")
     if "_stdin" in arguments:
         control_arguments["_stdin"] = arguments.pop("_stdin")
+    if "_stdout" in arguments:
+        control_arguments["_stdout"] = arguments.pop("_stdout")
 
     return control_arguments
 
