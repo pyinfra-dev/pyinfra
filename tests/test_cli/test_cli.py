@@ -223,6 +223,19 @@ class TestJsonOutput(PatchSSHTestCase):
         for host in payload:
             assert set(host.keys()) == {"name", "groups", "data"}
 
+    def test_json_debug_inventory_unserializable_data(self):
+        # Classes, dataclasses and other objects in host data shouldn't fail the output (#2025)
+        group_data = path.join("tests", "test_cli", "group_data_objects")
+        result = run_cli(
+            "--json", "somehost,anotherhost", f"--group-data={group_data}", "debug-inventory"
+        )
+        payload = self._parse_stdout(result)
+        data = payload[0]["data"]
+        assert data["Complex"] == "Class: Complex"
+        assert data["extra"] == {"id": 42, "addr": "192.168.0.42"}
+        assert data["opaque"] == "<Opaque>"
+        assert data["simple"] == "still shown"
+
     def test_json_fact(self):
         result = run_cli("--json", self.inventory, "fact", "server.Os")
         payload = self._parse_stdout(result)
