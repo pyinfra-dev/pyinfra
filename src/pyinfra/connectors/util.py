@@ -1,18 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from getpass import getpass
 from queue import Queue
-from gevent.subprocess import PIPE, Popen
 from typing import TYPE_CHECKING
-from collections.abc import Callable, Iterable
 
 import gevent
+from gevent.subprocess import PIPE, Popen
 
 from pyinfra import logger
-from pyinfra.api.output import echo, format_text
 from pyinfra.api import HiddenValue, QuoteString, StringCommand
 from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.output import echo, format_text
 from pyinfra.api.util import memoize
 
 if TYPE_CHECKING:
@@ -38,11 +38,88 @@ ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
+if [ -f "$0.${{PPID}}.called" ]; then
+    rm -f "$0.${{PPID}}.called"
+    echo "sudo: 1 incorrect password attempt" >&2
+    exit 1
+fi
+touch "$0.${{PPID}}.called"
 printf '%s\n' "${1}"
 __EOF__
 chmod 755 "$temp"
 echo "$temp"
 """
+
+SUDO_PASSWORD_REQUIRED_PHRASES = (
+    "a password is required",
+    "uma senha é necessária",
+    "se requiere una contraseña",
+    "un mot de passe est requis",
+    "ein passwort ist erforderlich",
+    "è richiesta una password",
+    "richiesta una password",
+    "требуется пароль",
+    "wymagane jest hasło",
+    "需要密码",
+    "需要密碼",
+    "パスワードが必要です",
+    "het wachtwoord is vereist",
+    "ett lösenord krävs",
+    "adgangskode er påkrævet",
+    "salasanan antamista vaaditaan",
+    "et passord er påkrevd",
+    "bir parola gerekli",
+    "암호가 필요합니다",
+    "je vyžadováno heslo",
+    "jelszó szükséges",
+    "cal una contrasenya",
+    "interactive authentication is required",  # sudo-rs
+)
+
+SUDO_INCORRECT_PASSWORD_PHRASES = (
+    "incorrect password attempt",
+    "tentativa de senha incorreta",
+    "tentativas de senha incorreta",
+    "intento de contraseña incorrecto",
+    "intentos de contraseña incorrectos",
+    "intento incorrecto de contraseña",
+    "intentos incorrectos de contraseña",
+    "tentative de mot de passe incorrecte",
+    "tentatives de mot de passe incorrectes",
+    "fehlerhafter versuch der passworteingabe",
+    "fehlerhafte versuche der passworteingabe",
+    "fehlgeschlagener passwortversuch",
+    "falscher passwortversuch",
+    "tentativo di password non valida",
+    "tentativo errato",
+    "tentativi errati",
+    "неверная попытка ввода пароля",
+    "неверных попыток ввода пароля",
+    "błędna próba podania hasła",
+    "błędne próby podania hasła",
+    "错误密码尝试",
+    "錯誤密碼嘗試",
+    "パスワードを間違えた回数",
+    "onjuiste wachtwoordpoging",
+    "felaktigt lösenordsförsök",
+    "forkert adgangskodeforsøg",
+    "virheellinen salasanayritys",
+    "feil passordforsøk",
+)
+
+
+def _is_sudo_password_required(line: str) -> bool:
+    line_lower = line.lower()
+    if not line_lower.startswith(("sudo:", "sudo-rs:")):
+        return False
+    return any(phrase in line_lower for phrase in SUDO_PASSWORD_REQUIRED_PHRASES)
+
+
+def _is_sudo_incorrect_password(line: str) -> bool:
+    line_lower = line.lower()
+    if not line_lower.startswith(("sudo:", "sudo-rs:")):
+        return False
+    return any(phrase in line_lower for phrase in SUDO_INCORRECT_PASSWORD_PHRASES)
 
 
 def run_local_process(
@@ -208,12 +285,19 @@ def execute_command_with_sudo_retry(
 ) -> tuple[int, CommandOutput]:
     return_code, output = execute_command()
 
+    attempts = 0
+    max_attempts = 3
     # If we failed look for a sudo password prompt line and re-submit using the sudo password. Look
     # at all lines here in case anything else gets printed, eg in:
     # https://github.com/pyinfra-dev/pyinfra/issues/1292
-    if return_code != 0 and output and output.combined_lines:
+    while return_code != 0 and output and output.combined_lines and attempts < max_attempts:
+        requires_password = False
         for line in reversed(output.combined_lines):
-            if line.line.strip() in SUDO_PASSWORD_REQUIRED_LINES:
+            line_stripped = line.line.strip()
+
+            if _is_sudo_incorrect_password(line_stripped) or _is_sudo_password_required(
+                line_stripped
+            ):
                 # Re-running only helps when the command is executed with sudo, otherwise
                 # the prompted password cannot be applied and the command just runs (and
                 # fails) a second time. Return the failed result so the usual failure
@@ -227,12 +311,19 @@ def execute_command_with_sudo_retry(
                         host.print_prefix,
                     )
                     break
-                # If we need a password, ask the user for it and attach to the host
-                # internal connector data for use when executing future commands.
-                sudo_password = getpass(f"{host.print_prefix}sudo password: ")
-                host.connector_data["prompted_sudo_password"] = sudo_password
-                return_code, output = execute_command()
+                requires_password = True
                 break
+                break
+
+        if requires_password:
+            # If we need a password, ask the user for it and attach to the host
+            # internal connector data for use when executing future commands.
+            sudo_password = getpass(f"{host.print_prefix}sudo password: ")
+            host.connector_data["prompted_sudo_password"] = sudo_password
+            attempts += 1
+            return_code, output = execute_command()
+        else:
+            break
 
     return return_code, output
 
@@ -276,7 +367,8 @@ def remove_any_sudo_askpass_file(host) -> None:
         if not path:
             continue
         try:
-            host.run_shell_command(StringCommand("rm", "-f", QuoteString(path)))
+            wildcard_path = StringCommand(QuoteString(path), ".*.called", _separator="")
+            host.run_shell_command(StringCommand("rm", "-f", QuoteString(path), wildcard_path))
         except Exception as e:
             logger.debug("Could not remove askpass file %s: %s", path, e)
         host.connector_data[cache_key] = None
@@ -372,14 +464,13 @@ def make_unix_command_for_host(
 
     # Handle sudo password
     if command_arguments.get("_sudo"):
-        # If the sudo password is not set in the direct arguments,
-        # set it from the connector data value.
-        if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
-            command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
+        # If a sudo password was prompted, use it; otherwise fall back to direct arguments.
+        if host.connector_data.get("prompted_sudo_password"):
+            command_arguments["_sudo_password"] = host.connector_data["prompted_sudo_password"]
 
         # If we know a password is needed, ask for it up front rather than first trying
         # passwordless sudo and prompting on failure.
-        if not command_arguments["_sudo_password"] and state.config.USE_SUDO_PASSWORD:
+        if not command_arguments.get("_sudo_password") and state.config.USE_SUDO_PASSWORD:
             sudo_password = getpass(f"{host.print_prefix}sudo password: ")
             host.connector_data["prompted_sudo_password"] = sudo_password
             command_arguments["_sudo_password"] = sudo_password
