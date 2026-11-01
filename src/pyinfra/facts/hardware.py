@@ -5,7 +5,8 @@ import re
 from collections.abc import Sequence
 from typing import Literal, cast
 
-from typing_extensions import NotRequired, TypedDict, override
+from typing_extensions import TypedDict, override
+from typing import NotRequired
 
 from pyinfra import logger
 from pyinfra.api import FactBase, ShortFactBase

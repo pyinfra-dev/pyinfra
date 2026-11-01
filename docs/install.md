@@ -9,8 +9,8 @@ orphan: true
 
 ### Python Version Requirements
 
-- Python 3.10 or later is required
-- pyinfra 3.5.1+ supports Python 3.10, 3.11, 3.12 and 3.13
+- Python 3.11 or later is required
+- pyinfra 3.x supports Python 3.11 through 3.15
 - You can check your Python version with:
 
   ```sh

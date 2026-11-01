@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import re
 import stat
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import TYPE_CHECKING
 
-from typing_extensions import NotRequired, TypedDict, override
+from typing_extensions import TypedDict, override
+from typing import NotRequired
 from typing import Literal
 
 from pyinfra.api import StringCommand
@@ -103,7 +104,7 @@ def _parse_mode(mode: str) -> int:
 def _parse_datetime(value: str) -> datetime | None:
     value = try_int(value)
     if isinstance(value, int):
-        return datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
+        return datetime.fromtimestamp(value, UTC).replace(tzinfo=None)
     return None
 
 

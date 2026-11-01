@@ -1,7 +1,8 @@
 import re
 from typing import TypedDict
 
-from typing_extensions import NotRequired, override
+from typing_extensions import override
+from typing import NotRequired
 
 from pyinfra.api import FactBase, QuoteString, StringCommand
 from pyinfra.api.util import try_int
