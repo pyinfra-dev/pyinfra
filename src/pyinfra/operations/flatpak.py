@@ -13,14 +13,16 @@ from pyinfra.facts.flatpak import FlatpakPackages
 def packages(
     packages: str | list[str] | None = None,
     remote: str | None = None,
-    present=True,
+    present: bool = True,
+    user: bool = False,
 ):
     """
     Install/remove a flatpak package
 
     + packages: List of packages
-    + remote: Source to install the application or runtime from
+    + remote: Source from which to install the application or runtime
     + present: whether the package should be installed
+    + user: use the current user's installation instead of Flatpak's default
 
     **Examples:**
 
@@ -28,26 +30,34 @@ def packages(
 
         from pyinfra.operations import flatpak
         # Install vlc flatpak
-        flatpak.package(
+        flatpak.packages(
             name="Install vlc",
             packages="org.videolan.VLC",
         )
 
         # Install vlc flatpak from flathub
-        flatpak.package(
+        flatpak.packages(
             name="Install vlc",
             packages="org.videolan.VLC",
             remote="flathub",
         )
 
+        # Install vlc flatpak for the current user
+        flatpak.packages(
+            name="Install vlc",
+            packages="org.videolan.VLC",
+            remote="flathub",
+            user=True,
+        )
+
         # Install multiple flatpaks
-        flatpak.package(
+        flatpak.packages(
             name="Install vlc and kodi",
             packages=["org.videolan.VLC", "tv.kodi.Kodi"],
         )
 
         # Remove vlc
-        flatpak.package(
+        flatpak.packages(
             name="Remove vlc",
             packages="org.videolan.VLC",
             present=False,
@@ -60,7 +70,7 @@ def packages(
     if isinstance(packages, str):
         packages = [packages]
 
-    flatpak_packages = host.get_fact(FlatpakPackages)
+    flatpak_packages = host.get_fact(FlatpakPackages, user=user)
 
     install_packages = []
     remove_packages = []
@@ -86,7 +96,9 @@ def packages(
                 host.noop(f"flatpak package {package} is not installed")
 
     if install_packages:
-        command: list[str | QuoteString] = ["flatpak install --noninteractive"]
+        command: list[str | QuoteString] = [
+            f"flatpak install --noninteractive{' --user' if user else ''}"
+        ]
         if remote:
             command.append(QuoteString(remote))
         command += [QuoteString(package) for package in install_packages]
@@ -94,6 +106,6 @@ def packages(
 
     if remove_packages:
         yield StringCommand(
-            "flatpak uninstall --noninteractive",
+            f"flatpak uninstall --noninteractive{' --user' if user else ''}",
             *[QuoteString(package) for package in remove_packages],
         )
