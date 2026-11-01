@@ -43,7 +43,7 @@ def packages(
         )
 
         # Install vlc flatpak for the current user
-        flatpak.package(
+        flatpak.packages(
             name="Install vlc",
             packages="org.videolan.VLC",
             remote="flathub",
