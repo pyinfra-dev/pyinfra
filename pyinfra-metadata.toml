@@ -584,3 +584,10 @@ name = "uv"
 path = "src/pyinfra/facts/uv.py"
 type = "fact"
 tags = ["package-manager", "python"]
+
+# Connectors
+[pyinfra.plugins."incus-connector"]
+name = "incus"
+path = "src/pyinfra/connectors/incus.py"
+type = "connector"
+tags = ["containers", "system"]
