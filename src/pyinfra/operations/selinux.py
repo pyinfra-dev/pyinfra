@@ -29,7 +29,7 @@ def boolean(bool_name: str, value: Boolean, persistent=False):
     """
     Set the specified SELinux boolean to the desired state.
 
-    + boolean: name of an SELinux boolean
+    + bool_name: name of an SELinux boolean
     + value: desired state of the boolean
     + persistent: whether to write updated policy or not
 
@@ -145,7 +145,7 @@ def port(protocol: Protocol | str, port_num: int, se_type: str | None = None, pr
     Set the SELinux type for the specified protocol and port.
 
     + protocol: the protocol: (udp|tcp|sctp|dccp)
-    + port: the port
+    + port_num: the port
     + se_type: the SELinux type for the given port
     + present: whether to add or remove the SELinux type for the port
 
