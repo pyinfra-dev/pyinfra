@@ -438,6 +438,34 @@ class AptPackages(FactBase):
         return parse_packages(self.regex, output)
 
 
+class AptHeldPackages(FactBase[list[str]]):
+    """
+    Returns a list of apt packages marked as held (``apt-mark showhold``). Held
+    packages are not automatically upgraded, removed or changed by ``apt``.
+
+    .. code:: python
+
+        [
+            "nomad",
+            "libfoo:i386",
+        ]
+    """
+
+    @override
+    def command(self) -> str:
+        return "apt-mark showhold"
+
+    @override
+    def requires_command(self) -> str:
+        return "apt-mark"
+
+    default = list
+
+    @override
+    def process(self, output: list[str]) -> list[str]:
+        return [line.strip() for line in output if line.strip()]
+
+
 class AptKeys(GpgKeyrings):
     """
     Returns information on GPG keys available to APT.

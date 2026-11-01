@@ -1390,7 +1390,6 @@ name = "pyinfra"
 version = "3.10.0"
 source = { editable = "." }
 dependencies = [
-    { name = "click" },
     { name = "cyclopts" },
     { name = "distro" },
     { name = "gevent" },
@@ -1407,7 +1406,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "click" },
     { name = "coverage" },
     { name = "freezegun" },
     { name = "ipdb" },
@@ -1435,7 +1433,6 @@ docs = [
     { name = "zensical" },
 ]
 test = [
-    { name = "click" },
     { name = "coverage" },
     { name = "freezegun" },
     { name = "mypy" },
@@ -1453,7 +1450,6 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "click", specifier = ">2" },
     { name = "cyclopts", specifier = ">=4,<5" },
     { name = "distro", specifier = ">=1.6,<2" },
     { name = "gevent", specifier = ">=1.5" },
@@ -1470,7 +1466,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "click", specifier = ">=8.2" },
     { name = "coverage", specifier = ">=7.7.1,<8" },
     { name = "freezegun", specifier = ">=1.5.5" },
     { name = "ipdb" },
@@ -1497,7 +1492,6 @@ docs = [
     { name = "zensical", specifier = ">=0.0.34" },
 ]
 test = [
-    { name = "click", specifier = ">=8.2" },
     { name = "coverage", specifier = ">=7.7.1,<8" },
     { name = "freezegun", specifier = ">=1.5.5" },
     { name = "mypy", specifier = "==1.17.1" },

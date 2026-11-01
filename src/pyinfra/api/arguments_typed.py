@@ -35,6 +35,7 @@ class PyinfraOperation(Generic[P], Protocol):
         _use_sudo_login: bool = False,
         _sudo_password: None | str = None,
         _preserve_sudo_env: bool = False,
+        _sudo_set_home: bool = True,
         _su_user: None | str = None,
         _use_su_login: bool = False,
         _preserve_su_env: bool = False,
