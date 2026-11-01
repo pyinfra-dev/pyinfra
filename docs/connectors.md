@@ -16,3 +16,4 @@ Each connector page is listed below and contains examples as well as a list of a
 - [`@docker`](connectors/docker.md) — Create or modify Docker containers.
 - [`@terraform`](connectors/terraform.md) — Get SSH targets from Terraform output.
 - [`@local`](connectors/local.md) — Connect to the local machine running pyinfra.
+- [`@chain`](connectors/chain.md) — Chain multiple connectors to reach nested targets.

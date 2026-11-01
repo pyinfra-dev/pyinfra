@@ -1,3 +1,4 @@
+from io import StringIO
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -6,6 +7,7 @@ from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
     _ensure_askpass_set_for_host,
+    buffer_stdin_for_retry,
     execute_command_with_sudo_retry,
     make_unix_command,
     make_unix_command_for_host,
@@ -270,6 +272,23 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         host = state.inventory.get_host("somehost")
         command = make_unix_command_for_host(state, host, "echo Šablony")
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
+
+
+class TestBufferStdinForRetry(TestCase):
+    def test_materializes_a_one_shot_iterator(self):
+        stdin = (line for line in ["header", "payload"])
+
+        assert buffer_stdin_for_retry(stdin) == ("header", "payload")
+
+    def test_leaves_reiterable_payloads_alone(self):
+        stdin = ["header", "payload"]
+
+        assert buffer_stdin_for_retry(stdin) is stdin
+
+    def test_leaves_streams_alone(self):
+        stdin = StringIO("header")
+
+        assert buffer_stdin_for_retry(stdin) is stdin
 
 
 class TestExecuteCommandWithSudoRetry(TestCase):
