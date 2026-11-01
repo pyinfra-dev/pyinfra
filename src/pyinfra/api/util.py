@@ -402,9 +402,11 @@ class get_file_io:
         # Only a completed write replaces the destination: a failed one leaves it intact.
         if self._text_target is not None and type is None:
             stand_in = cast(BytesIO, self.filename_or_io)
+            # Decode first: invalid UTF-8 must raise before the existing value is erased.
+            text = stand_in.getvalue().decode()
             self._text_target.seek(0)
             self._text_target.truncate()
-            self._text_target.write(stand_in.getvalue().decode())
+            self._text_target.write(text)
 
     @property
     def cache_key(self):

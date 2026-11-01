@@ -78,3 +78,13 @@ class TestApiUtilFileIO(TestCase):
                 raise RuntimeError()
 
         assert file.getvalue() == "stale"
+
+    def test_get_file_io_invalid_utf8_leaves_stringio_intact(self):
+        # Decoding must fail before the destination is truncated.
+        file = StringIO("stale")
+
+        with self.assertRaises(UnicodeDecodeError):
+            with get_file_io(file, mode="wb") as f:
+                f.write(b"\xff")
+
+        assert file.getvalue() == "stale"
