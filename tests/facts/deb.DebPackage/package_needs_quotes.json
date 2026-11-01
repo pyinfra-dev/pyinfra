@@ -1,6 +1,6 @@
 {
     "arg": "/tmp/my package; whoami.deb",
-    "command": "! test -e '/tmp/my package; whoami.deb' && (dpkg -s '/tmp/my package; whoami.deb' 2>/dev/null || true) || dpkg -I '/tmp/my package; whoami.deb'",
+    "command": "test -f '/tmp/my package; whoami.deb' && case '/tmp/my package; whoami.deb' in *.deb) dpkg -I '/tmp/my package; whoami.deb' ;; *) dpkg -s '/tmp/my package; whoami.deb' 2>/dev/null || true ;; esac || dpkg -s '/tmp/my package; whoami.deb' 2>/dev/null || true",
     "requires_command": "dpkg",
     "output": [
         "Package: my-package",

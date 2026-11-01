@@ -1,0 +1,5 @@
+args:
+  - "x; reboot"
+  - ["id"]
+commands:
+  - "docker exec 'x; reboot' id"

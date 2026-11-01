@@ -3,7 +3,7 @@
     "kwargs": {
         "description": "description",
         "gpgcheck": false,
-        "gpgkey": "test"
+        "gpgkey": "https://test/key"
     },
     "facts": {
         "files.File": {
@@ -16,7 +16,7 @@
     },
     "commands": [[
         "upload",
-        "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ntype=rpm-md\ngpgkey=test\n",
-            "/etc/zypp/repos.d/somerepo.repo"
-    ]]
+        "[somerepo]\nname=description\nbaseurl=http://baseurl\nenabled=1\ngpgcheck=0\ntype=rpm-md\ngpgkey=https://test/key\n",
+        "/etc/zypp/repos.d/somerepo.repo"
+    ], "chmod 644 /etc/zypp/repos.d/somerepo.repo"]
 }

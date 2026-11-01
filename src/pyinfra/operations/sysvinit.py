@@ -5,7 +5,7 @@ Manage sysvinit services (``/etc/init.d``).
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.facts.files import FindLinks
 from pyinfra.facts.server import LinuxDistribution
 from pyinfra.facts.sysvinit import InitdStatus
@@ -71,8 +71,8 @@ def service(
     if isinstance(enabled, bool):
         start_links = host.get_fact(
             FindLinks,
-            path=f"/etc/rc*.d/S*{service}",
-            quote_path=False,  # enable path glob matching
+            path="/etc",
+            path_match=f"/etc/rc*.d/S*{service}",
         )
 
         # If no links exist, attempt to enable the service using distro-specific commands
@@ -80,20 +80,20 @@ def service(
             distro = host.get_fact(LinuxDistribution).get("name")
 
             if distro in ("Ubuntu", "Debian"):
-                yield f"update-rc.d {service} defaults"
+                yield StringCommand("update-rc.d", QuoteString(service), "defaults")
 
             elif distro in ("CentOS", "Fedora", "Red Hat Enterprise Linux"):
-                yield f"chkconfig {service} --add"
-                yield f"chkconfig {service} on"
+                yield StringCommand("chkconfig", QuoteString(service), "--add")
+                yield StringCommand("chkconfig", QuoteString(service), "on")
 
             elif distro == "Gentoo":
-                yield f"rc-update add {service} default"
+                yield StringCommand("rc-update add", QuoteString(service), "default")
 
         # Remove any /etc/rcX.d/<service> start links
         elif enabled is False:
             # No state checking, just blindly remove any that exist
             for link in start_links:
-                yield f"rm -f {link}"
+                yield StringCommand("rm -f", QuoteString(link))
 
 
 @operation()

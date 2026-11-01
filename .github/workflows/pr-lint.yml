@@ -27,6 +27,7 @@ jobs:
           scopes: |
             api
             cli
+            deps
             operations(\.[A-Za-z0-9.\-]+)?
             facts(\.[A-Za-z0-9.\-]+)?
             connectors(\.[A-Za-z0-9.\-]+)?

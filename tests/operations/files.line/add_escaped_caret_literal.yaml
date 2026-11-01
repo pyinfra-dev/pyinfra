@@ -1,0 +1,12 @@
+args:
+  - somefile
+  - ^foo
+kwargs:
+  escape_regex_characters: true
+facts:
+  files.FindInFile:
+    # With escape_regex_characters the leading caret is a literal, so it must be
+    # kept when the line is appended (anchors are only stripped for raw regexes).
+    "extended_regex=False, interpolate_variables=False, path=somefile, pattern=^.*\\^foo.*$": []
+commands:
+  - echo '^foo' >> somefile

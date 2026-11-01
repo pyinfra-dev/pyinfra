@@ -1,0 +1,15 @@
+{
+    "args": ["this_is_a_command"],
+    "kwargs": {
+        "user": "x; reboot"
+    },
+    "facts": {
+        "crontab.Crontab": {
+            "user=x; reboot": {}
+        }
+    },
+    "commands": [
+        "echo '* * * * * this_is_a_command' >> _tempfile_",
+        "crontab -u 'x; reboot' _tempfile_"
+    ]
+}

@@ -9,7 +9,7 @@ import pytest
 from pyinfra.operations import server
 from pyinfra_cli.commands import get_func_and_args
 from pyinfra_cli.exceptions import CliError
-from pyinfra_cli.util import json_encode, try_import_module_attribute
+from pyinfra_cli.util import json_encode, parse_cli_arg, try_import_module_attribute
 
 
 class TestCliUtil(TestCase):
@@ -53,6 +53,17 @@ class TestCliUtil(TestCase):
             server.user,
             (["one", "two"], {"hello": "world"}),
         )
+
+    def test_setup_op_and_python_literal_list_kwarg(self):
+        commands = ("server.user", "one", "groups=['wheel', 'docker']")
+
+        assert get_func_and_args(commands) == (
+            server.user,
+            (["one"], {"groups": ["wheel", "docker"]}),
+        )
+
+    def test_parse_cli_arg_preserves_unwrapped_comma_values(self):
+        assert parse_cli_arg("80,443") == "80,443"
 
 
 @pytest.fixture(scope="function")
@@ -102,3 +113,11 @@ def test_try_import_module_attribute_falls_through_when_attr_missing(monkeypatch
     result = try_import_module_attribute("pip.Pip3Packages", prefix="pyinfra.facts")
 
     assert result is Pip3Packages
+
+
+def test_try_import_module_attribute_preserves_windows_path_in_error():
+    with pytest.raises(CliError, match=r"^No such module: D:/non_existing_script\.py$"):
+        try_import_module_attribute("D:/non_existing_script.py")
+
+    with pytest.raises(CliError, match=r"^No such module: D:\\non_existing_script\.py$"):
+        try_import_module_attribute(r"D:\non_existing_script.py")

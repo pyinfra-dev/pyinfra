@@ -1,4 +1,5 @@
 from collections import defaultdict
+from io import StringIO
 from os import path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
@@ -118,8 +119,144 @@ class TestOperationsApi(PatchSSHTestCase):
 
         disconnect_all(state)
 
+    def test_op_per_host_data_no_hash_collision(self):
+        inventory = make_inventory(
+            hosts=(
+                ("somehost", {"users": ["user-1"]}),
+                ("anotherhost", {"users": ["user-5"]}),
+            ),
+        )
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+
+        # Call the "same" operation (identical position) with per-host names and
+        # arguments - these must not collapse into a single operation hash (#1370).
+        for host in inventory:
+            for user in host.data.users:
+                add_op(
+                    state,
+                    server.shell,
+                    commands=[f"echo {user}"],
+                    name=f"Create {user} user",
+                    host=host,
+                )
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        names_by_host = {
+            host_name: {
+                name for op_hash in state.ops[host] for name in state.op_meta[op_hash].names
+            }
+            for host_name, host in (("somehost", somehost), ("anotherhost", anotherhost))
+        }
+        assert names_by_host == {
+            "somehost": {"Create user-1 user"},
+            "anotherhost": {"Create user-5 user"},
+        }
+
+        # Identical operations on both hosts must still share a single hash
+        add_op(state, server.shell, commands=["echo same"], host=[somehost, anotherhost])
+
+        shared_op_hash = state.get_op_order()[-1]
+        assert shared_op_hash in state.ops[somehost]
+        assert shared_op_hash in state.ops[anotherhost]
+
+    def test_op_per_host_args_no_name_no_hash_collision(self):
+        inventory = make_inventory(
+            hosts=(
+                ("somehost", {"users": ["user-1"]}),
+                ("anotherhost", {"users": ["user-5"]}),
+            ),
+        )
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+
+        # Same operation and position with per-host arguments but no explicit
+        # name - these must not collapse into a single operation hash (#1370).
+        for host in inventory:
+            for user in host.data.users:
+                add_op(state, server.shell, commands=[f"echo {user}"], host=host)
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        somehost_op_hash = next(iter(state.ops[somehost]))
+        anotherhost_op_hash = next(iter(state.ops[anotherhost]))
+        assert somehost_op_hash != anotherhost_op_hash
+
+        # Both auto-named the same, but the attached arguments are kept separate
+        assert state.op_meta[somehost_op_hash].names == {"server.shell"}
+        assert state.op_meta[anotherhost_op_hash].names == {"server.shell"}
+        assert state.op_meta[somehost_op_hash].args == ["commands=['echo user-1']"]
+        assert state.op_meta[anotherhost_op_hash].args == ["commands=['echo user-5']"]
+
+    def test_op_per_host_data_different_execution_kwargs(self):
+        inventory = make_inventory()
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+
+        # Distinct operations at the same position with different execution kwargs
+        # must not raise - they only shared a hash by accident before #1370.
+        add_op(
+            state,
+            server.shell,
+            commands=["echo somehost"],
+            name="somehost op",
+            _parallel=1,
+            host=somehost,
+        )
+        add_op(
+            state,
+            server.shell,
+            commands=["echo anotherhost"],
+            name="anotherhost op",
+            _parallel=2,
+            host=anotherhost,
+        )
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 2
+
+        somehost_op_hash = next(iter(state.ops[somehost]))
+        anotherhost_op_hash = next(iter(state.ops[anotherhost]))
+        assert state.op_meta[somehost_op_hash].global_arguments["_parallel"] == 1
+        assert state.op_meta[anotherhost_op_hash].global_arguments["_parallel"] == 2
+
+    def test_template_op_auto_name_does_not_include_data_kwargs(self):
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(
+            state,
+            files.template,
+            StringIO("password={{ password }}"),
+            "/etc/config.toml",
+            password="!CLEARTEXTPASSWORD",
+        )
+
+        [op_hash] = state.get_op_order()
+        op_args = state.op_meta[op_hash].args
+
+        assert any(arg.startswith("StringIO(hash=") for arg in op_args)
+        assert "/etc/config.toml" in op_args
+        assert "password=!CLEARTEXTPASSWORD" not in op_args
+
+        disconnect_all(state)
+
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
-    @patch("pyinfra.operations.files.os.path.isfile", lambda *args, **kwargs: True)
+    @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)
     def test_file_upload_op(self):
         inventory = make_inventory()
 
@@ -203,7 +340,7 @@ class TestOperationsApi(PatchSSHTestCase):
         state.current_stage = StateStage.Prepare
         connect_all(state)
 
-        with patch("pyinfra.operations.files.os.path.isfile", lambda *args, **kwargs: True):
+        with patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True):
             add_op(
                 state,
                 files.get,
@@ -318,10 +455,93 @@ class TestOperationsApi(PatchSSHTestCase):
             (
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_with_sudo_password(self):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        state.print_input = True
+        connect_all(state)
+
+        host = inventory.get_host("somehost")
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass"
+
+        add_op(
+            state,
+            files.rsync,
+            "src",
+            "dest",
+            _sudo=True,
+            _sudo_user="root",
+            _sudo_password="PASSWORD",
+        )
+
+        assert len(state.get_op_order()) == 1
+
+        with (
+            patch("pyinfra.connectors.ssh.echo") as fake_echo,
+            patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process,
+        ):
+            fake_run_local_process.return_value = 0, []
+            run_ops(state)
+
+        printed_command = fake_echo.call_args.args[0]
+        assert "PYINFRA_SUDO_PASSWORD=PASSWORD" not in printed_command
+        assert "*MASKED*" in printed_command
+
+        fake_run_local_process.assert_called_with(
+            (
+                "rsync -ax --delete --rsh "
+                '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
+                " --rsync-path 'env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass "
+                "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k -u root rsync' "
+                "src vagrant@somehost:dest"
+            ),
+            print_output=False,
+            print_prefix=host.print_prefix,
+        )
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
+    def test_rsync_op_retries_with_prompted_sudo_password(self):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        host = inventory.get_host("somehost")
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass"
+
+        add_op(state, files.rsync, "src", "dest", _sudo=True, _sudo_user="root")
+
+        assert len(state.get_op_order()) == 1
+
+        with (
+            patch("pyinfra.connectors.ssh.run_local_process") as fake_run_local_process,
+            patch("pyinfra.connectors.util.getpass", return_value="PASSWORD"),
+        ):
+            fake_run_local_process.side_effect = [
+                (1, CommandOutput([OutputLine("stderr", "sudo: a password is required")])),
+                (0, CommandOutput([])),
+            ]
+            run_ops(state)
+
+        assert fake_run_local_process.call_args_list[0].args[0] == (
+            "rsync -ax --delete --rsh "
+            '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
+            " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
+        )
+        assert fake_run_local_process.call_args_list[1].args[0] == (
+            "rsync -ax --delete --rsh "
+            '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\""'
+            " --rsync-path 'env SUDO_ASKPASS=/tmp/pyinfra-sudo-askpass "
+            "PYINFRA_SUDO_PASSWORD=PASSWORD sudo -H -A -k -u root rsync' "
+            "src vagrant@somehost:dest"
         )
 
     @patch("pyinfra.connectors.ssh.SSHConnector.check_can_rsync", lambda _: True)
@@ -343,7 +563,7 @@ class TestOperationsApi(PatchSSHTestCase):
             (
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=no\\""'
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -379,7 +599,7 @@ class TestOperationsApi(PatchSSHTestCase):
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes '
                 '-o \\"StrictHostKeyChecking=no\\" -F /home/me/ssh_test_config"'
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -407,7 +627,7 @@ class TestOperationsApi(PatchSSHTestCase):
                 "rsync -ax --delete --rsh "
                 '"ssh -o BatchMode=yes -o \\"StrictHostKeyChecking=accept-new\\" '
                 "-F '/home/me/ssh_test_config && echo hi'\""
-                " --rsync-path 'sudo -u root rsync' src vagrant@somehost:dest"
+                " --rsync-path 'sudo -H -n -u root rsync' src vagrant@somehost:dest"
             ),
             print_output=False,
             print_prefix=inventory.get_host("somehost").print_prefix,
@@ -761,6 +981,84 @@ class TestOperationOrdering(PatchSSHTestCase):
             # Ensure somehost has two ops and anotherhost only has the one
             assert len(state.ops[inventory.get_host("somehost")]) == 2
             assert len(state.ops[inventory.get_host("anotherhost")]) == 2
+
+    # Operations called in a plain loop share the same stack position, so their
+    # hash must come from the name & arguments - otherwise per-host data makes
+    # different operations collapse into one (#1370).
+    def test_cli_op_loop_per_host_data_no_hash_collision(self):
+        inventory = make_inventory(
+            hosts=(
+                ("somehost", {"users": ["user-1", "user-2"]}),
+                ("anotherhost", {"users": ["user-5"]}),
+            ),
+        )
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        state.current_deploy_filename = __file__
+
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                for name in ("somehost", "anotherhost"):
+                    host = inventory.get_host(name)
+                    with ctx_host.use(host):
+                        for user in host.data.users:
+                            server.shell(  # called on *the same line* for every host/user
+                                name=f"Create {user} user",
+                                commands=[f"echo {user}"],
+                            )
+        finally:
+            ctx_state.reset()
+            ctx_host.reset()
+            pyinfra.is_cli = False
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 3
+
+        names_by_host = {
+            host_name: {
+                name for op_hash in state.ops[host] for name in state.op_meta[op_hash].names
+            }
+            for host_name, host in (("somehost", somehost), ("anotherhost", anotherhost))
+        }
+        assert names_by_host == {
+            "somehost": {"Create user-1 user", "Create user-2 user"},
+            "anotherhost": {"Create user-5 user"},
+        }
+
+    # Identical operations called in a loop (same position, same name & arguments)
+    # must still be deduplicated by appending a counter to the hash.
+    def test_cli_op_loop_identical_ops_dedupe(self):
+        inventory = make_inventory(hosts=("somehost",))
+
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        state.current_deploy_filename = __file__
+
+        pyinfra.is_cli = True
+
+        try:
+            with ctx_state.use(state):
+                with ctx_host.use(inventory.get_host("somehost")):
+                    for _ in range(3):
+                        server.shell(commands=["echo same"])  # called on *the same line*
+        finally:
+            ctx_state.reset()
+            ctx_host.reset()
+            pyinfra.is_cli = False
+
+        op_order = state.get_op_order()
+        assert len(op_order) == 3
+        assert op_order[1] == f"{op_order[0]}-0"
+        assert op_order[2] == f"{op_order[0]}-0-1"
 
     # In API mode, pyinfra *overrides* the line numbers such that whenever an
     # operation or deploy is added it is simply appended. This makes sense as
@@ -1137,6 +1435,127 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertEqual(op_meta.max_retries, 3)
         self.assertTrue(op_meta.was_retried)
         self.assertTrue(op_meta.retry_succeeded)
+
+
+class TestRunNoWaitOps(PatchSSHTestCase):
+    """
+    `no_wait` runs all of a host's operations in a single greenlet, so a failure leaves that
+    greenlet as an exception rather than as a return value: it has to be read back, or the host
+    is never failed and the run reports success.
+    """
+
+    def _make_state(self, hosts=("somehost",)):
+        inventory = make_inventory(hosts=hosts)
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+        return state, inventory
+
+    def test_no_wait_fails_the_host_and_stops_its_operations(self):
+        state, inventory = self._make_state()
+        somehost = inventory.get_host("somehost")
+
+        add_op(state, server.shell, commands=["/bin/false"])
+        add_op(state, server.shell, commands=["echo second"])
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (False, FakeBuffer("", FakeChannel(1)))
+
+            with self.assertRaises(PyinfraError) as e:
+                run_ops(state, no_wait=True)
+
+        # The only host failed, so there is nothing left to run
+        assert e.exception.args[0] == "No hosts remaining!"
+        assert somehost in state.failed_hosts
+        # The failing operation is counted, the one behind it never ran
+        assert state.results[somehost].error_ops == 1
+        assert state.results[somehost].success_ops == 0
+
+    def test_no_wait_fails_only_the_failing_host(self):
+        state, inventory = self._make_state(hosts=("somehost", "anotherhost"))
+        somehost = inventory.get_host("somehost")
+        anotherhost = inventory.get_host("anotherhost")
+
+        add_op(state, server.shell, commands=["echo hello"])
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.side_effect = [
+                (False, FakeBuffer("", FakeChannel(1))),
+                (True, FakeBuffer("output", FakeChannel(0))),
+            ]
+
+            # One host failing is not a reason to stop the run for the other one
+            run_ops(state, no_wait=True)
+
+        assert len(state.failed_hosts) == 1
+        assert (somehost in state.failed_hosts) != (anotherhost in state.failed_hosts)
+
+    def test_no_wait_reports_a_connector_error_as_a_host_failure(self):
+        state, inventory = self._make_state()
+        somehost = inventory.get_host("somehost")
+
+        add_op(state, server.shell, commands=["echo hello"])
+
+        def refuse(*args, **kwargs):
+            raise PyinfraError("the connector refused")
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command", refuse):
+            with self.assertRaises(PyinfraError) as e:
+                run_ops(state, no_wait=True)
+
+        assert e.exception.args[0] == "No hosts remaining!"
+        assert somehost in state.failed_hosts
+
+
+class TestRunSingleOpFailPercent(PatchSSHTestCase):
+    """
+    `_serial` and `_parallel` run an operation on one host or batch at a time, so a host that
+    fails has to be failed before the next one starts, or the fail percent can't stop the run.
+    """
+
+    def _make_state(self, fail_percent=None):
+        inventory = make_inventory(hosts=("somehost", "anotherhost"))
+        state = State(inventory, Config(FAIL_PERCENT=fail_percent))
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+        return state
+
+    def _run_failing_op(self, state, **op_kwargs):
+        add_op(state, server.shell, "/bin/false", **op_kwargs)
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (False, FakeBuffer("", FakeChannel(127)))
+
+            with self.assertRaises(PyinfraError) as e:
+                run_ops(state)
+
+        return e.exception, fake_run_command.call_count
+
+    def test_serial_op_stops_at_fail_percent(self):
+        state = self._make_state(fail_percent=0)
+        exception, call_count = self._run_failing_op(state, _serial=True)
+
+        assert exception.args[0] == "Over 0% of hosts failed (50%)"
+        # The second host never ran the operation
+        assert call_count == 1
+        assert len(state.failed_hosts) == 1
+
+    def test_parallel_op_stops_at_fail_percent(self):
+        state = self._make_state(fail_percent=0)
+        exception, call_count = self._run_failing_op(state, _parallel=1)
+
+        assert exception.args[0] == "Over 0% of hosts failed (50%)"
+        # The second batch never ran the operation
+        assert call_count == 1
+        assert len(state.failed_hosts) == 1
+
+    def test_serial_op_without_fail_percent_runs_on_all_hosts(self):
+        state = self._make_state()
+        exception, call_count = self._run_failing_op(state, _serial=True)
+
+        assert exception.args[0] == "No hosts remaining!"
+        assert call_count == 2
+        assert len(state.failed_hosts) == 2
 
 
 this_filename = path.join("tests", "test_api", "test_api_operations.py")

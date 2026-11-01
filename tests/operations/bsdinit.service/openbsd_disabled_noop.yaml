@@ -1,0 +1,12 @@
+args:
+  - rad
+kwargs:
+  enabled: false
+  running: false
+facts:
+  server.Os: OpenBSD
+  bsdinit.RcdStatus:
+    rad: false
+  bsdinit.RcdEnabled: {}
+commands: []
+noop_description: service rad is disabled

@@ -4,7 +4,12 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import os
-from os import path
+from base64 import b64decode
+from binascii import Error as BinasciiError
+from collections.abc import Iterator
+from fnmatch import fnmatchcase
+from pathlib import Path
+from time import time
 
 from gevent.lock import BoundedSemaphore
 from paramiko import (
@@ -16,21 +21,31 @@ from paramiko import (
 )
 from paramiko.agent import AgentRequestHandler
 from paramiko.hostkeys import HostKeyEntry
+from paramiko.message import Message
+from paramiko.pkey import PKey, UnknownKeyType
 from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.util import memoize
-from pyinfra.connectors.ssh_util import load_key_with_certificate
+from pyinfra.connectors.ssh_util import (
+    _patch_paramiko_sk_key_support,
+    load_key_with_certificate,
+)
 
 from .config import SSHConfig
 
 HOST_KEYS_LOCK = BoundedSemaphore()
 
+CertAuthority = tuple[tuple[str, ...], PKey]
+
 
 class StrictPolicy(MissingHostKeyPolicy):
     @override
     def missing_host_key(self, client, hostname, key):
+        if _host_certificate_is_trusted(client, hostname, key):
+            return
+
         logger.error("No host key for %s found in known_hosts", hostname)
         raise SSHException(f"StrictPolicy: No host key for {hostname} found in known_hosts")
 
@@ -62,6 +77,9 @@ def append_hostkey(client, hostname, key):
 class AcceptNewPolicy(MissingHostKeyPolicy):
     @override
     def missing_host_key(self, client, hostname, key):
+        if _host_certificate_is_trusted(client, hostname, key):
+            return
+
         logger.warning(
             (
                 f"No host key for {hostname} found in known_hosts, "
@@ -76,6 +94,9 @@ class AcceptNewPolicy(MissingHostKeyPolicy):
 class AskPolicy(MissingHostKeyPolicy):
     @override
     def missing_host_key(self, client, hostname, key):
+        if _host_certificate_is_trusted(client, hostname, key):
+            return
+
         should_continue = input(
             f"No host key for {hostname} found in known_hosts, do you want to continue [y/n] ",
         )
@@ -101,7 +122,9 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
     falls back to the implicit ``<key>-cert.pub`` lookup so OpenSSH-style CA
     auth works without explicit pyinfra ``ssh_key`` configuration (issue #1569).
     Silent fall-through when no identity exists keeps the legacy paramiko
-    ``key_filename`` flow for missing or otherwise unloadable files.
+    ``key_filename`` flow for missing or otherwise unloadable files. An encrypted
+    identity prompts for its passphrase under the CLI and raises in API mode,
+    both handled inside :func:`load_key_with_certificate` (issue #1917).
     """
 
     identity_files = host_config.get("identityfile") or []
@@ -114,8 +137,8 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
     certificate_filename = certificate_files[0] if certificate_files else None
 
     for identity_file in identity_files:
-        expanded = path.expanduser(identity_file)
-        if not path.isfile(expanded):
+        expanded = Path(identity_file).expanduser()
+        if not expanded.is_file():
             continue
         try:
             cfg["pkey"] = load_key_with_certificate(
@@ -146,13 +169,183 @@ def get_ssh_config(user_config_file=None):
     logger.debug("Loading SSH config: %s", user_config_file)
 
     if user_config_file is None:
-        user_config_file = path.expanduser("~/.ssh/config")
+        user_config_file = os.path.expanduser("~/.ssh/config")
 
-    if path.exists(user_config_file):
+    if Path(user_config_file).exists():
         with open(user_config_file, encoding="utf-8") as f:
             ssh_config = SSHConfig()
             ssh_config.parse(f)
             return ssh_config
+
+
+def _get_cert_authorities(host_keys: HostKeys) -> list[CertAuthority]:
+    return getattr(host_keys, "_pyinfra_cert_authorities", [])
+
+
+def _add_cert_authority(
+    host_keys: HostKeys, host_patterns: str, key_type: str, key_data: str
+) -> None:
+    key = PKey.from_type_string(key_type, b64decode(key_data))
+    cert_authorities = _get_cert_authorities(host_keys)
+    cert_authorities.append((tuple(host_patterns.split(",")), key))
+    setattr(host_keys, "_pyinfra_cert_authorities", cert_authorities)
+
+
+def _hostname_matches(patterns: tuple[str, ...], *hostnames: str) -> bool:
+    matched = False
+
+    for pattern in patterns:
+        negated = pattern.startswith("!")
+        if negated:
+            pattern = pattern[1:]
+
+        # OpenSSH patterns use square brackets literally, unlike ``fnmatch``.
+        pattern = pattern.replace("[", "[[]")
+        if any(fnmatchcase(hostname, pattern) for hostname in hostnames):
+            if negated:
+                return False
+            matched = True
+
+    return matched
+
+
+def _hostname_without_port(hostname: str) -> str:
+    if hostname.startswith("["):
+        host, separator, port = hostname[1:].rpartition("]:")
+        if separator and port.isdecimal():
+            return host
+    return hostname
+
+
+def _key_from_blob(key_blob: bytes) -> PKey:
+    message = Message(key_blob)
+    key_type = message.get_text()
+    return PKey.from_type_string(key_type, key_blob)
+
+
+def _consume_certificate_key(message: Message, key_type: str) -> bool:
+    if key_type.startswith(("ssh-rsa-cert-", "rsa-sha2-256-cert-", "rsa-sha2-512-cert-")):
+        message.get_mpint()
+        message.get_mpint()
+        return True
+
+    if key_type == "ssh-ed25519-cert-v01@openssh.com":
+        message.get_string()
+        return True
+
+    if key_type.startswith("ecdsa-sha2-") and key_type.endswith("-cert-v01@openssh.com"):
+        message.get_text()
+        message.get_string()
+        return True
+
+    return False
+
+
+def _host_certificate_is_trusted(client, hostname: str, key: PKey) -> bool:
+    host_keys = getattr(client, "_host_keys", None)
+    if host_keys is None:
+        return False
+
+    cert_authorities = _get_cert_authorities(host_keys)
+    if not cert_authorities:
+        return False
+
+    public_blob = getattr(key, "public_blob", None)
+    if public_blob is None or not public_blob.key_type.endswith("-cert-v01@openssh.com"):
+        return False
+
+    message = Message(public_blob.key_blob)
+    cert_key_type = message.get_text()
+    message.get_string()  # nonce
+    if not _consume_certificate_key(message, cert_key_type):
+        return False
+
+    message.get_int64()  # serial
+    cert_type = message.get_int()
+    if cert_type != 2:  # SSH2_CERT_TYPE_HOST
+        return False
+
+    message.get_text()  # key id
+    principals = Message(message.get_string())
+    valid_after = message.get_int64()
+    valid_before = message.get_int64()
+    message.get_string()  # critical options
+    message.get_string()  # extensions
+    message.get_string()  # reserved
+    signature_key = message.get_string()
+    signature = message.get_string()
+
+    now = int(time())
+    if now < valid_after or now > valid_before:
+        return False
+
+    certificate_hostname = _hostname_without_port(hostname)
+    if not any(
+        principal == certificate_hostname for principal in _iter_certificate_principals(principals)
+    ):
+        return False
+
+    try:
+        signing_key = _key_from_blob(signature_key)
+    except (SSHException, UnknownKeyType):
+        return False
+
+    signed_data = public_blob.key_blob[: len(public_blob.key_blob) - len(signature) - 4]
+
+    for patterns, ca_key in cert_authorities:
+        if not _hostname_matches(patterns, hostname, certificate_hostname):
+            continue
+        if ca_key.asbytes() != signing_key.asbytes():
+            continue
+        if ca_key.verify_ssh_sig(signed_data, Message(signature)):
+            return True
+
+    return False
+
+
+def _iter_certificate_principals(principals: Message) -> Iterator[str]:
+    while principals.get_remainder():
+        yield principals.get_text()
+
+
+def _load_host_keys_file(host_keys: HostKeys, filename: str) -> None:
+    """
+    Load a single known_hosts file, skipping any line paramiko cannot parse.
+
+    ``HostKeys.load`` only ignores lines that raise ``SSHException``, so a line
+    it fails on for any other reason (``@cert-authority``/``@revoked`` markers,
+    a truncated key) aborts the whole file and drops every valid key in it. That
+    makes pyinfra treat known hosts as unknown and append them again (issue
+    #1339). See: https://github.com/paramiko/paramiko/pull/1990
+    """
+
+    with open(filename) as f:
+        for lineno, line in enumerate(f, 1):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            if line.startswith("@cert-authority "):
+                try:
+                    _, host_patterns, key_type, key_data, *_ = line.split(None, 4)
+                    _add_cert_authority(host_keys, host_patterns, key_type, key_data)
+                except (BinasciiError, SSHException, UnknownKeyType, ValueError) as e:
+                    logger.warning("Skipping bad host CA line %s:%i: %s", filename, lineno, e)
+                continue
+
+            try:
+                entry = HostKeyEntry.from_line(line, lineno)
+            # Broad by necessity: paramiko raises a bare ``Exception`` subclass
+            # (``InvalidHostKey``) for undecodable key data.
+            except Exception as e:
+                logger.warning("Skipping bad host keys line %s:%i: %s", filename, lineno, e)
+                continue
+
+            if entry is None:
+                continue
+
+            for hostname in entry.hostnames:
+                host_keys.add(hostname, entry.key.get_name(), entry.key)
 
 
 @memoize
@@ -168,10 +361,9 @@ def get_host_keys(filenames):
 
         for filename in filenames:
             try:
-                host_keys.load(filename)
-            # When paramiko encounters a bad host keys line it sometimes bails the
-            # entire load incorrectly.
-            # See: https://github.com/paramiko/paramiko/pull/1990
+                _load_host_keys_file(host_keys, filename)
+            # A missing or unreadable known_hosts file is not fatal, the keys
+            # from any other files should still be used.
             except Exception as e:
                 logger.warning("Failed to load host keys from %s: %s", filename, e)
 
@@ -195,6 +387,8 @@ class SSHClient(ParamikoClient):
         _pyinfra_ssh_paramiko_connect_kwargs=None,
         **kwargs,
     ):
+        _patch_paramiko_sk_key_support()
+
         (
             hostname,
             config,
@@ -210,10 +404,13 @@ class SSHClient(ParamikoClient):
             strict_host_key_checking=_pyinfra_ssh_strict_host_key_checking,
         )
         self.set_missing_host_key_policy(missing_host_key_policy)
+        proxyjump_sock = config.get("sock")
         config.update(kwargs)
+        if proxyjump_sock is not None:
+            config["sock"] = proxyjump_sock
 
         if _pyinfra_ssh_known_hosts_file:
-            host_keys_files = (path.expanduser(_pyinfra_ssh_known_hosts_file),)
+            host_keys_files = (os.path.expanduser(_pyinfra_ssh_known_hosts_file),)
 
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_files)
@@ -279,7 +476,7 @@ class SSHClient(ParamikoClient):
         forward_agent = False
         identity_agent = None
         missing_host_key_policy = get_missing_host_key_policy(strict_host_key_checking)
-        host_keys_files = (path.expanduser("~/.ssh/known_hosts"),)
+        host_keys_files: tuple[str, ...] = (os.path.expanduser("~/.ssh/known_hosts"),)
 
         ssh_config = get_ssh_config(ssh_config_file)
         if not ssh_config:
@@ -305,7 +502,7 @@ class SSHClient(ParamikoClient):
         if "userknownhostsfile" in host_config:
             # OpenSSH supports multiple space-separated known hosts files
             host_keys_files = tuple(
-                path.expanduser(f) for f in host_config["userknownhostsfile"].split()
+                os.path.expanduser(f) for f in host_config["userknownhostsfile"].split()
             )
 
         if "hostname" in host_config:
@@ -314,7 +511,11 @@ class SSHClient(ParamikoClient):
         if "user" in host_config:
             cfg["username"] = host_config["user"]
 
-        if "identityfile" in host_config:
+        # An explicit pyinfra ``ssh_key`` (already loaded into ``pkey`` using
+        # ``ssh_key_password``) wins over any ssh_config ``IdentityFile``, the
+        # same way ``ssh -i`` overrides the config (issue #1852). Loading the
+        # config identity here would otherwise prompt for its passphrase.
+        if "identityfile" in host_config and "pkey" not in cfg:
             cfg["key_filename"] = host_config["identityfile"]
             _attach_identity_with_certificate(cfg, host_config)
 
@@ -333,13 +534,17 @@ class SSHClient(ParamikoClient):
         if "identityagent" in host_config:
             agent_path = host_config["identityagent"]
             if agent_path.lower() != "none":
-                identity_agent = path.expanduser(agent_path)
+                identity_agent = os.path.expanduser(agent_path)
+
+        proxyjump = host_config.get("proxyjump")
 
         if "proxycommand" in host_config:
             cfg["sock"] = ProxyCommand(host_config["proxycommand"])
 
-        elif "proxyjump" in host_config:
-            hops = host_config["proxyjump"].split(",")
+        # ``ProxyJump none`` disables jumping entirely (issue #1445), the same as
+        # OpenSSH - without this we'd jump via a host literally called "none".
+        elif proxyjump and proxyjump.strip().lower() != "none":
+            hops = proxyjump.split(",")
             sock = None
             # Propagate the target's timeout down so hop connections and the
             # direct-tcpip channel don't hang forever when the network misbehaves

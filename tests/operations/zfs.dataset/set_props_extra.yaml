@@ -1,0 +1,13 @@
+args:
+  - tank/home/james
+kwargs:
+  present: true
+  quota: 1T
+  properties:
+    compression: lz4
+facts:
+  zfs.ZfsDatasets:
+    tank/home/james:
+      compression: zstd
+commands:
+  - zfs set compression=lz4 quota=1T tank/home/james

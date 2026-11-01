@@ -5,6 +5,6 @@
         "mysql_user": "root"
     },
     "commands": [
-        "mysql somedb -u\"root\" < somefile"
+        "mysql somedb -uroot < somefile"
     ]
 }

@@ -8,7 +8,7 @@ Connectors enable pyinfra to integrate with other tools out of the box. Connecto
 
 Each connector page is listed below and contains examples as well as a list of available data that can be used to configure the connector.
 
-**Want a new connector?** Check out [the writing connectors guide](../api/connectors.md).
+**Want a new connector?** Check out [the writing connectors guide](api/connectors.md).
 
 ### Popular connectors
 

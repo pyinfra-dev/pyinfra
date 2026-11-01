@@ -21,8 +21,8 @@
         }
     },
     "commands": [
-        "crontab -l  > _tempfile_",
+        "crontab -l > _tempfile_",
         "sed -i.a-timestamp 's/.*command_to_change.*/* * * 1 * command_to_be '\"'\"'with_a_quoted_argument'\"'\"'/' _tempfile_ && rm -f _tempfile_.a-timestamp",
-        "crontab  _tempfile_"
+        "crontab _tempfile_"
     ]
 }

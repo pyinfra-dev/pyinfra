@@ -22,3 +22,6 @@ uv run python scripts/generate_connectors_docs.py
 
 echo "### Generating arguments snippet"
 uv run python scripts/generate_arguments_doc.py
+
+echo "### Generating llms.txt"
+uv run python scripts/generate_llms_txt.py

@@ -1,0 +1,12 @@
+command: 'BINDIR=$(go env GOBIN); [ -z "$BINDIR" ] && BINDIR="$(go env GOPATH)/bin"; ! test -d "$BINDIR" || find "$BINDIR" -maxdepth 1 -type f -perm -u+x -exec go version -m {} + 2>/dev/null'
+requires_command: go
+output:
+  - "/home/user/go/bin/bitmagnet: go1.22.0"
+  - "\tpath\tgithub.com/bitmagnet-io/bitmagnet"
+  - "\tmod\tgithub.com/bitmagnet-io/bitmagnet\tv0.9.0\th1:aaaa"
+  - "\tdep\tgithub.com/example/lib\tv0.1.0\th1:bbbb"
+  - "/home/user/go/bin/devbin: go1.22.0"
+  - "\tpath\tcommand-line-arguments"
+  - "\tmod\tgithub.com/example/dev\t(devel)"
+fact:
+  github.com/bitmagnet-io/bitmagnet: ["v0.9.0"]

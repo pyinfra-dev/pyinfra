@@ -1,0 +1,16 @@
+{
+    "args": ["INPUT"],
+    "kwargs": {
+        "jump": "ACCEPT",
+        "protocol": "TCP",
+        "comment": "This rule is amazing!"
+    },
+    "facts": {
+        "iptables.IptablesRules": {
+            "table=filter": []
+        }
+    },
+    "commands": [
+        "iptables -t filter -A INPUT -p tcp -m comment --comment 'This rule is amazing!' -j ACCEPT"
+    ]
+}

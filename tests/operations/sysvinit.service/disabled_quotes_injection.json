@@ -1,0 +1,19 @@
+{
+    "args": ["x; reboot"],
+    "kwargs": {
+        "enabled": false
+    },
+    "facts": {
+        "sysvinit.InitdStatus": {
+            "x; reboot": true
+        },
+        "files.FindLinks": {
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/etc, path_match=/etc/rc*.d/S*x; reboot, quote_path=True, regex=None, size=None": [
+                "/etc/rc2.d/S20x; reboot"
+            ]
+        }
+    },
+    "commands": [
+        "rm -f '/etc/rc2.d/S20x; reboot'"
+    ]
+}

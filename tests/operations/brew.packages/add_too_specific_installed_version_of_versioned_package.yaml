@@ -1,0 +1,13 @@
+#
+# Brew will generate an error as the formula for python are only python@X.Y but it varies by
+# package (e.g. node is just node@X) so we need to generate the command and let brew reject it.
+#
+args:
+  - python@3.12.7
+facts:
+  brew.BrewPackages:
+    python@3.12:
+      - 'set:'
+      - 3.12.7
+commands:
+  - brew install python@3.12.7

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from pyinfra import logger
 from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.operation import operation
@@ -133,6 +135,15 @@ def crontab(
             day_of_week = "*"
         new_crontab_line = f"{minute} {hour} {day_of_month} {month} {day_of_week} {command}"
 
+    # The existing command is matched literally: escape the characters that are
+    # special in a sed basic regular expression (e.g. ``*`` in ``backup-*``).
+    # ``^`` and ``$`` stay as they are: the ``.*`` around the pattern means they
+    # are never at its ends, where they would be anchors.
+    existing_crontab_match = re.sub(r"([\\.*\[\]])", r"\\\1", existing_crontab_match)
+    if interpolate_variables:
+        # The sed script is then in double quotes, so shell would unescape the
+        # backslashes and expand $ and backticks: keep them as they are
+        existing_crontab_match = re.sub(r"([\\$`])", r"\\\1", existing_crontab_match)
     existing_crontab_match = f".*{existing_crontab_match}.*"
 
     # Don't want the cron and it does exist? Remove the line
@@ -187,19 +198,19 @@ def crontab(
             )
 
     if edit_commands:
-        crontab_args = []
+        crontab_args: list[str | QuoteString] = []
         if user:
-            crontab_args.append(f"-u {user}")
+            crontab_args += ["-u", QuoteString(user)]
 
         # List the crontab into a temporary file if it exists
         if ctb:
-            yield f"crontab -l {' '.join(crontab_args)} > {temp_filename}"
+            yield StringCommand("crontab -l", *crontab_args, ">", QuoteString(temp_filename))
 
         # Now yield any edits
         yield from edit_commands
 
         # Finally, use the tempfile to write a new crontab
-        yield f"crontab {' '.join(crontab_args)} {temp_filename}"
+        yield StringCommand("crontab", *crontab_args, QuoteString(temp_filename))
     else:
         host.noop(
             f"crontab {command} {'exists' if present else 'does not exist'}",

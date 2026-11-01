@@ -1,0 +1,11 @@
+command: pnpm --global list --depth=0 --json
+requires_command: pnpm
+output: |
+  [
+    {
+      "path": "/root/.local/share/pnpm/global/5",
+      "private": true,
+      "dependencies": {}
+    }
+  ]
+fact: {}

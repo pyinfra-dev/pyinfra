@@ -1,0 +1,17 @@
+args:
+  - remote-host.net
+kwargs:
+  port: 2222
+facts:
+  server.Home: /home/pyinfra
+  files.Directory:
+    path=/home/pyinfra/.ssh:
+      mode: 700
+  files.FindInFile:
+    # The broad lookup finds other ports, but port 2222 is absent.
+    extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=remote-host.net:
+      - remote-host.net ssh-ed25519 AAAA
+      - '[remote-host.net]:22222 ssh-ed25519 AAAA'
+      - '[remote-host.net]:2223 ssh-ed25519 AAAA'
+commands:
+  - ssh-keyscan -p 2222 remote-host.net >> /home/pyinfra/.ssh/known_hosts

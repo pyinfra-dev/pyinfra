@@ -1,0 +1,6 @@
+args:
+  - ["github.com/bitmagnet-io/bitmagnet"]
+facts:
+  go.GoPackages: {}
+commands:
+  - go install github.com/bitmagnet-io/bitmagnet@latest

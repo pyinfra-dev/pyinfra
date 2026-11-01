@@ -1,0 +1,5 @@
+command: podman image ls --format=json --all
+requires_command: podman
+output: |
+  []
+fact: []

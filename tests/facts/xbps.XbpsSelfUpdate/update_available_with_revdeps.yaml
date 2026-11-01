@@ -1,0 +1,8 @@
+command: xbps-install -n -u xbps
+requires_command: xbps-install
+output: |
+  xbps-triggers-0.128_1 update noarch https://repo-default.voidlinux.org/current 13612 5228
+  xbps-0.60.5_1 update x86_64 https://repo-default.voidlinux.org/current 1858672 607744
+fact:
+  - xbps-triggers-0.128_1
+  - xbps-0.60.5_1

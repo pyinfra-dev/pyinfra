@@ -48,14 +48,14 @@
             "path=/home/somedir/underthat": null
         },
         "files.FindFiles": {
-            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, quote_path=True, regex=None, size=None": [
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, path_match=None, quote_path=True, regex=None, size=None": [
                 "/home/somedir/deleteme.txt",
                 "/home/somedir/nodelete.pyc"
             ],
             "path=/home/somedir/underthat": []
         },
         "files.FindLinks": {
-            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, quote_path=True, regex=None, size=None": []
+            "args=None, fname=None, iname=None, max_size=None, maxdepth=None, min_size=None, path=/home/somedir, path_match=None, quote_path=True, regex=None, size=None": []
         },
         "files.Link": {
             "path=/home/somedir": false

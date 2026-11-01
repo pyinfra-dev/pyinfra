@@ -1,0 +1,13 @@
+{
+  "kwargs": {
+    "packages": ["x; reboot"],
+    "remote": "flathub"
+  },
+  "facts": {
+    "flatpak.FlatpakPackage": {},
+    "flatpak.FlatpakPackages": {
+      "user=False": []
+    }
+  },
+  "commands": ["flatpak install --noninteractive flathub 'x; reboot'"]
+}

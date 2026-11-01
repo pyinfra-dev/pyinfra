@@ -1,0 +1,8 @@
+args:
+  - ["@babel/core", "@types/node"]
+facts:
+  pnpm.PnpmPackages:
+    directory=None:
+      "@types/node": ["22.10.2"]
+commands:
+  - pnpm --global add @babel/core

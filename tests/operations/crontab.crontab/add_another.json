@@ -8,9 +8,9 @@
         }
     },
     "commands": [
-        "crontab -l  > _tempfile_",
+        "crontab -l > _tempfile_",
         "echo '' >> _tempfile_",
         "echo '* * * * * this_is_a_command' >> _tempfile_",
-        "crontab  _tempfile_"
+        "crontab _tempfile_"
     ]
 }

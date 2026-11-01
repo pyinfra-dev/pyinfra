@@ -17,7 +17,7 @@ def key(src: str):
     """
     Add dnf gpg keys with ``rpm``.
 
-    + key: filename or URL
+    + src: filename or URL
 
     Note:
         always returns one command, not idempotent
@@ -37,7 +37,7 @@ def key(src: str):
 
     """
 
-    yield f"rpm --import {src}"
+    yield StringCommand("rpm --import", QuoteString(src))
 
 
 @operation()

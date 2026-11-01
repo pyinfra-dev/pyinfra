@@ -24,6 +24,8 @@ venv/
 docs/connectors/
 docs/facts/
 docs/operations/
+docs/llms.txt
+docs/llms-full.txt
 snippets/
 
 .idea/

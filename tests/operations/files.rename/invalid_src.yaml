@@ -1,0 +1,12 @@
+require_platform:
+  - Darwin
+  - Linux
+args:
+  - tmp/testfile
+  - tmp/renamed
+facts:
+  files.File:
+    path=tmp/testfile:
+exception:
+  name: OperationError
+  message: src tmp/testfile does not exist

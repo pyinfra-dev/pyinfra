@@ -1,0 +1,8 @@
+args:
+  - ["typescript"]
+facts:
+  pnpm.PnpmPackages:
+    directory=None:
+      typescript: ["5.7.2"]
+commands: []
+noop_description: "package typescript is installed (5.7.2)"

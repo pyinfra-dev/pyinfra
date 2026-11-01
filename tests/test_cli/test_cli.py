@@ -2,7 +2,8 @@ import json
 from os import path
 from unittest import TestCase
 
-from pyinfra_cli.cli import _main
+from pyinfra.api import Host, Inventory
+from pyinfra_cli.cli import _apply_inventory_exclude, _apply_inventory_limit, _main
 
 from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli
@@ -15,6 +16,59 @@ class TestCliEagerFlags(TestCase):
 
         result = run_cli("--help")
         assert result.exit_code == 0, result.stderr
+
+    def test_support_standalone(self):
+        # `pyinfra --support` must work without INVENTORY/OPERATIONS: the crash
+        # handler tells users to run exactly this.
+        result = run_cli("--support")
+        assert result.exit_code == 0, result.stderr
+        assert "pyinfra: v" in result.stderr
+
+
+class TestCliYesEnvVar(TestCase):
+    def _parse_yes(self, value):
+        import os
+
+        from pyinfra_cli.cli import app
+
+        os.environ["PYINFRA_YES"] = value
+        try:
+            _, bound, _ = app.parse_args(["inv.py", "server.shell", "x"], exit_on_error=False)
+            return bound.arguments["yes"]
+        finally:
+            del os.environ["PYINFRA_YES"]
+
+    def test_empty_is_false(self):
+        assert self._parse_yes("") is False
+
+    def test_whitespace_is_false(self):
+        assert self._parse_yes("  ") is False
+
+    def test_on_off(self):
+        assert self._parse_yes("on") is True
+        assert self._parse_yes("off") is False
+
+    def test_numeric(self):
+        assert self._parse_yes("1") is True
+        assert self._parse_yes("0") is False
+
+    def test_true_false_any_case(self):
+        assert self._parse_yes("true") is True
+        assert self._parse_yes("False") is False
+
+    def test_invalid_value_errors(self):
+        import os
+
+        from cyclopts import CycloptsError
+
+        from pyinfra_cli.cli import app
+
+        os.environ["PYINFRA_YES"] = "junk"
+        try:
+            with self.assertRaises(CycloptsError):
+                app.parse_args(["inv.py", "x"], exit_on_error=False, print_error=False)
+        finally:
+            del os.environ["PYINFRA_YES"]
 
 
 class TestOperationCli(PatchSSHTestCase):
@@ -226,6 +280,107 @@ class TestJsonOutput(PatchSSHTestCase):
         assert payload["results"] is not None
         assert set(payload["results"].keys()) == {"operations", "totals", "failed_hosts"}
 
+    def test_json_deploy_with_exclude(self):
+        result = run_cli(
+            "-y",
+            "--json",
+            "--exclude",
+            "somehost",
+            self.inventory,
+            "exec",
+            "--",
+            "echo hi",
+        )
+        payload = self._parse_stdout(result)
+        operation = payload["results"]["operations"][0]
+        assert operation["hosts"] == 1
+        assert operation["success"] == ["anotherhost"]
+
+
+class TestCliLimitExclude(TestCase):
+    def setUp(self):
+        self.inventory = Inventory(
+            (
+                [
+                    "app-1.net",
+                    "app-2.net",
+                    "db-1.net",
+                    "db-2.net",
+                ],
+                {},
+            ),
+            app_servers=(["app-1.net", "app-2.net"], {}),
+            db_servers=(["db-1.net", "db-2.net"], {}),
+        )
+
+    def _host_names(self, hosts: list[Host] | None) -> set[str]:
+        assert hosts is not None
+        return {host.name for host in hosts}
+
+    def test_apply_inventory_exclude_host(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(
+            self.inventory,
+            initial_limit,
+            ("app-2.net",),
+        )
+
+        assert self._host_names(limited_hosts) == {
+            "app-1.net",
+            "db-1.net",
+            "db-2.net",
+        }
+
+    def test_apply_inventory_exclude_glob(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(self.inventory, initial_limit, ("db*",))
+
+        assert self._host_names(limited_hosts) == {"app-1.net", "app-2.net"}
+
+    def test_apply_inventory_exclude_group(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(
+            self.inventory,
+            initial_limit,
+            ("db_servers",),
+        )
+
+        assert self._host_names(limited_hosts) == {"app-1.net", "app-2.net"}
+
+    def test_apply_inventory_limit_then_exclude(self):
+        initial_limit = _apply_inventory_limit(self.inventory, ("app_servers",))
+        limited_hosts = _apply_inventory_exclude(
+            self.inventory,
+            initial_limit,
+            ("app-2.net",),
+        )
+
+        assert self._host_names(limited_hosts) == {"app-1.net"}
+
+    def test_apply_inventory_exclude_no_match_warns(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+
+        with self.assertLogs("pyinfra", level="WARNING") as logs:
+            limited_hosts = _apply_inventory_exclude(
+                self.inventory,
+                initial_limit,
+                ("missing-host",),
+            )
+
+        assert self._host_names(limited_hosts) == {
+            "app-1.net",
+            "app-2.net",
+            "db-1.net",
+            "db-2.net",
+        }
+        assert "No host matches found for --exclude pattern: missing-host" in "\n".join(logs.output)
+
+    def test_apply_inventory_exclude_all_hosts(self):
+        initial_limit = _apply_inventory_limit(self.inventory, None)
+        limited_hosts = _apply_inventory_exclude(self.inventory, initial_limit, ("*",))
+
+        assert limited_hosts == []
+
 
 class TestDirectMainExecution(PatchSSHTestCase):
     """
@@ -260,6 +415,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
                 dry=False,
                 yes=True,
                 limit=None,
+                exclude=tuple(),
                 no_wait=False,
                 serial=False,
                 shell_executable=None,

@@ -6,16 +6,15 @@
     },
     "facts": {
         "files.File": {
-            "path=/tmp/src_dir/file": true,
-            "path=/tmp/dest_dir/file": null
+            "path=/tmp/src_dir/file": true
         },
         "files.Directory": {
-            "path=/tmp/dest_dir": null,
-            "path=/tmp/src_dir/file": null
+            "path=/tmp/src_dir/file": false,
+            "path=/tmp/dest_dir": false
         }
     },
     "exception": {
         "name": "OperationError",
-        "message": "dest /tmp/dest_dir is not an existing directory"
+        "message": "dest /tmp/dest_dir is not a directory"
     }
 }

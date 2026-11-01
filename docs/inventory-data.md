@@ -5,7 +5,7 @@
 
 ## Inventory Files
 
-Inventory files contain groups of hosts. Groups are defined as a `list` or `tuple`. For example, this inventory creates two groups, `app_servers` and `db_servers`. Note that group names cannot start `_`:
+Inventory files contain groups of hosts. Groups are defined as a `list` or `tuple`. For example, this inventory creates two groups, `app_servers` and `db_servers`. Note that group names cannot start with `_`:
 
 ```python
 app_servers = [
@@ -94,6 +94,8 @@ def make_prod():
     The `group_data/` directory convention described below is tied to the location of an inventory **file**. It is not loaded when the inventory comes from a function or module attribute — there is no on-disk inventory to anchor the lookup against.
 
     Provide per-group data via the `(hosts, data)` tuple in the function's return value, or compose the data inside the function itself (e.g. by reading files, calling APIs, or importing Python modules). The function-based inventory loader is also still in alpha and will log a warning at startup.
+
+See [Dynamic Inventories & Data](examples/dynamic_inventories_data.md) for a worked example, including building a fake-data test inventory against the `@fake` connector.
 
 ## Project Layout
 
@@ -191,7 +193,7 @@ ssh_key = "~/.ssh/some_key"
 ssh_key_password = "password for key"
 ```
 
-The [Connectors Index](connectors/index.md) contains full details of which data keys are available in each connector.
+The [Connectors Index](connectors.md) contains full details of which data keys are available in each connector.
 
 ## Global Arguments with Data
 

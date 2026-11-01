@@ -1,0 +1,12 @@
+{
+    "kwargs": {
+        "id": "a; rm -rf /",
+        "image": "ubuntu:16.04"
+    },
+    "facts": {
+        "lxd.LxdContainers": []
+    },
+    "commands": [
+        "lxc launch ubuntu:16.04 'a; rm -rf /' < /dev/null"
+    ]
+}

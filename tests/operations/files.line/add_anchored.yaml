@@ -1,0 +1,8 @@
+args:
+  - /etc/apk/repositories
+  - ^https://dl-cdn.alpinelinux.org/alpine/v3.21/community$
+facts:
+  files.FindInFile:
+    "extended_regex=False, interpolate_variables=False, path=/etc/apk/repositories, pattern=^https://dl-cdn.alpinelinux.org/alpine/v3.21/community$": []
+commands:
+  - echo https://dl-cdn.alpinelinux.org/alpine/v3.21/community >> /etc/apk/repositories

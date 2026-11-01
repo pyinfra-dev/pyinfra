@@ -1,0 +1,9 @@
+args:
+  - app
+  - ["ls"]
+kwargs:
+  detach: true
+  privileged: true
+  tty: true
+commands:
+  - "docker exec --detach --privileged --tty app ls"

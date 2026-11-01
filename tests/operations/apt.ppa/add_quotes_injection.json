@@ -1,0 +1,10 @@
+{
+    "args": ["x\"; reboot #"],
+    "facts": {
+        "apt_sources": {},
+        "find_in_file:/etc/apt/sources.list": false
+    },
+    "commands": [
+        "apt-add-repository -y 'x\"; reboot #'"
+    ]
+}

@@ -3,7 +3,7 @@ from typing import TypedDict
 
 from typing_extensions import NotRequired, override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
 
@@ -164,8 +164,8 @@ class Crontab(FactBase[CrontabFile]):
     @override
     def command(self, user=None):
         if user:
-            return f"crontab -l -u {user} || true"
-        return "crontab -l || true"
+            return StringCommand("crontab -l -u", QuoteString(user), "|| true")
+        return StringCommand("crontab -l || true")
 
     @override
     def process(self, output):

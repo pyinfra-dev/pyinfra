@@ -1,28 +1,5 @@
 {% extends "base.html" %}
 
-{#
-    Version banner — shows a warning when viewing "latest" (pre-release) or
-    an older stable version. Driven by config.extra.docs_version and
-    config.extra.primary_doc_version (both injected via DOCS_VERSION env var
-    and zensical.toml).
-#}
-{% block announce %}
-    {% set version = config.extra.docs_version %}
-    {% set primary = config.extra.primary_doc_version %}
-    {% set language = config.extra.docs_language %}
-    {% if version != primary %}
-        {% if version == "latest" %}
-            You are reading the most recent documentation which may contain
-            unreleased features. The latest release is
-            <a href="/{{ language }}/{{ primary }}/"><strong>{{ primary }}</strong></a>.
-        {% else %}
-            You are viewing documentation for an older version of pyinfra.
-            The latest release is
-            <a href="/{{ language }}/{{ primary }}/"><strong>{{ primary }}</strong></a>.
-        {% endif %}
-    {% endif %}
-{% endblock %}
-
 {% block extrahead %}
     {{ super() }}
     <meta name="darkreader-lock">
@@ -31,6 +8,50 @@
     <link rel="preload" crossorigin
           href="https://pyinfra.com/static/fonts/jetbrains-mono-latin.woff2"
           as="font" type="font/woff2">
+
+    {#
+        Version banner — derived at runtime from the URL path (/<lang>/<version>/)
+        rather than baked in at build time. A single build is therefore served
+        correctly whether it lands at /en/latest/, /en/next/ or /en/3.x/, so it
+        can't drift out of sync with the deploy path. The container element
+        ([data-md-component="announce"]) is always present; we only render the
+        inner .md-banner when the reader is off the primary version.
+    #}
+    <script>
+        (function () {
+            var language = "{{ config.extra.docs_language }}";
+            var primary = "{{ config.extra.primary_doc_version }}";
+            var parts = window.location.pathname.split("/").filter(Boolean);
+            var version = (parts[0] === language && parts.length > 1) ? parts[1] : primary;
+            if (version === primary) return;
+
+            var unreleased = version === "latest" || version === "next";
+            var link = '<a href="/' + language + '/' + primary + '/"><strong>' +
+                primary + '</strong></a>';
+            var message = unreleased
+                ? "You are reading the most recent documentation which may contain " +
+                  "unreleased features. The latest release is " + link + "."
+                : "You are viewing documentation for an older version of pyinfra. " +
+                  "The latest release is " + link + ".";
+
+            function inject() {
+                var host = document.querySelector('[data-md-component="announce"]');
+                if (!host) return;
+                var aside = document.createElement("aside");
+                aside.className = "md-banner";
+                aside.innerHTML =
+                    '<div class="md-banner__inner md-grid md-typeset"><p>' +
+                    message + "</p></div>";
+                host.appendChild(aside);
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", inject);
+            } else {
+                inject();
+            }
+        })();
+    </script>
 {% endblock %}
 
 {# Plausible analytics #}

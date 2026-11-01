@@ -8,8 +8,8 @@
     },
     "commands": [
         {
-            "raw": "mysql -u\"someuser\" -psomepass -h127.0.0.1 -P100 -Be 'SELECT 1'",
-            "masked": "mysql -u\"someuser\" -p'*MASKED*' -h127.0.0.1 -P100 -Be 'SELECT 1'"
+            "raw": "mysql -usomeuser -psomepass -h127.0.0.1 -P100 -Be 'SELECT 1'",
+            "masked": "mysql -usomeuser -p'*MASKED*' -h127.0.0.1 -P100 -Be 'SELECT 1'"
         }
     ],
     "idempotent": false

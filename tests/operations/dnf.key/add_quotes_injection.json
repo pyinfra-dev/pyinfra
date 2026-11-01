@@ -1,0 +1,6 @@
+{
+    "args": ["https://example.com/key; rm -rf /"],
+    "commands": [
+        "rpm --import 'https://example.com/key; rm -rf /'"
+    ]
+}
