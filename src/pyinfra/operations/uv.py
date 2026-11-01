@@ -116,7 +116,7 @@ def pythons(
     """
     Install/remove Python version(s).
 
-    + version: a version or list of Python versions
+    + versions: a version or list of Python versions
     + present: whether the versions should be installed or removed. Default True.
     + managed: whether only managed or all available version should be considered. Default True.
     + extra_args: zero or more additional arguments to be passed to ``uv``. Default None.

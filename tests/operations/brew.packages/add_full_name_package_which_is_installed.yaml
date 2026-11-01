@@ -1,0 +1,9 @@
+args:
+  - koekeishiya/formulae/skhd
+facts:
+  brew.BrewPackages:
+    koekeishiya/formulae/skhd:
+      - 'set:'
+      - "0.3.9"
+commands: []
+noop_description: package koekeishiya/formulae/skhd is installed (0.3.9)

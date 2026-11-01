@@ -227,7 +227,7 @@ server.shell(
     _if=[create_user.did_change, create_otheruser.did_change],
 )
 
-# You can also build your own lamba functions to achieve, e.g. an OR condition
+# You can also build your own lambda functions to achieve, e.g. an OR condition
 server.shell(
     commands=["echo 'myuser or otheruser changed'"],
     _if=lambda: create_user.did_change() or create_otheruser.did_change(),

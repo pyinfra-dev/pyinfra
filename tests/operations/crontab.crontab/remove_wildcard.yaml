@@ -1,0 +1,18 @@
+args:
+  - find /tmp -name '*.log' -delete
+kwargs:
+  present: false
+facts:
+  crontab.Crontab:
+    user=None:
+      find /tmp -name '*.log' -delete:
+        minute: "*"
+        hour: "*"
+        month: "*"
+        day_of_week: "*"
+        day_of_month: "*"
+        comments: []
+commands:
+  - crontab -l > _tempfile_
+  - sed -i.a-timestamp '/.*find \/tmp -name '"'"'\*\.log'"'"' -delete.*/d' _tempfile_ && rm -f _tempfile_.a-timestamp
+  - crontab _tempfile_

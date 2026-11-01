@@ -1,0 +1,5 @@
+command: podman quadlet list --format=json
+requires_command: podman
+output: |
+  []
+fact: []

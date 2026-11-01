@@ -14,13 +14,12 @@ from unittest.mock import MagicMock, patch
 
 from pyinfra.api.exceptions import FactError, FactNotCollected, MissingCommandError
 from pyinfra.api.facts import _MISSING_COMMAND_MARKER, get_fact
-from pyinfra.api.state import StateStage
 from pyinfra.facts.zfs import ZfsPools
 
 
-def _make_state(stage: StateStage) -> MagicMock:
+def _make_state(is_executing: bool) -> MagicMock:
     state = MagicMock()
-    state.current_stage = stage
+    state.is_executing = is_executing
     return state
 
 
@@ -29,7 +28,7 @@ class TestMissingCommandPhaseAwareness(TestCase):
 
     def test_prepare_phase_returns_default(self):
         """Binary absent during prepare → fact returns default() silently."""
-        state = _make_state(StateStage.Prepare)
+        state = _make_state(is_executing=False)
         host = MagicMock()
 
         with patch("pyinfra.api.facts._get_fact", side_effect=MissingCommandError("zpool")):
@@ -40,7 +39,7 @@ class TestMissingCommandPhaseAwareness(TestCase):
     def test_execute_phase_returns_default_with_warning(self):
         """Binary absent during execute → compat shim: warning logged, default() returned (v3).
         TODO(v4): this should raise MissingCommandError instead."""
-        state = _make_state(StateStage.Execute)
+        state = _make_state(is_executing=True)
         host = MagicMock()
 
         with patch("pyinfra.api.facts._get_fact", side_effect=MissingCommandError("zpool")):

@@ -156,9 +156,9 @@ def read_buffer(
 def read_output_buffers(
     stdout_buffer: Iterable,
     stderr_buffer: Iterable,
-    timeout: int | None,
-    print_output: bool,
-    print_prefix: str,
+    timeout: int | None = None,
+    print_output: bool = False,
+    print_prefix: str = "",
 ) -> CommandOutput:
     output_queue: Queue[OutputLine] = Queue()
 
@@ -214,6 +214,19 @@ def execute_command_with_sudo_retry(
     if return_code != 0 and output and output.combined_lines:
         for line in reversed(output.combined_lines):
             if line.line.strip() in SUDO_PASSWORD_REQUIRED_LINES:
+                # Re-running only helps when the command is executed with sudo, otherwise
+                # the prompted password cannot be applied and the command just runs (and
+                # fails) a second time. Return the failed result so the usual failure
+                # handling (fail_hosts, _ignore_errors, --fail-percent) applies:
+                # https://github.com/pyinfra-dev/pyinfra/issues/940
+                if not command_arguments.get("_sudo"):
+                    logger.warning(
+                        "%ssudo is asking for a password but the command was not run with "
+                        "`_sudo`, not re-running it. Run the operation with `_sudo=True` "
+                        "so the whole command (or script) runs as root.",
+                        host.print_prefix,
+                    )
+                    break
                 # If we need a password, ask the user for it and attach to the host
                 # internal connector data for use when executing future commands.
                 sudo_password = getpass(f"{host.print_prefix}sudo password: ")
@@ -364,6 +377,13 @@ def make_unix_command_for_host(
         if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
             command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
 
+        # If we know a password is needed, ask for it up front rather than first trying
+        # passwordless sudo and prompting on failure.
+        if not command_arguments["_sudo_password"] and state.config.USE_SUDO_PASSWORD:
+            sudo_password = getpass(f"{host.print_prefix}sudo password: ")
+            host.connector_data["prompted_sudo_password"] = sudo_password
+            command_arguments["_sudo_password"] = sudo_password
+
         if command_arguments.get("_sudo_password"):
             command_arguments["_sudo_askpass_path"] = _ensure_sudo_askpass_set_for_host(
                 host, temp_dir=op_temp_dir
@@ -402,6 +422,7 @@ def make_unix_command(
     _sudo_password="",
     _sudo_askpass_path=None,
     _preserve_sudo_env=False,
+    _sudo_set_home=True,
     # Doas config
     _doas=False,
     _doas_user=None,
@@ -464,7 +485,10 @@ def make_unix_command(
         )
 
     if _sudo:
-        command_bits.extend(["sudo", "-H"])
+        command_bits.append("sudo")
+
+        if _sudo_set_home:
+            command_bits.append("-H")
 
         if _sudo_password:
             command_bits.extend(["-A", "-k"])  # use askpass, disable cache

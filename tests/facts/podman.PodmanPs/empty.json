@@ -1,8 +1,0 @@
-{
-  "command": "podman ps --format=json --all",
-  "requires_command": "podman",
-  "output": [
-    "[]"
-  ],
-  "fact": []
-}

@@ -1,0 +1,13 @@
+args:
+  - rad
+kwargs:
+  enabled: true
+facts:
+  server.Os: OpenBSD
+  bsdinit.RcdStatus:
+    rad: false
+  bsdinit.RcdEnabled:
+    rad: true
+commands:
+  - rcctl start rad
+noop_description: service rad is enabled

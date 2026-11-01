@@ -29,12 +29,14 @@ class ConnectorData(TypedDict):
     docker_identifier: str
     docker_platform: str
     docker_architecture: str
+    docker_user: str
 
 
 connector_data_meta: dict[str, DataMeta] = {
     "docker_identifier": DataMeta("ID of container or image to start from"),
     "docker_platform": DataMeta("Platform to use for Docker image (e.g., linux/amd64)"),
     "docker_architecture": DataMeta("Architecture to use for Docker image (e.g., amd64, arm64)"),
+    "docker_user": DataMeta("User to execute commands as inside the container"),
 }
 
 
@@ -207,9 +209,15 @@ class DockerConnector(BaseConnector):
         command = StringCommand(QuoteString(command))
 
         docker_flags = "-it" if local_arguments.get("_get_pty") else "-i"
+
+        docker_command_bits: list[str | QuoteString] = [self.docker_cmd, "exec"]
+
+        docker_user = self.data.get("docker_user")
+        if docker_user:
+            docker_command_bits.extend(["--user", QuoteString(docker_user)])
+
         docker_command = StringCommand(
-            self.docker_cmd,
-            "exec",
+            *docker_command_bits,
             docker_flags,
             container_id,
             "sh",

@@ -64,12 +64,10 @@ class BrewVersion(FactBase[Sequence[int]]):
         return [0, 0, 0]
 
     @override
-    def process(self, output: Iterable[str]) -> BrewVersionType:
-        if ((out := next(iter(output), None)) is not None) and (
-            (m := VERSION_MATCHER.match(out)) is not None
-        ):
+    def process(self, output: list[str]) -> BrewVersionType:
+        if (len(output) > 0) and ((m := VERSION_MATCHER.match(output[0])) is not None):
             return [int(m.group(key)) for key in ["major", "minor", "patch"]]
-        logger.warning(f"could not parse version string from brew: '{out}'")
+        logger.warning(f"could not parse version string from brew: '{output[0]}'")
         return self.default()
 
 
@@ -85,11 +83,25 @@ class BrewPackages(FactBase[BrewPackingMapping]):
         {
             "package_name": ["version"],
         }
+
+    !!! note
+        Homebrew maintains separate versions of certain formulae (e.g. `python`, `postgres` and
+        `node`) and multiple versions of these formulae can be installed at the same time
+        (e.g. `python@3.15` and `python@3.10`) but Homebrew does not otherwise support installing
+        a specific version of a formula (e.g. `rclone@1.75`).  In the case where multiple versions
+        of a formula are installed at once, they will show up as distinct entries in
+        `BrewPackages`
     """
 
     @override
     def command(self) -> str:
-        return "brew list --versions"
+        return (
+            r'if brew --version | grep -q -E "Homebrew 0\."; then '
+            r"brew list --versions; "
+            r"else "
+            r"brew info --json --installed; "
+            r"fi"
+        )
 
     @override
     def requires_command(self) -> str:
@@ -98,7 +110,30 @@ class BrewPackages(FactBase[BrewPackingMapping]):
     default = dict
 
     @override
-    def process(self, output: Iterable[str]) -> BrewPackingMapping:
+    def process(self, output: list[str]) -> BrewPackingMapping:
+        body = "\n".join(output).strip()
+        if body.startswith("["):
+            try:
+                data = json.loads(body)
+                if not isinstance(data, list):
+                    logger.warning(f"unexpected structure from brew info: '{body}'")
+                    return self.default()
+
+                packages: BrewPackingMapping = {}
+                for form in data:
+                    versions = {
+                        item["version"]
+                        for item in form.get("installed", [])
+                        if isinstance(item, dict) and "version" in item
+                    }
+                    if versions:
+                        for key in ("name", "full_name"):
+                            if key in form:
+                                packages.setdefault(form[key], set()).update(versions)
+                return packages
+            except (json.JSONDecodeError, TypeError, RecursionError, AttributeError):
+                logger.warning(f"unexpected output from brew info: '{body}'")
+                return self.default()
         return parse_packages(BREW_REGEX, output)
 
 
@@ -119,6 +154,10 @@ class BrewCasks(BrewPackages):
             r'if brew --version | grep -q -e "Homebrew\ +(1\.|2\.[0-5]).*" 1>/dev/null;'
             r"then brew cask list --versions; else brew list --cask --versions; fi"
         )
+
+    @override
+    def process(self, output: list[str]) -> BrewPackingMapping:
+        return parse_packages(BREW_REGEX, output)
 
     @override
     def requires_command(self) -> str:
@@ -153,7 +192,7 @@ class BrewTaps(FactBase[BrewTapList]):
     default = list
 
     @override
-    def process(self, output: Iterable[str]) -> BrewTapList:
+    def process(self, output: list[str]) -> BrewTapList:
         return output
 
 
@@ -192,7 +231,7 @@ class BrewTrusted(FactBase[BrewTrustMapping]):
         return {kind.value: [] for kind in BrewItemKind.__members__.values()}
 
     @override
-    def process(self, output: Iterable[str]) -> BrewTrustMapping:
+    def process(self, output: list[str]) -> BrewTrustMapping:
         error = False
         body = "\n".join(s for s in output)
         try:

@@ -47,7 +47,7 @@ class FlatpakPackage(FlatpakBaseFact):
                 matches = re.match(regex, line)
                 if matches:
                     data[regex_name] = matches.group(1)
-
+                    break
         return data
 
 
@@ -69,8 +69,9 @@ class FlatpakPackages(FlatpakBaseFact):
     default = list
 
     @override
-    def command(self):
-        return "flatpak list --columns=application"
+    def command(self, user: bool = False) -> str:
+        scope = "--user " if user else ""
+        return f"flatpak list {scope}--columns=application"
 
     @override
     def process(self, output):

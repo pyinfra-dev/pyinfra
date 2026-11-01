@@ -1,0 +1,8 @@
+command: service -e
+requires_command: service
+output: |
+  /etc/rc.d/cron
+  /usr/local/etc/rc.d/rad
+fact:
+  cron: true
+  rad: true

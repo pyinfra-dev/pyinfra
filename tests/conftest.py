@@ -1,3 +1,5 @@
+import errno
+import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -6,16 +8,34 @@ import pyinfra_testing.util
 from pyinfra_testing.util import patch_files as _patch_files
 
 
+def _check_name_too_long(filename):
+    # Real filesystems reject path components over NAME_MAX (255 bytes) with
+    # ENAMETOOLONG, eg when an inline SSH key is tried as a file path.
+    for component in str(filename).split(os.sep):
+        if len(os.fsencode(component)) > 255:
+            raise OSError(errno.ENAMETOOLONG, os.strerror(errno.ENAMETOOLONG), str(filename))
+
+
 class patch_files(_patch_files):
     """
     Extend ``pyinfra_testing.util.patch_files`` to also patch ``pathlib.Path``
     methods, now that pyinfra itself uses pathlib for local filesystem access.
     """
 
+    def exists(self, filename, *args):
+        # os.path.exists swallows OSError (eg ENAMETOOLONG) and returns False.
+        try:
+            _check_name_too_long(filename)
+        except OSError:
+            return False
+        return super().exists(filename, *args)
+
     def __enter__(self):
         patch_self = self
 
         def _path_exists(p):
+            # Path.exists re-raises ENAMETOOLONG on Python < 3.14.
+            _check_name_too_long(p)
             return patch_self.exists(str(p))
 
         def _path_is_file(p):

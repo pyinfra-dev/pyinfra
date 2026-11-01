@@ -1,0 +1,34 @@
+command: podman volume ls --format=json
+requires_command: podman
+output: |
+  [
+    {
+      "Name": "testvol",
+      "Driver": "local",
+      "Mountpoint": "/home/user/.local/share/containers/storage/volumes/testvol/_data",
+      "CreatedAt": "2026-07-25T19:56:02.661565428+02:00",
+      "Labels": {
+        "hello": ""
+      },
+      "Scope": "local",
+      "Options": {
+      },
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 1
+    }
+  ]
+fact:
+  - Name: testvol
+    Driver: local
+    Mountpoint: /home/user/.local/share/containers/storage/volumes/testvol/_data
+    CreatedAt: "2026-07-25T19:56:02.661565428+02:00"
+    Labels:
+      hello: ""
+    Scope: local
+    Options: {}
+    MountCount: 0
+    NeedsCopyUp: true
+    NeedsChown: true
+    LockNumber: 1
