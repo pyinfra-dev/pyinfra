@@ -629,10 +629,12 @@ class DeployProgress(BaseStateCallback):
         """Best-effort short error message from the operation's captured stderr."""
         try:
             op_data = state.get_op_data_for_host(host, op_hash)
-            stderr = op_data.operation_meta.stderr_lines
-        except Exception:
-            stderr = []
-        for line in stderr:
+        except KeyError:
+            return "failed"
+        meta = op_data.operation_meta
+        if not meta.is_complete():
+            return "failed"
+        for line in meta.stderr_lines:
             line = line.strip()
             if line:
                 return line
