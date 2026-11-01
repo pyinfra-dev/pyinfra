@@ -1507,4 +1507,55 @@ class TestRunNoWaitOps(PatchSSHTestCase):
         assert somehost in state.failed_hosts
 
 
+class TestRunSingleOpFailPercent(PatchSSHTestCase):
+    """
+    `_serial` and `_parallel` run an operation on one host or batch at a time, so a host that
+    fails has to be failed before the next one starts, or the fail percent can't stop the run.
+    """
+
+    def _make_state(self, fail_percent=None):
+        inventory = make_inventory(hosts=("somehost", "anotherhost"))
+        state = State(inventory, Config(FAIL_PERCENT=fail_percent))
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+        return state
+
+    def _run_failing_op(self, state, **op_kwargs):
+        add_op(state, server.shell, "/bin/false", **op_kwargs)
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (False, FakeBuffer("", FakeChannel(127)))
+
+            with self.assertRaises(PyinfraError) as e:
+                run_ops(state)
+
+        return e.exception, fake_run_command.call_count
+
+    def test_serial_op_stops_at_fail_percent(self):
+        state = self._make_state(fail_percent=0)
+        exception, call_count = self._run_failing_op(state, _serial=True)
+
+        assert exception.args[0] == "Over 0% of hosts failed (50%)"
+        # The second host never ran the operation
+        assert call_count == 1
+        assert len(state.failed_hosts) == 1
+
+    def test_parallel_op_stops_at_fail_percent(self):
+        state = self._make_state(fail_percent=0)
+        exception, call_count = self._run_failing_op(state, _parallel=1)
+
+        assert exception.args[0] == "Over 0% of hosts failed (50%)"
+        # The second batch never ran the operation
+        assert call_count == 1
+        assert len(state.failed_hosts) == 1
+
+    def test_serial_op_without_fail_percent_runs_on_all_hosts(self):
+        state = self._make_state()
+        exception, call_count = self._run_failing_op(state, _serial=True)
+
+        assert exception.args[0] == "No hosts remaining!"
+        assert call_count == 2
+        assert len(state.failed_hosts) == 2
+
+
 this_filename = path.join("tests", "test_api", "test_api_operations.py")

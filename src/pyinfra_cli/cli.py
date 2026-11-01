@@ -9,8 +9,8 @@ from collections.abc import Iterable
 from os import chdir as os_chdir, environ, getcwd
 from pathlib import Path
 
-import click
 from cyclopts import App, Group, Parameter
+from rich.prompt import Confirm
 
 from pyinfra import __version__, logger, state
 from pyinfra.api import Config, Host, Inventory, State
@@ -26,6 +26,7 @@ from pyinfra.operations import server
 from pyinfra.api.output import format_text
 
 from .commands import get_facts_and_args, get_func_and_args
+from .console import console, stdout_console
 from .exceptions import CliError, UnexpectedExternalError, UnexpectedInternalError, WrappedError
 from .inventory import make_inventory
 from .log import setup_logging
@@ -65,11 +66,71 @@ def _lenient_bool(type_, tokens) -> bool:
     raise ValueError(f"invalid boolean value: {tokens[0].value!r}")
 
 
+_EXAMPLES = """\
+# Run one or more deploys against the inventory
+pyinfra INVENTORY deploy_web.py [deploy_db.py]...
+
+# Run a single operation against the inventory
+pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
+
+# Execute an arbitrary command against the inventory
+pyinfra INVENTORY exec -- echo "hello world"
+
+# Run one or more facts against the inventory
+pyinfra INVENTORY fact server.LinuxName [server.Users]...
+pyinfra INVENTORY fact files.File path=/path/to/file...
+
+# Debug the inventory hosts and data
+pyinfra INVENTORY debug-inventory"""
+
+
+def _build_examples_epilogue() -> str:
+    """Render the CLI examples as syntax-highlighted (bash) ANSI text.
+
+    Used as a ``help_format="rich"`` epilogue so the examples show up
+    colourised on the help page.
+    """
+    from rich.syntax import Syntax
+
+    syntax = Syntax(_EXAMPLES, "bash", background_color="default", word_wrap=True)
+    with stdout_console.capture() as capture:
+        stdout_console.print("[bold]Examples:[/bold]\n")
+        stdout_console.print(syntax)
+    return capture.get()
+
+
+def _build_usage() -> str:
+    """Colourised usage line: required args in cyan, optionals dimmed.
+
+    Rendered to an ANSI string because Cyclopts concatenates ``usage`` as a
+    plain string; the ``Usage:`` label is added by the help formatter.  Colour
+    is only emitted when stdout is a terminal so piped output stays plain.
+    """
+    from rich.text import Text
+
+    line = Text.assemble(
+        ("pyinfra ", "bold"),
+        ("[OPTIONS] ", "dim"),
+        ("INVENTORY ", "bold cyan"),
+        ("[OPERATIONS...]", "cyan"),
+    )
+    if not stdout_console.is_terminal:
+        return line.plain
+    with stdout_console.capture() as capture:
+        stdout_console.print(line, end="")
+    return capture.get()
+
+
 app = App(
     name="pyinfra",
     version=f"pyinfra: v{__version__}",
     version_flags=["--version"],
     help_flags=["-h", "--help"],
+    help_format="rich",
+    usage=_build_usage(),
+    console=stdout_console,
+    error_console=console,
+    help_epilogue=_build_examples_epilogue(),
 )
 
 # Enable ``pyinfra --install-completion`` for shell autocompletion.
@@ -169,30 +230,14 @@ def cli(
     """pyinfra manages the state of one or more servers.
 
     It can be used for app/service deployment, config management and ad-hoc
-    command execution. Documentation: docs.pyinfra.com
+    command execution.
 
-    INVENTORY is a file (inventory.py), a hostname (host.net) or comma separated
-    hostnames (host-1.net,host-2.net,@local).
+    Documentation: [cyan][link=https://docs.pyinfra.com]docs.pyinfra.com[/link][/cyan]
 
-    Examples:
-
-    ```
-    # Run one or more deploys against the inventory
-    pyinfra INVENTORY deploy_web.py [deploy_db.py]...
-
-    # Run a single operation against the inventory
-    pyinfra INVENTORY server.user pyinfra home=/home/pyinfra
-
-    # Execute an arbitrary command against the inventory
-    pyinfra INVENTORY exec -- echo "hello world"
-
-    # Run one or more facts against the inventory
-    pyinfra INVENTORY fact server.LinuxName [server.Users]...
-    pyinfra INVENTORY fact files.File path=/path/to/file...
-
-    # Debug the inventory hosts and data
-    pyinfra INVENTORY debug-inventory
-    ```
+    INVENTORY can be:
+    - a file ([cyan]inventory.py[/cyan])
+    - a hostname ([cyan]host.net[/cyan])
+    - comma separated hostnames ([cyan]host-1.net,host-2.net,@local[/cyan])
 
     Parameters
     ----------
@@ -489,13 +534,12 @@ def _main(
         else:
             logger.info("--> Detected changes:")
             print_meta(state)
-            click.echo(
+            console.print(
                 """
     Detected changes may not include every change pyinfra will execute.
     Hidden side effects of operations may alter behaviour of future operations,
     this will be shown in the results. The remote state will always be updated
     to reflect the state defined by the input operations.""",
-                err=True,
             )
 
     # If --debug-facts or --debug-operations, print and exit
@@ -536,29 +580,15 @@ def _main(
 
 
 def _do_confirm(msg: str) -> bool:
-    click.echo(err=True)
-    click.echo(f"    {msg}", err=True)
+    console.print()
+    console.print(f"    {msg}")
     warning_count = state.get_warning_counter()
     if warning_count > 0:
-        click.secho(
+        console.print(
             f"    {warning_count} warnings shown during change detection, see above",
-            fg="yellow",
-            err=True,
+            style="yellow",
         )
-    confirm_msg = "    Press enter to execute..."
-    click.echo(confirm_msg, err=True, nl=False)
-    v = input()
-    if v:
-        click.echo(f"    Unexpected user input: {v}", err=True)
-        return False
-    # Go up, clear the line, go up again - as if the confirmation statement was never here!
-    click.echo(
-        "\033[1A{}\033[1A".format("".join(" " for _ in range(len(confirm_msg)))),
-        err=True,
-        nl=False,
-    )
-    click.echo(err=True)
-    return True
+    return Confirm.ask("    Execute?", console=console, default=True)
 
 
 # Setup
