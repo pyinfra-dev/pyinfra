@@ -14,7 +14,6 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "gevent>=1.5",
     "paramiko>=3.2,<6", # 3.2 adds PKey.from_type_string and pkey.UnknownKeyType, used by connectors.sshuserclient (#1290)
-    "click>2",
     "cyclopts>=4,<5",
     "rich>=13.7.1", # 13.7.1: emoji skin tone modifiers take no cells (results table alignment)
     "jinja2>3,<4",
@@ -51,7 +50,6 @@ repository = "https://github.com/pyinfra-dev/pyinfra"
 
 [dependency-groups]
 test = [
-    "click>=8.2",
     "pytest>=8.3.5,<9",
     "freezegun>=1.5.5",
     "coverage>=7.7.1,<8",
