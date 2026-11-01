@@ -58,7 +58,7 @@ jobs:
       - spell-check
     strategy:
       matrix:
-        os: [macos-26, macos-15, macos-14, windows-2025, windows-2022, ubuntu-24.04, ubuntu-22.04]
+        os: [macos-26, macos-15, windows-2025, windows-2022, ubuntu-24.04, ubuntu-22.04]
         # Test every OS vs. the default Python version (the newest stable release), and only one for
         # supported Python versions below that
         python-version: ["3.14"]
@@ -98,8 +98,6 @@ jobs:
         os: [ubuntu-22.04, ubuntu-24.04]
         test-name: [local, ssh, docker, podman]
         include:
-          - os: macos-14
-            test-name: local
           - os: macos-15
             test-name: local
           - os: macos-26
