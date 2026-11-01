@@ -7,4 +7,4 @@ facts:
     livedir=None:
       tipidee: true
 commands:
-  - s6 live reload -t 10 tipidee
+  - s6 live reload -t 1000 tipidee

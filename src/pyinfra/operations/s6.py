@@ -576,7 +576,7 @@ def service(
     do_install: bool | None = None,
     repodir: str | None = None,
     livedir: str | None = None,
-    reload_timeout: float | None = 10,
+    reload_timeout: int | None = 1000,
     command: str | None = None,
 ):
     """
@@ -598,7 +598,7 @@ def service(
     + do_install: whether to install the set to the livedir.
     + repodir: path to the repository to manage when `enabled` is specified. Uses the one configured for `s6-frontend` by default.
     + livedir: path to the live state to manage when any of `running`, `restarted`, `reloaded` are specified. Uses the one configured for `s6-frontend` by default.
-    + reload_timeout: number of seconds to wait for a service to reload.
+    + reload_timeout: number of milliseconds to wait for a service to reload. 0 means to wait indefinitely.
     + command: custom command to run after the auto-computed commands. This must be an s6 subcommand, e.g. `"system reboot"` gives the command `s6 system reboot`.
 
     This operation can manage multiple services at once.
@@ -614,6 +614,10 @@ def service(
         raise ValueError('enabled_rx must be either "active" or "always"')
     if disabled_rx not in {"usable", "masked"}:
         raise ValueError('disabled_rx must be either "usable" or "masked"')
+    if reload_timeout is not None and not isinstance(reload_timeout, int):
+        raise ValueError("reload_timeout must be a non-negative integer or None")
+    elif reload_timeout < 0:
+        raise ValueError("reload_timeout must be a non-negative integer")
 
     if isinstance(service, str):
         service = (service,)
@@ -648,16 +652,18 @@ def service(
             if some_up:
                 if livedir:
                     yield make_formatted_string_command(
-                        f"s6-rc -l {{{len(all_up_services)}}} -t {reload_timeout} reload "
+                        f"s6-rc -l {{{len(all_up_services)}}} -t {{{len(all_up_services) + 1}}} reload "
                         + _make_format_fields(len(all_up_services)),
                         *map(QuoteString, all_up_services),
-                        livedir,
+                        QuoteString(livedir),
+                        QuoteString(reload_timeout),
                     )
                 else:
                     yield make_formatted_string_command(
-                        f"s6 live reload -t {reload_timeout} "
+                        f"s6 live reload -t {{{len(all_up_services)}}} "
                         + _make_format_fields(len(all_up_services)),
                         *map(QuoteString, all_up_services),
+                        QuoteString(reload_timeout),
                     )
             else:
                 host.noop(f"all specified services are down: {', '.join(service)}")

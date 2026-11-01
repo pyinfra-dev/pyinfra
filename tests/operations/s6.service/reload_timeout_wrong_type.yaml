@@ -1,0 +1,13 @@
+args:
+  - tipidee
+kwargs:
+  running: true
+  reloaded: true
+  reload_timeout: "not an int"
+facts:
+  s6.S6LiveStatus:
+    livedir=None:
+      tipidee: true
+exception:
+  name: ValueError
+  message: "reload_timeout must be a non-negative integer or None"
