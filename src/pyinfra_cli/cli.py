@@ -332,6 +332,7 @@ def cli(
             "    pyinfra INVENTORY fact server.LinuxName [server.Users]..."
         )
 
+    progress_was_unset = "PYINFRA_PROGRESS" not in environ
     try:
         _main(
             inventory=inventory,
@@ -382,13 +383,17 @@ def cli(
         # Re-raise any unexpected internal exceptions as UnexpectedInternalError
         raise UnexpectedInternalError(e)
     finally:
-        # Stop routing host output into the (stopped) live tree: disconnect
-        # notices (e.g. docker image IDs) must reach the console.
-        routing.set_tree(None)
-        if ctx_state.isset() and state.initialised:
-            logger.info("Disconnecting from hosts...")
-            # Triggers any executor disconnect requirements
-            disconnect_all(state)
+        try:
+            # Stop routing host output into the (stopped) live tree: disconnect
+            # notices (e.g. docker image IDs) must reach the console.
+            routing.set_tree(None)
+            if ctx_state.isset() and state.initialised:
+                logger.info("Disconnecting from hosts...")
+                # Triggers any executor disconnect requirements
+                disconnect_all(state)
+        finally:
+            if progress_was_unset:
+                environ.pop("PYINFRA_PROGRESS", None)
 
 
 def _main(
@@ -460,13 +465,15 @@ def _main(
     # the user explicitly exports PYINFRA_PROGRESS: the tree replaces them, in
     # flat modes they'd fight the log stream, and in JSON mode stdout must
     # stay pure JSON.
-    environ.setdefault("PYINFRA_PROGRESS", "off")
     routing.reset_host_errors()
     tree = None
     if is_tree_active(json_output) and not (debug or debug_all):
         tree = DeployProgress(state, verbose=verbosity > 0)
         # NOTE: registered as a state callback after state.init() below.
     routing.set_tree(tree)
+    # Decide tree activation from the user's setting before disabling the
+    # low-level spinner by default. The CLI wrapper restores an unset value.
+    environ.setdefault("PYINFRA_PROGRESS", "off")
 
     # Update Config & Override Data
     #

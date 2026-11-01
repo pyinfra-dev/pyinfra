@@ -4,12 +4,14 @@ The live tree is only active on a TTY, which pytest cannot easily provide, so
 these exercise the routing logic directly rather than through a subprocess.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 from pyinfra_cli.log import _is_lifecycle_noise
 from pyinfra.api.renderable import Diff
+from pyinfra.api.operation import OperationMeta
+from pyinfra.connectors.util import CommandOutput, OutputLine
 
 from pyinfra_cli.progress import DeployProgress, DetailItem, NodeKind, NodeStatus, is_tree_active
 
@@ -336,3 +338,62 @@ class TestOperationLifecycle:
             progress.__exit__()
 
         assert group.status == (NodeStatus.ERROR if failed else NodeStatus.OK)
+
+
+class TestHostErrorDetail:
+    def _state_with_meta(self, complete):
+        state = MagicMock()
+        meta = OperationMeta("operation", None)
+        if complete:
+            meta.set_complete(
+                False,
+                [],
+                CommandOutput(
+                    [
+                        OutputLine("stdout", "not an error"),
+                        OutputLine("stderr", "  "),
+                        OutputLine("stderr", "  permission denied  "),
+                        OutputLine("stderr", "more detail"),
+                    ]
+                ),
+            )
+        state.get_op_data_for_host.return_value.operation_meta = meta
+        return state, meta
+
+    def test_first_nonempty_stderr_line_is_used(self):
+        state, _ = self._state_with_meta(complete=True)
+        assert (
+            DeployProgress._host_error_detail(state, MagicMock(), "operation")
+            == "permission denied"
+        )
+
+    def test_missing_operation_metadata_uses_fallback(self):
+        state = MagicMock()
+        state.get_op_data_for_host.side_effect = KeyError("operation")
+        assert DeployProgress._host_error_detail(state, MagicMock(), "operation") == "failed"
+
+    def test_incomplete_operation_uses_fallback(self):
+        state, _ = self._state_with_meta(complete=False)
+        assert DeployProgress._host_error_detail(state, MagicMock(), "operation") == "failed"
+
+    def test_complete_operation_without_stderr_uses_fallback(self):
+        state = MagicMock()
+        meta = OperationMeta("operation", None)
+        meta.set_complete(False, [], CommandOutput([]))
+        state.get_op_data_for_host.return_value.operation_meta = meta
+        assert DeployProgress._host_error_detail(state, MagicMock(), "operation") == "failed"
+
+    @pytest.mark.parametrize("exception", [RuntimeError, AttributeError])
+    def test_unexpected_lookup_failure_surfaces(self, exception):
+        state = MagicMock()
+        state.get_op_data_for_host.side_effect = exception("unexpected lookup failure")
+        with pytest.raises(exception, match="unexpected lookup failure"):
+            DeployProgress._host_error_detail(state, MagicMock(), "operation")
+
+    @pytest.mark.parametrize("exception", [RuntimeError, AttributeError, KeyError])
+    def test_unexpected_stderr_failure_surfaces(self, exception):
+        state, _ = self._state_with_meta(complete=True)
+        with patch.object(OperationMeta, "stderr_lines", new_callable=PropertyMock) as stderr:
+            stderr.side_effect = exception("unexpected stderr failure")
+            with pytest.raises(exception, match="unexpected stderr failure"):
+                DeployProgress._host_error_detail(state, MagicMock(), "operation")
