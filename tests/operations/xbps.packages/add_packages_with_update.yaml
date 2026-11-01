@@ -1,0 +1,15 @@
+# The fact is read before the repositories are synced, so xbps is always
+# updated after syncing.
+args:
+  - curl
+kwargs:
+  update: true
+facts:
+  xbps.XbpsPackages: {}
+  xbps.XbpsSelfUpdate: []
+commands:
+  - xbps-install -S
+  - xbps-install -y -u xbps
+  - xbps-install -y -u curl
+idempotent: false
+disable_idempotent_warning_reason: repository updates are always executed

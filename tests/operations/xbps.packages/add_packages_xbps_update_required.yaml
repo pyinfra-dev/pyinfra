@@ -1,0 +1,8 @@
+args:
+  - curl
+facts:
+  xbps.XbpsPackages: {}
+  xbps.XbpsSelfUpdate: ["xbps-0.60.5_1"]
+commands:
+  - xbps-install -y -u xbps
+  - xbps-install -y -u curl

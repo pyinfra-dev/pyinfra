@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
-from pyinfra.facts.bsdinit import RcdEnabled, RcdStatus
+from pyinfra.facts.bsdinit import RcdEnabled, RcdStatus, ServiceEnabled
 from pyinfra.facts.server import Os
 
 from . import files
@@ -27,6 +27,25 @@ def _handle_openbsd_enabled(service: str, enabled: bool):
     if enabled is False:
         if is_enabled:
             yield StringCommand("rcctl disable", QuoteString(service))
+            enabled_services[service] = False
+        else:
+            host.noop(f"service {service} is disabled")
+
+
+def _handle_freebsd_enabled(service: str, enabled: bool):
+    enabled_services = host.get_fact(ServiceEnabled)
+    is_enabled = enabled_services.get(service, False)
+
+    if enabled is True:
+        if not is_enabled:
+            yield StringCommand("service", QuoteString(service), "enable")
+            enabled_services[service] = True
+        else:
+            host.noop(f"service {service} is enabled")
+
+    if enabled is False:
+        if is_enabled:
+            yield StringCommand("service", QuoteString(service), "disable")
             enabled_services[service] = False
         else:
             host.noop(f"service {service} is disabled")
@@ -62,6 +81,10 @@ def service(
         if enabled is True:
             yield from _handle_openbsd_enabled(service, enabled)
 
+    elif os == "FreeBSD":
+        if enabled is True:
+            yield from _handle_freebsd_enabled(service, enabled)
+
     yield from handle_service_control(
         host,
         service,
@@ -77,6 +100,10 @@ def service(
     if os == "OpenBSD":
         if enabled is False:
             yield from _handle_openbsd_enabled(service, enabled)
+        return
+    elif os == "FreeBSD":
+        if enabled is False:
+            yield from _handle_freebsd_enabled(service, enabled)
         return
 
     # BSD init is simple, just add/remove <service>_enabled="YES"
