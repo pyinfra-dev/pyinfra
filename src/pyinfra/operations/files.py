@@ -1208,19 +1208,23 @@ def put(
         if not _file_equal(local_sum_path, dest):
             if state.config.DIFF:
                 # Generate diff when contents change
-                current_contents = host.get_fact(FileContents, path=dest)
-                if current_contents:
-                    current_lines = [line + "\n" for line in current_contents]
-                else:
-                    current_lines = []
-
                 host.log(f"Will modify {format_text(dest, bold=True)}", logger.info)
 
-                with get_file_io(src, "r") as f:
-                    desired_lines = f.readlines()
+                try:
+                    with get_file_io(src, "r") as f:
+                        desired_lines = f.readlines()
+                except UnicodeDecodeError:
+                    # Not fetching the remote contents here avoids hanging on a binary file
+                    logger.info("Binary file modified")
+                else:
+                    current_contents = host.get_fact(FileContents, path=dest)
+                    if current_contents:
+                        current_lines = [line + "\n" for line in current_contents]
+                    else:
+                        current_lines = []
 
-                for line in generate_color_diff(current_lines, desired_lines):
-                    logger.info("  %s", line)
+                    for line in generate_color_diff(current_lines, desired_lines):
+                        logger.info("  %s", line)
                 logger.info("")
 
             yield FileUploadCommand(
