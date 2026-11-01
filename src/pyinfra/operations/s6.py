@@ -561,7 +561,7 @@ def manage_set(
 
 @operation(
     is_idempotent=False,
-    idempotent_notice="Idempotent so long as `restarted in {False, None}`, `reloaded in {False, None}`, and `command=None`.",
+    idempotent_notice="Idempotent so long as `restarted in {False, None}`, `reloaded in {False, None}`, `do_commit in {False, None}`, `do_install in {False, None}`, and `command=None`.",
 )
 def service(
     service: str | Sequence[str],
