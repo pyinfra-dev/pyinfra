@@ -10,4 +10,4 @@ facts:
       tipidee: true
 exception:
   name: ValueError
-  message: "reload_timeout must be a non-negative integer or None"
+  message: "reload_timeout must be a non-negative integer"
