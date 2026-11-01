@@ -614,10 +614,9 @@ def service(
         raise ValueError('enabled_rx must be either "active" or "always"')
     if disabled_rx not in {"usable", "masked"}:
         raise ValueError('disabled_rx must be either "usable" or "masked"')
-    if reload_timeout is not None and not isinstance(reload_timeout, int):
-        raise ValueError("reload_timeout must be a non-negative integer or None")
-    elif reload_timeout < 0:
-        raise ValueError("reload_timeout must be a non-negative integer")
+    if reload_timeout is not None:
+        if not isinstance(reload_timeout, int) or reload_timeout < 0:
+            raise ValueError("reload_timeout must be a non-negative integer")
 
     if isinstance(service, str):
         service = (service,)
@@ -652,40 +651,29 @@ def service(
             if some_up:
                 if livedir:
                     yield make_formatted_string_command(
-                        f"s6-rc -l {{{len(all_up_services)}}} -t {{{len(all_up_services) + 1}}} reload "
+                        f"s6-rc -l {{{len(all_up_services)}}} -t {reload_timeout} reload "
                         + _make_format_fields(len(all_up_services)),
                         *map(QuoteString, all_up_services),
                         QuoteString(livedir),
-                        QuoteString(reload_timeout),
                     )
                 else:
                     yield make_formatted_string_command(
-                        f"s6 live reload -t {{{len(all_up_services)}}} "
+                        f"s6 live reload -t {reload_timeout} "
                         + _make_format_fields(len(all_up_services)),
                         *map(QuoteString, all_up_services),
-                        QuoteString(reload_timeout),
                     )
             else:
                 host.noop(f"all specified services are down: {', '.join(service)}")
 
     if enabled is not None:
-        if enabled is True:
-            yield from manage_set._inner(
-                the_set=the_set,
-                prescriptions={srv: enabled_rx for srv in service},
-                do_commit=bool(do_commit),
-                do_install=bool(do_install),
-                repodir=repodir,
-            )
-
-        if enabled is False:
-            yield from manage_set._inner(
-                the_set=the_set,
-                prescriptions={srv: disabled_rx for srv in service},
-                do_commit=bool(do_commit),
-                do_install=bool(do_install),
-                repodir=repodir,
-            )
+        yield from manage_set._inner(
+            the_set=the_set,
+            prescriptions={srv: enabled_rx if enabled else disabled_rx for srv in service},
+            do_commit=bool(do_commit),
+            do_install=bool(do_install),
+            repodir=repodir,
+            livedir=livedir,
+        )
 
     if command:
         yield StringCommand("s6", *map(QuoteString, shlex.split(command)))
