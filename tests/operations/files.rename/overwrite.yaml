@@ -1,0 +1,17 @@
+require_platform:
+  - Darwin
+  - Linux
+args:
+  - tmp/testfile
+  - tmp/renamed
+kwargs:
+  overwrite: true
+facts:
+  files.File:
+    path=tmp/testfile:
+      mode: 600
+    path=tmp/renamed:
+      mode: 600
+commands:
+  - rm -rf tmp/renamed
+  - mv tmp/testfile tmp/renamed

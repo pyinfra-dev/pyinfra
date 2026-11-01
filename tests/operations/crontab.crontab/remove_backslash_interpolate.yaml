@@ -1,0 +1,19 @@
+args:
+  - echo foo\bar $HOME `date`
+kwargs:
+  present: false
+  interpolate_variables: true
+facts:
+  crontab.Crontab:
+    user=None:
+      echo foo\bar $HOME `date`:
+        minute: "*"
+        hour: "*"
+        month: "*"
+        day_of_week: "*"
+        day_of_month: "*"
+        comments: []
+commands:
+  - 'crontab -l > _tempfile_'
+  - 'sed -i.a-timestamp "/.*echo foo\\\\bar \$HOME \`date\`.*/d" _tempfile_ && rm -f _tempfile_.a-timestamp'
+  - 'crontab _tempfile_'

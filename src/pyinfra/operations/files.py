@@ -12,13 +12,12 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from fnmatch import fnmatch
 from io import StringIO
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import IO, Any
 
 from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
-from pyinfra.api.output import format_text
 from pyinfra.api import (
     FileDownloadCommand,
     FileUploadCommand,
@@ -31,6 +30,7 @@ from pyinfra.api import (
     operation,
 )
 from pyinfra.api.command import make_formatted_string_command
+from pyinfra.api.output import format_text
 from pyinfra.api.util import (
     get_call_location,
     get_file_io,
@@ -55,6 +55,7 @@ from pyinfra.facts.files import (
     Flags,
     Link,
     Md5File,
+    SameFile,
     Sha1File,
     Sha256File,
     Sha384File,
@@ -667,14 +668,14 @@ def sync(
 
     """
     original_src = src  # Keep a copy to reference in errors
-    src = os.path.normpath(src)
+    src_path = Path(src)
 
     # Add deploy directory?
     if add_deploy_dir and state.cwd:
-        src = os.path.join(state.cwd, src)
+        src_path = Path(state.cwd) / src_path
 
     # Ensure the source directory exists
-    if not os.path.isdir(src):
+    if not src_path.is_dir():
         raise OSError(f"No such directory: {original_src}")
 
     # Ensure exclude is a list/tuple
@@ -690,54 +691,50 @@ def sync(
     put_files = []
     put_links = []  # List of (remote_path, link_target) tuples
     ensure_dirnames = []
-    for dirpath, dirnames, filenames in os.walk(src, topdown=True, followlinks=False):
-        remote_dirpath = Path(os.path.normpath(os.path.relpath(dirpath, src))).as_posix()
+    for dirpath, dirnames, filenames in os.walk(src_path, topdown=True, followlinks=False):
+        dirpath_path = Path(dirpath)
+        remote_dirpath = dirpath_path.relative_to(src_path).as_posix()
 
         # Filter excluded dirs and detect directory symlinks
         for child_dir in dirnames[:]:
-            child_path = os.path.normpath(os.path.join(remote_dirpath, child_dir))
+            # Build the remote-style relative path from the local paths,
+            # converting to posix only for matching against ``exclude_dir``.
+            child_path = (dirpath_path / child_dir).relative_to(src_path).as_posix()
             if exclude_dir and any(fnmatch(child_path, match) for match in exclude_dir):
                 dirnames.remove(child_dir)
                 continue
 
             # Check if this directory is actually a symlink
-            local_dir_path = os.path.join(dirpath, child_dir)
-            if os.path.islink(local_dir_path):
+            local_dir_path = dirpath_path / child_dir
+            if local_dir_path.is_symlink():
                 remote_link_path = unix_path_join(
-                    *[
-                        item
-                        for item in (dest, remote_dirpath, child_dir)
-                        if item and item != os.path.curdir
-                    ]
+                    *[item for item in (dest, remote_dirpath, child_dir) if item and item != "."]
                 )
                 link_target = os.readlink(local_dir_path)
                 put_links.append((remote_link_path, link_target))
                 dirnames.remove(child_dir)  # Don't traverse into symlinked directories
 
-        if remote_dirpath and remote_dirpath != os.path.curdir:
+        if remote_dirpath and remote_dirpath != ".":
             ensure_dirnames.append((remote_dirpath, get_path_permissions_mode(dirpath)))
 
         for filename in filenames:
-            full_filename = os.path.join(dirpath, filename)
+            full_filename = dirpath_path / filename
+            full_filename_str = str(full_filename)
 
             # Should we exclude this file?
-            if exclude and any(fnmatch(full_filename, match) for match in exclude):
+            if exclude and any(fnmatch(full_filename_str, match) for match in exclude):
                 continue
 
             remote_full_filename = unix_path_join(
-                *[
-                    item
-                    for item in (dest, remote_dirpath, filename)
-                    if item and item != os.path.curdir
-                ]
+                *[item for item in (dest, remote_dirpath, filename) if item and item != "."]
             )
 
             # Check if this is a symlink
-            if os.path.islink(full_filename):
+            if full_filename.is_symlink():
                 link_target = os.readlink(full_filename)
                 put_links.append((remote_full_filename, link_target))
             else:
-                put_files.append((full_filename, remote_full_filename))
+                put_files.append((full_filename_str, remote_full_filename))
 
     # Ensure the destination directory - if the destination is a link, ensure
     # the link target is a directory.
@@ -750,7 +747,7 @@ def sync(
         path=dest_to_ensure,
         user=user,
         group=group,
-        mode=dir_mode or mode or get_path_permissions_mode(src),
+        mode=dir_mode or mode or get_path_permissions_mode(str(src_path)),
     )
 
     # Ensure any remote dirnames
@@ -814,7 +811,9 @@ def sync(
 
 @memoize
 def show_rsync_warning() -> None:
-    logger.warning("The `files.rsync` operation is in alpha!")
+    logger.warning(
+        "The `files.rsync` operation is in alpha and deletes extra remote files by default!"
+    )
 
 
 @operation(is_idempotent=False)
@@ -828,9 +827,13 @@ def rsync(src: str, dest: str, flags: list[str] | None = None):
         or ``@local`` connectors. When using the SSH connector, rsync will automatically use the
         StrictHostKeyChecking setting, config and known_hosts file (when specified).
 
+    .. warning::
+        The default flags are ``["-ax", "--delete"]``, so remote files missing from ``src`` are
+        deleted. Pass ``flags=["-ax"]`` to preserve extra remote files.
+
     .. caution::
-        When using SSH, the ``files.rsync`` operation only supports the ``sudo`` and ``sudo_user``
-        global arguments.
+        When using SSH, the ``files.rsync`` operation only supports the ``sudo``, ``sudo_user``,
+        and ``sudo_password`` global arguments.
     """
 
     if flags is None:
@@ -922,9 +925,9 @@ def get(
         dest = os.path.join(state.cwd, dest)
 
     if create_local_dir:
-        local_pathname = os.path.dirname(dest)
-        if not os.path.exists(local_pathname):
-            os.makedirs(local_pathname)
+        local_pathname = Path(dest).parent
+        if not local_pathname.exists():
+            local_pathname.mkdir(parents=True)
 
     remote_file = host.get_fact(File, path=src)
 
@@ -940,7 +943,7 @@ def get(
         )
 
     # No local file, so always download
-    elif not os.path.exists(dest):
+    elif not Path(dest).exists():
         yield FileDownloadCommand(
             src, dest, remote_temp_filename=host.get_temp_filename(dest, temp_directory=temp_dir)
         )
@@ -1038,8 +1041,9 @@ def put(
     + mtime: value of mtime the file should have, use ``True`` to match the local file
 
     ``dest``:
-        If this is a directory that already exists on the remote side, the local
-        file will be uploaded to that directory with the same filename.
+        If this is a directory that already exists on the remote side, or the
+        destination ends with a trailing slash, the file will be uploaded to
+        that directory with the same filename.
 
     ``mode``:
         When set to ``True`` the permissions of the local file are applied to the
@@ -1113,7 +1117,7 @@ def put(
 
         local_file = src
 
-        if os.path.isfile(local_file):
+        if Path(local_file).is_file():
             local_sum_path = local_file
         elif assume_exists:
             local_sum_path = None
@@ -1121,7 +1125,7 @@ def put(
             raise OSError(f"No such file: {local_file}")
 
     if mode is True:
-        if isinstance(local_file, str) and os.path.isfile(local_file):
+        if isinstance(local_file, str) and Path(local_file).is_file():
             mode = get_path_permissions_mode(local_file)
         else:
             logger.warning(
@@ -1134,9 +1138,19 @@ def put(
 
     remote_file = host.get_fact(File, path=dest)
 
-    if not remote_file and bool(host.get_fact(Directory, path=dest)):
-        assert isinstance(src, str)
-        dest = unix_path_join(dest, os.path.basename(src))
+    if not remote_file and (
+        (isinstance(dest, str) and dest.endswith("/")) or bool(host.get_fact(Directory, path=dest))
+    ):
+        # A file-like ``src`` has no filename to append to the directory, so the
+        # destination is ambiguous. Raise a clear error rather than a bare
+        # ``AssertionError`` from the ``isinstance`` check below (#1144).
+        if hasattr(src, "read"):
+            raise OperationTypeError(
+                "When `src` is a file-like object, `dest` must be a full file "
+                "path, not a directory",
+            )
+
+        dest = unix_path_join(dest, Path(src).name)
         remote_file = host.get_fact(File, path=dest)
 
     if create_remote_dir:
@@ -1194,19 +1208,23 @@ def put(
         if not _file_equal(local_sum_path, dest):
             if state.config.DIFF:
                 # Generate diff when contents change
-                current_contents = host.get_fact(FileContents, path=dest)
-                if current_contents:
-                    current_lines = [line + "\n" for line in current_contents]
-                else:
-                    current_lines = []
-
                 host.log(f"Will modify {format_text(dest, bold=True)}", logger.info)
 
-                with get_file_io(src, "r") as f:
-                    desired_lines = f.readlines()
+                try:
+                    with get_file_io(src, "r") as f:
+                        desired_lines = f.readlines()
+                except UnicodeDecodeError:
+                    # Not fetching the remote contents here avoids hanging on a binary file
+                    logger.info("Binary file modified")
+                else:
+                    current_contents = host.get_fact(FileContents, path=dest)
+                    if current_contents:
+                        current_lines = [line + "\n" for line in current_contents]
+                    else:
+                        current_lines = []
 
-                for line in generate_color_diff(current_lines, desired_lines):
-                    logger.info("  %s", line)
+                    for line in generate_color_diff(current_lines, desired_lines):
+                        logger.info("  %s", line)
                 logger.info("")
 
             yield FileUploadCommand(
@@ -1302,7 +1320,7 @@ def template(
     dest: str,
     user: str | None = None,
     group: str | None = None,
-    mode: str | None = None,
+    mode: int | str | None = None,
     create_remote_dir: bool = True,
     jinja_env_kwargs: dict[str, Any] | None = None,
     **data,
@@ -1481,17 +1499,48 @@ def move(src: str, dest: str, overwrite=False):
     """
 
     if host.get_fact(File, src) is None:
-        raise OperationError(f"src {src} does not exist")
+        if state.is_executing:
+            raise OperationError(f"src {src} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}src {src} does not exist yet")
 
-    if not host.get_fact(Directory, dest):
-        raise OperationError(f"dest {dest} is not an existing directory")
+    dest_info = host.get_fact(Directory, dest)
+    if dest_info is False:
+        raise OperationError(f"dest {dest} is not a directory")
+    elif dest_info is None:
+        if state.is_executing:
+            raise OperationError(f"dest directory {dest} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}dest directory {dest} does not exist yet")
 
-    full_dest_path = os.path.join(dest, os.path.basename(src))
+    full_dest_path = posixpath.join(dest, PurePosixPath(src).name)
     if host.get_fact(File, full_dest_path) is not None:
         if overwrite:
             yield StringCommand("rm", "-rf", QuoteString(full_dest_path))
         else:
             raise OperationError(f"dest {full_dest_path} already exists and `overwrite` is unset")
+
+    yield StringCommand("mv", QuoteString(src), QuoteString(dest))
+
+
+@operation()
+def rename(src: str, dest: str, overwrite=False):
+    """
+    Rename a remote file/directory/link to a new path
+
+    + src: remote file/directory to rename
+    + dest: new path for `src`
+    + overwrite: whether to overwrite dest, if present
+    """
+
+    if host.get_fact(File, src) is None:
+        raise OperationError(f"src {src} does not exist")
+
+    if host.get_fact(File, dest) is not None:
+        if overwrite:
+            yield StringCommand("rm", "-rf", QuoteString(dest))
+        else:
+            raise OperationError(f"dest {dest} already exists and `overwrite` is unset")
 
     yield StringCommand("mv", QuoteString(src), QuoteString(dest))
 
@@ -1506,13 +1555,23 @@ def copy(src: str, dest: str, overwrite=False):
     + overwrite: whether to overwrite dest, if present
     """
     src_is_dir = host.get_fact(Directory, src)
-    if not host.get_fact(File, src) and not src_is_dir:
-        raise OperationError(f"src {src} does not exist")
+    src_is_file = host.get_fact(File, src)
+    if not src_is_file and not src_is_dir:
+        if state.is_executing:
+            raise OperationError(f"src {src} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}src {src} does not exist yet")
 
-    if not host.get_fact(Directory, dest):
-        raise OperationError(f"dest {dest} is not an existing directory")
+    dest_info = host.get_fact(Directory, dest)
+    if dest_info is False:
+        raise OperationError(f"dest {dest} is not a directory")
+    elif dest_info is None:
+        if state.is_executing:
+            raise OperationError(f"dest directory {dest} does not exist")
+        else:
+            logger.info(f"{host.print_prefix}dest directory {dest} does not exist yet")
 
-    dest_file_path = os.path.join(dest, os.path.basename(src))
+    dest_file_path = posixpath.join(dest, PurePosixPath(src).name)
     dest_file_exists = host.get_fact(File, dest_file_path)
     if dest_file_exists and not overwrite:
         if _remote_file_equal(src, dest_file_path):
@@ -1541,7 +1600,7 @@ def _raise_or_remove_invalid_path(fs_type, path, force, force_backup, force_back
         if force_backup:
             backup_path = f"{path}.{get_timestamp()}"
             if force_backup_dir:
-                backup_path = os.path.basename(backup_path)
+                backup_path = PurePosixPath(backup_path).name
                 backup_path = f"{force_backup_dir}/{backup_path}"
             yield StringCommand("mv", QuoteString(path), QuoteString(backup_path))
         else:
@@ -1603,6 +1662,13 @@ def link(
         raise OperationError("If present is True target must be provided")
 
     info = host.get_fact(Link, path=path)
+
+    if info is False and not symbolic and target is not None:
+        # The path exists but is not a symlink - it may already be a hard link to the target
+        file_info = host.get_fact(File, path=path)
+        same_file = host.get_fact(SameFile, path=path, target=target)
+        if file_info and same_file:
+            info = {**file_info, "link_target": target}
 
     if info is False:  # not a link
         yield from _raise_or_remove_invalid_path(
@@ -1807,6 +1873,7 @@ def directory(
             path="/web",
             user="myweb",
             group="myweb",
+            mode="750",
         )
 
         # Multiple directories
@@ -1929,6 +1996,7 @@ def block(
     marker: str | None = None,
     begin: str | None = None,
     end: str | None = None,
+    preserve_meta: bool = True,
 ):
     """
     Ensure content, surrounded by the appropriate markers, is present (or not) in the file.
@@ -1946,6 +2014,13 @@ def block(
     + marker: the base string used to mark the text.  Default is ``# {mark} PYINFRA BLOCK``
     + begin: the value for ``{mark}`` in the marker before the content. Default is ``BEGIN``
     + end: the value for ``{mark}`` in the marker after the content. Default is ``END``
+    + preserve_meta: whether to restore the file's owner, group and mode after rewriting it.
+      Default ``True`` (today's behaviour on an existing file). Set to ``False`` on a host
+      where the executing user may not ``chown`` the target. Has no effect when the file does
+      not yet exist: there is nothing to restore in that case either way. When ``False`` on an
+      existing file, the rewrite replaces the file rather than editing it in place, so the file
+      is left with the temporary file's mode (``0600``) and the executing user's ownership
+      instead of its original owner, group and mode.
 
     Content appended if ``line`` not found in the file
         If ``content`` is not in the file but is required (``present=True``) and ``line`` is not
@@ -2031,31 +2106,42 @@ def block(
     # standard awk doesn't have an "in-place edit" option so we write to a tempfile and
     # if edits were successful move to dest i.e. we do: <out_prep> ... do some work ... <real_out>
     q_path = QuoteString(path)
+    # Nothing to restore when the file doesn't exist yet (there is no prior owner, group or
+    # mode to preserve), and preserve_meta lets the caller decline the restore even when the
+    # file does exist, for hosts where the executing user may not chown the target.
+    restore_meta = preserve_meta and current is not None
     mode_get = (
-        ""
-        if current is None
-        else (
+        (
             'MODE="$(stat -c %a',
             q_path,
             "2>/dev/null || stat -f %Lp",
             q_path,
             '2>/dev/null)" &&',
         )
+        if restore_meta
+        else ""
+    )
+    owner_get = (
+        (
+            'OWNER="$(stat -c "%u:%g"',
+            q_path,
+            '2>/dev/null || stat -f "%u:%g"',
+            q_path,
+            '2>/dev/null || echo $(id -un):$(id -gn))" &&',
+        )
+        if restore_meta
+        else ""
     )
     out_prep = StringCommand(
         f'OUT="$(TMPDIR={tmp_dir} mktemp -t pyinfra.XXXXXX)" && ',
         *mode_get,
-        'OWNER="$(stat -c "%u:%g"',
-        q_path,
-        '2>/dev/null || stat -f "%u:%g"',
-        q_path,
-        '2>/dev/null || echo $(id -un):$(id -gn))" &&',
+        *owner_get,
     )
 
-    mode_change = "" if current is None else ' && chmod "$MODE"'
-    real_out = StringCommand(
-        ' && mv "$OUT"', q_path, ' && chown "$OWNER"', q_path, mode_change, q_path
+    meta_restore = (
+        (' && chown "$OWNER"', q_path, ' && chmod "$MODE"', q_path) if restore_meta else ()
     )
+    real_out = StringCommand(' && mv "$OUT"', q_path, *meta_restore)
 
     if backup and (current is not None):  # can't back up something that doesn't exist
         out_prep = StringCommand(
@@ -2252,9 +2338,14 @@ def unarchive(
         yield FileUploadCommand(src, temp_archive)
         archive_path = temp_archive
     else:
-        # Validate the remote archive exists
-        if host.get_fact(File, path=src) is None:
-            raise OperationError(f"Remote archive {src} does not exist")
+        # Check if the remote archive exists
+        archive_info = host.get_fact(File, path=src)
+        if archive_info is False:
+            raise OperationError(f"Remote archive {src} is not a file")
+        elif archive_info is None:
+            if state.is_executing:
+                raise OperationError(f"Remote archive {src} does not exist")
+            logger.info(f"{host.print_prefix}Remote archive {src} does not exist")
         archive_path = src
 
     extras = list(extra_opts) if extra_opts else []

@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 import stat
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from typing_extensions import NotRequired, TypedDict, override
 from typing import Literal
@@ -220,7 +220,7 @@ class FileDict(TypedDict):
     link_target: NotRequired[str]
 
 
-class File(FactBase[Union[FileDict, Literal[False], None]]):
+class File(FactBase[FileDict | Literal[False] | None]):
     """
     Returns information about a file on the remote system:
 
@@ -369,8 +369,27 @@ class Socket(File):
     type = "socket"
 
 
+class SameFile(FactBase[bool]):
+    """
+    Returns ``True`` if ``path`` and ``target`` refer to the same file (same device and
+    inode, ie one is a hard link to the other), otherwise ``False``.
+    """
+
+    @override
+    def command(self, path: str, target: str) -> StringCommand:
+        return make_formatted_string_command(
+            "test {0} -ef {1} && echo true || echo false",
+            QuoteString(path),
+            QuoteString(target),
+        )
+
+    @override
+    def process(self, output: list[str]) -> bool:
+        return output == ["true"]
+
+
 if TYPE_CHECKING:
-    FactBaseOptionalStr = FactBase[Optional[str]]
+    FactBaseOptionalStr = FactBase[str | None]
 else:
     FactBaseOptionalStr = FactBase
 
@@ -383,30 +402,28 @@ class HashFileFactBase(FactBaseOptionalStr):
     def __init_subclass__(cls, digits: int, cmds: list[str], **kwargs) -> None:
         super().__init_subclass__(**kwargs)
 
-        raw_hash_cmds = [f"{cmd} {{0}} 2> /dev/null" for cmd in cmds]
+        # Read files through stdin so checksum tools never see the filename,
+        # avoiding GNU coreutils' backslash/newline escaping (see #1911).
+        raw_hash_cmds = [f"{cmd} < {{0}} 2> /dev/null" for cmd in cmds]
         raw_hash_cmd = " || ".join(raw_hash_cmds)
         cls._raw_cmd = f"test -e {{0}} && ( {raw_hash_cmd} ) || true"
 
-        assert cls.__name__.endswith("File")
-        hash_name = cls.__name__[:-4].upper()
         cls._regexes = (
-            # GNU coreutils style:
-            r"^([a-fA-F0-9]{%d})\s+%%s$" % digits,
-            # BSD style:
-            r"^%s\s+\(%%s\)\s+=\s+([a-fA-F0-9]{%d})$" % (hash_name, digits),
+            # GNU coreutils / shasum stdin style: "<hash>  -"
+            r"^([a-fA-F0-9]{%d})\s+-\s*$" % digits,  # noqa: UP031
+            # BSD digest stdin style: just "<hash>"
+            r"^([a-fA-F0-9]{%d})$" % digits,  # noqa: UP031
         )
 
     @override
     def command(self, path):
-        self.path = path
         return make_formatted_string_command(self._raw_cmd, QuoteString(path))
 
     @override
     def process(self, output) -> str | None:
         output = output[0]
-        escaped_path = re.escape(self.path)
         for regex in self._regexes:
-            matches = re.match(regex % escaped_path, output)
+            matches = re.match(regex, output)
             if matches:
                 return matches.group(1)
         return None

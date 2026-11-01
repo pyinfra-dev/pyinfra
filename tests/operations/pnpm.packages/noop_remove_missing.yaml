@@ -1,0 +1,9 @@
+args:
+  - ["cowsay"]
+kwargs:
+  present: false
+facts:
+  pnpm.PnpmPackages:
+    directory=None: {}
+commands: []
+noop_description: "package cowsay is not installed"

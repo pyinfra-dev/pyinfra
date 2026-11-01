@@ -1,9 +1,16 @@
 {
-    "require_platform": ["Darwin", "Linux"],
-    "args": ["tmp/testfile", "tmp2"],
+    "require_platform": [
+        "Darwin",
+        "Linux"
+    ],
+    "args": [
+        "tmp/testfile",
+        "tmp2"
+    ],
     "facts": {
         "files.File": {
-            "path=tmp/testfile": null
+            "path=tmp/testfile": null,
+            "path=tmp2/testfile": null
         },
         "files.Directory": {
             "path=tmp2": {
@@ -11,8 +18,7 @@
             }
         }
     },
-    "exception": {
-        "name": "OperationError",
-        "message": "src tmp/testfile does not exist"
-    }
+    "commands": [
+        "mv tmp/testfile tmp2"
+    ]
 }

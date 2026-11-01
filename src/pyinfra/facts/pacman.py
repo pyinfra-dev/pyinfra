@@ -7,7 +7,8 @@ from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
 
-PACMAN_REGEX = r"^([0-9a-zA-Z\-_]+)\s([0-9\._+a-z\-:]+)"
+# `pacman -Q` output is two whitespace-free tokens: "<name> <version>"
+PACMAN_REGEX = r"^(\S+)\s(\S+)"
 
 
 class PacmanUnpackGroup(FactBase):

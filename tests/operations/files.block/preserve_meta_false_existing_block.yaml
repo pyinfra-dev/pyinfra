@@ -1,0 +1,17 @@
+require_platform:
+- Darwin
+- Linux
+args:
+- /home/someone/something
+kwargs:
+  content: should be this
+  line: before this
+  before: true
+  preserve_meta: false
+facts:
+  files.Block:
+    begin=None, end=None, marker=None, path=/home/someone/something:
+    - previously was something else
+commands:
+- |-
+  OUT="$(TMPDIR=_tempdir_ mktemp -t pyinfra.XXXXXX)" &&  awk 'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=""}}/# BEGIN PYINFRA BLOCK/ {print; print x; f=0} /# END PYINFRA BLOCK/ {print; f=1; next} f' /home/someone/something 'should be this' > "$OUT"  && mv "$OUT" /home/someone/something

@@ -1,0 +1,63 @@
+{
+  "command": "LANG=C ps -eo pid,user,stat,%cpu,%mem,args -ww && echo ===PYINFRA-PROCESSES-COMM=== && LANG=C ps -eo pid,comm -ww",
+  "facts": {
+    "server.Kernel": "Darwin"
+  },
+  "output": [
+    "  PID USER     STAT  %CPU %MEM ARGS",
+    "    1 root     Ss    0.0  0.1 /sbin/launchd",
+    "  200 root     S     0.0  0.0 /usr/libexec/opendirectoryd",
+    "  300 root     Ss    0.0  0.2 /usr/sbin/sshd -D -o PermitRootLogin=no",
+    "  500 root     Ss    0.3  1.2 /System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper",
+    "  600 karlicos S     0.1  0.4 /Applications/Some App.app/Contents/MacOS/Some App --flag value",
+    "===PYINFRA-PROCESSES-COMM===",
+    "  PID COMM",
+    "    1 /sbin/launchd",
+    "  200 /usr/libexec/opendirectoryd",
+    "  300 /usr/sbin/sshd",
+    "  500 /System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper",
+    "  600 /Applications/Some App.app/Contents/MacOS/Some App"
+  ],
+  "fact": {
+    "1": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.1,
+      "command": "/sbin/launchd",
+      "args": "/sbin/launchd"
+    },
+    "200": {
+      "user": "root",
+      "state": "S",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.0,
+      "command": "/usr/libexec/opendirectoryd",
+      "args": "/usr/libexec/opendirectoryd"
+    },
+    "300": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.2,
+      "command": "/usr/sbin/sshd",
+      "args": "/usr/sbin/sshd -D -o PermitRootLogin=no"
+    },
+    "500": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.3,
+      "mem_percent": 1.2,
+      "command": "/System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper",
+      "args": "/System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper"
+    },
+    "600": {
+      "user": "karlicos",
+      "state": "S",
+      "cpu_percent": 0.1,
+      "mem_percent": 0.4,
+      "command": "/Applications/Some App.app/Contents/MacOS/Some App",
+      "args": "/Applications/Some App.app/Contents/MacOS/Some App --flag value"
+    }
+  }
+}

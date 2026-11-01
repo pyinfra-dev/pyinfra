@@ -1,0 +1,4 @@
+kwargs:
+  wait_for_lock: 120
+commands:
+  - apt-get -o DPkg::Lock::Timeout=120 update

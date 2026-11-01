@@ -1,0 +1,19 @@
+{
+    "args": ["ssh://git@git.example.com:abc/org/repo.git", "/home/myrepo"],
+    "kwargs": {
+        "ssh_keyscan": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null,
+            "path=~/.ssh": {
+                "mode": 700
+            }
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "Could not parse domain (to SSH keyscan) from: ssh://git@git.example.com:abc/org/repo.git"
+    }
+}

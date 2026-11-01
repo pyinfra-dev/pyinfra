@@ -1,0 +1,11 @@
+args:
+  - ["typescript@5.7.2", "@types/node", "dayjs"]
+kwargs:
+  present: false
+facts:
+  pnpm.PnpmPackages:
+    directory=None:
+      typescript: ["5.7.2"]
+      "@types/node": ["22.10.2"]
+commands:
+  - pnpm --global remove typescript @types/node

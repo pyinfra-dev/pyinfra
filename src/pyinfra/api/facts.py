@@ -22,7 +22,7 @@ from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api.output import format_text
-from pyinfra.api import StringCommand
+from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.arguments import all_global_arguments, pop_global_arguments
 from pyinfra.api.exceptions import FactPreconditionError, FactProcessError, MissingCommandError
 from pyinfra.api.util import (
@@ -36,13 +36,13 @@ from pyinfra.context import ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .arguments import CONNECTOR_ARGUMENT_KEYS
-from .state import StateStage
 
 if TYPE_CHECKING:
     from pyinfra.api import Host, State
 
 # Sentinel output line emitted when skip_unless_command binary is absent on the remote host.
 _MISSING_COMMAND_MARKER = "##PYINFRA_NOCMD##"
+_SU_OUTPUT_MARKER = "##PYINFRA_SU_READY##"
 
 SUDO_REGEX = r"^sudo: unknown user"
 SU_REGEXES = (
@@ -69,7 +69,7 @@ class FactBase(Generic[T]):
         """
         return None
 
-    def check_preconditions(self, state: State, host: Host) -> str | None:
+    def check_preconditions(self, state: State, host: Host, *args, **kwargs) -> str | None:
         """Check that this fact's prerequisites are satisfied before running.
 
         Override this method to call ``host.get_fact(...)`` and return:
@@ -79,6 +79,15 @@ class FactBase(Generic[T]):
 
         The framework handles raising ``FactPreconditionError`` and phase-awareness
         automatically; fact authors never need to import exception classes.
+
+        A fact that takes parameters receives them here, named as its ``command`` declares
+        them, so a precondition can depend on which project or pool is being asked about. A
+        fact whose ``command`` takes none is called with none, which is what every existing
+        implementation already expects.
+
+        The trailing ``*args``/``**kwargs`` are what let an implementation declare only what it
+        needs — ``(self, state, host)``, or ``(self, state, host, pool=None)`` for one that
+        depends on its own parameters — the way ``requires_command``'s implementations do.
         """
         return None
 
@@ -220,7 +229,7 @@ def get_fact(
         # During the prepare phase the binary might not yet be installed (a prior
         # operation will install it).  Silently return the default so change
         # detection can proceed normally.
-        if state.current_stage != StateStage.Execute:
+        if not state.is_executing:
             logger.debug(
                 "Fact %s skipped on %s during prepare: %s",
                 cls.__name__,
@@ -242,7 +251,7 @@ def get_fact(
         # Same phase-aware logic: a precondition not satisfied during prepare
         # is normal (e.g. kernel module not yet loaded); during execute it is an
         # ordering error in the deploy.
-        if state.current_stage != StateStage.Execute:
+        if not state.is_executing:
             logger.debug(
                 "Fact %s skipped on %s during prepare: %s",
                 cls.__name__,
@@ -285,8 +294,11 @@ def _get_fact(
     if fact.shell_executable:
         global_kwargs["_shell_executable"] = fact.shell_executable
 
-    # Check preconditions before running this fact's command.
-    if reason := fact.check_preconditions(state, host):
+    # Check preconditions before running this fact's command. The fact's own arguments go
+    # with it, minus the `self` that `getcallargs` collected alongside them — `_make_command`
+    # drops it the same way before calling `command`.
+    precondition_kwargs = {key: value for key, value in fact_kwargs.items() if key != "self"}
+    if reason := fact.check_preconditions(state, host, **precondition_kwargs):
         raise FactPreconditionError(cls, reason)
 
     command = _make_command(fact.command, fact_kwargs)
@@ -318,6 +330,9 @@ def _get_fact(
         key: value for key, value in global_kwargs.items() if key in CONNECTOR_ARGUMENT_KEYS
     }
 
+    if executor_kwargs.get("_su_user"):
+        command = StringCommand("printf", QuoteString(_SU_OUTPUT_MARKER), "&&", command)
+
     try:
         status, output = host.run_shell_command(
             command,
@@ -333,6 +348,12 @@ def _get_fact(
         )
 
     stdout_lines, stderr_lines = output.stdout_lines, output.stderr_lines
+    if executor_kwargs.get("_su_user"):
+        for index, line in enumerate(stdout_lines):
+            if _SU_OUTPUT_MARKER in line:
+                stdout_lines = stdout_lines[index:].copy()
+                stdout_lines[0] = line.split(_SU_OUTPUT_MARKER, 1)[1]
+                break
 
     # Detect the "binary absent" sentinel from the if/then/else shell guard.
     if status and stdout_lines == [_MISSING_COMMAND_MARKER]:
@@ -369,9 +390,11 @@ def _get_fact(
         # This allows for users that don't currently but may be created during
         # other operations.
         first_line = stderr_lines[0]
-        if executor_kwargs["_sudo_user"] and re.match(SUDO_REGEX, first_line):
+        if executor_kwargs.get("_sudo_user") and re.match(SUDO_REGEX, first_line):
             status = True
-        if executor_kwargs["_su_user"] and any(re.match(regex, first_line) for regex in SU_REGEXES):
+        if executor_kwargs.get("_su_user") and any(
+            re.match(regex, first_line) for regex in SU_REGEXES
+        ):
             status = True
 
     if status:

@@ -1,5 +1,5 @@
 {
-    "command": "ip addr show 2> /dev/null || ifconfig -a",
+    "command": "ip -j addr show 2> /dev/null || ip addr show 2> /dev/null || ifconfig -a",
     "output": [
         "enp1s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500",
         "        inet 192.168.123.111  netmask 255.255.255.0  broadcast 192.168.123.255",
@@ -42,12 +42,7 @@
             "ipv6": {
                 "address": "2a01:e0a:5c2:7450:b241:6fff:fe0a:cf22",
                 "mask_bits": 64,
-                "additional_ips": [
-                    {
-                        "address": "fe80::b241:6fff:fe0a:cf22",
-                        "mask_bits": 64
-                    }
-                ]
+                "additional_ips": [{"address": "fe80::b241:6fff:fe0a:cf22", "mask_bits": 64}]
             }
         },
         "incusbr0": {
@@ -63,12 +58,7 @@
             "ipv6": {
                 "address": "fe80::216:3eff:fe9c:8200",
                 "mask_bits": 64,
-                "additional_ips": [
-                    {
-                        "address": "fd42:5bce:bd73:eda6::1",
-                        "mask_bits": 64
-                    }
-                ]
+                "additional_ips": [{"address": "fd42:5bce:bd73:eda6::1", "mask_bits": 64}]
             }
         },
         "lo": {
@@ -80,10 +70,7 @@
                 "netmask": "255.0.0.0",
                 "broadcast": null
             },
-            "ipv6": {
-                "address": "::1",
-                "mask_bits": 128
-            }
+            "ipv6": {"address": "::1", "mask_bits": 128}
         }
     }
 }

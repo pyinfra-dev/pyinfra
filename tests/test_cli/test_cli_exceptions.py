@@ -3,23 +3,17 @@ from os import path
 from unittest import TestCase
 
 import pytest
-from click.testing import CliRunner
 
 from pyinfra.api import OperationError
 from pyinfra.api.exceptions import ArgumentTypeError
 from pyinfra_cli.exceptions import CliError, UnexpectedExternalError, WrappedError
-from pyinfra_cli.main import cli
 
 from .util import run_cli
 
 
 class TestCliExceptions(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.runner = CliRunner()
-
     def assert_cli_exception(self, args, message):
-        result = self.runner.invoke(cli, args, standalone_mode=False)
+        result = run_cli(*args)
         self.assertIsInstance(result.exception, CliError)
         assert getattr(result.exception, "message") == message
 

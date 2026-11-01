@@ -1,24 +1,23 @@
 from __future__ import annotations
 
+import ast
 import json
-import os
 from datetime import datetime
 from importlib import import_module
 from importlib.util import find_spec
 from io import IOBase
-from os import path
 from pathlib import Path
 from types import CodeType, FunctionType, ModuleType
 from collections.abc import Callable
 
-import click
 import gevent
 
-from pyinfra import logger, state
+from pyinfra import logger
 from pyinfra.api.command import PyinfraCommand
 from pyinfra.api.exceptions import PyinfraError
 from pyinfra.api.host import HostData
 from pyinfra.api.operation import OperationMeta
+from pyinfra.api.output import format_text
 from pyinfra.api.state import (
     State,
     StateHostMeta,
@@ -26,7 +25,7 @@ from pyinfra.api.state import (
     StateOperationHostData,
     StateOperationMeta,
 )
-from pyinfra.context import ctx_config, ctx_host
+from pyinfra.context import ctx_config, ctx_host, ctx_state
 from pyinfra.progress import progress_spinner
 
 from .exceptions import CliError, UnexpectedExternalError
@@ -36,10 +35,13 @@ PYTHON_CODES: dict[str, CodeType] = {}
 
 
 def is_subdir(child, parent):
-    child = path.realpath(child)
-    parent = path.realpath(parent)
-    relative = path.relpath(child, start=parent)
-    return not relative.startswith(os.pardir)
+    child_resolved = Path(child).resolve()
+    parent_resolved = Path(parent).resolve()
+    try:
+        child_resolved.relative_to(parent_resolved)
+    except ValueError:
+        return False
+    return True
 
 
 def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = False):
@@ -47,8 +49,12 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
     Execute a Python file and optionally return it's attributes as a dict.
     """
 
-    old_current_exec_filename = state.current_exec_filename
-    state.current_exec_filename = filename
+    # The state context may be unset (eg when called via the API with no
+    # `ctx_state.use(state)`) - skip tracking the executing file then (#1432).
+    state = ctx_state.get()
+    if state is not None:
+        old_current_exec_filename = state.current_exec_filename
+        state.current_exec_filename = filename
 
     if filename not in PYTHON_CODES:
         with open(filename, encoding="utf-8") as f:
@@ -70,7 +76,8 @@ def exec_file(filename, return_locals: bool = False, is_deploy_code: bool = Fals
         # Wrap & re-raise errors in user code so we highlight filename/etc
         raise UnexpectedExternalError(e, filename)
     finally:
-        state.current_exec_filename = old_current_exec_filename
+        if state is not None:
+            state.current_exec_filename = old_current_exec_filename
 
     return data
 
@@ -150,10 +157,28 @@ def parse_cli_arg(arg):
     except ValueError:
         pass
 
+    if len(arg) >= 2 and (arg[0], arg[-1]) in (("[", "]"), ("{", "}"), ("(", ")")):
+        try:
+            parsed_arg = ast.literal_eval(arg)
+        except (SyntaxError, ValueError):
+            pass
+        else:
+            if isinstance(parsed_arg, (dict, list, tuple)):
+                return parsed_arg
+
     return arg
 
 
+def _is_windows_drive_path(path: str) -> bool:
+    return len(path) >= 3 and path[1] == ":" and path[2] in ("/", "\\")
+
+
 def try_import_module_attribute(path, prefix=None, raise_for_none=True):
+    if _is_windows_drive_path(path):
+        if raise_for_none:
+            raise CliError(f"No such module: {path}")
+        return None
+
     if ":" in path:
         # Allow a.module.name:function syntax
         mod_path, attr_name = path.rsplit(":", 1)
@@ -211,7 +236,7 @@ def _parallel_load_hosts(state: State, callback: Callable, name: str):
                 with ctx_host.use(local_host):
                     callback()
                     logger.info(
-                        f"{local_host.print_prefix}{click.style('Ready:', 'green')} {click.style(name, bold=True)}",
+                        f"{local_host.print_prefix}{format_text('Ready:', 'green')} {format_text(name, bold=True)}",
                     )
         except Exception as e:
             return e

@@ -23,6 +23,7 @@ AllowedTagType = Literal[
     "storage",
     "system",
     "rust",
+    "go",
     "version-control-system",
 ]
 

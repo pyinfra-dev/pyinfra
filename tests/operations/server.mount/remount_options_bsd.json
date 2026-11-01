@@ -1,0 +1,19 @@
+{
+    "args": ["/data"],
+    "kwargs": {
+        "options": ["rw", "noatime"]
+    },
+    "facts": {
+        "server.Kernel": "*BSD",
+        "server.Mounts": {
+            "/data": {
+                "options": ["rw"],
+                "type": "ufs",
+                "device": "/dev/sd0a"
+            }
+        }
+    },
+    "commands": [
+        "mount -uo rw,noatime -t ufs /dev/sd0a /data"
+    ]
+}

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-import os
+import pathlib
 import re
 import shutil
 from datetime import datetime
+from pathlib import PurePosixPath
 from tempfile import mkdtemp
-from typing import Optional, Union
 from collections.abc import Iterable
 
 from dateutil.parser import parse as parse_date
@@ -24,6 +24,14 @@ ISO_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 # Usernames used in shell tilde expansion (``~user``) cannot be quoted without
 # disabling the expansion, so the value must be a plain, shell-safe word.
 _SAFE_USERNAME_RE = re.compile(r"^[a-zA-Z0-9._][a-zA-Z0-9._-]*$")
+_OPENBSD_MOUNT_V_RE = re.compile(
+    r"""
+        (\S+) (?:\ \(.*\))?\  # the (diskname.label) part isn't always there, hence optional group
+        on\ (/.*)\            # *, not +, since root path "/" will be mounted
+        type\ (\w+)\          # types from /sbin/mount_*
+        \((.+)\)              # flags are in this group""",
+    flags=re.VERBOSE,
+)
 
 
 def _check_tilde_username(user: str) -> None:
@@ -41,7 +49,7 @@ class User(FactBase):
         return "echo $USER"
 
 
-class Home(FactBase[Optional[str]]):
+class Home(FactBase[str | None]):
     """
     Returns the home directory of the given user, or the current user if no user is given.
     """
@@ -205,7 +213,7 @@ class Timezone(FactBase[str]):
         return output[0]
 
 
-class Which(FactBase[Optional[str]]):
+class Which(FactBase[str | None]):
     """
     Returns the path of a given command according to `command -v`, if available.
     """
@@ -282,10 +290,12 @@ class Mounts(FactBase[dict[str, MountsDict]]):
 
     @override
     def command(self) -> str:
-        self._kernel = host.get_fact(Kernel)
+        self._kernel = host.get_fact(Kernel).strip()
 
-        if self._kernel.strip() == "FreeBSD":
+        if self._kernel == "FreeBSD":
             return "mount -p --libxo json"
+        if self._kernel == "OpenBSD":
+            return "mount -v"
         else:
             return "cat /proc/self/mountinfo"
 
@@ -315,6 +325,18 @@ class Mounts(FactBase[dict[str, MountsDict]]):
                 options = [option.strip() for option in entry["opts"].split(",")]
 
                 devices[path] = {"device": device, "type": type_, "options": options}
+
+            return devices
+
+        if self._kernel == "OpenBSD":
+            for line in output:
+                if m := _OPENBSD_MOUNT_V_RE.fullmatch(line):
+                    path = m[2]
+                    device = m[1]
+                    type_ = m[3]
+                    options = [opt.strip(" ") for opt in m[4].split(",") if "ctime=" not in opt]
+
+                    devices[path] = {"device": device, "type": type_, "options": options}
 
             return devices
 
@@ -354,7 +376,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[Union[tuple[str, int], tuple[None, None]]]):
+class Port(FactBase[tuple[str, int] | tuple[None, None]]):
     """
     Returns the process occupying a port and its PID.
 
@@ -915,6 +937,11 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
     Fedora & Gentoo currently. Also contains any key/value items located in
     release files.
 
+    ``major`` and ``minor`` resolved from the most precise source available, when
+    ``/etc/os-release`` exposes only major version (e.g. CentOS 8's ``VERSION_ID="8"``),
+    ``major.minor`` is read from distro-specific release file (e.g. ``/etc/centos-release``)
+    instead. ``minor`` is ``None`` when no source provides it (e.g. CentOS Stream).
+
     .. code:: python
 
         {
@@ -978,16 +1005,12 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
 
         temp_root = mkdtemp()
         try:
-            temp_etc_dir = os.path.join(temp_root, "etc")
-            os.mkdir(temp_etc_dir)
+            temp_etc_dir = pathlib.Path(temp_root) / "etc"
+            temp_etc_dir.mkdir()
 
             for filename, content in parts.items():
-                with open(
-                    os.path.join(temp_etc_dir, os.path.basename(filename)),
-                    "w",
-                    encoding="utf-8",
-                ) as fp:
-                    fp.write(content)
+                target = temp_etc_dir / PurePosixPath(filename).name
+                target.write_text(content, encoding="utf-8")
 
             parsed = distro.LinuxDistribution(
                 root_dir=temp_root,
@@ -1000,11 +1023,15 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
             # TODO: fix this!
             release_meta.pop("RELEASE_CODENAME", None)
 
+            # try_int returns its input on failure, so a missing version part comes back as ""
+            major = try_int(parsed.major_version(best=True))
+            minor = try_int(parsed.minor_version(best=True))
+
             release_info.update(
                 {
                     "name": self.name_to_pretty_name.get(parsed.id(), parsed.name()),
-                    "major": try_int(parsed.major_version()) or None,
-                    "minor": try_int(parsed.minor_version()) or None,
+                    "major": major if isinstance(major, int) else None,
+                    "minor": minor if isinstance(minor, int) else None,
                     "release_meta": release_meta,
                 },
             )
@@ -1278,6 +1305,10 @@ echo "no_reboot_required"
         return list(output)[0].strip() == "reboot_required"
 
 
+_DARWIN_ARGS_FIELDS = "pid,user,stat,%cpu,%mem,args"
+_DARWIN_COMM_MARKER = "===PYINFRA-PROCESSES-COMM==="
+
+
 class Processes(FactBase[dict[int, ProcessDict]]):
     """
     Returns a dictionary of running processes keyed by PID.
@@ -1301,7 +1332,9 @@ class Processes(FactBase[dict[int, ProcessDict]]):
     @override
     def command(self, pid: int | None = None) -> str | StringCommand:
         self._kernel = host.get_fact(Kernel)
-        is_bsd = self._kernel.strip() in ("FreeBSD", "Darwin")
+        kernel = self._kernel.strip()
+        self._is_darwin = kernel == "Darwin"
+        is_bsd = kernel in ("FreeBSD", "Darwin")
 
         # BusyBox ps (Alpine) only supports limited columns.
         # Detect by checking if busybox exists on the system.
@@ -1309,6 +1342,26 @@ class Processes(FactBase[dict[int, ProcessDict]]):
             self._is_busybox = bool(host.get_fact(Which, "busybox"))
         else:
             self._is_busybox = False
+
+        if self._is_darwin:
+            # macOS ps truncates any non-last text column (comm to 16 bytes, args to 64),
+            # so run ps twice with each of those columns last and join by pid.
+            if pid is not None:
+                return StringCommand(
+                    "LANG=C ps -p",
+                    QuoteString(str(pid)),
+                    f"-o {_DARWIN_ARGS_FIELDS} -ww &&",
+                    "echo",
+                    f"{_DARWIN_COMM_MARKER} &&",
+                    "LANG=C ps -p",
+                    QuoteString(str(pid)),
+                    "-o pid,comm -ww",
+                )
+            return (
+                f"LANG=C ps -eo {_DARWIN_ARGS_FIELDS} -ww && "
+                f"echo {_DARWIN_COMM_MARKER} && "
+                "LANG=C ps -eo pid,comm -ww"
+            )
 
         if not self._is_busybox:
             fields = "pid,user,stat,%cpu,%mem,comm,args"
@@ -1330,8 +1383,70 @@ class Processes(FactBase[dict[int, ProcessDict]]):
         else:
             return f"LANG=C ps -eo {fields} --no-headers"
 
+    def _process_darwin(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        args_lines: list[str] = []
+        comm_lines: list[str] = []
+        current = args_lines
+        marker_seen = False
+
+        for line in output:
+            if line.strip() == _DARWIN_COMM_MARKER:
+                marker_seen = True
+                current = comm_lines
+                continue
+            current.append(line)
+
+        if not marker_seen:
+            raise Exception(
+                f"server.Processes: did not find the {_DARWIN_COMM_MARKER!r} marker in "
+                "the ps output; the ps -eo/-p pipeline may have produced unexpected output"
+            )
+
+        processes: dict[int, ProcessDict] = {}
+
+        for line in args_lines:
+            line = line.strip()
+            if not line or line.startswith("PID"):
+                continue
+            parts = line.split(None, 5)
+            if len(parts) < 6:
+                continue
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+            processes[pid] = {
+                "user": parts[1],
+                "state": parts[2],
+                "cpu_percent": float(parts[3]),
+                "mem_percent": float(parts[4]),
+                "command": "",
+                "args": parts[5],
+            }
+
+        for line in comm_lines:
+            line = line.strip()
+            if not line or line.startswith("PID"):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) < 2:
+                continue
+            try:
+                pid = int(parts[0])
+            except ValueError:
+                continue
+            if pid in processes:
+                processes[pid]["command"] = parts[1]
+
+        # A pid without a matched `comm` row means it vanished between the two `ps`
+        # snapshots: drop it rather than return a record with an empty command.
+        return {pid: proc for pid, proc in processes.items() if proc["command"]}
+
     @override
     def process(self, output: Iterable[str]) -> dict[int, ProcessDict]:
+        if self._is_darwin:
+            return self._process_darwin(output)
+
         processes: dict[int, ProcessDict] = {}
 
         for line in output:

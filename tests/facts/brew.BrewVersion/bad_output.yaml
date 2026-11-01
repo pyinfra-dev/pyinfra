@@ -1,0 +1,8 @@
+command: brew --version
+requires_command: brew
+output:
+  - some random text
+fact:
+  - 0
+  - 0
+  - 0

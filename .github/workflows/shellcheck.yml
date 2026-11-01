@@ -1,0 +1,24 @@
+name: Shellcheck
+
+on:
+  push:
+    branches:
+      - 3.x
+      - 2.x
+      - 1.x
+      - 0.x
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: Check shell scripts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Run shellcheck
+        run: scripts/dev-shellcheck.sh

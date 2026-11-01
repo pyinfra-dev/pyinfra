@@ -1,0 +1,8 @@
+args:
+  - ["github.com/foo/bar"]
+kwargs:
+  present: false
+facts:
+  go.GoPackages: {}
+commands: []
+noop_description: "package github.com/foo/bar is not installed"

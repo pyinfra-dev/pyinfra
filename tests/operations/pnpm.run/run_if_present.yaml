@@ -1,0 +1,8 @@
+args:
+  - build
+  - /opt/app
+kwargs:
+  if_present: true
+  args: ["--mode", "production"]
+commands:
+  - cd /opt/app && pnpm run --if-present build --mode production

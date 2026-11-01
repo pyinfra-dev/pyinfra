@@ -1,13 +1,15 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from pyinfra.api import Config, State
+from pyinfra.api import Config, State, HiddenValue
 from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
     _ensure_askpass_set_for_host,
+    execute_command_with_sudo_retry,
     make_unix_command,
     make_unix_command_for_host,
+    read_output_buffers,
     remove_any_sudo_askpass_file,
 )
 
@@ -54,6 +56,16 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
     def test_sudo_preserve_env_command(self):
         command = make_unix_command("uptime", _sudo=True, _preserve_sudo_env=True)
         assert command.get_raw_value() == "sudo -H -n -E sh -c uptime"
+
+    def test_sudo_without_set_home_command(self):
+        command = make_unix_command("uptime", _sudo=True, _sudo_set_home=False)
+        assert command.get_raw_value() == "sudo -n sh -c uptime"
+
+    def test_sudo_without_set_home_preserve_env_command(self):
+        command = make_unix_command(
+            "uptime", _sudo=True, _sudo_set_home=False, _preserve_sudo_env=True
+        )
+        assert command.get_raw_value() == "sudo -n -E sh -c uptime"
 
     def test_use_sudo_login_command(self):
         command = make_unix_command("uptime", _sudo=True, _use_sudo_login=True)
@@ -147,6 +159,40 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
             == "sh -c 'export '\"'\"'KEY=value\"; id; echo \"'\"'\"' && uptime'"
         )
 
+    def test_command_env_hidden_value(self):
+        command = make_unix_command(
+            "uptime",
+            _env={
+                "KEY": HiddenValue("super-secret"),
+            },
+        )
+
+        raw = command.get_raw_value()
+        masked = command.get_masked_value()
+        assert "super-secret" in raw
+        assert "super-secret" not in masked
+        assert "*MASKED*" in masked
+        assert "KEY=*MASKED*" in masked
+
+    def test_command_env_hidden_value_with_shell_chars(self):
+        command = make_unix_command(
+            "uptime",
+            _env={
+                "KEY": HiddenValue("abc; id; echo bad"),
+            },
+        )
+
+        raw = command.get_raw_value()
+        masked = command.get_masked_value()
+
+        assert "abc; id; echo bad" in raw
+        assert "abc; id; echo bad" not in masked
+        assert "*MASKED*" in masked
+        assert "KEY=*MASKED*" in masked
+
+        # The raw command should still quote the assignment as one shell token.
+        assert "'\"'\"'KEY=abc; id; echo bad'\"'\"'" in raw
+
     def test_command_chdir(self):
         command = make_unix_command("uptime", _chdir="/opt/somedir")
         assert command.get_raw_value() == "sh -c 'cd /opt/somedir && uptime'"
@@ -224,6 +270,108 @@ class TestMakeUnixCommandConnectorUtil(TestCase):
         host = state.inventory.get_host("somehost")
         command = make_unix_command_for_host(state, host, "echo Šablony")
         assert command.get_raw_value() == "sh -c 'echo Šablony'"
+
+
+class TestExecuteCommandWithSudoRetry(TestCase):
+    """
+    A command failing with a sudo password required line should only be re-executed
+    when the command itself runs with sudo. Without `_sudo` the prompted password
+    cannot change the outcome, so the failed result is returned as-is and the usual
+    failure handling (fail_hosts, _ignore_errors, --fail-percent) applies
+    (issue #940).
+    """
+
+    def _make_host(self):
+        state = State(make_inventory(hosts=("somehost",)), Config())
+        host = state.inventory.get_host("somehost")
+        host.init(state)
+        return host
+
+    @staticmethod
+    def _sudo_required_output():
+        return CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_on_ordinary_failure(self, fake_getpass):
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, CommandOutput([OutputLine("stderr", "boom")])))
+
+        return_code, output = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        assert output.output == "boom"
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_without_sudo(self, fake_getpass, fake_logger):
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, self._sudo_required_output()))
+
+        return_code, output = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        assert output.output == "sudo: a password is required"
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+        assert "`_sudo=True`" in fake_logger.warning.call_args.args[0]
+        # The warning carries the host prefix so it can be attributed on multi-host runs
+        assert fake_logger.warning.call_args.args[1] == host.print_prefix
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_with_sudo_disabled(self, fake_getpass, fake_logger):
+        # The rsync path passes an explicit `_sudo=False`
+        host = self._make_host()
+        execute_command = MagicMock(return_value=(1, self._sudo_required_output()))
+
+        return_code, output = execute_command_with_sudo_retry(
+            host, {"_sudo": False}, execute_command
+        )
+
+        assert return_code == 1
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+
+    @patch("pyinfra.connectors.util.logger")
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_retry_without_sudo_sudo_rs(self, fake_getpass, fake_logger):
+        host = self._make_host()
+        execute_command = MagicMock(
+            return_value=(
+                1,
+                CommandOutput(
+                    [OutputLine("stderr", "sudo-rs: interactive authentication is required")]
+                ),
+            )
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {}, execute_command)
+
+        assert return_code == 1
+        execute_command.assert_called_once_with()
+        fake_getpass.assert_not_called()
+        fake_logger.warning.assert_called_once()
+
+    @patch("pyinfra.connectors.util.getpass", return_value="password")
+    def test_retry_with_sudo(self, fake_getpass):
+        host = self._make_host()
+        execute_command = MagicMock(
+            side_effect=[
+                (1, self._sudo_required_output()),
+                (0, CommandOutput([])),
+            ]
+        )
+
+        return_code, _ = execute_command_with_sudo_retry(host, {"_sudo": True}, execute_command)
+
+        assert return_code == 0
+        assert execute_command.call_count == 2
+        fake_getpass.assert_called_once()
+        assert host.connector_data["prompted_sudo_password"] == "password"
 
 
 class TestRemoveAnySudoAskpassFile(TestCase):
@@ -423,3 +571,66 @@ class TestEnsureAskpassTempDir(TestCase):
             )
 
         assert "${TMPDIR:=/op/tmp}" in captured["command"]
+
+
+class TestUseSudoPassword(TestCase):
+    """
+    With ``config.USE_SUDO_PASSWORD`` (``--use-sudo-password``) set, pyinfra should prompt for the
+    sudo password before the first sudo command rather than first trying passwordless sudo
+    (issue #1850).
+    """
+
+    def _make_host(self, config):
+        state = State(make_inventory(hosts=("somehost",)), config)
+        host = state.inventory.get_host("somehost")
+        host.init(state)
+        host.run_shell_command = MagicMock(  # type: ignore[method-assign]
+            return_value=(True, CommandOutput([OutputLine("stdout", "/tmp/askpass-XYZ")])),
+        )
+        return host
+
+    @patch("pyinfra.connectors.util.getpass", return_value="supersecret")
+    def test_prompts_before_first_sudo_command(self, fake_getpass):
+        host = self._make_host(Config(USE_SUDO_PASSWORD=True))
+
+        command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        assert command.get_raw_value() == (
+            "env SUDO_ASKPASS=/tmp/askpass-XYZ PYINFRA_SUDO_PASSWORD=supersecret "
+            "sudo -H -A -k sh -c uptime"
+        )
+
+        # The prompted password is reused for later commands
+        make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        fake_getpass.assert_called_once()
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_prompt_when_password_given(self, fake_getpass):
+        host = self._make_host(Config(USE_SUDO_PASSWORD=True, SUDO_PASSWORD="configured"))
+
+        command = make_unix_command_for_host(
+            host.state, host, "uptime", _sudo=True, _sudo_password="configured"
+        )
+        assert "sudo -H -A -k" in command.get_raw_value()
+        fake_getpass.assert_not_called()
+
+    @patch("pyinfra.connectors.util.getpass")
+    def test_no_prompt_without_use_sudo_password(self, fake_getpass):
+        host = self._make_host(Config())
+
+        command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
+        assert command.get_raw_value() == "sudo -H -n sh -c uptime"
+        fake_getpass.assert_not_called()
+
+
+class TestReadOutputBuffers(TestCase):
+    def test_defaults(self):
+        # Third-party connectors call this with just the buffers (issue #1303),
+        # so timeout, print_output and print_prefix must be optional.
+        output = read_output_buffers([b"hello\n"], [])
+        assert output.stdout_lines == ["hello"]
+        assert output.stderr_lines == []
+
+    def test_stderr(self):
+        output = read_output_buffers([], [b"oops\n"])
+        assert output.stdout_lines == []
+        assert output.stderr_lines == ["oops"]

@@ -1,9 +1,0 @@
-{
-    "args": ["homebrew/cask"],
-    "facts": {
-        "brew.BrewTaps": []
-    },
-    "commands": [
-        "brew tap homebrew/cask"
-    ]
-}

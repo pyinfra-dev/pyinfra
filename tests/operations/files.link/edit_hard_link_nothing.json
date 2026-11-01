@@ -1,0 +1,25 @@
+{
+    "args": ["testlink"],
+    "kwargs": {
+        "target": "/etc/init.d/nginx",
+        "symbolic": false,
+        "user": "testuser",
+        "group": "testgroup"
+    },
+    "facts": {
+        "files.Link": {
+            "path=testlink": false
+        },
+        "files.File": {
+            "path=testlink": {
+                "user": "testuser",
+                "group": "testgroup"
+            }
+        },
+        "files.SameFile": {
+            "path=testlink, target=/etc/init.d/nginx": true
+        }
+    },
+    "commands": [],
+    "noop_description": "link testlink already exists"
+}

@@ -22,6 +22,22 @@ class TestHiddenValue(TestCase):
         assert repr(s) == "'*MASKED*'"
         assert s.unmask() == "top secret"
 
+    def test_nested(self):
+        """A HiddenValue wrapped in another one is not the mask, it is the value."""
+        s = HiddenValue(HiddenValue("top secret"))
+        assert str(s) == "*MASKED*"
+        assert s.unmask() == "top secret"
+
+    def test_nested_subclass(self):
+        """Unwrapping goes through the subclass's own unmask(), wherever it draws its value from."""
+        s = HiddenValue(OtherHiddenValue(service="ssh", username="pyinfra"))
+        assert str(s) == "*MASKED*"
+        assert s.unmask() == "sshpyinfra"
+
+    def test_nested_several_deep(self):
+        s = HiddenValue(HiddenValue(HiddenValue("deep")))
+        assert s.unmask() == "deep"
+
     def test_deepcopy(self):
         s = HiddenValue("12345")
         new_s = copy.deepcopy(s)

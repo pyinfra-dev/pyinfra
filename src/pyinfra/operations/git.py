@@ -5,9 +5,12 @@ Manage git repositories and configuration.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
+from urllib.parse import urlsplit
 
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
+from pyinfra.api.arguments import EnvValue
 from pyinfra.facts.files import Directory, File
 from pyinfra.facts.git import (
     GitBranch,
@@ -20,6 +23,43 @@ from pyinfra.facts.git import (
 
 from . import files, ssh
 from .util.files import chown, unix_path_join
+
+
+def _git_command(safe_directory: str | None = None) -> StringCommand:
+    command: list[str | StringCommand] = ["git"]
+    if safe_directory is not None:
+        command.extend(
+            [
+                "-c",
+                StringCommand("safe.directory=", QuoteString(safe_directory), _separator=""),
+            ],
+        )
+    return StringCommand(*command)
+
+
+def _git_safe_directory_env(safe_directory: str | None) -> dict[str, str]:
+    if safe_directory is None:
+        return {}
+
+    return {
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "safe.directory",
+        "GIT_CONFIG_VALUE_0": safe_directory,
+    }
+
+
+def _git_safe_directory_fact_kwargs(
+    safe_directory: str | None,
+) -> dict[str, Mapping[str, EnvValue]]:
+    safe_env = _git_safe_directory_env(safe_directory)
+    if not safe_env:
+        return {}
+
+    env: dict[str, EnvValue] = {}
+    if host.current_op_global_arguments:
+        env.update(host.current_op_global_arguments.get("_env") or {})
+    env.update(safe_env)
+    return {"_env": env}
 
 
 @operation()
@@ -88,6 +128,51 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
         host.noop(f"git config {key} is set to {value}")
 
 
+# scp-like sources: [user@]host:path (git has no port syntax in this form)
+_SCP_LIKE_RE = re.compile(r"^(?:[^@/]+@)?(?P<host>\[[^\]]+\]|[^:@/]+):")
+
+
+def _parse_keyscan_source(src: str) -> tuple[str, int]:
+    """
+    Extract the SSH host and port to keyscan from a git source.
+
+    Only SSH sources can be keyscanned: the scp-like ``[user@]host:path`` syntax and
+    ``ssh://[user@]host[:port]/path`` URLs, bracketed IPv6 included, with the port read
+    from the URL where it really is an sshd port.
+
+    + src: the git source URL
+    """
+    if "://" in src:
+        # Discriminate on "://" rather than on urlsplit's scheme, which treats any word
+        # before a ":" as a scheme, and would thus parse scp-like sources (git@host:path)
+        # as URLs.
+        if src.split("://", 1)[0].lower() != "ssh":
+            raise OperationError(
+                f"ssh_keyscan only applies to SSH sources, not: {src} "
+                "(a clone over any other transport never reads known_hosts)",
+            )
+
+        try:
+            parsed = urlsplit(src)
+            hostname = parsed.hostname
+            port = parsed.port or 22
+        except ValueError:  # invalid IPv6 URL / non-numeric port
+            hostname = None
+
+        if hostname is None:
+            raise OperationError(f"Could not parse domain (to SSH keyscan) from: {src}")
+        return hostname, port
+
+    match = _SCP_LIKE_RE.match(src)
+    if match is None:
+        raise OperationError(f"Could not parse domain (to SSH keyscan) from: {src}")
+
+    hostname = match.group("host")
+    if hostname.startswith("["):  # bracketed IPv6: git@[2001:db8::1]:org/repo.git
+        hostname = hostname[1:-1]
+    return hostname, 22
+
+
 @operation()
 def repo(
     src: str,
@@ -103,6 +188,7 @@ def repo(
     depth: int | None = None,
     *,
     fetch_tags: bool = False,
+    force: bool = False,
 ):
     """
     Clone/pull git repositories.
@@ -114,13 +200,17 @@ def repo(
     + rebase: when pulling, use ``--rebase``
     + user: chown files to this user after
     + group: chown files to this group after
-    + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull
+    + ssh_keyscan: keyscan the remote host if not in known_hosts before clone/pull; only
+      SSH sources can be keyscanned (``user@host:path`` or ``ssh://host[:port]/path``),
+      with the host and port read from ``src``
     + update_submodules: update any git submodules
     + recursive_submodules: update git submodules recursively
-    + depth: create a shallow clone with a history truncated to the specified number of commits
-    + fetch_tags: Whether all tags should be fetched prior to attempting to check out the specified revision
+    + depth: truncate clone, fetch and pull history to the specified number of commits
+    + fetch_tags: Whether all tags should be fetched prior to attempting to
+      check out the specified revision.
+    + force: Execute ``fetch``, ``pull`` and ``checkout`` commands with ``--force``.
 
-    **Example:**
+    **Examples:**
 
     .. code:: python
 
@@ -129,52 +219,87 @@ def repo(
             src="https://github.com/Fizzadar/pyinfra.git",
             dest="/usr/local/src/pyinfra",
         )
+
+        git.repo(
+            name="Clone repo with SSH keyscan (non-standard port)",
+            src="ssh://git@git.example.com:2222/org/repo.git",
+            dest="/usr/local/src/repo",
+            ssh_keyscan=True,
+        )
     """
+
+    force_flag_list = ["--force"] if force else []
 
     # Ensure our target directory exists
     yield from files.directory._inner(dest)
 
     # Do we need to scan for the remote host key?
     if ssh_keyscan:
-        # Attempt to parse the domain from the git repository
-        domain = re.match(r"^[a-zA-Z0-9]+@([0-9a-zA-Z\.\-]+)", src)
-
-        if domain:
-            yield from ssh.keyscan._inner(domain.group(1))
-        else:
-            raise OperationError(
-                f"Could not parse domain (to SSH keyscan) from: {src}",
-            )
+        hostname, port = _parse_keyscan_source(src)
+        yield from ssh.keyscan._inner(hostname, port=port)
 
     # Store git commands for directory prefix
     git_commands: list[str | StringCommand] = []
     git_dir = unix_path_join(dest, ".git")
     is_repo = host.get_fact(Directory, path=git_dir)
 
+    # The depth argument can be passed to clone, fetch and pull operations.
+    # We prepare the argument list to reuse it later on
+    depth_options: list[str | QuoteString] = []
+    if depth is not None:
+        depth_options.extend(["--depth", QuoteString(str(depth))])
+
     # Cloning new repo?
     if not is_repo:
-        options: list[str | QuoteString] = []
-        if depth is not None:
-            options.extend(["--depth", str(depth)])
+        clone_options: list[str | QuoteString] = []
+        clone_options.extend(depth_options)
         if branch:
-            options.extend(["--branch", QuoteString(branch)])
+            clone_options.extend(["--branch", QuoteString(branch)])
 
-        git_commands.append(StringCommand("clone", QuoteString(src), *options, "."))
+        git_commands.append(StringCommand("clone", QuoteString(src), *clone_options, "."))
 
     # Ensuring existing repo
     else:
+        safe_directory = dest if user or group else None
+        safe_directory_fact_kwargs = _git_safe_directory_fact_kwargs(safe_directory)
+        # Reconcile the `origin` remote URL with `src`. If `src` has changed for
+        # an existing working copy, update `origin` so the fetch/pull below
+        # operate against the new source instead of silently continuing to track
+        # the old remote (see GH #1763). Only act when an `origin` URL already
+        # exists and differs - if it is missing we leave remote management alone.
+        existing_remote = host.get_fact(
+            GitConfig,
+            repo=dest,
+            **safe_directory_fact_kwargs,
+        ).get("remote.origin.url")
+        remote_changed = existing_remote is not None and existing_remote != [src]
+        if remote_changed:
+            git_commands.append(StringCommand("remote", "set-url", "origin", QuoteString(src)))
+
         is_tag = False
-        current_branch = host.get_fact(GitBranch, repo=dest)
+        current_branch = host.get_fact(
+            GitBranch,
+            repo=dest,
+            **safe_directory_fact_kwargs,
+        )
         if branch is not None and current_branch != branch:
             # fetch to ensure we have the branch/tag locally
+            fetch_options: list[str | QuoteString] = []
+            fetch_options.extend(depth_options)
             if fetch_tags:
-                git_commands.append(StringCommand("fetch", "--tags"))
-            else:
-                git_commands.append(StringCommand("fetch"))
+                fetch_options.append("--tags")
+            git_commands.append(StringCommand("fetch", *fetch_options, *force_flag_list))
 
-            git_commands.append(StringCommand("checkout", QuoteString(branch)))
-        if branch and branch in (host.get_fact(GitTag, repo=dest) or []):
-            git_commands.append(StringCommand("checkout", QuoteString(branch)))
+            git_commands.append(StringCommand("checkout", QuoteString(branch), *force_flag_list))
+        if branch and branch in (
+            host.get_fact(
+                GitTag,
+                repo=dest,
+                **safe_directory_fact_kwargs,
+            )
+            or []
+        ):
+            git_commands.append(StringCommand("checkout", QuoteString(branch), *force_flag_list))
             is_tag = True
         if pull and not is_tag:
             skip_pull = False
@@ -182,14 +307,22 @@ def repo(
             # remote tip, so pyinfra reports the operation unchanged rather
             # than always "Success". This still applies when we switch branch:
             # if the target branch already exists locally at the remote tip,
-            # the fetch+checkout leaves nothing for pull to do.
+            # the fetch+checkout leaves nothing for pull to do. When the remote
+            # URL just changed, the cached remote-tip fact was gathered against
+            # the old origin, so never skip - we must pull from the new source.
             effective_branch = branch or current_branch
-            if effective_branch:
-                local_commit = host.get_fact(GitLocalCommit, repo=dest, ref=effective_branch)
+            if not remote_changed and effective_branch:
+                local_commit = host.get_fact(
+                    GitLocalCommit,
+                    repo=dest,
+                    ref=effective_branch,
+                    **safe_directory_fact_kwargs,
+                )
                 remote_commit = host.get_fact(
                     GitRemoteBranchCommit,
                     repo=dest,
                     branch=effective_branch,
+                    **safe_directory_fact_kwargs,
                 )
                 if local_commit and remote_commit and local_commit == remote_commit:
                     skip_pull = True
@@ -197,19 +330,26 @@ def repo(
                 host.noop(
                     f"git repository {dest} is already up to date",
                 )
-            elif rebase:
-                git_commands.append("pull --rebase")
             else:
-                git_commands.append("pull")
+                pull_options: list[str | QuoteString] = []
+                pull_options.extend(depth_options)
+                if rebase:
+                    pull_options.append("--rebase")
+                git_commands.append(StringCommand("pull", *pull_options, *force_flag_list))
 
     if update_submodules:
         if recursive_submodules:
-            git_commands.append("submodule update --init --recursive")
+            git_commands.append(StringCommand("submodule", "update", "--init", "--recursive"))
         else:
-            git_commands.append("submodule update --init")
+            git_commands.append(StringCommand("submodule", "update", "--init"))
 
     # Attach prefixes for directory
-    command_prefix = StringCommand("cd", QuoteString(dest), "&&", "git")
+    command_prefix = StringCommand(
+        "cd",
+        QuoteString(dest),
+        "&&",
+        _git_command(safe_directory if is_repo else None),
+    )
 
     for cmd in git_commands:
         yield StringCommand(command_prefix, cmd)
