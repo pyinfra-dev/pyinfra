@@ -1,0 +1,6 @@
+args:
+  - [nomad, consul]
+facts:
+  apt.AptHeldPackages: [consul, nomad]
+commands: []
+noop_description: consul, nomad already held
