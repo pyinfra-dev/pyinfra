@@ -52,6 +52,7 @@ class ConnectorArguments(TypedDict, total=False):
     _use_sudo_login: bool
     _sudo_password: str
     _preserve_sudo_env: bool
+    _sudo_set_home: bool
     _su_user: str
     _use_su_login: bool
     _preserve_su_env: bool
@@ -112,6 +113,10 @@ auth_argument_meta: dict[str, ArgumentMeta] = {
     "_preserve_sudo_env": ArgumentMeta(
         "Preserve the shell environment of the connecting user when using sudo.",
         default=lambda config: config.PRESERVE_SUDO_ENV,
+    ),
+    "_sudo_set_home": ArgumentMeta(
+        "Set ``HOME`` to the target user's home directory when using sudo (``sudo -H``).",
+        default=lambda config: config.SUDO_SET_HOME,
     ),
     "_su_user": ArgumentMeta(
         "Execute/apply any changes with this user using su.",
