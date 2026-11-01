@@ -1,0 +1,6 @@
+args:
+  - "nomad; rm -rf /"
+facts:
+  apt.AptHeldPackages: []
+commands:
+  - "apt-mark hold 'nomad; rm -rf /'"
