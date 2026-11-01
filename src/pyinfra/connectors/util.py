@@ -7,7 +7,7 @@ from queue import Queue
 from shutil import copyfileobj
 from gevent.subprocess import PIPE, Popen, TimeoutExpired
 from typing import TYPE_CHECKING, Any, TypeGuard
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 
 import gevent
 
@@ -283,6 +283,23 @@ def _is_stream(payload: Any | None) -> TypeGuard[Any]:
 
 def _is_seekable(stream: Any) -> bool:
     return getattr(stream, "seekable", lambda: False)()
+
+
+def buffer_stdin_for_retry(stdin: Any) -> Any:
+    """
+    Materialize a one-shot iterator so a retry can send the same lines again.
+
+    A generator is consumed as it is written; a second attempt would read from an
+    exhausted iterator and truncate the destination (eg ``cat > dest``). A tuple is
+    re-iterable, so buffering it before the first attempt keeps retries honest. Streams
+    are left alone: they are rewound by :func:`rewind_stdin_for_retry` instead.
+
+    + param stdin: the payload passed as ``_stdin``, or None.
+    """
+
+    if isinstance(stdin, Iterator) and not _is_stream(stdin):
+        return tuple(stdin)
+    return stdin
 
 
 def check_stdin_is_rewindable(stdin: Any | None) -> None:

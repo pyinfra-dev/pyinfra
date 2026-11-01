@@ -1181,6 +1181,72 @@ class TestOperationRetry(PatchSSHTestCase):
 
         assert attempts == [b"payload", b"payload"]
 
+    @patch("time.sleep")
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    def test_retry_resends_a_generator_stdin(self, fake_run_command, fake_sleep):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(
+            state,
+            server.shell,
+            "cat > /dest",
+            _stdin=(line for line in ["header", "payload"]),
+            _retries=1,
+            _retry_delay=0,
+        )
+
+        attempts = []
+
+        def execute(*args, **kwargs):
+            attempts.append(list(kwargs["_stdin"]))
+            channel = FakeChannel(1 if len(attempts) == 1 else 0)
+            return len(attempts) > 1, FakeBuffer("", channel)
+
+        fake_run_command.side_effect = execute
+        run_ops(state)
+
+        # A generator is consumed by the first attempt: the retry must get the same lines,
+        # not an exhausted iterator.
+        assert attempts == [["header", "payload"], ["header", "payload"]]
+
+    def test_sudo_retry_resends_a_generator_stdin(self):
+        inventory = make_inventory(hosts=("@local",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        # Pretend the askpass script already exists, so the retry does not run an extra
+        # local process to create it.
+        host = inventory.get_host("@local")
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass"
+
+        add_op(
+            state,
+            server.shell,
+            "cat > /dest",
+            _stdin=(line for line in ["header", "payload"]),
+            _sudo=True,
+        )
+
+        attempts = []
+
+        def execute(*args, **kwargs):
+            attempts.append(list(kwargs["stdin"]))
+            if len(attempts) == 1:
+                return 1, CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+            return 0, CommandOutput([])
+
+        with (
+            patch("pyinfra.connectors.local.run_local_process", side_effect=execute),
+            patch("pyinfra.connectors.util.getpass", return_value="PASSWORD"),
+        ):
+            run_ops(state)
+
+        assert attempts == [["header", "payload"], ["header", "payload"]]
+
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
     def test_retry_refuses_a_non_seekable_stdin_before_running(self, fake_run_command):
         inventory = make_inventory(hosts=("somehost",))

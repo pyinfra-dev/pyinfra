@@ -13,6 +13,7 @@ from pyinfra.api.output import format_text
 from pyinfra.connectors.util import (
     CommandOutput,
     OutputLine,
+    buffer_stdin_for_retry,
     check_stdin_is_rewindable,
     get_stdin_position_for_retry,
     reset_stdout_for_retry,
@@ -84,6 +85,13 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
         ConnectorArguments,
         {key: global_arguments[key] for key in executor_kwarg_keys if key in global_arguments},  # type: ignore[literal-required] # noqa
     )
+    # A one-shot iterator is consumed by the first attempt, so an operation retry or a
+    # sudo password retry would send an empty payload. Buffer it before any command runs.
+    if "_stdin" in base_connector_arguments:
+        base_connector_arguments["_stdin"] = buffer_stdin_for_retry(
+            base_connector_arguments["_stdin"]
+        )
+
     stdin = base_connector_arguments.get("_stdin")
     stdin_position = None
     if retries:
@@ -116,6 +124,10 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
             status = False
             connector_arguments = base_connector_arguments.copy()
             connector_arguments.update(command.connector_arguments)
+            if "_stdin" in command.connector_arguments:
+                connector_arguments["_stdin"] = buffer_stdin_for_retry(
+                    connector_arguments["_stdin"]
+                )
 
             if not isinstance(command, PyinfraCommand):
                 raise TypeError(f"{command} is an invalid pyinfra command!")
