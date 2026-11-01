@@ -5,9 +5,10 @@ from unittest import TestCase
 import pytest
 
 from pyinfra.api import OperationError
-from pyinfra.api.exceptions import ArgumentTypeError
+from pyinfra.api.exceptions import ArgumentTypeError, PyinfraError
 from pyinfra_cli.exceptions import CliError, UnexpectedExternalError, WrappedError
 
+from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli
 
 
@@ -77,4 +78,25 @@ class TestCliDeployExceptions(TestCase):
         assert isinstance(result.exception.exception, OperationError)
         assert (
             result.exception.exception.args[0] == "operation_error.py exists and is not a directory"
+        )
+
+
+class TestCliOpCycleError(PatchSSHTestCase):
+    def test_cycle_error_names_operations_and_hosts(self):
+        result = run_cli(
+            "-y",
+            "a1,a2,a3,a4,b1,b2,b3,c1,d1",
+            path.join("tests", "test_cli", "deploy_fails", "op_cycle.py"),
+            f"--chdir={path.join('tests', 'test_cli', 'deploy_fails')}",
+        )
+        assert isinstance(result.exception, WrappedError)
+        assert isinstance(result.exception.exception, PyinfraError)
+        assert result.exception.exception.args[0] == (
+            "Cycle detected in operation ordering DAG.\n"
+            "    These hosts call the operations in an order that forms a loop:\n"
+            "    first -> second (on a1, a2, a3 and 1 more)\n"
+            "    second -> server.user (third, home=/h) (on b1, b2, b3)\n"
+            "    server.user (third, home=/h) -> first (on c1)\n\n"
+            "    This can happen when using loops in operation code, "
+            "please see: https://docs.pyinfra.com/en/latest/deploy-process.html#loops-cycle-errors"  # noqa: E501
         )
