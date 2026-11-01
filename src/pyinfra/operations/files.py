@@ -1436,9 +1436,6 @@ def template(
         )
     '''
 
-    if not hasattr(src, "read") and state.cwd:
-        src = os.path.join(state.cwd, src)
-
     # Ensure host/state/inventory are available inside templates (if not set)
     data.setdefault("host", host)
     data.setdefault("state", state)
