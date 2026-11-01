@@ -9,6 +9,7 @@ from pyinfra.connectors.util import (
     execute_command_with_sudo_retry,
     make_unix_command,
     make_unix_command_for_host,
+    read_output_buffers,
     remove_any_sudo_askpass_file,
 )
 
@@ -619,3 +620,17 @@ class TestUseSudoPassword(TestCase):
         command = make_unix_command_for_host(host.state, host, "uptime", _sudo=True)
         assert command.get_raw_value() == "sudo -H -n sh -c uptime"
         fake_getpass.assert_not_called()
+
+
+class TestReadOutputBuffers(TestCase):
+    def test_defaults(self):
+        # Third-party connectors call this with just the buffers (issue #1303),
+        # so timeout, print_output and print_prefix must be optional.
+        output = read_output_buffers([b"hello\n"], [])
+        assert output.stdout_lines == ["hello"]
+        assert output.stderr_lines == []
+
+    def test_stderr(self):
+        output = read_output_buffers([], [b"oops\n"])
+        assert output.stdout_lines == []
+        assert output.stderr_lines == ["oops"]
