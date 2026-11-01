@@ -5,7 +5,9 @@
   },
   "facts": {
     "flatpak.FlatpakPackage": {},
-    "flatpak.FlatpakPackages": []
+    "flatpak.FlatpakPackages": {
+      "user=False": []
+    }
   },
   "commands": ["flatpak install --noninteractive flathub 'x; reboot'"]
 }

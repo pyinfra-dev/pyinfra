@@ -1,0 +1,8 @@
+args:
+  - [nomad, consul]
+kwargs:
+  present: false
+facts:
+  apt.AptHeldPackages: [nomad]
+commands:
+  - apt-mark unhold nomad

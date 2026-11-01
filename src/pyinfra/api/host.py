@@ -366,7 +366,8 @@ class Host:
 
     def get_fact(self, name_or_cls, *args, **kwargs):
         """
-        Get a fact for this host, reading from the cache if present.
+        Get a fact for this host. Facts are not cached, so the fact's command runs on
+        the host each time this is called.
         """
         return get_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
 
