@@ -2,7 +2,6 @@ import json
 from unittest import TestCase
 from unittest.mock import mock_open, patch
 
-from pyinfra.api.exceptions import InventoryError
 from pyinfra.connectors.vagrant import VagrantInventoryConnector, get_vagrant_options
 
 FAKE_VAGRANT_OPTIONS = {
@@ -119,5 +118,8 @@ class TestVagrantConnector(TestCase):
         ]
 
     def test_make_names_data_no_matches(self):
-        with self.assertRaises(InventoryError):
-            list(VagrantInventoryConnector.make_names_data(name="nope"))
+        with self.assertLogs("pyinfra", level="WARNING") as logs:
+            data = list(VagrantInventoryConnector.make_names_data(name="nope"))
+
+        assert data == []
+        assert "No running Vagrant instances matching `nope` found!" in "\n".join(logs.output)
