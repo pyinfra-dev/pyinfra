@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic, overload
 from collections.abc import Callable, Generator, Iterable, Mapping
 
 from typing_extensions import ParamSpec, Protocol
@@ -24,6 +24,16 @@ EnvValue = str | HiddenValue
 class PyinfraOperation(Generic[P], Protocol):
     _inner: Callable[P, Generator]
 
+    # Calls without any global arguments: operation arguments may be passed
+    # positionally or by keyword.
+    @overload
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> OperationMeta: ...
+
+    # Calls with global arguments: these must be passed by keyword, before the
+    # operation's own arguments. Note this means mixing positional operation
+    # arguments with global arguments (eg `shell("echo", _sudo=True)`) cannot
+    # be typed and is not supported.
+    @overload
     def __call__(
         self,
         #
