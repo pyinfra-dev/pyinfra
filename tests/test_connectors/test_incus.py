@@ -7,22 +7,40 @@ from unittest.mock import mock_open, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
-from pyinfra.connectors.incus import IncusConnector
+from pyinfra.connectors.incus import IncusConnector, LXCConnector
 from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
 
 INSTANCES = [
-    {"name": "container-one", "status": "Running", "type": "container"},
-    {"name": "vm-one", "status": "Running", "type": "virtual-machine"},
-    {"name": "stopped-one", "status": "Stopped", "type": "container"},
+    {"name": "container-one", "status": "Running", "type": "container", "project": "default"},
+    {"name": "vm-one", "status": "Running", "type": "virtual-machine", "project": "default"},
+    {"name": "stopped-one", "status": "Stopped", "type": "container", "project": "default"},
+]
+REMOTE_INSTANCES = [
+    {"name": "remote-one", "status": "Running", "type": "container", "project": "default"},
 ]
 
 
 def fake_incus_shell(command, splitlines=None):
-    if command == "incus list --format json --fast":
+    if command == "incus list --all-projects --format json --fast":
+        return json.dumps(INSTANCES)
+    if command == "incus list remote: --all-projects --format json --fast":
+        return json.dumps(REMOTE_INSTANCES)
+    if command == "lxc list --all-projects --format json --fast":
         return json.dumps(INSTANCES)
     raise PyinfraError(f"Invalid command: {command}")
+
+
+def make_instance_data(name, instance_type, remote=None, project="default"):
+    data = {
+        "incus_name": name,
+        "incus_type": instance_type,
+        "incus_project": project,
+    }
+    if remote is not None:
+        data["incus_remote"] = remote
+    return data
 
 
 @patch("pyinfra.connectors.incus.local.shell", fake_incus_shell)
@@ -31,12 +49,12 @@ class TestIncusConnectorNamesData(TestCase):
         assert list(IncusConnector.make_names_data()) == [
             (
                 "@incus/container-one",
-                {"incus_name": "container-one", "incus_type": "container"},
+                make_instance_data("container-one", "container"),
                 ["@incus"],
             ),
             (
                 "@incus/vm-one",
-                {"incus_name": "vm-one", "incus_type": "virtual-machine"},
+                make_instance_data("vm-one", "virtual-machine"),
                 ["@incus"],
             ),
         ]
@@ -45,7 +63,7 @@ class TestIncusConnectorNamesData(TestCase):
         assert list(IncusConnector.make_names_data("vm-one")) == [
             (
                 "@incus/vm-one",
-                {"incus_name": "vm-one", "incus_type": "virtual-machine"},
+                make_instance_data("vm-one", "virtual-machine"),
                 ["@incus"],
             ),
         ]
@@ -53,6 +71,49 @@ class TestIncusConnectorNamesData(TestCase):
     def test_comma_separated_instances(self):
         hosts = list(IncusConnector.make_names_data("container-one, vm-one"))
         assert [host[0] for host in hosts] == ["@incus/container-one", "@incus/vm-one"]
+
+    def test_remote_instances(self):
+        assert list(IncusConnector.make_names_data("remote:")) == [
+            (
+                "@incus/remote:remote-one",
+                make_instance_data("remote-one", "container", remote="remote"),
+                ["@incus"],
+            ),
+        ]
+
+    def test_remote_named_instance(self):
+        hosts = list(IncusConnector.make_names_data("remote:remote-one"))
+        assert hosts == [
+            (
+                "@incus/remote:remote-one",
+                make_instance_data("remote-one", "container", remote="remote"),
+                ["@incus"],
+            ),
+        ]
+
+    def test_lxc_instance(self):
+        assert list(LXCConnector.make_names_data("vm-one")) == [
+            (
+                "@lxc/vm-one",
+                make_instance_data("vm-one", "virtual-machine"),
+                ["@lxc"],
+            ),
+        ]
+
+    def test_duplicate_instance_names_across_projects(self):
+        instances = [
+            {"name": "duplicate", "status": "Running", "type": "container", "project": "one"},
+            {"name": "duplicate", "status": "Running", "type": "container", "project": "two"},
+        ]
+        with patch("pyinfra.connectors.incus.local.shell", return_value=json.dumps(instances)):
+            with self.assertRaisesRegex(InventoryError, "Duplicate"):
+                list(IncusConnector.make_names_data())
+
+    def test_missing_project(self):
+        instances = [{"name": "container-one", "status": "Running", "type": "container"}]
+        with patch("pyinfra.connectors.incus.local.shell", return_value=json.dumps(instances)):
+            with self.assertRaisesRegex(InventoryError, "no project information"):
+                list(IncusConnector.make_names_data())
 
     def test_missing_instance(self):
         with self.assertRaisesRegex(InventoryError, "missing"):
@@ -68,7 +129,7 @@ class TestIncusConnectorNamesData(TestCase):
 
     def test_no_running_instances(self):
         with patch("pyinfra.connectors.incus.local.shell", return_value="[]"):
-            with self.assertRaisesRegex(InventoryError, "No running Incus instances found"):
+            with self.assertRaisesRegex(InventoryError, "No running incus instances found"):
                 list(IncusConnector.make_names_data())
 
     def test_invalid_json(self):
@@ -97,10 +158,10 @@ class TestIncusConnector(TestCase):
     def tearDown(self):
         self.fake_popen_patch.stop()
 
-    def make_host(self, name="container-one"):
-        inventory = make_inventory(hosts=(f"@incus/{name}",))
+    def make_host(self, name="container-one", connector="incus"):
+        inventory = make_inventory(hosts=(f"@{connector}/{name}",))
         State(inventory, Config())
-        return inventory.get_host(f"@incus/{name}")
+        return inventory.get_host(f"@{connector}/{name}")
 
     def test_connect(self):
         host = self.make_host("vm-one")
@@ -146,6 +207,36 @@ class TestIncusConnector(TestCase):
         command = self.fake_popen_mock.call_args.args[0]
         assert "incus exec container-one" in command
         assert "--force-interactive" not in command
+
+    def test_remote_run_shell_command(self):
+        host = self.make_host("remote:remote-one")
+        status, _ = host.run_shell_command("echo hi")
+        assert status is True
+        command = self.fake_popen_mock.call_args.args[0]
+        assert "incus exec remote:remote-one" in command
+
+    def test_non_default_project_run_shell_command(self):
+        instances = [
+            {
+                "name": "remote-one",
+                "status": "Running",
+                "type": "container",
+                "project": "special",
+            },
+        ]
+        with patch("pyinfra.connectors.incus.local.shell", return_value=json.dumps(instances)):
+            host = self.make_host("remote:remote-one")
+            status, _ = host.run_shell_command("echo hi")
+        assert status is True
+        command = self.fake_popen_mock.call_args.args[0]
+        assert "incus --project special exec remote:remote-one" in command
+
+    def test_lxc_run_shell_command(self):
+        host = self.make_host("vm-one", connector="lxc")
+        status, _ = host.run_shell_command("echo hi")
+        assert status is True
+        command = self.fake_popen_mock.call_args.args[0]
+        assert "lxc exec vm-one" in command
 
     def test_run_shell_command_success_exit_codes(self):
         self.fake_popen_mock().returncode = 1

@@ -16,7 +16,8 @@ All built-in connector pages are listed below. Each page contains examples and t
 - [`@docker`](connectors/docker.md): Create or modify Docker containers.
 - [`@dockerssh`](connectors/dockerssh.md): Run commands in Docker containers on a remote machine.
 - [`@fake`](connectors/fake.md): Simulate command execution and file transfers locally.
-- [`@incus`](connectors/incus.md): Target running containers and agent-enabled VMs on a local Incus daemon.
+- [`@incus`](connectors/incus.md): Target running containers and agent-enabled VMs on local or remote Incus daemons.
+- [`@lxc`](connectors/lxc.md): Use the Incus connector implementation with the `lxc` command.
 - [`@local`](connectors/local.md): Connect to the local machine running pyinfra.
 - [`@podman`](connectors/podman.md): Create or modify Podman containers.
 - [`@podmanssh`](connectors/podmanssh.md): Run commands in Podman containers on a remote machine over SSH.

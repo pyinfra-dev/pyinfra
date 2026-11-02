@@ -591,3 +591,9 @@ name = "incus"
 path = "src/pyinfra/connectors/incus.py"
 type = "connector"
 tags = ["containers", "system"]
+
+[pyinfra.plugins."lxc-connector"]
+name = "lxc"
+path = "src/pyinfra/connectors/incus.py"
+type = "connector"
+tags = ["containers", "system"]
