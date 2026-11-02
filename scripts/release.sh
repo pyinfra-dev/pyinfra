@@ -7,6 +7,11 @@ MAJOR_BRANCH="$(uv run python scripts/generate_next_version.py | cut -d'.' -f1).
 
 echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
 
+echo "# Setting version in pyproject.toml..."
+uv run python scripts/generate_next_version.py --write
+git add pyproject.toml
+git diff --cached --quiet || git commit -m "chore: release v${VERSION}"
+
 echo "# Running tests..."
 uv run pytest
 
