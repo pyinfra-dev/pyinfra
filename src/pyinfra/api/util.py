@@ -173,7 +173,7 @@ def get_template(
     user_finalize = jinja_env_kwargs.pop("finalize", None)
 
     def finalize(v):
-        if user_finalize:
+        if user_finalize is not None:
             v = user_finalize(v)
         if isinstance(v, HiddenValue):
             return v.unmask()

@@ -112,6 +112,19 @@ def test_template_custom_finalize_handles_ordinary_values():
     assert template.render(value=None, other="public") == "|public"
 
 
+def test_template_calls_falsey_finalize():
+    class Finalize:
+        def __bool__(self):
+            return False
+
+        def __call__(self, value):
+            return f"[{value}]"
+
+    template = get_template(StringIO("{{ value }}"), {"finalize": Finalize()})
+
+    assert template.render(value="public") == "[public]"
+
+
 def test_template_unmasks_custom_finalize_result():
     template = get_template(StringIO("{{ value }}"), {"finalize": HiddenValue})
 
