@@ -36,6 +36,7 @@ pyinfra-debug.log
 Makefile
 
 .prs/
+sbom.json
 .issues/
 
 docs-public/
