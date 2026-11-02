@@ -15,7 +15,7 @@ from io import StringIO
 from pathlib import Path, PurePosixPath
 from typing import IO, Any
 
-from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
+from jinja2 import Environment, TemplateRuntimeError, TemplateSyntaxError, UndefinedError
 
 from pyinfra import host, logger, state
 from pyinfra.api import (
@@ -1436,7 +1436,8 @@ def template(
         )
     '''
 
-    if not hasattr(src, "read") and state.cwd:
+    has_custom_loader = bool(jinja_env_kwargs and jinja_env_kwargs.get("loader") is not None)
+    if not hasattr(src, "read") and state.cwd and not has_custom_loader:
         src = os.path.join(state.cwd, src)
 
     # Ensure host/state/inventory are available inside templates (if not set)
@@ -1457,8 +1458,13 @@ def template(
         line_number = trace_frames[-1][1]
 
         # Quickly read the line in question and one above/below for nicer debugging
-        with get_file_io(src, "r") as f:
-            template_lines = f.readlines()
+        if has_custom_loader and not hasattr(src, "read"):
+            loader = jinja_env_kwargs["loader"]  # type: ignore[index]
+            source_str, _, _ = loader.get_source(Environment(loader=loader), str(src))
+            template_lines = source_str.splitlines()
+        else:
+            with get_file_io(src, "r") as f:
+                template_lines = f.readlines()
 
         template_lines = [line.strip() for line in template_lines]
         relevant_lines = template_lines[max(line_number - 2, 0) : line_number + 1]

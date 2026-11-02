@@ -59,3 +59,84 @@ class TestApiUtilFileIO(TestCase):
 
         assert isinstance(data, str)
         assert data == "some string"
+
+
+class TestGetTemplateWithLoader(TestCase):
+    def test_get_template_uses_custom_loader_search_path(self):
+        from pathlib import Path
+        import tempfile
+
+        from jinja2 import DictLoader, FileSystemLoader
+
+        from pyinfra.api.util import get_template
+
+        with tempfile.TemporaryDirectory() as d1, tempfile.TemporaryDirectory() as d2:
+            (Path(d1) / "first.j2").write_text("from d1: {{ val }}", encoding="utf-8")
+            (Path(d2) / "first.j2").write_text("from d2: {{ val }}", encoding="utf-8")
+            (Path(d2) / "second.j2").write_text("only d2: {{ val }}", encoding="utf-8")
+
+            loader = FileSystemLoader([d1, d2])
+            kwargs = {"loader": loader}
+
+            t1 = get_template("first.j2", kwargs)
+            assert t1.render({"val": "ok"}) == "from d1: ok"
+            assert "loader" in kwargs
+
+            t2 = get_template("second.j2", kwargs)
+            assert t2.render({"val": "yes"}) == "only d2: yes"
+
+        dict_loader = DictLoader({"in_memory.j2": "hello {{ who }}"})
+        t3 = get_template("in_memory.j2", {"loader": dict_loader})
+        assert t3.render({"who": "world"}) == "hello world"
+
+    def test_files_template_with_custom_loader_does_not_prepend_cwd(self):
+        from pathlib import Path
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from jinja2 import FileSystemLoader
+        import pytest
+
+        from pyinfra.api import OperationError
+        from pyinfra.operations import files
+
+        with tempfile.TemporaryDirectory() as search_dir, tempfile.TemporaryDirectory() as cwd_dir:
+            (Path(search_dir) / "motd.j2").write_text("Welcome {{ target }}!", encoding="utf-8")
+            (Path(search_dir) / "broken.j2").write_text("{{ missing_var }}", encoding="utf-8")
+            loader = FileSystemLoader([search_dir])
+
+            captured = {}
+
+            def fake_put_inner(*args, **kwargs):
+                captured["content"] = kwargs["src"].read()
+                captured["template"] = getattr(kwargs["src"], "template", None)
+                yield "put-cmd"
+
+            fake_state = SimpleNamespace(cwd=cwd_dir, inventory=object())
+            with (
+                patch.object(files, "state", fake_state),
+                patch.object(files.put, "_inner", side_effect=fake_put_inner),
+            ):
+                cmds = list(
+                    files.template._inner(
+                        "motd.j2",
+                        "/etc/motd",
+                        jinja_env_kwargs={"loader": loader},
+                        target="pyinfra",
+                    )
+                )
+                assert cmds == ["put-cmd"]
+                assert captured["content"] == "Welcome pyinfra!"
+                assert captured["template"] == "motd.j2"
+
+                with pytest.raises(OperationError) as exc_info:
+                    list(
+                        files.template._inner(
+                            "broken.j2",
+                            "/etc/motd",
+                            jinja_env_kwargs={"loader": loader},
+                        )
+                    )
+                assert "Error in template: broken.j2" in str(exc_info.value)
+                assert "missing_var" in str(exc_info.value)

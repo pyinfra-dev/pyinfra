@@ -153,8 +153,17 @@ def get_template(
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
     """
-    if jinja_env_kwargs is None:
-        jinja_env_kwargs = {}
+    env_kwargs = dict(jinja_env_kwargs) if jinja_env_kwargs else {}
+    custom_loader = env_kwargs.pop("loader", None)
+
+    if custom_loader is not None and not hasattr(filename_or_io, "read"):
+        return Environment(
+            undefined=StrictUndefined,
+            keep_trailing_newline=True,
+            loader=custom_loader,
+            **env_kwargs,
+        ).get_template(str(filename_or_io))
+
     file_data = get_file_io(filename_or_io, mode="r")
     cache_key = file_data.cache_key
 
@@ -168,8 +177,8 @@ def get_template(
     template = Environment(
         undefined=StrictUndefined,
         keep_trailing_newline=True,
-        loader=jinja_env_kwargs.pop("loader", default_loader),
-        **jinja_env_kwargs,
+        loader=custom_loader or default_loader,
+        **env_kwargs,
     ).from_string(template_string)
 
     if cache_key:
