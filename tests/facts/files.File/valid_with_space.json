@@ -1,12 +1,14 @@
 {
     "arg": "/home/pyinfra dir/fil-@_e.txt",
-    "command": "! (test -e '/home/pyinfra dir/fil-@_e.txt' || test -L '/home/pyinfra dir/fil-@_e.txt' ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' '/home/pyinfra dir/fil-@_e.txt' 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' '/home/pyinfra dir/fil-@_e.txt' || ls -ld '/home/pyinfra dir/fil-@_e.txt' )",
+    "command": "! (test -e '/home/pyinfra dir/fil-@_e.txt' || test -L '/home/pyinfra dir/fil-@_e.txt' ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s uid=%u gid=%g %N' '/home/pyinfra dir/fil-@_e.txt' 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z uid=%u gid=%g %N%SY' '/home/pyinfra dir/fil-@_e.txt' || ( ls -ld '/home/pyinfra dir/fil-@_e.txt' && ls -ldn '/home/pyinfra dir/fil-@_e.txt' ) )",
     "output": [
-        "user=pyinfra group=pyinfra mode=-rw-r--r-- atime=1594804348 mtime=1594804348 ctime=0 size=0 '/home/pyinfra dir/fil-@_e.txt'"
+        "user=pyinfra group=pyinfra mode=-rw-r--r-- atime=1594804348 mtime=1594804348 ctime=0 size=0 uid=1000 gid=1000 '/home/pyinfra dir/fil-@_e.txt'"
     ],
     "fact": {
         "group": "pyinfra",
         "user": "pyinfra",
+        "uid": 1000,
+        "gid": 1000,
         "mode": 644,
         "atime": "2020-07-15T09:12:28",
         "mtime": "2020-07-15T09:12:28",
