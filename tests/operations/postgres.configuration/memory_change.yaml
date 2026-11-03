@@ -1,0 +1,14 @@
+args:
+  - shared_buffers
+kwargs:
+  value: "256MB"
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      shared_buffers:
+        value: "16384"
+        unit: "8kB"
+        source: configuration file
+        context: postmaster
+commands:
+  - "psql -Ac 'ALTER SYSTEM SET shared_buffers = '\"'\"'256MB'\"'\"''"

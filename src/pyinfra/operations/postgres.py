@@ -16,13 +16,18 @@ See example/postgresql.py for detailed example
 
 from __future__ import annotations
 
+import re
+
 from pyinfra import host
-from pyinfra.api import HiddenValue, QuoteString, StringCommand, operation
+from pyinfra.api import HiddenValue, OperationError, QuoteString, StringCommand, operation
 from pyinfra.facts.postgres import (
+    SETTING_NAME_RE,
+    PostgresConfiguration,
     PostgresDatabases,
     PostgresRoles,
     make_execute_psql_command,
     make_psql_command,
+    quote_sql_literal,
 )
 
 
@@ -439,4 +444,197 @@ def load(
         ),
         "<",
         QuoteString(src),
+    )
+
+
+# Multipliers used to normalise PostgreSQL memory/time settings so an operation
+# value such as "128MB" can be compared against the raw value + unit pg_settings
+# reports (eg setting="16384", unit="8kB"). Memory is reduced to bytes and time
+# to microseconds.
+_MEMORY_UNITS = {"b": 1, "kb": 1024, "mb": 1024**2, "gb": 1024**3, "tb": 1024**4}
+_TIME_UNITS = {
+    "us": 1,
+    "ms": 1000,
+    "s": 1_000_000,
+    "min": 60_000_000,
+    "h": 3_600_000_000,
+    "d": 86_400_000_000,
+}
+_UNIT_SCALES = {**_MEMORY_UNITS, **_TIME_UNITS}
+
+_TRUE_VALUES = {"on", "true", "yes", "1"}
+_FALSE_VALUES = {"off", "false", "no", "0"}
+
+# A bare quantity ("128", "2.5") with an optional unit suffix ("128MB", "30s").
+_QUANTITY_RE = re.compile(r"^(-?\d+(?:\.\d+)?)\s*([a-zA-Z]*)$")
+# A pg_settings unit, optionally prefixed with a block multiplier ("8kB", "kB").
+_UNIT_RE = re.compile(r"^(\d*)\s*([a-zA-Z]+)$")
+
+
+def _to_bool(value: str) -> bool | None:
+    lowered = value.strip().lower()
+    if lowered in _TRUE_VALUES:
+        return True
+    if lowered in _FALSE_VALUES:
+        return False
+    return None
+
+
+def _to_number(value: str) -> int | float | None:
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
+
+def _quantity_match(desired: str, current: str, unit: str) -> bool:
+    unit_match = _UNIT_RE.match(unit)
+    if unit_match is None:
+        return False
+    unit_multiplier = int(unit_match.group(1)) if unit_match.group(1) else 1
+    unit_scale = _UNIT_SCALES.get(unit_match.group(2).lower())
+    if unit_scale is None:
+        return False
+
+    current_number = _to_number(current)
+    if current_number is None:
+        return False
+    current_base = current_number * unit_multiplier * unit_scale
+
+    desired_match = _QUANTITY_RE.match(desired)
+    if desired_match is None:
+        return False
+    desired_number = _to_number(desired_match.group(1))
+    if desired_number is None:
+        return False
+    suffix = desired_match.group(2)
+    if suffix:
+        suffix_scale = _UNIT_SCALES.get(suffix.lower())
+        if suffix_scale is None:
+            return False
+        desired_base = desired_number * suffix_scale
+    else:
+        # A bare number is interpreted as a count in the setting's own unit.
+        desired_base = desired_number * unit_multiplier * unit_scale
+
+    return current_base == desired_base
+
+
+def _values_match(desired: object, current_value: str | None, unit: str | None) -> bool:
+    if current_value is None:
+        return False
+
+    desired_str = str(desired).strip()
+    current_str = current_value.strip()
+    if desired_str == current_str:
+        return True
+
+    if unit:
+        return _quantity_match(desired_str, current_str, unit)
+
+    desired_bool = _to_bool(desired_str)
+    current_bool = _to_bool(current_str)
+    if desired_bool is not None and current_bool is not None:
+        return desired_bool == current_bool
+
+    desired_number = _to_number(desired_str)
+    current_number = _to_number(current_str)
+    if desired_number is not None and current_number is not None:
+        return desired_number == current_number
+
+    return desired_str.lower() == current_str.lower()
+
+
+@operation(
+    idempotent_notice=(
+        "ALTER SYSTEM writes to postgresql.auto.conf; until the server reloads or "
+        "restarts, pg_settings still reports the old value, so this operation will "
+        "re-issue the change on each run until it is applied."
+    ),
+)
+def configuration(
+    setting: str,
+    value: str | int | bool | None = None,
+    present: bool = True,
+    # Details for speaking to PostgreSQL via `psql` CLI
+    psql_user: str | None = None,
+    psql_password: str | None = None,
+    psql_host: str | None = None,
+    psql_port: int | None = None,
+    psql_database: str | None = None,
+):
+    """
+    Set or reset a PostgreSQL server configuration parameter with ``ALTER SYSTEM``.
+
+    + setting: name of the configuration parameter (eg ``work_mem``)
+    + value: desired value, required when ``present`` is ``True``
+    + present: ``True`` to set ``value``, ``False`` to reset the setting to its
+      default with ``ALTER SYSTEM RESET``
+    + psql_*: global module arguments, see above
+
+    Reload/restart:
+        ``ALTER SYSTEM`` only writes ``postgresql.auto.conf``. Changes take effect
+        after the server reloads (``postgres.sql("SELECT pg_reload_conf()")``) or,
+        for settings whose ``context`` is ``postmaster``, after a full restart.
+        This operation never reloads or restarts for you, so it compares against
+        the *running* value and becomes a no-op once the change is live.
+
+    **Example:**
+
+    .. code:: python
+
+        postgres.configuration(
+            name="Increase work_mem",
+            setting="work_mem",
+            value="8MB",
+            _sudo_user="postgres",
+        )
+    """
+
+    if not SETTING_NAME_RE.match(setting):
+        raise OperationError(f"invalid PostgreSQL setting name: {setting}")
+
+    if present and value is None:
+        raise OperationError("`value` is required when `present` is True")
+
+    current = host.get_fact(
+        PostgresConfiguration,
+        psql_user=psql_user,
+        psql_password=psql_password,
+        psql_host=psql_host,
+        psql_port=psql_port,
+        psql_database=psql_database,
+    ).get(setting)
+
+    if not present:
+        if current is None:
+            host.noop(f"postgresql setting {setting} is not set")
+            return
+        if current.get("source") == "default":
+            host.noop(f"postgresql setting {setting} is already at its default")
+            return
+        yield make_execute_psql_command(
+            f"ALTER SYSTEM RESET {setting}",
+            user=psql_user,
+            password=psql_password,
+            host=psql_host,
+            port=psql_port,
+            database=psql_database,
+        )
+        return
+
+    if current is not None and _values_match(value, current.get("value"), current.get("unit")):
+        host.noop(f"postgresql setting {setting} is already set to {value}")
+        return
+
+    yield make_execute_psql_command(
+        f"ALTER SYSTEM SET {setting} = {quote_sql_literal(value)}",
+        user=psql_user,
+        password=psql_password,
+        host=psql_host,
+        port=psql_port,
+        database=psql_database,
     )
