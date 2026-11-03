@@ -96,6 +96,8 @@ dockerssh = "pyinfra.connectors.dockerssh:DockerSSHConnector"
 podmanssh = "pyinfra.connectors.dockerssh:PodmanSSHConnector"
 # Testing / development connector (no-op simulation)
 fake = "pyinfra.connectors.fake:FakeConnector"
+incus = "pyinfra.connectors.incus:IncusConnector"
+lxc = "pyinfra.connectors.incus:LXCConnector"
 # Inventory only connectors
 terraform = "pyinfra.connectors.terraform:TerraformInventoryConnector"
 vagrant = "pyinfra.connectors.vagrant:VagrantInventoryConnector"
@@ -139,6 +141,7 @@ python_classes = "Test* !TestGenerator"
 markers = [
     "end_to_end",
     "end_to_end_docker",
+    "end_to_end_incus",
     "end_to_end_podman",
     "end_to_end_local",
     "end_to_end_ssh"
