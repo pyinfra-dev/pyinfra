@@ -155,10 +155,10 @@ def rule(
 
     # These are only shortcuts for extras
     if destination_port:
-        extras = f"{extras} --dport {destination_port}"
+        extras = f"{extras} --dport {shlex.quote(str(destination_port))}"
 
     if source_port:
-        extras = f"{extras} --sport {source_port}"
+        extras = f"{extras} --sport {shlex.quote(str(source_port))}"
 
     if comment:
         extras = f"{extras} -m comment --comment {shlex.quote(comment)}"
