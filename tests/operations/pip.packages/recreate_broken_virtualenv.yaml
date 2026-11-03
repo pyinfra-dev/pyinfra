@@ -1,0 +1,15 @@
+args:
+  - [elasticquery==1.1, flask, test==1.1]
+kwargs:
+  virtualenv: testdir
+facts:
+  files.File:
+    path=testdir/bin/activate: true
+  files.Directory:
+    path=testdir: true
+  pip.PythonVersion:
+    python=testdir/bin/python: null
+commands:
+  - rm -rf testdir
+  - virtualenv testdir
+  - testdir/bin/pip install elasticquery==1.1 flask test==1.1

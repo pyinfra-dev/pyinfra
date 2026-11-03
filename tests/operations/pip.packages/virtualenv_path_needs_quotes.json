@@ -1,6 +1,8 @@
 {
     "kwargs": {
-        "packages": ["flask"],
+        "packages": [
+            "flask"
+        ],
         "virtualenv": "/opt/my venv"
     },
     "facts": {
@@ -9,6 +11,13 @@
         },
         "pip.PipPackages": {
             "pip='/opt/my venv'/bin/pip": {}
+        },
+        "pip.PythonVersion": {
+            "python=/opt/my venv/bin/python": [
+                3,
+                12,
+                11
+            ]
         }
     },
     "commands": [

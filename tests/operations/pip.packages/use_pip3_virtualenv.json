@@ -1,5 +1,9 @@
 {
-    "args": [["test"]],
+    "args": [
+        [
+            "test"
+        ]
+    ],
     "kwargs": {
         "pip": "pip3",
         "virtualenv": "testdir"
@@ -10,6 +14,13 @@
         },
         "files.File": {
             "path=testdir/bin/activate": true
+        },
+        "pip.PythonVersion": {
+            "python=testdir/bin/python": [
+                3,
+                12,
+                11
+            ]
         }
     },
     "commands": [

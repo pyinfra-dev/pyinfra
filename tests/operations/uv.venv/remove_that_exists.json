@@ -1,5 +1,5 @@
 {
-    "args": ["/somewhere/useful"],
+    "args": ["/somewhere/useful/.venv"],
     "kwargs": {
         "present": false
     },
