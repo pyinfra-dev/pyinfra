@@ -784,7 +784,9 @@ class Groups(FactBase[list[str]]):
     """
 
     @override
-    def command(self):
+    def command(self) -> str:
+        if host.get_fact(Which, "getent"):
+            return "getent group"
         return "cat /etc/group"
 
     default = list
@@ -830,13 +832,33 @@ class Users(FactBase):
     """
 
     @override
-    def command(self):
-        return """
+    def command(self) -> str:
+        kernel = host.get_fact(Kernel) or ""
+        has_getent = bool(host.get_fact(Which, "getent"))
 
-        for i in `cat /etc/passwd | cut -d: -f1`; do
-            ENTRY=`grep ^$i: /etc/passwd`;
+        if has_getent:
+            user_details_cmd = "getent passwd"
+            user_entry_cmd = "getent passwd $i"
+        else:
+            user_details_cmd = "cat /etc/passwd"
+            user_entry_cmd = "grep ^$i: /etc/passwd"
+
+        if "BSD" in kernel:
+            if has_getent:
+                user_password_cmd = user_entry_cmd
+            else:
+                user_password_cmd = "grep ^$i: /etc/master.passwd"
+        elif has_getent:
+            user_password_cmd = "getent shadow $i"
+        else:
+            user_password_cmd = "grep ^$i: /etc/shadow"
+
+        return f"""
+
+        for i in `{user_details_cmd} | cut -d: -f1`; do
+            ENTRY=`{user_entry_cmd}`;
             LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | grep ^$i | tr -s ' ')`;
-            PASSWORD=`(grep ^$i: /etc/shadow || grep ^$i: /etc/master.passwd) 2> /dev/null | cut -d: -f2`;
+            PASSWORD=`{user_password_cmd} 2> /dev/null | cut -d: -f2`;
             echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
         done
     """.strip()  # noqa
