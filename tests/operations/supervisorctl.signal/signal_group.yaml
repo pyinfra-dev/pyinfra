@@ -1,0 +1,5 @@
+args:
+  - USR2
+  - "workers:*"
+commands:
+  - supervisorctl signal USR2 'workers:*'

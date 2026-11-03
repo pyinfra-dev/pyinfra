@@ -1,0 +1,12 @@
+args:
+  - INPUT
+  - ACCEPT
+kwargs:
+  protocol: tcp
+  destination_port: "22; reboot #"
+  source_port: "80 && reboot"
+facts:
+  iptables.IptablesRules:
+    table=filter: []
+commands:
+  - "iptables -t filter -A INPUT -p tcp --dport '22; reboot #' --sport '80 && reboot' -j ACCEPT"
