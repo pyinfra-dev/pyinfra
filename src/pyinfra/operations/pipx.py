@@ -4,7 +4,7 @@ Manage pipx (python) applications.
 
 from pyinfra import host
 from pyinfra.api import operation
-from pyinfra.facts.pipx import PipxEnvironment, PipxPackages
+from pyinfra.facts.pipx import PipxEnvironment, PipxPackages, PipxRunpipDryRun
 from pyinfra.facts.server import Path
 
 from .util.packaging import PkgInfo, ensure_packages
@@ -28,6 +28,11 @@ def packages(
     Versions:
         Package versions can be pinned like pip: ``<pkg>==<version>``.
 
+    Extras:
+        Packages may request extras (e.g. ``foo[bar]``). When the bare package is already
+        installed, whether the extras are satisfied is checked with ``pipx runpip ... --dry-run``;
+        if not, the app is reinstalled with ``pipx install --force``.
+
     **Example:**
 
     .. code:: python
@@ -47,6 +52,12 @@ def packages(
     if extra_args:
         prep_install_command.append(extra_args)
     install_command = " ".join(prep_install_command)
+
+    # pipx install errors on an already-installed app, so adding a missing extra to an installed
+    # app (detected via PipxRunpipDryRun) requires --force.
+    force_reinstall_command = " ".join(
+        ["pipx", "install", "--force", *([extra_args] if extra_args else [])]
+    )
 
     uninstall_command = "pipx uninstall"
     upgrade_command = "pipx upgrade"
@@ -72,6 +83,10 @@ def packages(
             uninstall_command=uninstall_command,
             upgrade_command=upgrade_command,
             latest=latest,
+            extras_satisfied=lambda pkg: host.get_fact(
+                PipxRunpipDryRun, app=pkg.name, spec=pkg.spec
+            ),
+            force_reinstall_command=force_reinstall_command,
         )
 
 
