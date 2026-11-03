@@ -24,7 +24,7 @@ def connect_all(state: "State"):
 
     greenlet_to_host = {state.pool.spawn(host.connect): host for host in hosts}
 
-    with progress_spinner(greenlet_to_host.values()) as progress:
+    with progress_spinner(greenlet_to_host.values(), prefix_message="Connecting") as progress:
         for greenlet in gevent.iwait(greenlet_to_host.keys()):
             host = greenlet_to_host[greenlet]
             progress(host)
@@ -57,7 +57,7 @@ def disconnect_all(state: "State"):
         for host in state.activated_hosts  # only hosts we connected to please!
     }
 
-    with progress_spinner(greenlet_to_host.values()) as progress:
+    with progress_spinner(greenlet_to_host.values(), prefix_message="Disconnecting") as progress:
         for greenlet in gevent.iwait(greenlet_to_host.keys()):
             host = greenlet_to_host[greenlet]
             progress(host)

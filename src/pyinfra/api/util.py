@@ -201,7 +201,7 @@ def print_host_combined_output(host: Host, output: CommandOutput) -> None:
 
 
 def log_operation_start(
-    op_meta: StateOperationMeta, op_types: list | None = None, prefix: str = "--> "
+    op_meta: StateOperationMeta, op_types: list | None = None, prefix: str = ""
 ) -> None:
     op_types = op_types or []
     if op_meta.global_arguments["_serial"]:
