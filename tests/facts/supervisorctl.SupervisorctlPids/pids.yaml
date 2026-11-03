@@ -1,0 +1,10 @@
+command: supervisorctl pid all || true
+requires_command: supervisorctl
+output: |
+  1001
+  1002
+  0
+fact:
+  - 1001
+  - 1002
+  - 0

@@ -1,0 +1,19 @@
+arg:
+  config_file: /etc/supervisord.conf
+  server_url: http://localhost:9001
+  username: admin
+  password: s3cret
+command:
+  raw: >-
+    supervisorctl --configuration /etc/supervisord.conf
+    --serverurl http://localhost:9001
+    --username admin --password s3cret status || true
+  masked: >-
+    supervisorctl --configuration /etc/supervisord.conf
+    --serverurl http://localhost:9001
+    --username admin --password '*MASKED*' status || true
+requires_command: supervisorctl
+output: |
+  web                              RUNNING   pid 1001, uptime 1:23:45
+fact:
+  web: true

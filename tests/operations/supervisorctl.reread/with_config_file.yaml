@@ -1,0 +1,4 @@
+kwargs:
+  config_file: /etc/supervisord.conf
+commands:
+  - supervisorctl --configuration /etc/supervisord.conf reread
