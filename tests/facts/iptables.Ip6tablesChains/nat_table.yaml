@@ -1,0 +1,12 @@
+arg:
+  table: nat
+command: ip6tables-save -t nat
+requires_command: ip6tables-save
+output:
+  - "*nat"
+  - ":PREROUTING ACCEPT [0:0]"
+  - ":POSTROUTING ACCEPT [0:0]"
+  - "COMMIT"
+fact:
+  PREROUTING: ACCEPT
+  POSTROUTING: ACCEPT
