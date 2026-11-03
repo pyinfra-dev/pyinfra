@@ -5,6 +5,7 @@ creation (eg pyinfra-openstack).
 """
 
 from functools import wraps
+from inspect import Parameter, signature
 from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable
 
@@ -14,7 +15,7 @@ import pyinfra
 from pyinfra import context
 from pyinfra.context import ctx_host, ctx_state
 
-from .arguments import pop_global_arguments
+from .arguments import all_argument_meta, pop_global_arguments
 from .arguments_typed import PyinfraOperation
 from .exceptions import PyinfraError
 from .host import Host
@@ -79,8 +80,39 @@ def deploy(
 
 
 def _wrap_deploy(func: Callable[P, Any]) -> PyinfraOperation[P]:
+    func_signature = signature(func)
+    parameters = func_signature.parameters
+    accepts_var_keyword = any(
+        parameter.kind is Parameter.VAR_KEYWORD for parameter in parameters.values()
+    )
+    # Global arguments declared in the function signature with a default value,
+    # applied below when the caller does not pass them explicitly.
+    global_arg_default_names = {
+        name
+        for name, parameter in parameters.items()
+        if name in all_argument_meta and parameter.default is not Parameter.empty
+    }
+
     @wraps(func)
     def decorated_func(*args: P.args, **kwargs: P.kwargs) -> Any:
+        if global_arg_default_names:
+            # Bind the call to pick up global arguments passed positionally and to
+            # apply signature defaults for those not passed at all. Only bind the
+            # arguments the function declares, as callers may pass global arguments
+            # that are not present in the signature.
+            bound = func_signature.bind_partial(
+                *args,
+                **(
+                    kwargs
+                    if accepts_var_keyword
+                    else {key: value for key, value in kwargs.items() if key in parameters}
+                ),
+            )
+            bound.apply_defaults()
+            for name in global_arg_default_names:
+                if name not in kwargs:
+                    kwargs[name] = bound.arguments[name]
+
         deploy_kwargs, _ = pop_global_arguments(context.state, context.host, kwargs)
 
         deploy_data = getattr(func, "deploy_data", None)
