@@ -1,5 +1,5 @@
 from collections import defaultdict
-from io import StringIO
+from io import BytesIO, RawIOBase, StringIO
 from os import path
 from unittest import TestCase
 from unittest.mock import mock_open, patch
@@ -1149,6 +1149,130 @@ class TestOperationRetry(PatchSSHTestCase):
         self.assertEqual(op_meta.max_retries, 2)
         self.assertTrue(op_meta.was_retried)
         self.assertTrue(op_meta.retry_succeeded)
+
+    @patch("time.sleep")
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    def test_retry_preserves_initial_stdin_position(self, fake_run_command, fake_sleep):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        stdin = BytesIO(b"headerpayload")
+        stdin.seek(len(b"header"))
+        add_op(
+            state,
+            server.shell,
+            "cat > /dest",
+            _stdin=stdin,
+            _retries=1,
+            _retry_delay=0,
+        )
+
+        attempts = []
+
+        def execute(*args, **kwargs):
+            attempts.append(kwargs["_stdin"].read())
+            channel = FakeChannel(1 if len(attempts) == 1 else 0)
+            return len(attempts) > 1, FakeBuffer("", channel)
+
+        fake_run_command.side_effect = execute
+        run_ops(state)
+
+        assert attempts == [b"payload", b"payload"]
+
+    @patch("time.sleep")
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    def test_retry_resends_a_generator_stdin(self, fake_run_command, fake_sleep):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        add_op(
+            state,
+            server.shell,
+            "cat > /dest",
+            _stdin=(line for line in ["header", "payload"]),
+            _retries=1,
+            _retry_delay=0,
+        )
+
+        attempts = []
+
+        def execute(*args, **kwargs):
+            attempts.append(list(kwargs["_stdin"]))
+            channel = FakeChannel(1 if len(attempts) == 1 else 0)
+            return len(attempts) > 1, FakeBuffer("", channel)
+
+        fake_run_command.side_effect = execute
+        run_ops(state)
+
+        # A generator is consumed by the first attempt: the retry must get the same lines,
+        # not an exhausted iterator.
+        assert attempts == [["header", "payload"], ["header", "payload"]]
+
+    def test_sudo_retry_resends_a_generator_stdin(self):
+        inventory = make_inventory(hosts=("@local",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        # Pretend the askpass script already exists, so the retry does not run an extra
+        # local process to create it.
+        host = inventory.get_host("@local")
+        host.connector_data["sudo_askpass_path__/tmp"] = "/tmp/pyinfra-sudo-askpass"
+
+        add_op(
+            state,
+            server.shell,
+            "cat > /dest",
+            _stdin=(line for line in ["header", "payload"]),
+            _sudo=True,
+        )
+
+        attempts = []
+
+        def execute(*args, **kwargs):
+            attempts.append(list(kwargs["stdin"]))
+            if len(attempts) == 1:
+                return 1, CommandOutput([OutputLine("stderr", "sudo: a password is required")])
+            return 0, CommandOutput([])
+
+        with (
+            patch("pyinfra.connectors.local.run_local_process", side_effect=execute),
+            patch("pyinfra.connectors.util.getpass", return_value="PASSWORD"),
+        ):
+            run_ops(state)
+
+        assert attempts == [["header", "payload"], ["header", "payload"]]
+
+    @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
+    def test_retry_refuses_a_non_seekable_stdin_before_running(self, fake_run_command):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+
+        class NonSeekableStream(RawIOBase):
+            """
+            A stream that says it cannot be rewound. A real `IO[bytes]`, as the payload
+            check requires, but no pipe under it: what the check reads is the same on every
+            platform.
+            """
+
+            def seekable(self):
+                return False
+
+        add_op(state, server.shell, "cat > /dest", _stdin=NonSeekableStream(), _retries=1)
+
+        # Refused up front, rather than after a first attempt has consumed the stream
+        # and truncated the destination.
+        with self.assertRaises(PyinfraError) as context:
+            run_ops(state)
+
+        assert "non-seekable" in str(context.exception)
+        fake_run_command.assert_not_called()
 
     @patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command")
     def test_retry_max_attempts_failure(self, fake_run_command):
