@@ -55,6 +55,45 @@ def _patch_paramiko_sk_key_support() -> None:
     setattr(AuthHandler, "_get_key_type_and_bits", get_key_type_and_bits)
 
 
+def _patch_paramiko_dss_key_value_error() -> None:
+    """
+    Work around paramiko/paramiko#1839 so a DSA key rejected by modern
+    ``cryptography`` does not abort the whole auth loop.
+
+    ``DSSKey.sign_ssh_data`` rebuilds the key through ``cryptography`` at signing
+    time, which raises ``ValueError`` ("q must be exactly 160, 224, or 256 bits
+    long") for keys that current OpenSSH also refuses. Paramiko's
+    ``SSHClient._auth`` only catches ``SSHException`` per key, so the raw
+    ``ValueError`` escapes the loop and even a valid password fallback never
+    runs (issue #1358). Re-raising it as ``SSHException`` lets paramiko skip the
+    broken key and move on to the next auth method. The patch is idempotent
+    (marks its replacement so a second call is a no-op) and a no-op when
+    paramiko no longer ships ``DSSKey`` (paramiko 4+).
+    """
+
+    import paramiko
+
+    dss_key_cls = getattr(paramiko, "DSSKey", None)
+    if dss_key_cls is None:
+        return
+
+    current_method = getattr(dss_key_cls, "sign_ssh_data", None)
+    if current_method is None:
+        return
+
+    if getattr(current_method, "_pyinfra_dss_patch", False):
+        return
+
+    def sign_ssh_data(self: Any, data: Any, algorithm: Any = None) -> Any:
+        try:
+            return current_method(self, data, algorithm)
+        except ValueError as e:
+            raise SSHException(str(e)) from e
+
+    setattr(sign_ssh_data, "_pyinfra_dss_patch", True)
+    setattr(dss_key_cls, "sign_ssh_data", sign_ssh_data)
+
+
 def raise_connect_error(host: "Host", message, data):
     message = f"{message} ({data})"
     raise ConnectError(message)
