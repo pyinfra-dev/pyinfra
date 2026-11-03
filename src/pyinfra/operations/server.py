@@ -48,6 +48,7 @@ from . import (
     pacman,
     pkg,
     runit,
+    s6,
     systemd,
     sysvinit,
     upstart,
@@ -733,6 +734,9 @@ def service(
     elif host.get_fact(Which, command="sv"):
         service_operation = runit.service
 
+    elif host.get_fact(Which, command="s6"):
+        service_operation = s6.service
+
     # NOTE: must run before the sysvinit check: BSDs ship `service` in base (distinct from the
     # Linux sysvinit wrapper), so matching on Which command="service" first would misroute BSD
     # hosts to sysvinit. See https://github.com/pyinfra-dev/pyinfra/issues/1496.
@@ -753,7 +757,9 @@ def service(
 
     else:
         raise OperationError(
-            ("No init system found (no systemctl, initctl, /etc/init.d or /etc/rc.d found)"),
+            (
+                "No init system found (no systemctl, rc-service, initctl, sv, s6, /etc/init.d or /etc/rc.d found)"
+            ),
         )
 
     yield from service_operation._inner(

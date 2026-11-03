@@ -1,0 +1,11 @@
+args:
+  - tipidee
+kwargs:
+  livedir: "/run/s6; rm -rf /"
+  running: true
+facts:
+  s6.S6LiveStatus:
+    livedir=/run/s6; rm -rf /:
+      tipidee: false
+commands:
+  - s6-rc -l '/run/s6; rm -rf /' -u change tipidee

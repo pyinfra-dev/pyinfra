@@ -1,0 +1,12 @@
+args:
+  - [tipidee, nftables]
+kwargs:
+  restarted: true
+  livedir: /run/s7-rc
+facts:
+  s6.S6LiveStatus:
+    livedir=/run/s7-rc:
+      tipidee: true
+      nftables: true
+commands:
+  - s6-rc -l /run/s7-rc -d change tipidee nftables && s6-rc -l /run/s7-rc -u change tipidee nftables

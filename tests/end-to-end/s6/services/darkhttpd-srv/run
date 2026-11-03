@@ -1,0 +1,8 @@
+#!/bin/execlineb -P
+foreground {
+	if { test -e /var/www } {
+		foreground { install -d /var/www }
+		redirfd 1 /var/www/index.html printf "<html><p>pyinfra s6 integration test</p></html>"
+	}
+} 
+exec darkhttpd --addr 127.0.0.1 /var/www

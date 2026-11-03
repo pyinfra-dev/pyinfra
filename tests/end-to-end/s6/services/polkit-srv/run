@@ -1,0 +1,2 @@
+#!/bin/execlineb -P
+exec /usr/lib/polkit-1/polkitd
