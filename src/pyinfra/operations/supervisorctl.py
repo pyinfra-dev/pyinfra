@@ -222,7 +222,7 @@ def reload(
 
 @operation(is_idempotent=False)
 def add(
-    name: str,
+    group: str,
     config_file: str | None = None,
     server_url: str | None = None,
     username: str | None = None,
@@ -231,7 +231,7 @@ def add(
     """
     Activate any updates in config for a process or group.
 
-    + name: name of the process/group to add
+    + group: name of the process group to add
     + config_file: configuration file to pass to ``supervisorctl`` (``-c``)
     + server_url: URL on which supervisord listens (``-s``)
     + username: username to authenticate with (``-u``)
@@ -246,13 +246,13 @@ def add(
             password=password,
         ),
         "add",
-        QuoteString(name),
+        QuoteString(group),
     )
 
 
 @operation(is_idempotent=False)
 def remove(
-    name: str,
+    group: str,
     config_file: str | None = None,
     server_url: str | None = None,
     username: str | None = None,
@@ -261,7 +261,7 @@ def remove(
     """
     Remove a process or group from the active configuration.
 
-    + name: name of the process/group to remove
+    + group: name of the process group to remove
     + config_file: configuration file to pass to ``supervisorctl`` (``-c``)
     + server_url: URL on which supervisord listens (``-s``)
     + username: username to authenticate with (``-u``)
@@ -276,7 +276,7 @@ def remove(
             password=password,
         ),
         "remove",
-        QuoteString(name),
+        QuoteString(group),
     )
 
 

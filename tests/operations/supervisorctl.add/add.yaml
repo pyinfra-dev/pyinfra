@@ -1,4 +1,4 @@
-args:
-  - web
+kwargs:
+  group: web
 commands:
   - supervisorctl add web
