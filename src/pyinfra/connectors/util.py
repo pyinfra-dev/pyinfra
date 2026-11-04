@@ -38,12 +38,19 @@ ASKPASS_COMMAND = r"""
 temp=$(mktemp "${{TMPDIR:={0}}}/pyinfra-sudo-askpass-XXXXXXXXXXXX")
 cat >"$temp"<<'__EOF__'
 #!/bin/sh
-if [ -f "$0.${{PPID}}.called" ]; then
-    rm -f "$0.${{PPID}}.called"
+marker="$0.${{PPID}}.called"
+if [ -f "$marker" ]; then
+    rm -f "$marker"
     echo "sudo: 1 incorrect password attempt" >&2
     exit 1
 fi
-touch "$0.${{PPID}}.called"
+touch "$marker"
+(
+    while kill -0 "$PPID" 2>/dev/null; do
+        sleep 1
+    done
+    rm -f "$marker"
+) </dev/null >/dev/null 2>&1 &
 printf '%s\n' "${1}"
 __EOF__
 chmod 755 "$temp"
@@ -311,8 +318,9 @@ def execute_command_with_sudo_retry(
                         host.print_prefix,
                     )
                     break
+                if command_arguments.get("_sudo_password"):
+                    break
                 requires_password = True
-                break
                 break
 
         if requires_password:
@@ -464,13 +472,14 @@ def make_unix_command_for_host(
 
     # Handle sudo password
     if command_arguments.get("_sudo"):
-        # If a sudo password was prompted, use it; otherwise fall back to direct arguments.
-        if host.connector_data.get("prompted_sudo_password"):
-            command_arguments["_sudo_password"] = host.connector_data["prompted_sudo_password"]
+        # If the sudo password is not set in the direct arguments,
+        # set it from the connector data value.
+        if "_sudo_password" not in command_arguments or not command_arguments["_sudo_password"]:
+            command_arguments["_sudo_password"] = host.connector_data.get("prompted_sudo_password")
 
         # If we know a password is needed, ask for it up front rather than first trying
         # passwordless sudo and prompting on failure.
-        if not command_arguments.get("_sudo_password") and state.config.USE_SUDO_PASSWORD:
+        if not command_arguments["_sudo_password"] and state.config.USE_SUDO_PASSWORD:
             sudo_password = getpass(f"{host.print_prefix}sudo password: ")
             host.connector_data["prompted_sudo_password"] = sudo_password
             command_arguments["_sudo_password"] = sudo_password
