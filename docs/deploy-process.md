@@ -25,6 +25,8 @@ For every host in the inventory pyinfra invokes your deploy code with the `host`
 
 When the deploy file finishes, pyinfra knows the order operations appear in and which operations will change which hosts. What it has built is an **ordering**, not a stored list of commands. **No mutating commands have been sent to any target yet** — only fact-gathering reads.
 
+Just before the run moves on to execute, pyinfra fires the `prepare_end` [callback](api/index.md#running-code-at-the-end-of-prepare). It is the last thing to happen in prepare, so it is where you hook whole-inventory work that must run once per run, such as gathering a fact from every host. The callback also receives the run mode (`dry`, `debug`), because the run may still be abandoned before execute.
+
 ### Phase 2: execute
 
 pyinfra then walks the operations in order. For each operation it **re-evaluates** the operation against each host — re-running the operation's logic to generate its commands, then running them on every host that needs them, in parallel, and waiting for that operation to finish on all hosts before moving on to the next. The commands are produced here, at execute time, not replayed from prepare.
