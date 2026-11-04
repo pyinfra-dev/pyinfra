@@ -704,7 +704,7 @@ class Block(FactBase):
         return output
 
 
-class FileContents(FactBase):
+class FileContents(FactBase[list[str] | None]):
     """
     Returns the contents of a file as a list of lines, or ``None`` if the file does not exist.
     """
@@ -719,7 +719,7 @@ class FileContents(FactBase):
         )
 
     @override
-    def process(self, output):
+    def process(self, output) -> list[str] | None:
         # If output is the missing flag, the file doesn't exist
         if output and output[0] == self.missing_flag:
             return None
