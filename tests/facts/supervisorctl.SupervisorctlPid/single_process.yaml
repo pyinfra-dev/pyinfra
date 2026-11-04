@@ -1,0 +1,7 @@
+arg:
+  process: web
+command: supervisorctl pid web || true
+requires_command: supervisorctl
+output: |
+  1001
+fact: 1001
