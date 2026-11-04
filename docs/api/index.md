@@ -105,3 +105,28 @@ run_ops(state)
 ```
 
 The available hooks are defined on `BaseStateCallback` — subclass it and override only the ones you care about. The current set covers host connect/disconnect, operation start/end, and per-host operation start/success/error/retry. See [`pyinfra.api.state.BaseStateCallback`](reference.md#pyinfra.api.state.BaseStateCallback) for the full signature list.
+
+### Running code at the end of prepare
+
+The `prepare_end` hook runs once per registered handler after the deploy code has run and change detection is done, but before any operation executes. It is the place for whole-inventory work that must happen once per run: cache invalidation, controller-side bookkeeping, or gathering a fact from every host. It fires with `state.current_stage` still set to `StateStage.Prepare`.
+
+The run may still be abandoned after this point, so a handler must not assume that an operation will follow. For that reason `prepare_end` receives the run mode it was called under:
+
++ `dry` is `True` for a `--dry` run.
++ `debug` is `True` for `--debug-facts` or `--debug-operations`.
+
+A handler that only makes sense when operations will run should return early when either flag is set. An exception raised in a `prepare_end` handler aborts the run.
+
+```python
+from pyinfra.api import BaseStateCallback
+
+class CollectInventoryWideFacts(BaseStateCallback):
+    def prepare_end(self, state, dry=False, debug=False):
+        if dry or debug:
+            return
+        gather_facts_from_every_host(state.inventory.get_active_hosts())
+
+state.add_callback_handler(CollectInventoryWideFacts())
+```
+
+Register the handler **once per run**. A deploy file is executed once per host, so registering there installs one handler for each host. Register before the run instead — for example in a small wrapper around the CLI entry point.

@@ -66,6 +66,34 @@ class BaseStateCallback:
     def host_disconnect(state: State, host: Host):
         """Called after a host has disconnected."""
 
+    # Deploy callbacks
+    #
+
+    @staticmethod
+    def prepare_end(state: State, dry: bool = False, debug: bool = False):
+        """Called at the end of the prepare phase, after the deploy code has run and change
+        detection is done, but before any operation executes.
+
+        This is the hook for work that must happen once per run, after the whole inventory has
+        been prepared: cache invalidation, controller-side bookkeeping, or gathering facts from
+        every host. It fires with ``state.current_stage`` still set to ``StateStage.Prepare``.
+
+        The run may still be abandoned after this point, so a handler must not assume that any
+        operation will follow:
+
+        + ``dry`` is ``True`` for a ``--dry`` run, which reports changes without executing them.
+        + ``debug`` is ``True`` for ``--debug-facts`` or ``--debug-operations``, which print and
+          exit before execution.
+
+        A handler that only makes sense when operations will run should return early when either
+        flag is set. An exception raised here aborts the run.
+
+        Like the other lifecycle callbacks this is driven by the CLI, which owns the stages. It
+        fires once for the prepare phase of a run and not for commands that end before prepare,
+        such as a ``fact`` query or ``debug-inventory``. The API has no prepare phase of its own,
+        so a caller driving ``run_ops`` directly does not receive it.
+        """
+
     # Operation callbacks
     #
 

@@ -525,6 +525,14 @@ def _main(
     can_diff, state, config = _handle_commands(
         state, config, command, original_operations, operations, json_output=json_output
     )
+    # The deploy code has run and change detection is done, so the prepare phase
+    # is over. Fire this before any of the exit paths below, so handlers run for
+    # every run that reaches prepare, including dry runs and debug dumps.
+    state.trigger_callbacks(
+        "prepare_end",
+        dry=dry,
+        debug=debug_facts or debug_operations,
+    )
 
     # Print proposed changes, execute unless --dry, and exit
     #

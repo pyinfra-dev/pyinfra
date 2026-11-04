@@ -1,3 +1,12 @@
+# Unreleased
+
+Core:
+
+- api: add a `prepare_end` callback to `BaseStateCallback`, fired once per registered handler at the
+  end of the prepare phase, after the deploy code has run and change detection is done but before any
+  operation executes. It receives `dry` and `debug` flags so handlers can skip work that only makes
+  sense when operations will run.
+
 # v3.10.0
 
 Another bumper update with lots of security fixes in user input quoting and many other improvements. Thank you all new and returning contributors (there are many of you!).
