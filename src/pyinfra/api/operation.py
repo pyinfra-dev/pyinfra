@@ -23,7 +23,8 @@ from pyinfra.context import ctx_host, ctx_state
 from .arguments import EXECUTION_KWARG_KEYS, AllArguments, pop_global_arguments
 from .arguments_typed import PyinfraOperation
 from .command import PyinfraCommand, StringCommand
-from .exceptions import NestedOperationError, OperationValueError, PyinfraError
+from .exceptions import ArgumentTypeError, NestedOperationError, OperationValueError, PyinfraError
+from .facts import FactBase, ShortFactBase
 from .host import Host
 from .operations import run_host_op
 from .state import State, StateOperationHostData, StateOperationMeta, StateStage
@@ -297,6 +298,15 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         #
         # Get the meta kwargs (globals that apply to all hosts)
         global_arguments, global_argument_keys = pop_global_arguments(state, host, kwargs)
+
+        conditions = global_arguments.get("_if")
+        for condition in conditions if isinstance(conditions, list) else (conditions,):
+            if isinstance(condition, type) and issubclass(condition, (FactBase, ShortFactBase)):
+                raise ArgumentTypeError(
+                    "Invalid argument `_if`: bare fact classes are not conditions. "
+                    "Use any_fact(MyFact), all_fact(MyFact), or "
+                    "lambda: bool(host.get_fact(MyFact, ...)) for facts with arguments."
+                )
 
         names, add_args = generate_operation_name(func, host, kwargs, global_arguments)
         op_order, op_hash = solve_operation_consistency(names, args, kwargs, state, host)
