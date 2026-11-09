@@ -1,9 +1,12 @@
 import json
+import os
 from os import path
 from unittest import TestCase
+from unittest.mock import PropertyMock, patch
 
 from pyinfra.api import Host, Inventory
 from pyinfra_cli.cli import _apply_inventory_exclude, _apply_inventory_limit, _main
+from pyinfra_cli.progress import DeployProgress
 
 from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli
@@ -72,6 +75,46 @@ class TestCliYesEnvVar(TestCase):
 
 
 class TestOperationCli(PatchSSHTestCase):
+    def test_tty_progress_selection_uses_user_setting_before_spinner_default(self):
+        for setting in (None, "off", "on"):
+            with self.subTest(setting=setting), patch.dict(os.environ):
+                if setting is None:
+                    os.environ.pop("PYINFRA_PROGRESS", None)
+                else:
+                    os.environ["PYINFRA_PROGRESS"] = setting
+                with (
+                    patch(
+                        "rich.console.Console.is_terminal",
+                        new_callable=PropertyMock,
+                        return_value=True,
+                    ),
+                    patch("pyinfra_cli.cli.DeployProgress", wraps=DeployProgress) as make_tree,
+                ):
+                    # Repeat the full CLI path: its temporary spinner default
+                    # must not turn the next invocation into an implicit opt-out.
+                    for _ in range(2):
+                        make_tree.reset_mock()
+                        result = run_cli(
+                            "-y",
+                            path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
+                            "server.shell",
+                            "echo hi",
+                        )
+                        assert result.exit_code == 0, result.stderr
+                        assert make_tree.call_count == (0 if setting == "off" else 1)
+                        assert os.environ.get("PYINFRA_PROGRESS") == setting
+
+    def test_unset_progress_is_restored_after_cli_failure(self):
+        with patch.dict(os.environ):
+            os.environ.pop("PYINFRA_PROGRESS", None)
+            result = run_cli(
+                "-y",
+                path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
+                "not_a_module.shell",
+            )
+            assert result.exit_code == 1
+            assert "PYINFRA_PROGRESS" not in os.environ
+
     def test_invalid_operation_module(self):
         result = run_cli(
             path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),

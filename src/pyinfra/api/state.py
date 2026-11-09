@@ -78,6 +78,10 @@ class BaseStateCallback:
         """Called before an operation runs on a host."""
 
     @staticmethod
+    def operation_host_skipped(state: State, host: Host, op_hash):
+        pass
+
+    @staticmethod
     def operation_host_success(state: State, host: Host, op_hash, retry_count: int = 0):
         """Called after an operation succeeds on a host, where ``retry_count`` is the number of
         retries it took (``0`` on the first attempt).

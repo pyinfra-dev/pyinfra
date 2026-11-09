@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from pyinfra.api import Config, State
 from pyinfra.api.host import HostData
+from pyinfra.api.renderable import CodeBlock
 from pyinfra.context import ctx_config
 
 from ..util import make_inventory
@@ -45,6 +46,19 @@ class TestHostDeployContext(TestCase):
         inventory = make_inventory()
         State(inventory, Config())
         return inventory.get_host("somehost")
+
+    def test_structured_output_has_plain_logging_fallback(self):
+        host = self._make_host()
+        diff = "@@ -1 +1 @@\n-old\n+new"
+        with self.assertLogs("pyinfra", level="INFO") as captured:
+            host.log_diff(diff)
+            host.log_rich(CodeBlock("print('hello')", lexer="python"))
+
+        assert diff in captured.output[0]
+        assert "somehost" in captured.output[0]
+        assert "print('hello')" in captured.output[1]
+        assert captured.records[0].pyinfra_rich.text == diff
+        assert captured.records[0].pyinfra_host == "somehost"
 
     def test_deploy_restores_state_after_exception(self):
         host = self._make_host()

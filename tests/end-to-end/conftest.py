@@ -31,7 +31,7 @@ class Helpers:
     @staticmethod
     def run_check_output(command, expected_lines=None, **kwargs):
         if expected_lines is None:
-            expected_lines = ["Connected", "Starting operation", "Errors: 0"]
+            expected_lines = ["Connected", "Starting operation", "Grand total"]
 
         _, stderr = Helpers.run(command, **kwargs)
 

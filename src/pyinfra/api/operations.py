@@ -39,6 +39,7 @@ def run_host_op(state: State, host: Host, op_hash: str) -> bool:
 
     if op_hash not in state.ops[host]:
         logger.info(f"{host.print_prefix}{format_text('Skipped', 'blue')}")
+        state.trigger_callbacks("operation_host_skipped", host, op_hash)
         return True
 
     op_meta = state.get_op_meta(op_hash)
@@ -205,7 +206,14 @@ def _run_host_op(state: State, host: Host, op_hash: str) -> bool:
             _status_text = f"{_status_text} on retry {retry_attempt}"
 
         _log_status = format_text(_status_text, "green" if executed_commands > 0 else "cyan")
-        logger.info(f"{host.print_prefix}{_log_status}")
+        logger.info(
+            f"{host.print_prefix}{_log_status}",
+            extra={
+                "pyinfra_status_changed": executed_commands > 0,
+                "pyinfra_status_text": _status_text,
+                "pyinfra_host": host.name,
+            },
+        )
 
         state.trigger_callbacks("operation_host_success", host, op_hash, retry_attempt)
     else:
@@ -283,7 +291,7 @@ def _run_serial_ops(state: State):
 
     for host in list(state.inventory.get_active_hosts()):
         host_operations = product([host], state.get_op_order())
-        with progress_spinner(host_operations) as progress:
+        with progress_spinner(host_operations, prefix_message=f"Running ({host.name})") as progress:
             try:
                 _run_host_ops(
                     state,
@@ -300,7 +308,7 @@ def _run_no_wait_ops(state: State):
     """
 
     hosts_operations = product(state.inventory.get_active_hosts(), state.get_op_order())
-    with progress_spinner(hosts_operations) as progress:
+    with progress_spinner(hosts_operations, prefix_message="Running operations") as progress:
         # Spawn greenlet for each host to run *all* ops
         if state.pool is None:
             raise PyinfraError("No pool found on state.")
@@ -342,8 +350,12 @@ def _run_single_op(state: State, op_hash: str):
     op_meta = state.get_op_meta(op_hash)
     log_operation_start(op_meta)
 
+    op_name = ", ".join(op_meta.names) if op_meta.names else "operation"
+
     if op_meta.global_arguments["_serial"]:
-        with progress_spinner(state.inventory.get_active_hosts()) as progress:
+        with progress_spinner(
+            state.inventory.get_active_hosts(), prefix_message=op_name
+        ) as progress:
             # For each host, run the op
             for host in state.inventory.get_active_hosts():
                 result = _run_host_op_with_context(state, host, op_hash)
@@ -365,7 +377,7 @@ def _run_single_op(state: State, op_hash: str):
             batches = [hosts[i : i + parallel] for i in range(0, len(hosts), parallel)]
 
         for batch in batches:
-            with progress_spinner(batch) as progress:
+            with progress_spinner(batch, prefix_message=op_name) as progress:
                 # Spawn greenlet for each host
                 if state.pool is None:
                     raise PyinfraError("No pool found on state.")
