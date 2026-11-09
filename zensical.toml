@@ -32,6 +32,7 @@ nav = [
     { "How pyinfra Works" = [
         { "Deploy Process" = "deploy-process.md" },
         { "Packaging Deploys" = "api/deploys.md" },
+        { "Testing Deploys" = "api/testing.md" },
         { "Writing Connectors" = "api/connectors.md" },
         { "Writing Operations" = "api/operations.md" },
         { "Writing Facts" = "api/facts.md" },

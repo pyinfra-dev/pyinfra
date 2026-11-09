@@ -4,7 +4,7 @@ import shlex
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString, StringCommand
 
 # Mapping for iptables code arguments to variable names
 IPTABLES_ARGS = {
@@ -125,8 +125,8 @@ class IptablesRules(FactBase):
         return "iptables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"iptables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("iptables-save", "-t", QuoteString(table))
 
     @override
     def process(self, output):
@@ -158,8 +158,8 @@ class Ip6tablesRules(IptablesRules):
         return "ip6tables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"ip6tables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("ip6tables-save", "-t", QuoteString(table))
 
 
 class IptablesChains(FactBase):
@@ -180,8 +180,8 @@ class IptablesChains(FactBase):
         return "iptables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"iptables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("iptables-save", "-t", QuoteString(table))
 
     @override
     def process(self, output):
@@ -213,5 +213,5 @@ class Ip6tablesChains(IptablesChains):
         return "ip6tables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"ip6tables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("ip6tables-save", "-t", QuoteString(table))
