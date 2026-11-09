@@ -16,6 +16,7 @@ from pyinfra.api.command import QuoteString, StringCommand
 from pyinfra.api.operation import operation
 from pyinfra.facts import server
 from pyinfra.facts.files import File
+from pyinfra.facts.pip import PythonVersion
 from pyinfra.facts.uv import (
     MANAGED_PYTHON,
     UV_CMD,
@@ -289,7 +290,7 @@ def venv(
         if exists:
             recreate, reason = False, None
             if on_mismatch != "ignore":
-                current = host.get_fact(UvPythonVersion, request=f"{path}/bin/python")
+                current = host.get_fact(PythonVersion, python=f"{path}/bin/python")
                 wanted = None
                 if current is not None and python is not None:
                     wanted = host.get_fact(UvPythonVersion, request=python)

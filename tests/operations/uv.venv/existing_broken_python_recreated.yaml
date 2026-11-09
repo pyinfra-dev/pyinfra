@@ -5,8 +5,8 @@ facts:
     path=/somewhere/useful/.venv/bin/activate: true
   files.Directory:
     path=/somewhere/useful/.venv: true
-  uv.UvPythonVersion:
-    request=/somewhere/useful/.venv/bin/python: null
+  pip.PythonVersion:
+    python=/somewhere/useful/.venv/bin/python: null
 commands:
   - rm -rf /somewhere/useful/.venv
   - uv venv /somewhere/useful/.venv
