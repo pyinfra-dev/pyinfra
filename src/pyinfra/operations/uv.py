@@ -264,10 +264,10 @@ def venv(
 
     Existing venvs:
         A venv whose interpreter can no longer be executed, typically because the Python it
-        was created from was upgraded or removed, is deleted and created again. When ``python``
-        is given, the major.minor version it resolves to is also compared with the interpreter
-        inside the venv, and ``on_mismatch`` decides what happens when they differ. Set
-        ``on_mismatch="ignore"`` to skip both checks.
+        was created from was upgraded or removed, is replaced with ``uv venv --clear``. When
+        ``python`` is given, the major.minor version it resolves to is also compared with the
+        interpreter inside the venv, and ``on_mismatch`` decides what happens when they differ.
+        Set ``on_mismatch="ignore"`` to skip both checks.
 
     **Example:**
 
@@ -287,8 +287,9 @@ def venv(
             raise ValueError("allow_existing and clear_existing cannot both be set")
         if len(str(path).strip()) == 0:
             raise ValueError("must provide path in which .venv is to be created")
+        recreate = False
         if exists:
-            recreate, reason = False, None
+            reason = None
             if on_mismatch != "ignore":
                 current = host.get_fact(PythonVersion, python=f"{path}/bin/python")
                 wanted, missing_tool = None, None
@@ -306,13 +307,12 @@ def venv(
                 return
 
             logger.info(f"venv at {path}: {reason}, recreating")
-            yield from files.directory._inner(path, present=False)  # noqa: SLF001
 
         cmd_list: list[str | QuoteString] = [UV_CMD, "venv"]
-        if allow_existing:
-            cmd_list.append("--allow-existing")
-        if clear_existing:
+        if recreate or clear_existing:
             cmd_list.append("--clear")
+        elif allow_existing:
+            cmd_list.append("--allow-existing")
         if seed:
             cmd_list.append("--seed")
         if link_mode:

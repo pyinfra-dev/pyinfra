@@ -7,8 +7,6 @@ kwargs:
 facts:
   files.File:
     path=/somewhere/useful/.venv/bin/activate: true
-  files.Directory:
-    path=/somewhere/useful/.venv: true
   pip.PythonVersion:
     python=/somewhere/useful/.venv/bin/python: [3, 13, 4]
   server.Which:
@@ -16,5 +14,4 @@ facts:
   uv.UvPythonVersion:
     request=3.15: [3, 15, 0]
 commands:
-  - rm -rf /somewhere/useful/.venv
-  - uv venv --seed --python 3.15 /somewhere/useful/.venv
+  - uv venv --clear --seed --python 3.15 /somewhere/useful/.venv
