@@ -1,3 +1,107 @@
+# v3.11.0
+
+Core:
+
+- api: include name and arguments in operation hash (#1942) (@wowi42)
+- api.facts: use _is_executing boolean over CLI only stage
+- api: strip su password prompt from fact output (#1981) (@0xTaoZ)
+- api: omit variadic kwargs from auto labels (#1983) (@0xTaoZ)
+- api: document BaseStateCallback, fix reported doc typos (#1985) (@maisim)
+- api: unmask a HiddenValue wrapped in another one (#1987) (@maisim)
+- api: give check_preconditions the fact's own arguments (#1988) (@maisim)
+- api: skip connectors whose module cannot be imported (#1974) (@maisim)
+- api: tolerate missing connector kwargs in fact execution (#1995) (@wowi42)
+- api: mark the hosts that fail when running with no_wait (#2016) (@maisim)
+- api: honour fail percent between _serial hosts and _parallel batches (#2021) (@1sakshm)
+
+Operations/facts:
+
+- facts.sysvinit: allow underscores in service names (#1923) (@NoiceHax)
+- operations.dnf: install pinned package versions (#1913) (@0xTaoZ)
+- operations.iptables,facts.iptables: extras comparison losing duplicate flags and quoted values (#1712) (@JustScreaMy)
+- operations.pnpm, facts.pnpm: pnpm facts and operations with support of package manager and build tool (#1928) (@yagarea)
+- operations.server: mention shell executable (#1941) (@0xTaoZ)
+- facts.podman: add more basic facts (#1900) (@lsg551)
+- facts.files: read checksum targets via stdin to fix backslash escaping (#1911) (#1912) (@wowi42)
+- facts.server: preserve full executable names and args on macOS (#1953) (@ynaamane)
+- operations.files: Ensure file ops don't fail if source missing in prepare phase (#1915) (@aktiur)
+- operations.apt: add wait_for_lock argument to apt operations (#1937) (@wowi42)
+- operations.git.repo: pass depth argument to fetch and pull (#1934) (@evilham)
+- operations.bsdinit: enable OpenBSD services with rcctl (#1916) (@0xTaoZ)
+- operations.ssh: add keyscan option to command (#1960) (@StasShk)
+- operations.git: support ssh://, raise explicit error on bad proto/keyscan combination (#1785) (@maisim)
+- operations.ssh: make keyscan checks port-aware (#1969)
+- operations.files: make files.link idempotent for existing hard links (#1962) (@ethanstoner)
+- operations.files: warn rsync deletes extra files (#1979) (@0xTaoZ)
+- operations.git: allow chowned repo pulls (#1982) (@0xTaoZ)
+- facts.brew: handle third-party tap packages idempotently (#1280) (#1990) (@Macejdo)
+- facts.flatpak: Optimize FlatpakPackage.process (#1993) (@antoinenicls)
+- operations.files: handle missing directory destinations in put (#1966) (@StasShk)
+- operations.files: don't fail files.block on an unneeded chown (#1973) (@ynaamane)
+- operations.bsdinit: Use the service command to enable/disable services on FreeBSD (#2012) (@abergeron)
+- operations.flatpak: Correct examples and touch-up remote text (#2022) (@jbjorkang)
+- operations.xbps: update xbps itself before installing packages (#2018) (@1sakshm)
+- operations.apt: add apt.hold operation and AptHeldPackages fact (#2017) (@1sakshm)
+- operations.server: add password_lock option to server.user (#2014) (@1sakshm)
+- operations.crontab: match existing commands literally in sed (#2030) (@SparkDrago05)
+- operations.flatpak: Add 'user' installation option to flatpak install operation (#1968) (@isFakeAccount)
+- operations: match documented argument names to signatures (#2033) (@mmporong)
+- operations.crontab: don't escape ^ and $ in the matched command (#2040) (@SparkDrago05)
+- operations.files: don't show a text diff for a binary file in put (#2043) (@SparkDrago05)
+- operations.iptables: quote user input in iptables commands (#1810) (@wowi42)
+
+Connectors:
+
+- connectors.ssh: skip unparsable known_hosts lines instead of dropping the file (#1926) (@NoiceHax)
+- connectors.docker: strip sha256 prefix instead of slicing image ID (#1925) (@NoiceHax)
+- connectors.ssh: treat ProxyJump none as no jump host (#1445) (#1922) (@NoiceHax)
+- connectors.ssh: prompt for encrypted ssh_config IdentityFile passphrase (#1917) (#1921) (@NoiceHax)
+- connectors.ssh: don't truncate local file when download fails (#1440) (#1924) (@NoiceHax)
+- connectors.ssh: retry NFSv4 ACL handover (#1955) (@0xTaoZ)
+- connectors.docker: add docker_user connector data option (#1938) (@wowi42)
+- connectors.ssh: trust known_hosts certificate authorities (#1945) (@0xTaoZ)
+- connectors.ssh: support sudo passwords with rsync (#1950) (@0xTaoZ)
+- connectors.util: prompt for sudo password up front with --use-sudo-password (#1961) (@anandghegde)
+- connectors.ssh: preserve nested ProxyJump sockets (#1980) (@0xTaoZ)
+- connectors.ssh: require paramiko>=3.2 (#1992) (@wolfgang-aura)
+- connectors.ssh: match host CAs on custom ports (#1971) (@0xTaoZ)
+- connectors: add _sudo_set_home argument to control sudo -H (#1998) (@1sakshm)
+- connectors: skip futile re-run after sudo password prompt (#2013) (@wowi42)
+- connectors: default optional args in read_output_buffers (#2001) (@wowi42)
+- connectors.ssh: unflake SFTP client mock assertions (#2003) (@wowi42)
+
+CLI:
+
+- cli: migrate argument parsing from Click to Cyclopts (#1901) (@noirbizarre)
+- cli: parse literal list arguments (#1892) (@0xTaoZ)
+- cli: size result table columns by terminal cell width (#1977) (@xqliu)
+- cli: allow make_inventory without CLI context state (#2011) (@wowi42)
+- cli: Rich-based output, prints and debug-inventory (#1902) (@noirbizarre)
+
+Docs/meta:
+
+- docs: add debugging guide (#1919) (@Himanshuagrawal4)
+- docs: fix links to connector and fact guides (#1918) (@Himanshuagrawal4)
+- docs: add mode example to files.directory operation (#1933) (@evilham)
+- docs: fix links to connectors, operations, and facts indexes (#1956) (@castanearie)
+- chore: allow paramiko 5.0.0 to avoid CVE-2026-44405 (#1743) (@dpinol)
+- docs: fix connectors index link (#1958) (@0xTaoZ)
+- docs: correct claims that fact results are cached (#2000) (@1sakshm)
+- docs: add Simplified Chinese translation of README (#2027) (@WanderLandWalker)
+- ci: remove retired macOS 14 runners (#2051) (@wowi42)
+- docs: add deploy testing guide (#2052) (@wowi42)
+
+Other:
+
+- fix: add target, slice and device substates to systemd status check (#1914) (@kevinschweikert)
+- fix: parse packages with a brew "version" correctly. (#1601) (@morrison12)
+- feat: Allow `fetch_tags="force"` in `git.repo` (#1766) (@inducer)
+- feat: add files.rename operation (#1932) (@wowi42)
+- refactor: make AI skills harness generic
+- fix: handle long inline keys in server.user_authorized_keys (#1908) (@wowi42)
+- fix: explicitly re-export context objects from the pyinfra package (#2042) (@sarankumar1325)
+- feat: add supervisorctl operations and facts (#1822) (@wowi42)
+
 # v3.10.0
 
 Another bumper update with lots of security fixes in user input quoting and many other improvements. Thank you all new and returning contributors (there are many of you!).
