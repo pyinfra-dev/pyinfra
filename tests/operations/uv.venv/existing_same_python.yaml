@@ -7,6 +7,8 @@ facts:
     path=/somewhere/useful/.venv/bin/activate: true
   pip.PythonVersion:
     python=/somewhere/useful/.venv/bin/python: [3, 13, 4]
+  server.Which:
+    command=uv: /usr/local/bin/uv
   uv.UvPythonVersion:
     request=3.13: [3, 13, 9]
 commands: []

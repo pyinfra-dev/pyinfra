@@ -1,4 +1,3 @@
-# Without uv the UvPythonVersion fact yields its default; a healthy venv must be kept.
 args:
   - /somewhere/useful/.venv
 kwargs:
@@ -8,7 +7,7 @@ facts:
     path=/somewhere/useful/.venv/bin/activate: true
   pip.PythonVersion:
     python=/somewhere/useful/.venv/bin/python: [3, 13, 4]
-  uv.UvPythonVersion:
-    request=3.13: null
+  server.Which:
+    command=uv: null
 commands: []
-noop_description: venv already exists at /somewhere/useful/.venv but the requested Python 3.13 was not found, so its version was not checked
+noop_description: venv already exists at /somewhere/useful/.venv but uv is not installed, so its Python version was not checked

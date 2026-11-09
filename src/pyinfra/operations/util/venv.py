@@ -16,6 +16,7 @@ def check_existing_venv(
     wanted: Sequence[int] | None,
     python: str | None,
     on_mismatch: Literal["warn", "recreate", "ignore"],
+    missing_tool: str | None = None,
 ) -> tuple[bool, str | None]:
     """
     Decide what to do with an existing Python virtual environment.
@@ -25,6 +26,8 @@ def check_existing_venv(
     + wanted: version of the interpreter the user asked for, ``None`` if it was not found
     + python: the interpreter the user asked for, ``None`` when they did not specify one
     + on_mismatch: ``warn`` or ``recreate``; ``ignore`` is for the caller to handle
+    + missing_tool: a tool needed to resolve ``python`` that is not installed, eg ``uv``;
+      the environment is kept and a warning logged
 
     Returns ``(recreate, reason)``: whether the environment must be deleted and created again,
     and why it is not simply fine (``None`` when it is). An environment that is kept despite a
@@ -36,6 +39,11 @@ def check_existing_venv(
 
     if python is None:
         return False, None
+
+    if missing_tool is not None:
+        reason = f"{missing_tool} is not installed, so its Python version was not checked"
+        logger.warning(f"{description} exists but {reason}")
+        return False, reason
 
     if wanted is None:
         reason = f"the requested Python {python} was not found, so its version was not checked"

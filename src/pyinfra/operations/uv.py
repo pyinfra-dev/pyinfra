@@ -291,11 +291,14 @@ def venv(
             recreate, reason = False, None
             if on_mismatch != "ignore":
                 current = host.get_fact(PythonVersion, python=f"{path}/bin/python")
-                wanted = None
+                wanted, missing_tool = None, None
                 if current is not None and python is not None:
-                    wanted = host.get_fact(UvPythonVersion, request=python)
+                    if host.get_fact(server.Which, command=UV_CMD) is None:
+                        missing_tool = UV_CMD
+                    else:
+                        wanted = host.get_fact(UvPythonVersion, request=python)
                 recreate, reason = check_existing_venv(
-                    f"venv at {path}", current, wanted, python, on_mismatch
+                    f"venv at {path}", current, wanted, python, on_mismatch, missing_tool
                 )
 
             if not recreate:
