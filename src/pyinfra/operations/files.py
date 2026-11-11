@@ -1357,6 +1357,11 @@ def template(
         The default template lookup directory (used with jinjas ``extends``, ``import`` and
         ``include`` statements) is the current working directory.
 
+        If ``jinja_env_kwargs`` includes a custom ``loader`` and ``src`` is a
+        template name that does not exist as a local path, that loader searches
+        for the name instead of treating ``src`` as a file relative to the
+        working directory.
+
         For information on the template syntax, see
         `the jinja2 docs <https://jinja.palletsprojects.com>`_.
 
@@ -1437,7 +1442,12 @@ def template(
     '''
 
     if not hasattr(src, "read") and state.cwd:
-        src = os.path.join(state.cwd, src)
+        # A custom loader searches by template name. Only absolutize when we
+        # will read the file ourselves (no loader, or the path already exists).
+        loader = (jinja_env_kwargs or {}).get("loader")
+        joined = os.path.join(state.cwd, src)
+        if loader is None or os.path.isfile(joined) or os.path.isfile(src):
+            src = joined
 
     # Ensure host/state/inventory are available inside templates (if not set)
     data.setdefault("host", host)
