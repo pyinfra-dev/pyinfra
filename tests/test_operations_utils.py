@@ -3,10 +3,37 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from pyinfra.context import ctx_host
+from pyinfra.facts.server import Hostname, LinuxName
 from pyinfra.facts.util.packages import PackageInfo, PackageStatus
+from pyinfra.operations.util import all_fact, any_fact
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
 from pyinfra.operations.util.files import ensure_mode_int, unix_path_join
 from pyinfra.operations.util.packaging import ensure_packages
+
+
+@pytest.mark.parametrize("factory", [any_fact, all_fact])
+def test_fact_conditions(factory):
+    condition = factory(Hostname, LinuxName)
+    for values in [(None, []), ([], "found"), ({"found": True}, 0), (1, ["found"])]:
+        host = MagicMock()
+        host.get_fact.side_effect = values
+        host.get_fact.assert_not_called()
+        expected = any(values) if factory is any_fact else all(values)
+        with ctx_host.use(host):
+            assert condition() is expected
+        short_circuited = bool(values[0]) if factory is any_fact else not values[0]
+        assert host.get_fact.call_count == (1 if short_circuited else 2)
+        host.get_fact.assert_any_call(Hostname)
+        host.get_fact.reset_mock(side_effect=True)
+        host.get_fact.side_effect = values
+        with ctx_host.use(host):
+            assert condition() is expected
+    assert factory()() is (factory is all_fact)
+    with ctx_host.use(host):
+        host.get_fact.side_effect = ValueError("fact failed")
+        with pytest.raises(ValueError, match="fact failed"):
+            condition()
 
 
 class TestUnixPathJoin(TestCase):
