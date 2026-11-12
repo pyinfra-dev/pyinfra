@@ -1,0 +1,39 @@
+{
+    "output": [
+        "foo:x:1000:1000:Foo:/home/foo:/bin/sh|foo|foo||foo-password",
+        "f.o:x:1001:1001:F O:/home/f.o:/bin/sh|f.o|f.o||dot-password"
+    ],
+    "command": "for i in `cat /etc/passwd | cut -d: -f1`; do\n            ENTRY=`USER=\"$i\" awk -F: '$1 == ENVIRON[\"USER\"] {print}' /etc/passwd`;\n            LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | USER=\"$i\" awk '$1 == ENVIRON[\"USER\"] {print}' | tr -s ' ')`;\n            PASSWORD=`USER=\"$i\" awk -F: '$1 == ENVIRON[\"USER\"] {print}' /etc/shadow 2> /dev/null | cut -d: -f2`;\n            echo \"$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD\";\n        done",
+    "facts": {
+        "server.Kernel": "Linux",
+        "server.Which": {
+            "command=getent": null
+        }
+    },
+    "fact": {
+        "foo": {
+            "home": "/home/foo",
+            "comment": "Foo",
+            "shell": "/bin/sh",
+            "group": "foo",
+            "groups": [],
+            "uid": 1000,
+            "gid": 1000,
+            "lastlog": null,
+            "login_time": null,
+            "password": "foo-password"
+        },
+        "f.o": {
+            "home": "/home/f.o",
+            "comment": "F O",
+            "shell": "/bin/sh",
+            "group": "f.o",
+            "groups": [],
+            "uid": 1001,
+            "gid": 1001,
+            "lastlog": null,
+            "login_time": null,
+            "password": "dot-password"
+        }
+    }
+}

@@ -1,7 +1,7 @@
 command: |-
   for i in `getent passwd | cut -d: -f1`; do
               ENTRY=`getent passwd $i`;
-              LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | grep ^$i | tr -s ' ')`;
+              LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | USER="$i" awk '$1 == ENVIRON["USER"] {print}' | tr -s ' ')`;
               PASSWORD=`getent shadow $i 2> /dev/null | cut -d: -f2`;
               echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
           done

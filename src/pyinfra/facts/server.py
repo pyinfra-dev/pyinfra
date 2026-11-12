@@ -841,23 +841,25 @@ class Users(FactBase):
             user_entry_cmd = "getent passwd $i"
         else:
             user_details_cmd = "cat /etc/passwd"
-            user_entry_cmd = "grep ^$i: /etc/passwd"
+            user_entry_cmd = 'USER="$i" awk -F: \'$1 == ENVIRON["USER"] {print}\' /etc/passwd'
 
         if "BSD" in kernel:
             if has_getent:
                 user_password_cmd = user_entry_cmd
             else:
-                user_password_cmd = "grep ^$i: /etc/master.passwd"
+                user_password_cmd = (
+                    'USER="$i" awk -F: \'$1 == ENVIRON["USER"] {print}\' /etc/master.passwd'
+                )
         elif has_getent:
             user_password_cmd = "getent shadow $i"
         else:
-            user_password_cmd = "grep ^$i: /etc/shadow"
+            user_password_cmd = 'USER="$i" awk -F: \'$1 == ENVIRON["USER"] {print}\' /etc/shadow'
 
         return f"""
 
         for i in `{user_details_cmd} | cut -d: -f1`; do
             ENTRY=`{user_entry_cmd}`;
-            LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | grep ^$i | tr -s ' ')`;
+            LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | USER="$i" awk '$1 == ENVIRON["USER"] {{print}}' | tr -s ' ')`;
             PASSWORD=`{user_password_cmd} 2> /dev/null | cut -d: -f2`;
             echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
         done
