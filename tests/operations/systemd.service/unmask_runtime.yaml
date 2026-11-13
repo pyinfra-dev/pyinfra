@@ -1,0 +1,15 @@
+# A runtime mask is only removed by unmasking with --runtime.
+args:
+  - redis-server.service
+kwargs:
+  running: false
+  masked: false
+facts:
+  systemd.SystemdStatus:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: false
+  systemd.SystemdMasked:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: masked-runtime
+commands:
+  - systemctl unmask --runtime redis-server.service

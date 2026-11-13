@@ -6,7 +6,13 @@ from __future__ import annotations
 
 from pyinfra import host
 from pyinfra.api import QuoteString, StringCommand, operation
-from pyinfra.facts.systemd import SystemdEnabled, SystemdStatus, _make_systemctl_cmd
+from pyinfra.api.exceptions import OperationValueError
+from pyinfra.facts.systemd import (
+    SystemdEnabled,
+    SystemdMasked,
+    SystemdStatus,
+    _make_systemctl_cmd,
+)
 
 from .util.service import handle_service_control
 
@@ -19,6 +25,7 @@ def daemon_reload(user_mode=False, machine: str | None = None, user_name: str | 
     + user_mode: whether to use per-user systemd (systemctl --user) or not
     + machine: the machine name to connect to
     + user_name: connect to a specific user's systemd session
+    + masked: whether this unit should be masked/unmasked (a masked unit cannot be started)
     """
 
     systemctl_cmd = _make_systemctl_cmd(
@@ -45,6 +52,7 @@ def service(
     user_mode=False,
     machine: str | None = None,
     user_name: str | None = None,
+    masked: bool | None = None,
 ):
     """
     Manage the state of systemd managed units.
@@ -80,7 +88,20 @@ def service(
             enabled=True,
         )
 
+        systemd.service(
+            name="Stop and mask the bluetooth service",
+            service="bluetooth.service",
+            running=False,
+            masked=True,
+        )
+
     """
+
+    if masked is True:
+        if running is True:
+            raise OperationValueError("A masked unit cannot be running, set `running=False`")
+        if enabled is True:
+            raise OperationValueError("A masked unit cannot be enabled")
 
     systemctl_cmd = _make_systemctl_cmd(
         user_mode=user_mode,
@@ -111,6 +132,26 @@ def service(
             machine=machine,
             user_name=user_name,
         )
+
+    mask_state: str | None = None
+    if isinstance(masked, bool):
+        systemd_masked: dict[str, str | None] = host.get_fact(
+            SystemdMasked,
+            user_mode=user_mode,
+            machine=machine,
+            user_name=user_name,
+            services=[service],
+        )
+        mask_state = systemd_masked.get(service)
+
+    # Unmask before any start/enable, since masked units cannot be started. A
+    # runtime mask is only removed by unmasking with --runtime.
+    unmasking = mask_state is not None and masked is False
+    if unmasking:
+        if mask_state == "masked-runtime":
+            yield StringCommand(systemctl_cmd, "unmask", "--runtime", QuoteString(service))
+        else:
+            yield StringCommand(systemctl_cmd, "unmask", QuoteString(service))
 
     yield from handle_service_control(
         host,
@@ -143,6 +184,12 @@ def service(
         if not is_enabled and enabled is True:
             yield StringCommand(systemctl_cmd, "enable", QuoteString(service))
 
-        # Is enabled and want disabled?
-        elif is_enabled and enabled is False:
+        # Is enabled and want disabled? A masked unit reports "masked" rather than
+        # whether it is enabled, and masking keeps the enable symlinks, so disable
+        # regardless after unmasking.
+        elif (is_enabled or unmasking) and enabled is False:
             yield StringCommand(systemctl_cmd, "disable", QuoteString(service))
+
+    # A runtime mask is gone after a reboot, so replace it with a persistent one
+    if masked is True and mask_state != "masked":
+        yield StringCommand(systemctl_cmd, "mask", QuoteString(service))

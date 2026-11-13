@@ -1,0 +1,15 @@
+# A runtime mask is gone after a reboot, so it's replaced with a persistent one.
+args:
+  - redis-server.service
+kwargs:
+  running: false
+  masked: true
+facts:
+  systemd.SystemdStatus:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: false
+  systemd.SystemdMasked:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: masked-runtime
+commands:
+  - systemctl mask redis-server.service
