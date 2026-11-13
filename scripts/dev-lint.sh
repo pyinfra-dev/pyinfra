@@ -12,6 +12,9 @@ uv run mypy
 echo "Execute arguments type check..."
 uv run python scripts/lint_arguments_sync.py
 
+echo "Execute operation argument check..."
+uv run python scripts/lint_operation_arguments.py
+
 echo "Execute shellcheck..."
 scripts/dev-shellcheck.sh
 
