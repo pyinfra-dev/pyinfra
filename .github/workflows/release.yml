@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    environment: release
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39  # v8.2.0
+
+      - name: Build
+        run: uv build
+
+      - name: Check built artifacts match tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ls "dist/pyinfra-${VERSION}-py3-none-any.whl" "dist/pyinfra-${VERSION}.tar.gz"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # v1.14.0
+
+      - name: Extract changelog
+        id: changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          # HEAD is the tagged commit itself, so look for the previous tag from
+          # its parent - the script's own tag detection would find this tag and
+          # produce an empty range.
+          PREV_TAG="$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || true)"
+          if [ -n "$PREV_TAG" ]; then
+            python scripts/generate_changelog.py "$PREV_TAG" > /tmp/changelog.txt || true
+          fi
+          echo "body<<CHANGELOG_EOF" >> "$GITHUB_OUTPUT"
+          if [ -s /tmp/changelog.txt ]; then
+            cat /tmp/changelog.txt >> "$GITHUB_OUTPUT"
+          else
+            echo "Release $VERSION" >> "$GITHUB_OUTPUT"
+          fi
+          echo "CHANGELOG_EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
+        with:
+          body: ${{ steps.changelog.outputs.body }}
+          generate_release_notes: false
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
