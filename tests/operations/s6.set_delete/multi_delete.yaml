@@ -1,0 +1,5 @@
+args:
+  - [ myset_a, myset_b, myset_c ]
+  - /etc/s6/repo
+commands:
+  - s6-rc-set-delete -r /etc/s6/repo myset_a myset_b myset_c

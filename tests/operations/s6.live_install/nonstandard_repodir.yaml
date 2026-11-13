@@ -1,0 +1,4 @@
+kwargs:
+  repodir: /etc/s6/repo
+commands:
+  - s6-rc-set-install -r /etc/s6/repo current

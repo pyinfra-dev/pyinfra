@@ -1,0 +1,5 @@
+kwargs:
+  repodir: /etc/s6/repo
+  livedir: /run/s7-rc
+commands:
+  - s6-rc-set-install -r /etc/s6/repo -l /run/s7-rc current

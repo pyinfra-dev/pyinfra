@@ -1,0 +1,17 @@
+args:
+  - default
+kwargs:
+  do_commit: false
+  do_install: true
+  livedir: /run/s7-rc
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repodir=None:
+      - current
+      - default
+commands:
+  - s6-rc-set-install -l /run/s7-rc default

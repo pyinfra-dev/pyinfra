@@ -1,0 +1,2 @@
+commands:
+  - s6 live install -s current
