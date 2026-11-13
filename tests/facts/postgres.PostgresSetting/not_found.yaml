@@ -1,0 +1,8 @@
+arg:
+  setting: does_not_exist
+command: "psql -Ac 'SELECT name, setting, unit, source, context FROM pg_settings WHERE name = '\"'\"'does_not_exist'\"'\"''"
+requires_command: psql
+output: |
+  name|setting|unit|source|context
+  (0 rows)
+fact: null

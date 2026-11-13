@@ -1,0 +1,14 @@
+args:
+  - ssl
+kwargs:
+  value: true
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      ssl:
+        value: "on"
+        unit: null
+        source: configuration file
+        context: postmaster
+commands: []
+noop_description: "postgresql setting ssl is already set to True"
