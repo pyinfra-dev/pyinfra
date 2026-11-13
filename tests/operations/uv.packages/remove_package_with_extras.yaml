@@ -1,0 +1,9 @@
+args:
+- ["foo[bar]"]
+kwargs:
+  present: false
+facts:
+  uv.UvPipPackages:
+    foo: ["1.0"]
+commands:
+- uv pip uninstall --no-progress  foo

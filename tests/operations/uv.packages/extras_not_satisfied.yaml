@@ -1,0 +1,9 @@
+args:
+- ["foo[bar]"]
+facts:
+  uv.UvPipPackages:
+    foo: ["1.0"]
+  uv.UvPipInstallDryRun:
+    spec=foo[bar]: false
+commands:
+- uv pip install --no-progress  'foo[bar]'
