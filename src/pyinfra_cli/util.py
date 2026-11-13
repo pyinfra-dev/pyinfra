@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import ast
+import dataclasses
+import enum
 import json
 from datetime import datetime
 from importlib import import_module
@@ -133,6 +135,12 @@ def json_encode(obj):
 
     if hasattr(obj, "to_json"):
         return obj.to_json()
+
+    if isinstance(obj, enum.Enum):
+        return obj.value
+
+    if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+        return dataclasses.asdict(obj)
 
     raise TypeError(f"Cannot serialize: {type(obj)} ({obj})")
 

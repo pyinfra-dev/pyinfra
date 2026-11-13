@@ -1,0 +1,29 @@
+command: (pkg query '%n %v %k' && echo __pyinfra_pkg_remote__ && (pkg version -vRL= || true)) || pkg_info || true
+output: |
+  zsh 5.9_5 0
+  curl 8.7.1 0
+  vim 9.1.0 1
+  compat-lib 1.0 0
+  compat-lib 1.0_1 0
+  __pyinfra_pkg_remote__
+  zsh-5.9_5                          <   needs updating (remote has 5.9_6)
+  vim-9.1.0                          <   needs updating (remote has 9.1.1)
+  weird-1.0                          >   succeeds remote (remote has 0.9)
+  orphan-2.0                         ?   orphaned: misc/orphan
+fact:
+  - name: compat-lib
+    installed_versions: ["1.0", "1.0_1"]
+    available_version: null
+    status: installed
+  - name: curl
+    installed_versions: ["8.7.1"]
+    available_version: null
+    status: installed
+  - name: vim
+    installed_versions: ["9.1.0"]
+    available_version: "9.1.1"
+    status: held
+  - name: zsh
+    installed_versions: ["5.9_5"]
+    available_version: "5.9_6"
+    status: upgradeable
