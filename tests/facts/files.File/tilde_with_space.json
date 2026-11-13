@@ -1,12 +1,14 @@
 {
     "arg": "~/My Documents/file",
-    "command": "! (test -e ~/'My Documents/file' || test -L ~/'My Documents/file' ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' ~/'My Documents/file' 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' ~/'My Documents/file' || ls -ld ~/'My Documents/file' )",
+    "command": "! (test -e ~/'My Documents/file' || test -L ~/'My Documents/file' ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s uid=%u gid=%g %N' ~/'My Documents/file' 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z uid=%u gid=%g %N%SY' ~/'My Documents/file' || ( ls -ld ~/'My Documents/file' && ls -ldn ~/'My Documents/file' ) )",
     "output": [
-        "user=pyinfra group=pyinfra mode=-rw-r--r-- atime=1723484281 mtime=1723484281 ctime=1723484281 size=0 '/home/pyinfra/My Documents/file'"
+        "user=pyinfra group=pyinfra mode=-rw-r--r-- atime=1723484281 mtime=1723484281 ctime=1723484281 size=0 uid=1000 gid=1000 '/home/pyinfra/My Documents/file'"
     ],
     "fact": {
         "user": "pyinfra",
         "group": "pyinfra",
+        "uid": 1000,
+        "gid": 1000,
         "mode": 644,
         "atime": "2024-08-12T17:38:01",
         "mtime": "2024-08-12T17:38:01",

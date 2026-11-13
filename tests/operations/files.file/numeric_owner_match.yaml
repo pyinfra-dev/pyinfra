@@ -1,0 +1,14 @@
+args:
+  - testfile
+kwargs:
+  user: 1000
+  group: 1000
+facts:
+  files.File:
+    path=testfile:
+      user: testuser
+      group: testgroup
+      uid: 1000
+      gid: 1000
+commands: []
+noop_description: file testfile already exists

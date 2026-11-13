@@ -1,0 +1,14 @@
+args:
+  - testdir
+kwargs:
+  user: 1000
+  group: 1000
+facts:
+  files.Directory:
+    path=testdir:
+      user: testuser
+      group: testgroup
+      uid: 1000
+      gid: 1000
+commands: []
+noop_description: directory testdir already exists

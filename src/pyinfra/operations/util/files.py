@@ -167,23 +167,23 @@ def chmod(target: str, mode: str | int, recursive=False) -> StringCommand:
 
 def chown(
     target: str,
-    user: str | None = None,
-    group: str | None = None,
+    user: str | int | None = None,
+    group: str | int | None = None,
     recursive=False,
     dereference=True,
 ) -> StringCommand:
     command = "chown"
     user_group: str | None = None
 
-    if user and group:
+    if user is not None and group is not None:
         user_group = f"{user}:{group}"
 
-    elif user:
-        user_group = user
+    elif user is not None:
+        user_group = str(user)
 
-    elif group:
+    elif group is not None:
         command = "chgrp"
-        user_group = group
+        user_group = str(group)
 
     if user_group is None:
         raise OperationError("chown() requires at least one of user or group")
