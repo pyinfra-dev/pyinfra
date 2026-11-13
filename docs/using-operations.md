@@ -242,6 +242,31 @@ server.shell(commands=["..."], _if=all_changed(create_user, create_otheruser))
 !!! important
     `_if` must be a callable, or a list of callables. Passing a value directly (e.g. `_if=host.get_fact(MyFact)`) does not gate the operation: most non-callable values raise `ArgumentTypeError` at prepare time, and `None` is treated as "no condition" so the operation always runs. Wrap the value in a lambda to gate on it: `_if=lambda: bool(host.get_fact(MyFact))`.
 
+Use `any_fact` (OR) or `all_fact` (AND) to gate an operation on the truthiness of facts that take no arguments:
+
+```python
+from pyinfra import host
+from pyinfra.facts.server import HasGui, LinuxName, Which
+from pyinfra.operations.util import any_fact, all_fact
+
+server.shell(commands=["..."], _if=any_fact(HasGui, LinuxName))
+server.shell(commands=["..."], _if=all_fact(HasGui, LinuxName))
+# Lists keep their AND semantics and can mix fact and operation conditions.
+server.shell(commands=["..."], _if=[any_fact(HasGui, LinuxName), create_user.did_change])
+
+# Facts that need arguments use an explicit lambda.
+server.shell(commands=["..."], _if=lambda: bool(host.get_fact(Which, "git")))
+```
+
+These helpers collect facts lazily when the condition runs, using the current executing host.
+They short-circuit: `any_fact` stops at the first truthy value, and `all_fact` stops at the
+first falsey value. Each invocation reads facts through the existing fact API.
+With no facts, `any_fact()` returns a condition that is always false and `all_fact()` returns
+one that is always true. An empty `_if` list also allows the operation to run.
+
+Passing a bare fact class, such as `_if=HasGui` or `_if=[HasGui]`, raises `ArgumentTypeError`
+during prepare. Wrap it with `any_fact` or `all_fact`, or use a lambda as above.
+
 ## Output & Callbacks
 
 pyinfra doesn't immediately execute operations, meaning output is not available right away. It is possible to access this output at runtime by providing a callback function using the [`python.call`](operations/python.md#python-call) operation. Callback functions may also call other operations which will be immediately executed.
