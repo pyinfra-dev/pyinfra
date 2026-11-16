@@ -1,1 +1,3 @@
-from .client import SCPClient  # noqa: F401
+from .client import SCPClient
+
+__all__ = ["SCPClient"]

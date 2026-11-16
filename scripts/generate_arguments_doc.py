@@ -2,7 +2,8 @@
 
 import sys
 from os import makedirs, path
-from typing import get_type_hints
+from types import UnionType
+from typing import Any, get_type_hints
 
 from pyinfra.api import Config
 from pyinfra.api.arguments import AllArguments, __argument_docs__
@@ -11,6 +12,17 @@ from pyinfra.api.operation import OperationMeta
 
 sys.path.append(path.dirname(path.realpath(__file__)))
 from docs_utils import prepare_docstring  # noqa: E402
+
+
+def _get_type_name(type_: Any) -> str:
+    if isinstance(type_, UnionType):
+        return " | ".join(_get_type_name(arg) for arg in type_.__args__)
+
+    type_name = type_.__name__
+    if hasattr(type_, "__args__"):
+        type_args = ", ".join(_get_type_name(arg) for arg in type_.__args__)
+        type_name = f"{type_name}[{type_args}]"
+    return type_name
 
 
 def build_arguments_doc():
@@ -53,11 +65,7 @@ def build_arguments_doc():
                 default = default(pyinfra_config)
             default = "" if default is None else f"`{default}`"
 
-            type_ = all_arguments[key]
-            type_name = type_.__name__
-            if hasattr(type_, "__args__"):
-                type_args = ", ".join([arg.__name__ for arg in type_.__args__])
-                type_name = f"{type_name}[{type_args}]"
+            type_name = _get_type_name(all_arguments[key])
 
             description = (meta.description or "").replace("\n", " ").strip()
             lines.append(f"| `{key}` | {description} | `{type_name}` | {default} |")
