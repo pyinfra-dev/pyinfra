@@ -80,26 +80,24 @@ def build_package_map(
     installed: dict[str, set[str]],
     upgradeable: dict[str, str] | None = None,
     held: set[str] | None = None,
-) -> list[PackageInfo]:
-    """Build a list of :class:`PackageInfo` by combining package data.
+) -> dict[str, PackageInfo]:
+    """Build a :class:`PackageInfo` map by combining sub-fact data.
 
-    + installed: installed packages (name to set of versions).
+    + installed: installed packages from a fact (name to set of versions).
     + upgradeable: packages with available upgrades (name to available version).
     + held: names of held/locked/pinned packages.
 
-    The result is a flat ``list[PackageInfo]`` sorted by name (each entry
-    carries its own name, so a name-keyed dict would only duplicate it).
-    Versions within an entry are sorted with a natural-order key (digit runs
-    as integers) so multi-version output is deterministic across runs and the
-    highest version is last.
+    Versions are sorted with a natural-order key (digit runs as integers) so
+    multi-version output is deterministic across runs and the highest version
+    is last.
     """
 
-    result: list[PackageInfo] = []
+    result: dict[str, PackageInfo] = {}
     _upgradeable = upgradeable or {}
     _held = held or set()
 
-    for name in sorted(installed):
-        sorted_versions = tuple(sorted(installed[name], key=_version_sort_key))
+    for name, versions in installed.items():
+        sorted_versions = tuple(sorted(versions, key=_version_sort_key))
 
         if name in _held:
             status = PackageStatus.HELD
@@ -108,13 +106,11 @@ def build_package_map(
         else:
             status = PackageStatus.INSTALLED
 
-        result.append(
-            PackageInfo(
-                name=name,
-                installed_versions=sorted_versions,
-                available_version=_upgradeable.get(name),
-                status=status,
-            )
+        result[name] = PackageInfo(
+            name=name,
+            installed_versions=sorted_versions,
+            available_version=_upgradeable.get(name),
+            status=status,
         )
 
     return result

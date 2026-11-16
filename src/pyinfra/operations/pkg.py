@@ -14,6 +14,13 @@ from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from .util.packaging import ensure_packages
 
 
+def _get_pkg_packages() -> dict[str, PackageInfo]:
+    return {
+        name: PackageInfo.from_dict(package) if isinstance(package, dict) else package
+        for name, package in host.get_fact(PkgPackages).items()
+    }
+
+
 @operation(is_idempotent=False)
 def update(force: bool = False):
     """
@@ -43,12 +50,11 @@ def upgrade():
 
     """
 
-    current_packages = [
-        PackageInfo.from_dict(package) if isinstance(package, dict) else package
-        for package in host.get_fact(PkgPackages)
-    ]
+    current_packages = _get_pkg_packages()
 
-    if not any(package.status is PackageStatus.UPGRADEABLE for package in current_packages):
+    if not any(
+        package.status is PackageStatus.UPGRADEABLE for package in current_packages.values()
+    ):
         host.noop("all packages are up to date")
         return
 
@@ -106,15 +112,10 @@ def packages(
     if pkg_path:
         install_command = f"PKG_PATH={pkg_path} {install_command}"
 
-    current_packages = [
-        PackageInfo.from_dict(package) if isinstance(package, dict) else package
-        for package in host.get_fact(PkgPackages)
-    ]
-
     yield from ensure_packages(
         host,
         packages,
-        current_packages,
+        _get_pkg_packages(),
         present,
         install_command=install_command,
         uninstall_command=uninstall_command,

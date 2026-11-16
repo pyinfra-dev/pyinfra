@@ -4,7 +4,8 @@ kwargs:
   latest: true
 facts:
   pkg.PkgPackages:
-    - name: vim
+    vim:
+      name: vim
       installed_versions: ["9.0"]
       available_version: "9.1"
       status: held

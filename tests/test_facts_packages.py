@@ -1,7 +1,12 @@
 import json
+import os
+import subprocess
 from dataclasses import asdict
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from pyinfra.facts.pkg import PkgPackages
 from pyinfra.facts.util.packages import (
     PackageInfo,
     PackageStatus,
@@ -53,25 +58,48 @@ class TestPackageInfo(TestCase):
         assert info.installed_version is None
 
 
-def _by_name(packages: list[PackageInfo]) -> dict[str, PackageInfo]:
-    return {package.name: package for package in packages}
+class TestPkgPackagesCommand(TestCase):
+    def test_remote_version_failure_is_not_masked(self):
+        # The YAML fact harness cannot assert shell exit statuses.
+        with TemporaryDirectory() as temp_dir:
+            pkg_path = Path(temp_dir, "pkg")
+            pkg_path.write_text(
+                "#!/bin/sh\ncase \"$1\" in\nquery) echo 'vim 9.0 0' ;;\nversion) exit 1 ;;\nesac\n",
+                encoding="utf-8",
+            )
+            pkg_path.chmod(0o755)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{temp_dir}:{env.get('PATH', '')}"
+            result = subprocess.run(
+                PkgPackages().command(),
+                shell=True,
+                executable="/bin/sh",
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=10,
+            )
+
+        assert result.returncode == 1
 
 
 class TestBuildPackageMap(TestCase):
     def test_only_installed(self):
         result = build_package_map({"vim": {"9.0"}, "git": {"2.40"}})
-        # Output is a list sorted by name
-        assert result == [
-            PackageInfo(name="git", installed_versions=("2.40",), status=PackageStatus.INSTALLED),
-            PackageInfo(name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED),
-        ]
+        assert set(result.keys()) == {"vim", "git"}
+        assert result["vim"] == PackageInfo(
+            name="vim", installed_versions=("9.0",), status=PackageStatus.INSTALLED
+        )
+        assert result["git"] == PackageInfo(
+            name="git", installed_versions=("2.40",), status=PackageStatus.INSTALLED
+        )
 
     def test_marks_upgradeable(self):
-        result = _by_name(
-            build_package_map(
-                installed={"vim": {"9.0"}, "git": {"2.40"}},
-                upgradeable={"vim": "9.1"},
-            )
+        result = build_package_map(
+            installed={"vim": {"9.0"}, "git": {"2.40"}},
+            upgradeable={"vim": "9.1"},
         )
         assert result["vim"].status == PackageStatus.UPGRADEABLE
         assert result["vim"].available_version == "9.1"
@@ -79,29 +107,25 @@ class TestBuildPackageMap(TestCase):
         assert result["git"].available_version is None
 
     def test_marks_held(self):
-        result = _by_name(
-            build_package_map(
-                installed={"vim": {"9.0"}, "git": {"2.40"}},
-                held={"vim"},
-            )
+        result = build_package_map(
+            installed={"vim": {"9.0"}, "git": {"2.40"}},
+            held={"vim"},
         )
         assert result["vim"].status == PackageStatus.HELD
 
     def test_held_takes_precedence_over_upgradeable(self):
-        result = _by_name(
-            build_package_map(
-                installed={"vim": {"9.0"}},
-                upgradeable={"vim": "9.1"},
-                held={"vim"},
-            )
+        result = build_package_map(
+            installed={"vim": {"9.0"}},
+            upgradeable={"vim": "9.1"},
+            held={"vim"},
         )
         assert result["vim"].status == PackageStatus.HELD
         assert result["vim"].available_version == "9.1"
 
     def test_handles_empty_versions(self):
         result = build_package_map({"foo": set()})
-        assert result[0].installed_versions == ()
-        assert result[0].installed_version is None
+        assert result["foo"].installed_versions == ()
+        assert result["foo"].installed_version is None
 
     def test_multiple_versions_sorted_natural_order(self):
         # Sets are hash-randomized; build_package_map sorts versions ascending
@@ -111,7 +135,7 @@ class TestBuildPackageMap(TestCase):
         result = build_package_map(
             {"linux-image": {"6.1.0-13", "6.1.0-12", "5.10.0-26", "5.10.0-9"}}
         )
-        info = result[0]
+        info = result["linux-image"]
         assert info.installed_versions == ("5.10.0-9", "5.10.0-26", "6.1.0-12", "6.1.0-13")
         assert info.installed_version == "6.1.0-13"
 
@@ -119,12 +143,12 @@ class TestBuildPackageMap(TestCase):
         # Lexicographic sort of this set is ["1.10", "1.2", "1.9"]; the
         # natural-order key must instead yield 1.2 < 1.9 < 1.10.
         result = build_package_map({"libfoo": {"1.10", "1.2", "1.9"}})
-        info = result[0]
+        info = result["libfoo"]
         assert info.installed_versions == ("1.2", "1.9", "1.10")
         assert info.installed_version == "1.10"
 
     def test_json_encode_round_trip(self):
-        (info,) = build_package_map({"vim": {"9.0"}}, upgradeable={"vim": "9.1"})
+        info = build_package_map({"vim": {"9.0"}}, upgradeable={"vim": "9.1"})["vim"]
         assert json.loads(json.dumps(info, default=json_encode)) == {
             "name": "vim",
             "installed_versions": ["9.0"],
@@ -133,7 +157,7 @@ class TestBuildPackageMap(TestCase):
         }
 
     def test_asdict_uses_enum(self):
-        (info,) = build_package_map({"vim": {"9.0"}}, upgradeable={"vim": "9.1"})
+        info = build_package_map({"vim": {"9.0"}}, upgradeable={"vim": "9.1"})["vim"]
         data = asdict(info)
         assert data["name"] == "vim"
         assert data["status"] == PackageStatus.UPGRADEABLE

@@ -15,38 +15,39 @@ _REMOTE_MARKER = "__pyinfra_pkg_remote__"
 _REMOTE_HAS_RE = re.compile(r"\(remote has ([^)]+)\)")
 
 
-class PkgPackages(FactBase[list[PackageInfo]]):
+class PkgPackages(FactBase[dict[str, PackageInfo]]):
     """
-    Returns a list of installed pkg packages as ``PackageInfo``, sorted by
-    name. On FreeBSD (``pkg``) entries carry the locked status (``HELD``, via
-    ``pkg lock``) and available upgrades (``UPGRADEABLE``, compared against
-    the remote catalogues). With the ``pkg_info`` fallback used on other BSDs
-    every entry is ``INSTALLED``.
+    Returns a map of installed pkg packages to ``PackageInfo``. On FreeBSD
+    (``pkg``) entries carry the locked status (``HELD``, via ``pkg lock``) and
+    available upgrades (``UPGRADEABLE``, compared against the remote
+    catalogues). With the ``pkg_info`` fallback used on other BSDs every entry
+    is ``INSTALLED``.
 
     .. code:: python
 
-        [
-            PackageInfo(
+        {
+            "zsh": PackageInfo(
                 name="zsh",
                 installed_versions=("5.9_5",),
                 available_version="5.9_6",
                 status=PackageStatus.UPGRADEABLE,
             ),
-        ]
+        }
     """
 
     regex = r"^([a-zA-Z0-9_\-\+]+)\-([0-9a-z\.]+)"
-    default = list
+    default = dict
 
     @override
     def command(self) -> str:
         return (
-            f"(pkg query '%n %v %k' && echo {_REMOTE_MARKER} && (pkg version -vRL= || true))"
-            " || pkg_info || true"
+            "if command -v pkg >/dev/null 2>&1; then "
+            f"pkg query '%n %v %k' && echo {_REMOTE_MARKER} && pkg version -vURL=; "
+            "else pkg_info || true; fi"
         )
 
     @override
-    def process(self, output: list[str]) -> list[PackageInfo]:
+    def process(self, output: list[str]) -> dict[str, PackageInfo]:
         installed: dict[str, set[str]] = {}
         upgradeable: dict[str, str] = {}
         held: set[str] = set()
@@ -62,7 +63,7 @@ class PkgPackages(FactBase[list[PackageInfo]]):
                 continue
 
             if in_remote:
-                # `pkg version -vRL=` line: `name-version  <  needs updating (remote has X)`
+                # `pkg version -vURL=` line: `name-version  <  needs updating (remote has X)`
                 parts = line.split()
                 if len(parts) >= 2 and parts[1] == "<":
                     match = _REMOTE_HAS_RE.search(line)
