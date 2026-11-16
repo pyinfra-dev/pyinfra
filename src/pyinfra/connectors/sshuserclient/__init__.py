@@ -1,1 +1,3 @@
-from .client import SSHClient  # noqa: F401
+from .client import SSHClient
+
+__all__ = ["SSHClient"]
