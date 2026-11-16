@@ -4,7 +4,7 @@ import subprocess
 from dataclasses import asdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest import TestCase
+from unittest import TestCase, skipIf
 
 from pyinfra.facts.pkg import PkgPackages
 from pyinfra.facts.util.packages import (
@@ -87,6 +87,7 @@ class TestPackageInfo(TestCase):
 
 
 class TestPkgPackagesCommand(TestCase):
+    @skipIf(os.name == "nt", "requires a POSIX shell")
     def test_remote_version_failure_is_not_masked(self):
         # The YAML fact harness cannot assert shell exit statuses.
         with TemporaryDirectory() as temp_dir:
