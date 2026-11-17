@@ -1,5 +1,5 @@
-from .command import (  # noqa: F401
-    FileDownloadCommand,  # noqa: F401 # pragma: no cover
+from .command import (
+    FileDownloadCommand,
     FileUploadCommand,
     FunctionCommand,
     QuoteString,
@@ -7,11 +7,11 @@ from .command import (  # noqa: F401
     StringCommand,
     MaskString,
 )
-from .hiddenvalue import HiddenValue  # noqa: F401 # pragma: no cover
-from .config import Config  # noqa: F401 # pragma: no cover
-from .deploy import deploy  # noqa: F401 # pragma: no cover
-from .exceptions import (  # noqa: F401
-    DeployError,  # noqa: F401 # pragma: no cover
+from .hiddenvalue import HiddenValue
+from .config import Config
+from .deploy import deploy
+from .exceptions import (
+    DeployError,
     FactPreconditionError,
     FactError,
     FactNotCollected,
@@ -24,8 +24,40 @@ from .exceptions import (  # noqa: F401
     OperationTypeError,
     OperationValueError,
 )
-from .facts import FactBase, ShortFactBase  # noqa: F401 # pragma: no cover
-from .host import Host  # noqa: F401 # pragma: no cover
-from .inventory import Inventory  # noqa: F401 # pragma: no cover
-from .operation import operation  # noqa: F401 # pragma: no cover
-from .state import BaseStateCallback, State  # noqa: F401 # pragma: no cover
+from .facts import FactBase, ShortFactBase
+from .host import Host
+from .inventory import Inventory
+from .operation import operation
+from .state import BaseStateCallback, State
+
+__all__ = [
+    "BaseStateCallback",
+    "Config",
+    "DeployError",
+    "FactBase",
+    "FactError",
+    "FactNotCollected",
+    "FactPreconditionError",
+    "FactProcessError",
+    "FactTypeError",
+    "FactValueError",
+    "FileDownloadCommand",
+    "FileUploadCommand",
+    "FunctionCommand",
+    "HiddenValue",
+    "Host",
+    "Inventory",
+    "InventoryError",
+    "MaskString",
+    "MissingCommandError",
+    "OperationError",
+    "OperationTypeError",
+    "OperationValueError",
+    "QuoteString",
+    "RsyncCommand",
+    "ShortFactBase",
+    "State",
+    "StringCommand",
+    "deploy",
+    "operation",
+]

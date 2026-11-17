@@ -2,7 +2,7 @@ from collections import defaultdict
 from io import StringIO
 from os import path
 from unittest import TestCase
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 import time
 
 import pyinfra
@@ -17,13 +17,15 @@ from pyinfra.api import (
     StringCommand,
 )
 from pyinfra.api.connect import connect_all, disconnect_all
-from pyinfra.api.exceptions import PyinfraError
+from pyinfra.api.exceptions import ArgumentTypeError, PyinfraError
 from pyinfra.api.operation import OperationMeta, add_op
 from pyinfra.api.operations import run_ops
 from pyinfra.api.state import StateOperationMeta, StateStage
 from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
+from pyinfra.facts.server import Hostname, LinuxName, Which
 from pyinfra.operations import files, python, server
+from pyinfra.operations.util import all_fact, any_fact
 
 from ..paramiko_util import FakeBuffer, FakeChannel, PatchSSHTestCase
 from ..util import make_inventory
@@ -40,6 +42,93 @@ class TestOperationMeta(TestCase):
 
 
 class TestOperationsApi(PatchSSHTestCase):
+    def test_callable_conditions_remain_supported(self):
+        inventory = make_inventory(hosts=("somehost",))
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+        host = inventory.get_host("somehost")
+        with (
+            patch.object(host, "get_fact", return_value="/bin/tool") as get_fact,
+            patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as run_command,
+        ):
+            run_command.return_value = (True, FakeBuffer("", FakeChannel(0)))
+            first = add_op(state, server.shell, "echo first")[host]
+            for condition in (
+                None,
+                [],
+                lambda: True,
+                MagicMock(return_value=True),
+                first.did_change,
+                lambda: bool(pyinfra.host.get_fact(Which, "tool")),
+                [lambda: True, lambda: False],
+            ):
+                add_op(state, server.shell, "echo test", _if=condition)
+            get_fact.assert_not_called()
+            run_ops(state)
+        assert run_command.call_count == 7
+        get_fact.assert_called_once_with(Which, "tool")
+
+    def test_bare_fact_conditions_rejected_before_registration(self):
+        for fact in (Hostname, LinuxName):
+            for condition in (fact, [fact], [lambda: True, fact]):
+                for source in ("operation", "deploy", "host"):
+                    with self.subTest(fact=fact, condition=condition, source=source):
+                        inventory = make_inventory(hosts=("somehost",))
+                        state = State(inventory, Config())
+                        state.current_stage = StateStage.Prepare
+                        host = inventory.get_host("somehost")
+                        kwargs = {}
+                        if source == "operation":
+                            kwargs["_if"] = condition
+                        elif source == "deploy":
+                            host.current_deploy_kwargs = {"_if": condition}
+                        else:
+                            host.data._if = condition
+                        with patch.object(host, "run_shell_command") as run_command:
+                            with self.assertRaisesRegex(
+                                ArgumentTypeError, "any_fact.*all_fact.*lambda"
+                            ):
+                                add_op(state, server.shell, "echo test", host=host, **kwargs)
+                        assert not state.op_meta
+                        assert not state.ops[host]
+                        run_command.assert_not_called()
+
+    def test_fact_conditions_execute_with_current_host(self):
+        for factory in (any_fact, all_fact):
+            for as_list in (False, True):
+                for check_for_changes in (False, True):
+                    with self.subTest(factory=factory, as_list=as_list, check=check_for_changes):
+                        condition = factory(Hostname, LinuxName)
+                        inventory = make_inventory()
+                        state = State(inventory, Config(), check_for_changes=check_for_changes)
+                        state.current_stage = StateStage.Prepare
+                        connect_all(state)
+                        somehost = inventory.get_host("somehost")
+                        anotherhost = inventory.get_host("anotherhost")
+                        with (
+                            patch.object(somehost, "get_fact", return_value=None) as false_fact,
+                            patch.object(
+                                anotherhost, "get_fact", return_value="Linux"
+                            ) as true_fact,
+                            patch(
+                                "pyinfra.connectors.ssh.SSHConnector.run_shell_command"
+                            ) as run_command,
+                        ):
+                            run_command.return_value = (True, FakeBuffer("", FakeChannel(0)))
+                            results = add_op(
+                                state,
+                                server.shell,
+                                "echo test",
+                                _if=[condition] if as_list else condition,
+                            )
+                            false_fact.assert_not_called()
+                            true_fact.assert_not_called()
+                            run_ops(state)
+                        assert run_command.call_count == 1
+                        assert results[somehost].did_change() is False
+                        assert results[anotherhost].did_change() is True
+
     def test_op(self):
         inventory = make_inventory()
         somehost = inventory.get_host("somehost")
