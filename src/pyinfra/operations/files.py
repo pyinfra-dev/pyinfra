@@ -15,7 +15,13 @@ from io import StringIO
 from pathlib import Path, PurePosixPath
 from typing import IO, Any
 
-from jinja2 import TemplateRuntimeError, TemplateSyntaxError, UndefinedError
+from jinja2 import (
+    Environment,
+    TemplateNotFound,
+    TemplateRuntimeError,
+    TemplateSyntaxError,
+    UndefinedError,
+)
 
 from pyinfra import host, logger, state
 from pyinfra.api import (
@@ -1314,6 +1320,20 @@ def put(
                 host.noop(f"file {dest} is already uploaded")
 
 
+def _read_template_lines(src, jinja_env_kwargs) -> list[str]:
+    """
+    Returns the source lines of a template for error messages. A template found
+    by a custom loader (``src`` is a name, not a local file) is read through that
+    loader, so the error is reported instead of a missing-file error.
+    """
+    loader = (jinja_env_kwargs or {}).get("loader")
+    if loader is not None and isinstance(src, str) and not os.path.isfile(src):
+        source, _, _ = loader.get_source(Environment(), src)
+        return source.splitlines(keepends=True)
+    with get_file_io(src, "r") as f:
+        return f.readlines()
+
+
 @operation()
 def template(
     src: str | IO[Any],
@@ -1457,6 +1477,8 @@ def template(
     # Render and make file-like it's output
     try:
         output = get_template(src, jinja_env_kwargs).render(data)
+    except TemplateNotFound as e:
+        raise OperationError(f"Template not found: {e.name or src}")
     except (TemplateRuntimeError, TemplateSyntaxError, UndefinedError) as e:
         trace_frames = [
             frame
@@ -1467,8 +1489,7 @@ def template(
         line_number = trace_frames[-1][1]
 
         # Quickly read the line in question and one above/below for nicer debugging
-        with get_file_io(src, "r") as f:
-            template_lines = f.readlines()
+        template_lines = _read_template_lines(src, jinja_env_kwargs)
 
         template_lines = [line.strip() for line in template_lines]
         relevant_lines = template_lines[max(line_number - 2, 0) : line_number + 1]
