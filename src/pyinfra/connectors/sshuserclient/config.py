@@ -100,8 +100,7 @@ def _expand_include_statements(file_obj, parsed_files=None):
                         f"Include loop detected in ssh config file: {filename}",
                     )
                 with open(filename, encoding="utf-8") as fd:
-                    parsed_files.append(filename)
-                    parsed_lines.extend(_expand_include_statements(fd, parsed_files))
+                    parsed_lines.extend(_expand_include_statements(fd, [*parsed_files, filename]))
 
     return parsed_lines
 
