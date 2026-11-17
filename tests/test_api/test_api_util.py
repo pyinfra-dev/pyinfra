@@ -65,7 +65,7 @@ class TestApiUtilFileIO(TestCase):
         import os
         import tempfile
 
-        text = "café ◕‿◕ 🆔"
+        text = "café (◕‿◕✿) 🆔"
         with tempfile.NamedTemporaryFile("wb", delete=False) as file:
             file.write(text.encode("utf-8"))
 
