@@ -4,6 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
+from itertools import pairwise
 from multiprocessing import cpu_count
 from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterator
@@ -319,6 +320,25 @@ class State:
             func = getattr(handler, method_name)
             func(self, *args, **kwargs)
 
+    def _describe_op_cycle(self, cycle: list[str]) -> str:
+        def op_label(op_hash: str) -> str:
+            op_meta = self.op_meta[op_hash]
+            names = ", ".join(sorted(op_meta.names))
+            return f"{names} ({', '.join(op_meta.args)})" if op_meta.args else names
+
+        lines = []
+        for before, after in pairwise(cycle):
+            hosts = [
+                host.name
+                for host in self.inventory
+                if (before, after) in pairwise(host.op_hash_order)
+            ]
+            shown = ", ".join(hosts[:3])
+            if len(hosts) > 3:
+                shown += f" and {len(hosts) - 3} more"
+            lines.append(f"    {op_label(before)} -> {op_label(after)} (on {shown})")
+        return "\n".join(lines)
+
     def get_op_order(self):
         ts: TopologicalSorter = TopologicalSorter()
 
@@ -337,7 +357,8 @@ class State:
             raise PyinfraError(
                 (
                     "Cycle detected in operation ordering DAG.\n"
-                    f"    Error: {e}\n\n"
+                    "    These hosts call the operations in an order that forms a loop:\n"
+                    f"{self._describe_op_cycle(e.args[1])}\n\n"
                     "    This can happen when using loops in operation code, "
                     "please see: https://docs.pyinfra.com/en/latest/deploy-process.html#loops-cycle-errors"  # noqa: E501
                 ),

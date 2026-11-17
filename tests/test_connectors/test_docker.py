@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 from pyinfra.api import Config, State
 from pyinfra.api.connect import connect_all
-from pyinfra.api.exceptions import InventoryError, PyinfraError
+from pyinfra.api.exceptions import ConnectError, InventoryError, PyinfraError
 from pyinfra.connectors.util import make_unix_command
 
 from ..util import make_inventory
@@ -74,6 +74,69 @@ class TestContainerConnector(TestCase):
 
         message = fake_logger.info.call_args[0][0]
         assert message.endswith(f"image ID: {FAKE_IMAGE_DIGEST[:12]}")
+
+    def _fake_shell(self):
+        if self.cli_cmd == "docker":
+            return fake_docker_shell
+        return fake_podman_shell
+
+    def _get_tag_commands(self, tag):
+        inventory = make_inventory(
+            hosts=(f"@{self.connector_name}/not-an-image",),
+            override_data={"docker_tag": tag},
+        )
+        State(inventory, Config())
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        host.connect()
+
+        with patch("pyinfra.connectors.docker.local.shell", wraps=self._fake_shell()) as fake_shell:
+            host.disconnect()
+
+        return [call.args[0] for call in fake_shell.call_args_list]
+
+    def test_disconnect_host_with_tag(self):
+        tag = "registry.example.com/team/app:1.2.3"
+        commands = self._get_tag_commands(tag)
+        assert commands == [
+            f"{self.cli_cmd} commit containerid",
+            f"{self.cli_cmd} rm -f containerid",
+            f"{self.cli_cmd} tag {FAKE_IMAGE_DIGEST[:12]} {tag}",
+        ]
+
+    def test_disconnect_host_quotes_tag(self):
+        tag = "example.com/team/app:prod; echo injected"
+        commands = self._get_tag_commands(tag)
+        assert commands[-1] == f"{self.cli_cmd} tag {FAKE_IMAGE_DIGEST[:12]} '{tag}'"
+
+    def test_disconnect_host_tag_failure_after_cleanup(self):
+        inventory = make_inventory(
+            hosts=(f"@{self.connector_name}/not-an-image",),
+            override_data={"docker_tag": "bad"},
+        )
+        State(inventory, Config())
+        host = inventory.get_host(f"@{self.connector_name}/not-an-image")
+        host.connect()
+
+        with patch("pyinfra.connectors.docker.local.shell", wraps=self._fake_shell()) as fake_shell:
+            with self.assertRaisesRegex(PyinfraError, "tag failed"):
+                host.disconnect()
+
+        commands = [call.args[0] for call in fake_shell.call_args_list]
+        assert commands[-2:] == [
+            f"{self.cli_cmd} rm -f containerid",
+            f"{self.cli_cmd} tag {FAKE_IMAGE_DIGEST[:12]} bad",
+        ]
+
+    def test_tag_rejected_for_existing_container(self):
+        inventory = make_inventory(
+            hosts=(f"@{self.connector_name}/existing",),
+            override_data={"docker_tag": "app:latest"},
+        )
+        State(inventory, Config())
+        host = inventory.get_host(f"@{self.connector_name}/existing")
+
+        with self.assertRaisesRegex(ConnectError, "existing container"):
+            host.connect(raise_exceptions=True)
 
     def test_run_shell_command(self):
         inventory = make_inventory(hosts=(f"@{self.connector_name}/not-an-image",))
@@ -267,6 +330,9 @@ class TestContainerConnector(TestCase):
 
 
 def fake_docker_shell(command, splitlines=None):
+    if command == "docker container inspect existing":
+        return '[{"State": {"Running": true}}]'
+
     if command == "docker run -d not-an-image tail -f /dev/null":
         return ["containerid"]
 
@@ -280,6 +346,11 @@ def fake_docker_shell(command, splitlines=None):
         return [f"sha256:{FAKE_IMAGE_DIGEST}"]
 
     if command == "docker rm -f containerid":
+        return []
+
+    if command.startswith("docker tag "):
+        if command.endswith(" bad"):
+            raise PyinfraError("tag failed")
         return []
 
     raise PyinfraError(f"Invalid command: {command}")
@@ -298,6 +369,9 @@ class TestDocker2Connector(TestContainerConnector):
 
 
 def fake_podman_shell(command, splitlines=None):
+    if command == "podman container inspect existing":
+        return '[{"State": {"Running": true}}]'
+
     if command == "podman run -d not-an-image tail -f /dev/null":
         return ["containerid"]
 
@@ -311,6 +385,11 @@ def fake_podman_shell(command, splitlines=None):
         return [FAKE_IMAGE_DIGEST]
 
     if command == "podman rm -f containerid":
+        return []
+
+    if command.startswith("podman tag "):
+        if command.endswith(" bad"):
+            raise PyinfraError("tag failed")
         return []
 
     raise PyinfraError(f"Invalid command: {command}")

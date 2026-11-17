@@ -1,3 +1,20 @@
+# v3.11.1
+
+Core:
+
+- api: name operations and hosts in dependency cycle errors (#2049) (@ynaamane)
+
+Operations/facts:
+
+- facts.files: add return type to FileContents (#2065) (@kelno)
+- facts.iptables: accept table in Ip6tablesChains.requires_command (#2059)
+- facts.server: match usernames exactly (#2072) (@wowi42)
+- fix: make fact conditions explicit and reject bare fact classes (#2064) (@mvanhorn)
+
+Docs/meta:
+
+- ci: prevent spell check failing on changelog usernames
+
 # v3.11.0
 
 Core:
