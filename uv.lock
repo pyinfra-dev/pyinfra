@@ -496,19 +496,45 @@ wheels = [
 
 [[package]]
 name = "cyclopts"
-version = "4.22.2"
+version = "4.25.3"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.11'",
+]
 dependencies = [
     { name = "attrs" },
     { name = "docstring-parser" },
     { name = "rich" },
     { name = "rich-rst" },
-    { name = "tomli", marker = "python_full_version < '3.11'" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "tomli" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/98/ca72a91d5c25a2ae1baf19d27b31f12288cb9d8a3168b65b3cd54d40d277/cyclopts-4.22.2.tar.gz", hash = "sha256:0721e90e7209885e78f7637cfba255c12e89206b633e35d185305e349ba20ecd", size = 194511, upload-time = "2026-07-24T20:53:08.739Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c1/08/a444f3cca86cb27bc256831fc8c42b578390f4087bf6631cccb5334bd9ed/cyclopts-4.25.3.tar.gz", hash = "sha256:7d3a067bc7699a1a65fe2ea0b092a925855bb711a05adc1e65c5b9ba307acea4", size = 202814, upload-time = "2026-09-17T16:25:16.892Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/75/a11bfb5045e58b4ef69337b848985918e829fe9a90572a761d17c1a992f5/cyclopts-4.22.2-py3-none-any.whl", hash = "sha256:9c2cdf6a621886cd0af631a67437eb7d0084f33f9e8fba2d2562a1aecf75f2ff", size = 233906, upload-time = "2026-07-24T20:53:07.064Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/cc/e879da3d54cf727f90e6d90118e132672c3913338b566740486f8797190d/cyclopts-4.25.3-py3-none-any.whl", hash = "sha256:40e76b3153ea90e885abd8d3a4d8184db5a5eec2fde8540025aae8d72fc973fc", size = 242748, upload-time = "2026-09-17T16:25:15.509Z" },
+]
+
+[[package]]
+name = "cyclopts"
+version = "5.5.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.15' and platform_python_implementation != 'PyPy'",
+    "python_full_version >= '3.15' and platform_python_implementation == 'PyPy'",
+    "python_full_version == '3.14.*' and platform_python_implementation != 'PyPy'",
+    "python_full_version == '3.13.*' and platform_python_implementation != 'PyPy'",
+    "python_full_version >= '3.13' and python_full_version < '3.15' and platform_python_implementation == 'PyPy'",
+    "python_full_version >= '3.11' and python_full_version < '3.13'",
+]
+dependencies = [
+    { name = "attrs" },
+    { name = "docstring-parser" },
+    { name = "rich" },
+    { name = "rich-rst" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/49/5d/cee0096dd8c5ad13ce516599c4823637d0107643666a03ddc43a9580391f/cyclopts-5.5.2.tar.gz", hash = "sha256:c0339b7ddd7b1c886f13bb8b68a6a65aa7144d3027f1d0e290be514b8fe1589b", size = 258336, upload-time = "2026-11-16T16:26:28.322Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7a/b2/be66b75ce0a3ccc7aa3601c9e7f9cd0fbad4301183fc7105c6b9faebeaeb/cyclopts-5.5.2-py3-none-any.whl", hash = "sha256:4fbe863ebace1c65dafc6520c82217915b103d27fbd1d8fcd168f2abcca3a12a", size = 301206, upload-time = "2026-11-16T16:26:26.615Z" },
 ]
 
 [[package]]
@@ -1389,7 +1415,8 @@ wheels = [
 name = "pyinfra"
 source = { editable = "." }
 dependencies = [
-    { name = "cyclopts" },
+    { name = "cyclopts", version = "4.25.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "cyclopts", version = "5.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "distro" },
     { name = "gevent" },
     { name = "jinja2" },
@@ -1449,7 +1476,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cyclopts", specifier = ">=4,<5" },
+    { name = "cyclopts", specifier = ">=4,<6" },
     { name = "distro", specifier = ">=1.6,<2" },
     { name = "gevent", specifier = ">=1.5" },
     { name = "jinja2", specifier = ">3,<4" },
