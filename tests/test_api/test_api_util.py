@@ -59,3 +59,20 @@ class TestApiUtilFileIO(TestCase):
 
         assert isinstance(data, str)
         assert data == "some string"
+
+    def test_get_file_io_filename_to_string_is_utf8(self):
+        # Imported here: an import at the top would shift the line test_get_caller_frameinfo checks
+        import os
+        import tempfile
+
+        text = "café ◕‿◕ 🆔"
+        with tempfile.NamedTemporaryFile("wb", delete=False) as file:
+            file.write(text.encode("utf-8"))
+
+        try:
+            with get_file_io(file.name, mode="r") as f:
+                data = f.read()
+        finally:
+            os.unlink(file.name)
+
+        assert data == text

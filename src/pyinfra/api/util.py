@@ -380,7 +380,9 @@ class get_file_io:
 
     def __enter__(self):
         if isinstance(self.filename_or_io, str):
-            file_io = open(self.filename_or_io, self.mode)
+            # Text is UTF-8, whatever the platform's default encoding
+            encoding = None if "b" in self.mode else "utf-8"
+            file_io = open(self.filename_or_io, self.mode, -1, encoding)
             self._file_io = file_io
             self._close = True
         else:
