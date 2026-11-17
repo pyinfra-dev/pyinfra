@@ -834,9 +834,9 @@ class Users(FactBase):
         return """
 
         for i in `cat /etc/passwd | cut -d: -f1`; do
-            ENTRY=`grep ^$i: /etc/passwd`;
-            LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | grep ^$i | tr -s ' ')`;
-            PASSWORD=`(grep ^$i: /etc/shadow || grep ^$i: /etc/master.passwd) 2> /dev/null | cut -d: -f2`;
+            ENTRY=`USER="$i" awk -F: '$1 == ENVIRON["USER"] {print}' /etc/passwd`;
+            LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | USER="$i" awk '$1 == ENVIRON["USER"] {print}' | tr -s ' ')`;
+            PASSWORD=`(USER="$i" awk -F: '$1 == ENVIRON["USER"] {print}' /etc/shadow || USER="$i" awk -F: '$1 == ENVIRON["USER"] {print}' /etc/master.passwd) 2> /dev/null | cut -d: -f2`;
             echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
         done
     """.strip()  # noqa
