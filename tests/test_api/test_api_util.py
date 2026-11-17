@@ -1,3 +1,6 @@
+import inspect
+import os
+import tempfile
 from io import BytesIO, StringIO
 from unittest import TestCase
 
@@ -15,8 +18,10 @@ class TestApiUtil(TestCase):
         def _get_caller_frameinfo():
             return get_caller_frameinfo()
 
+        frame = inspect.currentframe()
+        assert frame is not None
         frameinfo = _get_caller_frameinfo()
-        assert frameinfo.lineno == 18  # called by the line above
+        assert frameinfo.lineno == frame.f_lineno - 1  # called by the line above
 
     def test_format_exception(self):
         exception = Exception("I am a message", 1)
@@ -61,10 +66,6 @@ class TestApiUtilFileIO(TestCase):
         assert data == "some string"
 
     def test_get_file_io_filename_to_string_is_utf8(self):
-        # Imported here: an import at the top would shift the line test_get_caller_frameinfo checks
-        import os
-        import tempfile
-
         text = "café (◕‿◕✿) 🆔"
         with tempfile.NamedTemporaryFile("wb", delete=False) as file:
             file.write(text.encode("utf-8"))
