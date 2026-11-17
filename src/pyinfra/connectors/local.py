@@ -71,6 +71,7 @@ class LocalConnector(BaseConnector):
         arguments.pop("_get_pty", False)
         _timeout = arguments.pop("_timeout", None)
         _stdin = arguments.pop("_stdin", None)
+        _stdout = arguments.pop("_stdout", None)
         _success_exit_codes = arguments.pop("_success_exit_codes", None)
 
         def execute_command() -> tuple[int, CommandOutput]:
@@ -88,12 +89,15 @@ class LocalConnector(BaseConnector):
                 timeout=_timeout,
                 print_output=print_output,
                 print_prefix=self.host.print_prefix,
+                stdout_sink=_stdout,
             )
 
         return_code, combined_output = execute_command_with_sudo_retry(
             self.host,
             arguments,
             execute_command,
+            stdin=_stdin,
+            stdout=_stdout,
         )
 
         if _success_exit_codes:
