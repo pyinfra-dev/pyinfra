@@ -15,6 +15,7 @@ from pyinfra.connectors.sshuserclient.client import (
     get_host_keys,
     get_ssh_config,
 )
+from pyinfra.connectors.sshuserclient.config import SSHConfig
 
 CERT_KEY_TYPE = "ssh-ed25519-cert-v01@openssh.com"
 
@@ -678,6 +679,26 @@ def test_parse_config_encrypted_identityfile_wrong_passphrase_falls_through(
 
     assert "pkey" not in cfg
     assert cfg["key_filename"] == [str(ssh_encrypted_key["key"])]
+
+
+def test_ssh_config_same_file_included_by_multiple_hosts(tmp_path):
+    shared = tmp_path / "shared.config"
+    shared.write_text("IdentitiesOnly yes\n")
+
+    config_file = tmp_path / "config"
+    config_file.write_text(
+        f"Host one\n    User oneuser\n    Include {shared}\n"
+        f"Host two\n    User twouser\n    Include {shared}\n"
+    )
+
+    config = SSHConfig()
+    with open(config_file, encoding="utf-8") as f:
+        config.parse(f)
+
+    assert config.lookup("one")["user"] == "oneuser"
+    assert config.lookup("one")["identitiesonly"] == "yes"
+    assert config.lookup("two")["user"] == "twouser"
+    assert config.lookup("two")["identitiesonly"] == "yes"
 
 
 def test_get_host_keys_skips_unparsable_lines(tmp_path):
