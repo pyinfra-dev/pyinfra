@@ -1,0 +1,16 @@
+args:
+  - testlink
+kwargs:
+  target: /etc/init.d/nginx
+  user: 1001
+  group: 1001
+facts:
+  files.Link:
+    path=testlink:
+      link_target: /etc/init.d/nginx
+      user: testuser
+      group: testgroup
+      uid: 1000
+      gid: 1000
+commands:
+  - chown -h 1001:1001 testlink

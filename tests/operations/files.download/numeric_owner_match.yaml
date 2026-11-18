@@ -1,0 +1,15 @@
+args:
+  - http://myfile
+kwargs:
+  dest: /home/myfile
+  user: 1000
+  group: 1000
+facts:
+  files.File:
+    path=/home/myfile:
+      user: testuser
+      group: testgroup
+      uid: 1000
+      gid: 1000
+commands: []
+noop_description: file /home/myfile has already been downloaded

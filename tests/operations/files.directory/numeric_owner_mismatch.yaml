@@ -1,0 +1,14 @@
+args:
+  - testdir
+kwargs:
+  user: 1001
+  group: 1001
+facts:
+  files.Directory:
+    path=testdir:
+      user: testuser
+      group: testgroup
+      uid: 1000
+      gid: 1000
+commands:
+  - chown 1001:1001 testdir

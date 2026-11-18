@@ -1,0 +1,14 @@
+args:
+  - testfile
+kwargs:
+  user: 1001
+  group: 1001
+facts:
+  files.File:
+    path=testfile:
+      user: testuser
+      group: testgroup
+      uid: 1000
+      gid: 1000
+commands:
+  - chown 1001:1001 testfile

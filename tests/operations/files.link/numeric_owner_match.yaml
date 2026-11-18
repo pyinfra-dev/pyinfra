@@ -1,0 +1,16 @@
+args:
+  - testlink
+kwargs:
+  target: /etc/init.d/nginx
+  user: 1000
+  group: 1000
+facts:
+  files.Link:
+    path=testlink:
+      link_target: /etc/init.d/nginx
+      user: testuser
+      group: testgroup
+      uid: 1000
+      gid: 1000
+commands: []
+noop_description: link testlink already exists

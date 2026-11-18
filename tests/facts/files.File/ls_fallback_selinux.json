@@ -1,12 +1,15 @@
 {
     "arg": "src",
-    "command": "! (test -e src || test -L src ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s %N' src 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z %N%SY' src || ls -ld src )",
+    "command": "! (test -e src || test -L src ) || ( stat -c 'user=%U group=%G mode=%A atime=%X mtime=%Y ctime=%Z size=%s uid=%u gid=%g %N' src 2> /dev/null || stat -f 'user=%Su group=%Sg mode=%Sp atime=%a mtime=%m ctime=%c size=%z uid=%u gid=%g %N%SY' src || ( ls -ld src && ls -ldn src ) )",
     "output": [
-        "-rw-r--r--. 1 src src 1024 Nov  7 19:21 src"
+        "-rw-r--r--. 1 src src 1024 Nov  7 19:21 src",
+        "-rw-r--r--. 1 1000 1000 1024 Nov  7 19:21 src"
     ],
     "fact": {
         "group": "src",
         "user": "src",
+        "uid": 1000,
+        "gid": 1000,
         "mode": 644,
         "atime": null,
         "mtime": "2025-11-07T19:21:00",
