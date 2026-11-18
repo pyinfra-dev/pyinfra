@@ -1,0 +1,12 @@
+kwargs:
+  packages:
+    - org.videolan.VLC
+  present: false
+  user: true
+facts:
+  flatpak.FlatpakPackage: {}
+  flatpak.FlatpakPackages:
+    user=True:
+      - org.videolan.VLC
+commands:
+  - flatpak uninstall --noninteractive --user org.videolan.VLC

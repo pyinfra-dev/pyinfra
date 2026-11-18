@@ -10,6 +10,7 @@ extend-exclude = [
 extend-ignore-re = [
     "shell\\('uptim'\\)",
     '"fpr:::::::::',
+    '"tru:',
     '== "fpr":',
     "00740ba1",
     "forr something in",
@@ -19,7 +20,12 @@ extend-ignore-re = [
     "\\[d\\]efault", # Literal dnf module list hint legend
     "\\[e\\]nabled", # Literal dnf module list hint legend
     "\\[i\\]nstalled", # Literal dnf module list hint legend
+    "\\(@[\\w-]+\\)", # GitHub usernames credited in CHANGELOG.md
 ]
 
 [default.extend-words]
 datas = "datas"
+requiere = "requiere"
+ein = "ein"
+ist = "ist"
+passord = "passord"

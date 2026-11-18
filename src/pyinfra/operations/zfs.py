@@ -97,7 +97,7 @@ def snapshot(snapshot_name, present=True, recursive=False, properties=None, **ex
     """
     Create or destroy a ZFS snapshot, or modify its properties.
 
-    + dataset_name: name of the filesystem to operate on
+    + snapshot_name: name of the filesystem to operate on
     + present: whether the named filesystem should exist
     + recursive: whether to snapshot child datasets
     + properties: the ZFS properties that should be set on the snapshot.

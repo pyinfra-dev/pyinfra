@@ -1,0 +1,8 @@
+command: apt-mark showhold
+requires_command: apt-mark
+output: |
+  nomad
+  libfoo:i386
+fact:
+  - nomad
+  - libfoo:i386

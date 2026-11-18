@@ -1,0 +1,8 @@
+arg: true
+command: flatpak list --user --columns=application
+requires_command: flatpak
+output:
+  - Application ID
+  - org.videolan.VLC
+fact:
+  - org.videolan.VLC
