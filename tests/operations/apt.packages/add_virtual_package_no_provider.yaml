@@ -1,0 +1,8 @@
+args:
+  - - fortune
+facts:
+  deb.DebPackages: {}
+  apt.AptPackageProvides:
+    "package=fortune": []
+commands:
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install fortune'

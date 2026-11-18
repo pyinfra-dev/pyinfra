@@ -1,0 +1,19 @@
+# apt-cache showpkg reports the candidate version from the package cache, so a
+# provider whose installed version differs from the candidate (eg apt update
+# with a pending upgrade) does not match and the virtual package is reinstalled.
+args:
+  - - awk
+facts:
+  deb.DebPackages:
+    mawk:
+      - 1.3.4.20200120-3
+  apt.AptPackageProvides:
+    "package=awk":
+      - - original-awk
+        - 2022-09-12-1
+      - - mawk
+        - 1.3.4.20200120-3.1
+      - - gawk
+        - "1:5.2.1-2"
+commands:
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install awk'

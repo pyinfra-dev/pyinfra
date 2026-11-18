@@ -8,5 +8,8 @@ facts:
   deb.DebPackages:
     git: [""]
     python-pip: [""]
+  apt.AptPackageProvides:
+    "package=git": []
+    "package=python-pip": []
 commands:
   - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" purge git python-pip'
