@@ -5,6 +5,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 
 import glob
 import re
+import shlex
 from os import environ, path
 from pathlib import Path
 
@@ -86,21 +87,31 @@ def _expand_include_statements(file_obj, parsed_files=None):
         if parsed_files is None:
             parsed_files = []
 
-        # The path can be relative to its parent configuration file
-        if path.isabs(value) is False and value[0] != "~":
-            folder = path.dirname(file_obj.name)
-            value = path.join(folder, value)
+        for raw_pattern in shlex.split(value, posix=False):
+            pattern = (
+                raw_pattern[1:-1]
+                if len(raw_pattern) >= 2
+                and raw_pattern[0] == raw_pattern[-1]
+                and raw_pattern[0] in ("'", '"')
+                else raw_pattern
+            )
+            # The path can be relative to its parent configuration file
+            if path.isabs(pattern) is False and pattern[0] != "~":
+                folder = path.dirname(file_obj.name)
+                pattern = path.join(folder, pattern)
 
-        value = path.expanduser(value)
+            pattern = path.expanduser(pattern)
 
-        for filename in glob.iglob(value):
-            if Path(filename).is_file():
-                if filename in parsed_files:
-                    raise Exception(
-                        f"Include loop detected in ssh config file: {filename}",
-                    )
-                with open(filename, encoding="utf-8") as fd:
-                    parsed_lines.extend(_expand_include_statements(fd, [*parsed_files, filename]))
+            for filename in sorted(glob.iglob(pattern)):
+                if Path(filename).is_file():
+                    if filename in parsed_files:
+                        raise Exception(
+                            f"Include loop detected in ssh config file: {filename}",
+                        )
+                    with open(filename, encoding="utf-8") as fd:
+                        parsed_lines.extend(
+                            _expand_include_statements(fd, [*parsed_files, filename])
+                        )
 
     return parsed_lines
 

@@ -681,6 +681,31 @@ def test_parse_config_encrypted_identityfile_wrong_passphrase_falls_through(
     assert cfg["key_filename"] == [str(ssh_encrypted_key["key"])]
 
 
+def test_ssh_config_include_multiple_paths(tmp_path):
+    hosts_dir = tmp_path / "hosts"
+    nested_dir = hosts_dir / "site_b"
+    nested_dir.mkdir(parents=True)
+
+    (hosts_dir / "site_a.conf").write_text(
+        "Host site_a.noresolve\n    Hostname site_a.com\n    Port 2201\n"
+    )
+    (nested_dir / "site_b.conf").write_text(
+        "Host site_b.noresolve\n    Hostname site_b.com\n    Port 2202\n"
+    )
+
+    config_file = tmp_path / "config"
+    config_file.write_text("Include hosts/*.conf hosts/*/*.conf\n")
+
+    config = SSHConfig()
+    with open(config_file, encoding="utf-8") as f:
+        config.parse(f)
+
+    assert config.lookup("site_a.noresolve")["hostname"] == "site_a.com"
+    assert config.lookup("site_a.noresolve")["port"] == "2201"
+    assert config.lookup("site_b.noresolve")["hostname"] == "site_b.com"
+    assert config.lookup("site_b.noresolve")["port"] == "2202"
+
+
 def test_ssh_config_same_file_included_by_multiple_hosts(tmp_path):
     shared = tmp_path / "shared.config"
     shared.write_text("IdentitiesOnly yes\n")
