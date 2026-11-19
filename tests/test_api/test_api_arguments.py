@@ -1,8 +1,10 @@
+from io import BytesIO, StringIO
 from typing import cast
 from unittest import TestCase
 
 from pyinfra.api import Config, Host, Inventory, State
 from pyinfra.api.arguments import AllArguments, pop_global_arguments
+from pyinfra.api.exceptions import ArgumentTypeError
 
 
 class TestOperationKwargs(TestCase):
@@ -58,3 +60,22 @@ class TestOperationKwargs(TestCase):
         assert kwargs.get("_sudo") is True
         assert kwargs.get("_sudo_user") == "deploy-kwarg-user"
         assert "_sudo" in keys
+
+    def test_stdout_accepts_a_binary_sink(self):
+        inventory = Inventory((("somehost",), {}))
+        state = State(config=Config(), inventory=inventory)
+        host = inventory.get_host("somehost")
+
+        sink = BytesIO()
+        kwargs, _ = pop_global_arguments(state, host, {"_stdout": sink})
+        assert kwargs.get("_stdout") is sink
+
+    def test_stdout_rejects_a_text_sink(self):
+        inventory = Inventory((("somehost",), {}))
+        state = State(config=Config(), inventory=inventory)
+        host = inventory.get_host("somehost")
+
+        with self.assertRaises(ArgumentTypeError) as context:
+            pop_global_arguments(state, host, {"_stdout": StringIO()})
+
+        assert "_stdout" in str(context.exception)
