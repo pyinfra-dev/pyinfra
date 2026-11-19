@@ -1,0 +1,9 @@
+args:
+  - /tmp/cipher.txt
+  - /tmp/plain2.txt
+facts:
+  files.FileContents:
+    path=/tmp/cipher.txt: null
+exception:
+  name: OperationError
+  message: vault file /tmp/cipher.txt does not exist
