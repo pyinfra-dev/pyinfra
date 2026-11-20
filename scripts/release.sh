@@ -3,16 +3,23 @@
 set -euo pipefail
 
 VERSION=$(uv run python scripts/generate_next_version.py)
-MAJOR_BRANCH="$(uv run python scripts/generate_next_version.py | cut -d'.' -f1).x"
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+MAJOR_BRANCH="$(echo "${VERSION}" | cut -d'.' -f1).x"
+MINOR_BRANCH="$(echo "${VERSION}" | cut -d'.' -f1-2).x"
 
-echo "# Releasing pyinfra v${VERSION} (branch ${MAJOR_BRANCH})"
+if [ "${BRANCH}" != "${MAJOR_BRANCH}" ] && [ "${BRANCH}" != "${MINOR_BRANCH}" ]; then
+    echo "Refusing to release v${VERSION} from ${BRANCH} (expected ${MAJOR_BRANCH} or ${MINOR_BRANCH})"
+    exit 1
+fi
+
+echo "# Releasing pyinfra v${VERSION} (branch ${BRANCH})"
 
 echo "# Running tests..."
 uv run pytest
 
 echo "# Git tag & push..."
 git tag -a "v$VERSION" -m "v$VERSION"
-git push --atomic origin "${MAJOR_BRANCH}" "v$VERSION"
+git push --atomic origin "${BRANCH}" "v$VERSION"
 
 echo "Clear existing build/dist..."
 rm -rf build/* dist/*
