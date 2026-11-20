@@ -32,7 +32,7 @@
         }
     },
     "commands": [
-        "cd /home/myrepo && git fetch --depth 1 --tags",
+        "cd /home/myrepo && git fetch --depth 1 --tags origin mybranch",
         "cd /home/myrepo && git checkout mybranch",
         "cd /home/myrepo && git pull --depth 1"
     ],
