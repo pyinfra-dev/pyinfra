@@ -298,16 +298,19 @@ class Host:
                 old_deploy_data,
             )
 
-    # Cache per execution phase so change detection cannot affect execution.
     @memoize
-    def _get_temp_directory(self, is_executing: bool) -> str:
+    def _get_temp_directory(self) -> str:
         temp_directory = self.state.config.TEMP_DIR
 
         if temp_directory is None:
             # Local import avoids a circular dependency with the server fact module.
             from pyinfra.facts.server import TmpDir
 
-            temp_directory = self.get_fact(TmpDir)
+            # Temp files cross the privilege boundary (eg uploads are written by the SSH
+            # user then copied w/sudo), so resolve as the connecting user, not the calling op.
+            temp_directory = self.get_fact(
+                TmpDir, _sudo=False, _su_user=None, _doas=False, _dzdo=False
+            )
 
         if not temp_directory:
             temp_directory = self.state.config.DEFAULT_TEMP_DIR
@@ -343,7 +346,7 @@ class Host:
         Generate a temporary filename for this deploy.
         """
 
-        temp_directory = temp_directory or self._get_temp_directory(self.state.is_executing)
+        temp_directory = temp_directory or self._get_temp_directory()
 
         if not hash_key:
             hash_key = str(uuid4())
