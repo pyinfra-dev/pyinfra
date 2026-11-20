@@ -18,7 +18,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import ArgumentTypeError, PyinfraError
-from pyinfra.api.operation import OperationMeta, add_op
+from pyinfra.api.operation import OperationMeta, add_op, operation
 from pyinfra.api.operations import run_ops
 from pyinfra.api.state import StateOperationMeta, StateStage
 from pyinfra.connectors.util import CommandOutput, OutputLine
@@ -42,6 +42,37 @@ class TestOperationMeta(TestCase):
 
 
 class TestOperationsApi(PatchSSHTestCase):
+    def test_temp_directory_uses_execution_time_fact(self):
+        @operation()
+        def show_temp_path():
+            yield StringCommand(pyinfra.host.get_temp_filename("dest", hash_filename=False))
+
+        for check_for_changes in (True, False):
+            with self.subTest(check_for_changes=check_for_changes):
+                host_name = f"tempdir-{check_for_changes}"
+                inventory = make_inventory(hosts=(host_name,))
+                state = State(inventory, Config(), check_for_changes=check_for_changes)
+                state.current_stage = StateStage.Prepare
+                target = inventory.get_host(host_name)
+
+                with patch.object(
+                    target,
+                    "get_fact",
+                    side_effect=lambda _: "/" if state.is_executing else "/tmp",
+                ) as get_fact:
+                    add_op(state, show_temp_path, host=target)
+                    op_hash = next(iter(state.ops[target]))
+                    state.current_stage = StateStage.Execute
+                    state.is_executing = True
+
+                    with ctx_state.use(state), ctx_host.use(target):
+                        command = next(
+                            state.get_op_data_for_host(target, op_hash).command_generator()
+                        )
+
+                assert str(command) == "//pyinfra-dest"
+                assert get_fact.call_count == (2 if check_for_changes else 1)
+
     def test_callable_conditions_remain_supported(self):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())

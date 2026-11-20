@@ -298,13 +298,13 @@ class Host:
                 old_deploy_data,
             )
 
+    # Cache per execution phase so change detection cannot affect execution.
     @memoize
-    def _get_temp_directory(self):
+    def _get_temp_directory(self, is_executing: bool) -> str:
         temp_directory = self.state.config.TEMP_DIR
 
         if temp_directory is None:
-            # Unfortunate, but very hard to avoid, circular dependency, this method is memoized so
-            # performance isn't a concern.
+            # Local import avoids a circular dependency with the server fact module.
             from pyinfra.facts.server import TmpDir
 
             temp_directory = self.get_fact(TmpDir)
@@ -343,7 +343,7 @@ class Host:
         Generate a temporary filename for this deploy.
         """
 
-        temp_directory = temp_directory or self._get_temp_directory()
+        temp_directory = temp_directory or self._get_temp_directory(self.state.is_executing)
 
         if not hash_key:
             hash_key = str(uuid4())
