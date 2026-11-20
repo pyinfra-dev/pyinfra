@@ -32,8 +32,6 @@ from pyinfra.api import (
     deploy,
     operation,
 )
-from pyinfra.connectors.scp import SCPClient
-from pyinfra.connectors.sshuserclient import SSHClient
 
 print(__version__, config, host, inventory, state)
 print(BaseStateCallback, Config, DeployError, FactBase, FactError, FactNotCollected)
@@ -41,4 +39,4 @@ print(FactPreconditionError, FactProcessError, FactTypeError, FactValueError)
 print(FileDownloadCommand, FileUploadCommand, FunctionCommand, HiddenValue, Host)
 print(Inventory, InventoryError, MaskString, MissingCommandError, OperationError)
 print(OperationTypeError, OperationValueError, QuoteString, RsyncCommand)
-print(ShortFactBase, State, StringCommand, deploy, operation, SCPClient, SSHClient)
+print(ShortFactBase, State, StringCommand, deploy, operation)

@@ -1,11 +1,10 @@
+import asyncio
 import math
 import os
 import platform
 import sys
 from collections import deque
 from contextlib import contextmanager
-import gevent
-from gevent.event import Event
 
 from pyinfra.api.output import is_output_active
 
@@ -29,38 +28,33 @@ if IS_TTY:
                 TERMINAL_WIDTH = int(terminal_size[1])
 
 
-def _print_spinner(stop_event, progress_queue):
-    if not IS_TTY or os.environ.get("PYINFRA_PROGRESS") == "off":
-        return
+def _should_print_spinner() -> bool:
+    return IS_TTY and os.environ.get("PYINFRA_PROGRESS") != "off"
 
-    progress = ""
-    text = ""
 
-    while True:
-        # Stop when asked too
-        if stop_event.is_set():
-            break
+def _print_spinner_frame(progress_queue) -> None:
+    WAIT_CHARS.rotate(1)
 
-        WAIT_CHARS.rotate(1)
+    progress = progress_queue[-1] if progress_queue else ""
 
-        try:
-            progress = progress_queue[-1]
-        except IndexError:
-            pass
+    text = f"    {' '.join((WAIT_CHARS[0], progress))}"
+    text = f"{text}\r"
 
-        text = f"    {' '.join((WAIT_CHARS[0], progress))}"
-        text = f"{text}\r"
+    sys.stderr.write(text)
+    sys.stderr.flush()
 
-        sys.stderr.write(text)
-        sys.stderr.flush()
+    # In pyinfra_cli's __main__ we set stdout & stderr to be line buffered,
+    # so write this escape code (clear line) into the buffer but don't flush,
+    # such that any next print/log/etc clear the line first.
+    if not IS_WINDOWS:
+        sys.stderr.write("\033[K")
 
-        # In pyinfra_cli's __main__ we set stdout & stderr to be line buffered,
-        # so write this escape code (clear line) into the buffer but don't flush,
-        # such that any next print/log/etc clear the line first.
-        if not IS_WINDOWS:
-            sys.stderr.write("\033[K")
 
-        stop_event.wait(timeout=WAIT_TIME)
+def _get_running_loop() -> asyncio.AbstractEventLoop | None:
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return None
 
 
 @contextmanager
@@ -75,7 +69,6 @@ def progress_spinner(items, prefix_message=None):
         items = set(items)
 
     total_items = len(items)
-    stop_event = Event()
 
     def make_progress_message(include_items=True):
         message_bits = []
@@ -119,12 +112,22 @@ def progress_spinner(items, prefix_message=None):
         items.remove(complete_item)
         progress_queue.append(make_progress_message())
 
-    # Kick off the spinner greenlet
-    spinner_greenlet = gevent.spawn(_print_spinner, stop_event, progress_queue)
+    # The spinner is a repeating event loop callback, so it keeps ticking while
+    # host tasks and greenlets are waiting on I/O without needing its own task.
+    loop = _get_running_loop()
+    handle: asyncio.TimerHandle | None = None
 
-    # Yield allowing the actual code the spinner waits for to run
-    yield progress
+    if loop is not None and _should_print_spinner():
 
-    # Finally, stop the spinner
-    stop_event.set()
-    spinner_greenlet.join()
+        def tick() -> None:
+            nonlocal handle
+            _print_spinner_frame(progress_queue)
+            handle = loop.call_later(WAIT_TIME, tick)
+
+        tick()
+
+    try:
+        yield progress
+    finally:
+        if handle is not None:
+            handle.cancel()

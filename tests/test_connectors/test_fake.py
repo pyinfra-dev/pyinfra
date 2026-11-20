@@ -1,14 +1,16 @@
+import asyncio
 import re
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pyinfra.api import Config, HiddenValue, State, StringCommand
+from pyinfra.api.concurrency import async_def
 from pyinfra.api.connect import connect_all
 from pyinfra.connectors.fake import FakeConnector
 
 from ..util import make_inventory
 
-# Instant execution everywhere so tests never call gevent.sleep.
+# Instant execution everywhere so tests never call asyncio.sleep.
 NO_DELAY = {"fake_delay": 0, "fake_delay_jitter": 0}
 
 
@@ -43,7 +45,7 @@ class TestFakeConnector(TestCase):
     def test_connect_all(self):
         inventory = make_fake_inventory(hosts=("@fake",))
         state = State(inventory, Config())
-        connect_all(state)
+        asyncio.run(connect_all(state))
         assert len(state.active_hosts) == 1
 
     def test_connect_multiple_named_hosts(self):
@@ -51,7 +53,7 @@ class TestFakeConnector(TestCase):
             hosts=(("@fake/web-1", NO_DELAY), ("@fake/web-2", NO_DELAY)),
         )
         state = State(inventory, Config())
-        connect_all(state)
+        asyncio.run(connect_all(state))
         assert len(state.active_hosts) == 2
 
     def test_default_command_succeeds_with_empty_output(self):
@@ -184,7 +186,7 @@ class TestFakeConnector(TestCase):
         State(inventory, Config())
         host = inventory.get_host("@fake")
 
-        with patch("pyinfra.connectors.fake.gevent.sleep") as fake_sleep:
-            host.run_shell_command("echo hi")
+        with patch("pyinfra.connectors.fake.asyncio.sleep", new=AsyncMock()) as fake_sleep:
+            asyncio.run(async_def(host.run_shell_command, "echo hi"))
 
         fake_sleep.assert_called_once_with(2.0)

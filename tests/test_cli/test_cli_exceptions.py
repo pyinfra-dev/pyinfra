@@ -8,7 +8,7 @@ from pyinfra.api import OperationError
 from pyinfra.api.exceptions import ArgumentTypeError, PyinfraError
 from pyinfra_cli.exceptions import CliError, UnexpectedExternalError, WrappedError
 
-from ..paramiko_util import PatchSSHTestCase
+from ..fake_ssh import PatchSSHTestCase
 from .util import run_cli
 
 

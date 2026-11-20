@@ -44,6 +44,32 @@ yield from files.file._inner(
 )
 ```
 
+## Async operations & callbacks
+
+Operations may also be written as ``async`` generator functions. The body runs inside pyinfra's
+per-host execution context, so it can both ``await`` asyncio code and call the usual synchronous
+host APIs such as ``host.get_fact``. The same applies to ``FunctionCommand`` callbacks (and so to
+``python.call``), which may be coroutine functions:
+
+```py
+import asyncio
+
+@operation()
+async def wait_for_service(name: str):
+    async def wait_until_up(state, host):
+        for _ in range(30):
+            if host.get_fact(Command, f"systemctl is-active {name}") == "active":
+                return
+            await asyncio.sleep(1)
+        raise OperationError(f"{name} did not start")
+
+    yield StringCommand("systemctl", "start", QuoteString(name))
+    yield FunctionCommand(wait_until_up, (), {})
+```
+
+Blocking calls such as ``time.sleep`` inside operations or callbacks block every host, so prefer
+``await asyncio.sleep`` in async code.
+
 ## Example: managing files
 
 This is a simplified version of the ``files.file`` operation, which will create/remove a
