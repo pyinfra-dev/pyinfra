@@ -21,7 +21,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import ArgumentTypeError, PyinfraError
-from pyinfra.api.operation import OperationMeta, add_op
+from pyinfra.api.operation import OperationMeta, add_op, operation
 from pyinfra.api.operations import run_ops
 from pyinfra.api.state import StateOperationMeta, StateStage
 from pyinfra.connectors.util import CommandOutput, OutputLine
@@ -45,6 +45,43 @@ class TestOperationMeta(TestCase):
 
 
 class TestOperationsApi(PatchSSHTestCase):
+    def test_temp_directory_fact_ignores_privilege_escalation(self):
+        @operation()
+        def show_temp_path():
+            yield StringCommand(pyinfra.host.get_temp_filename("dest", hash_filename=False))
+
+        for check_for_changes in (True, False):
+            with self.subTest(check_for_changes=check_for_changes):
+                inventory = make_inventory(hosts=("somehost",))
+                state = State(inventory, Config(SUDO=True), check_for_changes=check_for_changes)
+                inventory.get_host("somehost")._get_temp_directory.cache.clear()
+                connect_all(state)
+
+                with patch(
+                    "pyinfra.connectors.ssh.SSHConnector.run_shell_command",
+                    return_value=(True, CommandOutput([OutputLine("stdout", "/tmp")])),
+                ) as fake_run_command:
+                    add_op(state, show_temp_path, _su_user="someuser")
+                    run_ops(state)
+
+                tmp_dir_calls = [
+                    call
+                    for call in fake_run_command.call_args_list
+                    if "TMPDIR" in str(call.args[0])
+                ]
+                assert len(tmp_dir_calls) == 1
+                assert {
+                    key: tmp_dir_calls[0].kwargs[key]
+                    for key in ("_sudo", "_su_user", "_doas", "_dzdo")
+                } == {"_sudo": False, "_su_user": None, "_doas": False, "_dzdo": False}
+
+                assert any(
+                    str(call.args[0]) == "/tmp/pyinfra-dest"
+                    and call.kwargs["_sudo"] is True
+                    and call.kwargs["_su_user"] == "someuser"
+                    for call in fake_run_command.call_args_list
+                )
+
     def test_callable_conditions_remain_supported(self):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())

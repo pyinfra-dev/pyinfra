@@ -299,15 +299,18 @@ class Host:
             )
 
     @memoize
-    def _get_temp_directory(self):
+    def _get_temp_directory(self) -> str:
         temp_directory = self.state.config.TEMP_DIR
 
         if temp_directory is None:
-            # Unfortunate, but very hard to avoid, circular dependency, this method is memoized so
-            # performance isn't a concern.
+            # Local import avoids a circular dependency with the server fact module.
             from pyinfra.facts.server import TmpDir
 
-            temp_directory = self.get_fact(TmpDir)
+            # Temp files cross the privilege boundary (eg uploads are written by the SSH
+            # user then copied w/sudo), so resolve as the connecting user, not the calling op.
+            temp_directory = self.get_fact(
+                TmpDir, _sudo=False, _su_user=None, _doas=False, _dzdo=False
+            )
 
         if not temp_directory:
             temp_directory = self.state.config.DEFAULT_TEMP_DIR
