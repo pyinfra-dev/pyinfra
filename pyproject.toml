@@ -14,10 +14,10 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "gevent>=1.5",
     "paramiko>=3.2,<6", # 3.2 adds PKey.from_type_string and pkey.UnknownKeyType, used by connectors.sshuserclient (#1290)
-    "cyclopts>=4,<5",
+    "cyclopts>=4,<6",
     "rich>=13.7.1", # 13.7.1: emoji skin tone modifiers take no cells (results table alignment)
     "jinja2>3,<4",
-    "python-dateutil>2,<3",
+    "python-dateutil>2,<4",
     "typeguard>=4,<5",
     "distro>=1.6,<2",
     "packaging>=16.1",
@@ -50,18 +50,18 @@ repository = "https://github.com/pyinfra-dev/pyinfra"
 
 [dependency-groups]
 test = [
-    "pytest>=8.3.5,<9",
+    "pytest>=8.3.5,<10",
     "freezegun>=1.5.5",
     "coverage>=7.7.1,<8",
     "pytest-cov>=7.0.0,<8",
     "pytest-testinfra>=10.2.2,<11",
     "pyyaml>=6.0.2,<7",
-    "mypy==1.17.1",
+    "mypy==2.4.1",
     "types-cryptography>=3.3.23.2,<4",
-    "types-paramiko>=2.7,<4",
+    "types-paramiko>=2.7,<6",
     "types-python-dateutil>2,<3",
     "types-PyYAML>6,<7",
-    "ruff==0.14.0",
+    "ruff==0.17.5",
     "pyinfra-testing>=0.2.1",
 ]
 
@@ -114,7 +114,7 @@ source = "uv-dynamic-versioning"
 line-length = 100
 target-version = "py310"
 
-extend-exclude = ["*.json", "*.yaml", "*.yml"]
+extend-exclude = ["*.json", "*.yaml", "*.yml", "*.md"]
 force-exclude = true
 
 [tool.ruff.lint]

@@ -152,9 +152,35 @@ def get_template(
     """
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
+
+    If a custom ``loader`` is supplied and ``filename_or_io`` is a template name
+    that does not exist as a local path, the loader searches for that name
+    (so a ``FileSystemLoader`` search path is honoured). Existing file paths
+    and IO objects are still read directly and compiled with ``from_string``.
     """
     if jinja_env_kwargs is None:
         jinja_env_kwargs = {}
+    else:
+        # Copy so popping the default loader cannot mutate the caller's dict.
+        jinja_env_kwargs = dict(jinja_env_kwargs)
+
+    loader = jinja_env_kwargs.get("loader")
+    if (
+        loader is not None
+        and isinstance(filename_or_io, str)
+        and not os.path.isfile(filename_or_io)
+    ):
+        cache_key = f"loader:{id(loader)}:{filename_or_io}"
+        if cache_key in TEMPLATES:
+            return TEMPLATES[cache_key]
+        template = Environment(
+            undefined=StrictUndefined,
+            keep_trailing_newline=True,
+            **jinja_env_kwargs,
+        ).get_template(filename_or_io)
+        TEMPLATES[cache_key] = template
+        return template
+
     file_data = get_file_io(filename_or_io, mode="r")
     cache_key = file_data.cache_key
 

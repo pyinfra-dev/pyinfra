@@ -9,6 +9,10 @@
         "deb.DebPackages": {
             "something": ["0.9"],
             "another": ["1.1"]
+        },
+        "apt.AptPackageProvides": {
+            "package=git": [],
+            "package=python-pip": []
         }
     },
     "commands": [

@@ -1,9 +1,12 @@
 from collections import defaultdict
 from io import StringIO
-from os import path
+from os import makedirs, path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, mock_open, patch
 import time
+
+import jinja2
 
 import pyinfra
 from pyinfra.api import (
@@ -343,6 +346,75 @@ class TestOperationsApi(PatchSSHTestCase):
         assert "password=!CLEARTEXTPASSWORD" not in op_args
 
         disconnect_all(state)
+
+    def _template_loader_state(self, templates):
+        tmp = TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        search = path.join(tmp.name, "templates")
+        cwd = path.join(tmp.name, "deploy")
+        makedirs(search)
+        makedirs(cwd)
+        for name, content in templates.items():
+            with open(path.join(search, name), "w", encoding="utf-8") as f:
+                f.write(content)
+
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        state.cwd = cwd
+        connect_all(state)
+        self.addCleanup(disconnect_all, state)
+        return state, {"loader": jinja2.FileSystemLoader([search])}
+
+    def test_template_op_custom_loader_searches_by_name(self):
+        state, jinja_env_kwargs = self._template_loader_state(
+            {"app.conf.j2": "name={{ app_name }}\n"},
+        )
+
+        add_op(
+            state,
+            files.template,
+            "app.conf.j2",
+            "/etc/app.conf",
+            jinja_env_kwargs=jinja_env_kwargs,
+            app_name="pyinfra",
+        )
+
+        [op_hash] = state.get_op_order()
+        assert op_hash in state.ops[state.inventory.get_host("somehost")]
+
+    def test_template_op_custom_loader_error_is_operation_error(self):
+        state, jinja_env_kwargs = self._template_loader_state(
+            {"broken.j2": "line one\n{{ missing_variable }}\nline three\n"},
+        )
+
+        with self.assertRaises(PyinfraError) as context:
+            add_op(
+                state,
+                files.template,
+                "broken.j2",
+                "/etc/broken.conf",
+                jinja_env_kwargs=jinja_env_kwargs,
+            )
+
+        assert isinstance(context.exception, OperationError)
+        message = str(context.exception)
+        assert "Error in template: broken.j2 (L2)" in message
+        assert "missing_variable" in message
+
+    def test_template_op_custom_loader_missing_template(self):
+        state, jinja_env_kwargs = self._template_loader_state({})
+
+        with self.assertRaises(OperationError) as context:
+            add_op(
+                state,
+                files.template,
+                "absent.j2",
+                "/etc/absent.conf",
+                jinja_env_kwargs=jinja_env_kwargs,
+            )
+
+        assert "Template not found: absent.j2" in str(context.exception)
 
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
     @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)
