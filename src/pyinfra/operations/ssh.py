@@ -10,6 +10,7 @@ from collections.abc import Generator
 
 from pyinfra import host
 from pyinfra.api import OperationError, QuoteString, StringCommand, operation
+from pyinfra.api.command import PyinfraCommand
 from pyinfra.facts.files import File, FindInFile
 from pyinfra.facts.server import Home
 
@@ -19,7 +20,7 @@ from . import files
 @operation()
 def keyscan(
     hostname: str, force: bool = False, port: int | str = 22
-) -> Generator[StringCommand, None, None]:
+) -> Generator[PyinfraCommand | str, None, None]:
     """
     Check/add hosts to the ``~/.ssh/known_hosts`` file.
 
