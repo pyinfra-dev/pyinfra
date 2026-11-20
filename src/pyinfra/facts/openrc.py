@@ -4,10 +4,10 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class OpenrcStatus(FactBase):
+class OpenrcStatus(ShellFact):
     """
     Returns a dict of name -> status for OpenRC services for a given runlevel.
     """
@@ -42,7 +42,7 @@ class OpenrcStatus(FactBase):
         return services
 
 
-class OpenrcEnabled(FactBase):
+class OpenrcEnabled(ShellFact):
     """
     Returns a dict of name -> whether enabled for OpenRC services for a given runlevel.
     """

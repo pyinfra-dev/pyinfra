@@ -4,10 +4,10 @@ import json
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class OpenvzContainers(FactBase):
+class OpenvzContainers(ShellFact):
     """
     Returns a dict of running OpenVZ containers by CTID:
 

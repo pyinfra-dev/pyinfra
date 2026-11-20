@@ -4,13 +4,13 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util import make_cat_files_command_with_markers
 from .util.packaging import REPO_FILENAME_MARKER, parse_yum_repositories
 
 
-class DnfRepositories(FactBase):
+class DnfRepositories(ShellFact):
     """
     Returns a list of installed dnf repositories:
 
@@ -52,7 +52,7 @@ class DnfRepositories(FactBase):
         return parse_yum_repositories(output)
 
 
-class DnfEnabledModules(FactBase):
+class DnfEnabledModules(ShellFact):
     """
     Returns a dict mapping enabled dnf module names to their enabled stream:
 
@@ -90,7 +90,7 @@ class DnfEnabledModules(FactBase):
         return result
 
 
-class DnfDisabledModules(FactBase):
+class DnfDisabledModules(ShellFact):
     """
     Returns a sorted list of dnf module names that have been explicitly disabled:
 

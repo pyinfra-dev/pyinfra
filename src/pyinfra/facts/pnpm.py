@@ -15,7 +15,7 @@ import posixpath
 from typing_extensions import override
 
 from pyinfra import logger
-from pyinfra.api import FactBase, QuoteString, StringCommand
+from pyinfra.api import ShellFact, QuoteString, StringCommand
 
 from .util.packaging import PackageVersionDict
 
@@ -33,7 +33,7 @@ DEPENDENCY_FIELDS = (
 UP_TO_DATE_MARKER = "up_to_date"
 
 
-class PnpmPackages(FactBase[PackageVersionDict]):
+class PnpmPackages(ShellFact[PackageVersionDict]):
     """
     Returns a dict of installed pnpm packages, globally or in a given directory:
 
@@ -103,7 +103,7 @@ class PnpmPackages(FactBase[PackageVersionDict]):
         return packages
 
 
-class PnpmModulesUpToDate(FactBase[bool]):
+class PnpmModulesUpToDate(ShellFact[bool]):
     """
     Returns whether a project's ``node_modules`` was installed from the
     ``pnpm-lock.yaml`` now in the directory.
@@ -141,7 +141,7 @@ class PnpmModulesUpToDate(FactBase[bool]):
         return output[0].strip() == UP_TO_DATE_MARKER
 
 
-class PnpmVersion(FactBase[str]):
+class PnpmVersion(ShellFact[str]):
     """
     Returns the version of pnpm installed:
 

@@ -4,10 +4,10 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class FlatpakBaseFact(FactBase):
+class FlatpakBaseFact(ShellFact):
     abstract = True
 
     @override

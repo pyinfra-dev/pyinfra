@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, HiddenValue, QuoteString, StringCommand
+from pyinfra.api import ShellFact, HiddenValue, QuoteString, StringCommand
 
 RUNNING_STATES = ("RUNNING", "STARTING")
 STOPPED_STATES = ("STOPPED", "STOPPING", "EXITED")
@@ -32,7 +32,7 @@ def _make_supervisorctl_command(
     return StringCommand(*command_bits)
 
 
-class SupervisorctlStatus(FactBase[dict[str, "bool | None"]]):
+class SupervisorctlStatus(ShellFact[dict[str, "bool | None"]]):
     """
     Returns a dict of supervisor process names to their running state.
 
@@ -99,7 +99,7 @@ class SupervisorctlStatus(FactBase[dict[str, "bool | None"]]):
         return processes
 
 
-class SupervisorctlPid(FactBase["int | None"]):
+class SupervisorctlPid(ShellFact["int | None"]):
     """
     Returns the PID of supervisord itself, or of a single supervisor managed
     process when ``process`` is given.
@@ -152,7 +152,7 @@ class SupervisorctlPid(FactBase["int | None"]):
         return None
 
 
-class SupervisorctlPids(FactBase[list[int]]):
+class SupervisorctlPids(ShellFact[list[int]]):
     """
     Returns a list of the PIDs of all supervisor managed processes
     (``supervisorctl pid all``). A PID of ``0`` means a process is not

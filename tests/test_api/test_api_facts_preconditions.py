@@ -14,7 +14,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api.exceptions import FactError, FactNotCollected, FactPreconditionError
-from pyinfra.api.facts import FactBase
+from pyinfra.api.facts import ShellFact
 from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.facts.zfs import ZfsPools
 
@@ -34,7 +34,7 @@ class TestFactPreconditionError(TestCase):
         host = MagicMock()
 
         with patch(
-            "pyinfra.api.facts.FactBase._get_fact",
+            "pyinfra.api.facts.ShellFact._get_fact",
             side_effect=FactPreconditionError(ZfsPools, "zfs module not loaded"),
         ):
             result = ZfsPools.get(state, host)
@@ -47,7 +47,7 @@ class TestFactPreconditionError(TestCase):
         host = MagicMock()
 
         with patch(
-            "pyinfra.api.facts.FactBase._get_fact",
+            "pyinfra.api.facts.ShellFact._get_fact",
             side_effect=FactPreconditionError(ZfsPools, "zfs module not loaded"),
         ):
             with self.assertRaises(FactPreconditionError) as ctx:
@@ -69,7 +69,7 @@ class TestFactPreconditionError(TestCase):
         assert isinstance(exc, FactError)
 
 
-class _AsksAboutAProject(FactBase):
+class _AsksAboutAProject(ShellFact):
     """
     A fact whose precondition needs the argument the fact was asked about.
 
@@ -90,7 +90,7 @@ class _AsksAboutAProject(FactBase):
         return {}
 
 
-class _Parameterless(FactBase):
+class _Parameterless(ShellFact):
     """A fact written the old way, with a precondition that takes nothing."""
 
     default = str

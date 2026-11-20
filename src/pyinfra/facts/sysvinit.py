@@ -4,10 +4,10 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class InitdStatus(FactBase):
+class InitdStatus(ShellFact):
     """
     Low level check for every /etc/init.d/* script. Unfortunately many of these
     misbehave and return exit status 0 while also displaying the help info/not

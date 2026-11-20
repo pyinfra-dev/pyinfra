@@ -4,7 +4,7 @@ import shlex
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, QuoteString, StringCommand
+from pyinfra.api import ShellFact, QuoteString, StringCommand
 
 # Mapping for iptables code arguments to variable names
 IPTABLES_ARGS = {
@@ -104,7 +104,7 @@ def parse_iptables_rule(line):
     return definition
 
 
-class IptablesRules(FactBase):
+class IptablesRules(ShellFact):
     """
     Returns a list of iptables rules for a specific table:
 
@@ -162,7 +162,7 @@ class Ip6tablesRules(IptablesRules):
         return StringCommand("ip6tables-save", "-t", QuoteString(table))
 
 
-class IptablesChains(FactBase):
+class IptablesChains(ShellFact):
     """
     Returns a dict of iptables chains & policies:
 

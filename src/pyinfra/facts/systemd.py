@@ -5,7 +5,7 @@ from collections.abc import Iterable
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, QuoteString, StringCommand
+from pyinfra.api import ShellFact, QuoteString, StringCommand
 
 # Valid unit names consist of a "name prefix" and a dot and a suffix specifying the unit type.
 # The "unit prefix" must consist of one or more valid characters
@@ -41,7 +41,7 @@ def _make_systemctl_cmd(user_mode=False, machine=None, user_name=None):
     return StringCommand(*systemctl_cmd)
 
 
-class SystemdStatus(FactBase[dict[str, bool]]):
+class SystemdStatus(ShellFact[dict[str, bool]]):
     """
     Returns a dictionary map of systemd units to booleans indicating whether they are active.
 

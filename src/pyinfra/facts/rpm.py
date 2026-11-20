@@ -4,7 +4,7 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, QuoteString
+from pyinfra.api import ShellFact, QuoteString
 from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
@@ -13,7 +13,7 @@ rpm_regex = r"^(\S+)\ (\S+)$"
 rpm_query_format = "%{NAME} %{VERSION}-%{RELEASE}\\n"
 
 
-class RpmPackages(FactBase):
+class RpmPackages(ShellFact):
     """
     Returns a dict of installed rpm packages:
 
@@ -41,7 +41,7 @@ class RpmPackages(FactBase):
         return parse_packages(rpm_regex, output)
 
 
-class RpmPackage(FactBase):
+class RpmPackage(ShellFact):
     """
     Returns information on a .rpm file:
 
@@ -78,7 +78,7 @@ class RpmPackage(FactBase):
                 }
 
 
-class RpmPackageProvides(FactBase):
+class RpmPackageProvides(ShellFact):
     """
     Returns a list of packages that provide the specified capability (command, file, etc).
     """

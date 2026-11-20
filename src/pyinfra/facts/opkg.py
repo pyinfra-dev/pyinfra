@@ -18,7 +18,7 @@ from typing import NamedTuple
 from typing_extensions import override
 
 from pyinfra import logger
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 from pyinfra.facts.util.packaging import parse_packages
 
 # TODO - change NamedTuple to dataclass Opkgbut need to figure out how to get json serialization
@@ -43,7 +43,7 @@ class OpkgFeedInfo(NamedTuple):
     kind: str  # whether it comes from the 'distribution' or is 'custom'
 
 
-class OpkgConf(FactBase):
+class OpkgConf(ShellFact):
     """
     Returns a NamedTuple with the current configuration:
 
@@ -115,7 +115,7 @@ class OpkgConf(FactBase):
         return OpkgConfInfo(dest, lists_dir, options, arch_cfg)
 
 
-class OpkgFeeds(FactBase):
+class OpkgFeeds(ShellFact):
     """
     Returns a dictionary containing the information for the distribution-provided and
     custom opkg feeds:
@@ -163,7 +163,7 @@ class OpkgFeeds(FactBase):
         return feeds
 
 
-class OpkgInstallableArchitectures(FactBase):
+class OpkgInstallableArchitectures(ShellFact):
     """
     Returns a dictionary containing the currently installable architectures for this system along
     with their priority:
@@ -202,7 +202,7 @@ class OpkgInstallableArchitectures(FactBase):
         return arch_list
 
 
-class OpkgPackages(FactBase):
+class OpkgPackages(ShellFact):
     """
     Returns a dict of installed opkg packages:
 
@@ -230,7 +230,7 @@ class OpkgPackages(FactBase):
         return parse_packages(self.regex, sorted(output))
 
 
-class OpkgUpgradeablePackages(FactBase):
+class OpkgUpgradeablePackages(ShellFact):
     """
     Returns a dict of installed and upgradable opkg packages:
 

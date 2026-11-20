@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .sysvinit import InitdStatus
 
@@ -25,7 +25,7 @@ class RcdStatus(InitdStatus):
     default = dict
 
 
-class RcdEnabled(FactBase):
+class RcdEnabled(ShellFact):
     """
     Returns a dict of OpenBSD rc.d services enabled at boot.
     """
@@ -45,7 +45,7 @@ class RcdEnabled(FactBase):
         return {line: True for line in output}
 
 
-class ServiceEnabled(FactBase[dict[str, bool]]):
+class ServiceEnabled(ShellFact[dict[str, bool]]):
     """
     Returns a dict of FreeBSD rc.d services enabled at boot.
     """

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class LaunchdStatus(FactBase):
+class LaunchdStatus(ShellFact):
     """
     Returns a dict of name -> status for launchd managed services.
     """

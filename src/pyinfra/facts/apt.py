@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from typing_extensions import TypedDict, override
 
-from pyinfra.api import FactBase, QuoteString, StringCommand
+from pyinfra.api import ShellFact, QuoteString, StringCommand
 
 from .gpg import GpgKeyrings
 from .util.packaging import parse_packages
@@ -333,7 +333,7 @@ def parse_apt_list_file(lines: list[str]) -> list[AptRepo]:
     return repos
 
 
-class AptSources(FactBase):
+class AptSources(ShellFact):
     """Returns a list of installed apt sources (legacy .list + deb822 .sources).
 
     Returns a list of AptRepo instances that behave like dicts for backward compatibility:
@@ -397,7 +397,7 @@ class AptSources(FactBase):
         return repos
 
 
-class AptPackages(FactBase):
+class AptPackages(ShellFact):
     """
     Returns a dict of installed apt packages, keyed by name with a list of
     versions as the value:
@@ -438,7 +438,7 @@ class AptPackages(FactBase):
         return parse_packages(self.regex, output)
 
 
-class AptPackageProvides(FactBase):
+class AptPackageProvides(ShellFact):
     """
     Returns a list of packages that provide the specified (virtual) package name:
 
@@ -476,7 +476,7 @@ class AptPackageProvides(FactBase):
         return packages
 
 
-class AptHeldPackages(FactBase[list[str]]):
+class AptHeldPackages(ShellFact[list[str]]):
     """
     Returns a list of apt packages marked as held (``apt-mark showhold``). Held
     packages are not automatically upgraded, removed or changed by ``apt``.
@@ -555,7 +555,7 @@ class AptSimulationDict(TypedDict):
     not_upgraded: int
 
 
-class SimulateOperationWillChange(FactBase[AptSimulationDict]):
+class SimulateOperationWillChange(ShellFact[AptSimulationDict]):
     """
     Simulate an 'apt-get' operation and try to detect if any changes would be performed.
     """

@@ -27,6 +27,8 @@ from pyinfra.api import (
     OperationValueError,
     QuoteString,
     RsyncCommand,
+    ShellFact,
+    ShortcutFact,
     ShortFactBase,
     State,
     StringCommand,
@@ -42,5 +44,5 @@ print(BaseStateCallback, Config, DeployError, FactBase, FactCore, FactError, Fac
 print(FactPreconditionError, FactProcessError, FactTypeError, FactValueError)
 print(FileDownloadCommand, FileUploadCommand, FunctionCommand, HiddenValue, Host)
 print(Inventory, InventoryError, MaskString, MissingCommandError, OperationError)
-print(OperationTypeError, OperationValueError, QuoteString, RsyncCommand)
+print(OperationTypeError, OperationValueError, QuoteString, RsyncCommand, ShellFact, ShortcutFact)
 print(ShortFactBase, State, StringCommand, deploy, fact, operation, SCPClient, SSHClient)

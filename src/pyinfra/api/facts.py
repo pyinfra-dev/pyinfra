@@ -59,7 +59,8 @@ class FactCore(Generic[T]):
     This is the base class for all facts, whatever the underlying technique is used to collect it.
     It defines the interface that every fact must implement, with basic default implementations
     where relevant.
-    It should really be called FactBase, and FactBase be renamed ShellFact(Base).
+    It should really be called FactBase, but this would cause backwards compatibility issues as this
+    name was used for the ShellFact class in the past.
     """
 
     name: str
@@ -191,7 +192,7 @@ def fact(
     return decorator
 
 
-class FactBase(FactCore[T]):
+class ShellFact(FactCore[T]):
     """
     Base class for all shell-commands-based facts.
     """
@@ -499,7 +500,13 @@ class FactBase(FactCore[T]):
         return data
 
 
-class ShortFactBase(FactCore[T]):
+class ShortcutFact(FactCore[T]):
+    """Base class for short(cut) facts.
+
+    Short facts re-process the data returned by their fact.
+    For example this can be used to return a specific value from a complex fact.
+    """
+
     name: str
     fact: type[FactCore]
 
@@ -518,6 +525,11 @@ class ShortFactBase(FactCore[T]):
 
     def process_data(self, data):
         return data
+
+
+# Backwards compatibility aliases
+FactBase = ShellFact
+ShortFactBase = ShortcutFact
 
 
 def _make_command(command_attribute, host_args):

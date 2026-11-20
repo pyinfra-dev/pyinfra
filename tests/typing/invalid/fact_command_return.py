@@ -1,11 +1,11 @@
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class ReturnsInt(FactBase[str]):
+class ReturnsInt(ShellFact[str]):
     def command(self) -> int:
         return 1
 
 
-class ReturnsOptional(FactBase[str]):
+class ReturnsOptional(ShellFact[str]):
     def command(self, path: str) -> str | None:
         return None

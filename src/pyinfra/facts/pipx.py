@@ -2,7 +2,7 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
@@ -24,7 +24,7 @@ def parse_environment(output):
 PIPX_REGEX = r"^([a-zA-Z0-9_\-\+\.]+)\s+([0-9\.]+[a-z0-9\-]*)$"
 
 
-class PipxPackages(FactBase):
+class PipxPackages(ShellFact):
     """
     Returns a dict of installed pipx packages:
 
@@ -50,7 +50,7 @@ class PipxPackages(FactBase):
         return parse_packages(PIPX_REGEX, output)
 
 
-class PipxEnvironment(FactBase):
+class PipxEnvironment(ShellFact):
     """
     Returns a dict of pipx environment variables:
 

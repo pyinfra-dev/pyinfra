@@ -24,7 +24,7 @@ from .exceptions import (
     OperationTypeError,
     OperationValueError,
 )
-from .facts import fact, FactBase, FactCore, ShortFactBase
+from .facts import fact, FactBase, FactCore, ShellFact, ShortcutFact, ShortFactBase
 from .host import Host
 from .inventory import Inventory
 from .operation import operation
@@ -56,6 +56,8 @@ __all__ = [
     "OperationValueError",
     "QuoteString",
     "RsyncCommand",
+    "ShellFact",
+    "ShortcutFact",
     "ShortFactBase",
     "State",
     "StringCommand",

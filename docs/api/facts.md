@@ -71,9 +71,9 @@ the fact command is run. When the binary is absent pyinfra emits a unique sentin
 executing the command, then raises `MissingCommandError` internally:
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class ZfsPools(FactBase):
+class ZfsPools(ShellFact):
     def requires_command(self) -> str:
         return "zpool"
 
@@ -97,9 +97,9 @@ Some facts require more than just a binary — they need a specific runtime stat
 module loaded, a service running). Override `check_preconditions` to express these checks:
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class ZfsDatasets(FactBase):
+class ZfsDatasets(ShellFact):
     def requires_command(self) -> str:
         return "zfs"
 
@@ -153,9 +153,9 @@ host.get_fact(Which, command='htop')
 This fact returns a boolean indicating whether swap is enabled. For this fact the ``command`` is declared as a class attribute.
 
 ```py
-from  pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class SwapEnabled(FactBase):
+class SwapEnabled(ShellFact):
     '''
     Returns a boolean indicating whether swap is enabled.
     '''
@@ -177,9 +177,9 @@ is_swap_enabled = host.get_fact(SwapEnabled)
 This fact returns a list of files found in a given directory. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class FindFiles(FactBase):
+class FindFiles(ShellFact):
     '''
     Returns a list of files from a start point, recursively using find.
     '''
@@ -203,9 +203,9 @@ list_of_files = host.get_fact(FindFiles, path='/somewhere')
 This fact returns the raw output of any command. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class RawCommandOutput(FactBase):
+class RawCommandOutput(ShellFact):
     '''
     Returns the raw output of a command.
     '''

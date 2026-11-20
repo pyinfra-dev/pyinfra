@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
@@ -11,7 +11,7 @@ from .util.packaging import parse_packages
 APK_REGEX = r"(.+)-([^-]+-r[^-]+) \S+ \{\S+\} \(.+?\)"
 
 
-class ApkPackages(FactBase):
+class ApkPackages(ShellFact):
     """
     Returns a dict of installed apk packages:
 

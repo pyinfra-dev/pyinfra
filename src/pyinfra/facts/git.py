@@ -4,10 +4,10 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api.facts import FactBase
+from pyinfra.api.facts import ShellFact
 
 
-class GitFactBase(FactBase):
+class GitFactBase(ShellFact):
     abstract = True
 
     @override

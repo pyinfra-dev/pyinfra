@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, HiddenValue, QuoteString, StringCommand
+from pyinfra.api import ShellFact, HiddenValue, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
 from .util.databases import parse_columns_and_rows
@@ -58,7 +58,7 @@ def make_execute_mysql_command(
     return StringCommand(*commands_bits)
 
 
-class MysqlFactBase(FactBase):
+class MysqlFactBase(ShellFact):
     abstract = True
 
     mysql_command: str

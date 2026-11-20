@@ -4,10 +4,10 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class UpstartStatus(FactBase):
+class UpstartStatus(ShellFact):
     """
     Returns a dict of name -> status for upstart managed services.
     """

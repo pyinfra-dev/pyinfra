@@ -3,7 +3,7 @@ from typing import TypedDict
 
 from typing_extensions import NotRequired, override
 
-from pyinfra.api import FactBase, QuoteString, StringCommand
+from pyinfra.api import ShellFact, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
 
@@ -119,7 +119,7 @@ _crontab_env_re = re.compile(
 )
 
 
-class Crontab(FactBase[CrontabFile]):
+class Crontab(ShellFact[CrontabFile]):
     """
     Returns a dictionary of CrontabFile.
 

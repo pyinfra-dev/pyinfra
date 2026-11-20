@@ -4,10 +4,10 @@ from urllib.parse import urlparse
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class GpgFactBase(FactBase):
+class GpgFactBase(ShellFact):
     abstract = True
 
     @override

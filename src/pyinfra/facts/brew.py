@@ -9,7 +9,7 @@ from typing import cast
 from typing_extensions import override
 
 from pyinfra import logger
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
@@ -40,7 +40,7 @@ VERSION_MATCHER = re.compile(r"^Homebrew\s+(?P<major>\d+)\.(?P<minor>\d+)\.(?P<p
 BrewVersionType = list[int]
 
 
-class BrewVersion(FactBase[Sequence[int]]):
+class BrewVersion(ShellFact[Sequence[int]]):
     """
     Returns the version of brew installed as a semantic versioning list:
 
@@ -74,7 +74,7 @@ class BrewVersion(FactBase[Sequence[int]]):
 BrewPackingMapping = dict[str, set[str]]
 
 
-class BrewPackages(FactBase[BrewPackingMapping]):
+class BrewPackages(ShellFact[BrewPackingMapping]):
     """
     Returns a dict of installed brew packages:
 
@@ -167,7 +167,7 @@ class BrewCasks(BrewPackages):
 BrewTapList = Iterable[str]
 
 
-class BrewTaps(FactBase[BrewTapList]):
+class BrewTaps(ShellFact[BrewTapList]):
     """
     Returns a list of brew taps.
 
@@ -199,7 +199,7 @@ class BrewTaps(FactBase[BrewTapList]):
 BrewTrustMapping = Mapping[str, Sequence[str]]
 
 
-class BrewTrusted(FactBase[BrewTrustMapping]):
+class BrewTrusted(ShellFact[BrewTrustMapping]):
     """
     Returns a dict with lists of the casks, commands, formulae and taps that have
     been marked as trusted
