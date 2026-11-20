@@ -1,0 +1,12 @@
+args:
+  - /tmp/plain.txt
+  - /tmp/cipher.txt
+facts:
+  files.FileContents:
+    path=/tmp/plain.txt:
+      - hello
+      - world
+  files.File:
+    path=/tmp/cipher.txt: null
+commands:
+  - ["encrypt_file", [["hello", "world"], "/tmp/cipher.txt", "testvaultpassword"], {}]

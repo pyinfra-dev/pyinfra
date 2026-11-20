@@ -1,0 +1,16 @@
+args:
+  - /tmp/cipher.txt
+  - /tmp/plain2.txt
+facts:
+  files.FileContents:
+    path=/tmp/cipher.txt:
+      - $PYINFRA_VAULT;1.0;AES256_GCM
+      - aabbccddeeff00112233445566778899
+      - 00112233445566778899aabb
+      - 00ff
+  files.File:
+    path=/tmp/plain2.txt:
+      mode: 600
+exception:
+  name: OperationError
+  message: plain file /tmp/plain2.txt already exists and `overwrite` is unset

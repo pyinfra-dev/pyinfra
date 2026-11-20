@@ -1,0 +1,14 @@
+args:
+  - /tmp/plain.txt
+  - /tmp/cipher.txt
+facts:
+  files.FileContents:
+    path=/tmp/plain.txt:
+      - hello
+      - world
+  files.File:
+    path=/tmp/cipher.txt:
+      mode: 600
+exception:
+  name: OperationError
+  message: vault file /tmp/cipher.txt already exists and `overwrite` is unset

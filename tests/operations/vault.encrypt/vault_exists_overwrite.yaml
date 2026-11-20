@@ -1,0 +1,15 @@
+args:
+  - /tmp/plain.txt
+  - /tmp/cipher.txt
+kwargs:
+  overwrite: true
+facts:
+  files.FileContents:
+    path=/tmp/plain.txt:
+      - hello
+      - world
+  files.File:
+    path=/tmp/cipher.txt:
+      mode: 600
+commands:
+  - ["encrypt_file", [["hello", "world"], "/tmp/cipher.txt", "testvaultpassword"], {}]
