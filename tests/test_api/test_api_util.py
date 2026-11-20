@@ -59,3 +59,60 @@ class TestApiUtilFileIO(TestCase):
 
         assert isinstance(data, str)
         assert data == "some string"
+
+
+class TestGetTemplateLoader(TestCase):
+    def test_get_template_uses_custom_loader_search_path(self):
+        import os
+        import tempfile
+
+        import jinja2
+
+        from pyinfra.api.util import TEMPLATES, get_template
+
+        TEMPLATES.clear()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "fstab")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("device {{ mount }}\n")
+
+            # Name is not a path under cwd; the loader must find it.
+            template = get_template("fstab", {"loader": jinja2.FileSystemLoader([tmp])})
+            assert template.render(mount="/") == "device /\n"
+
+    def test_get_template_still_reads_an_existing_file_path(self):
+        import os
+        import tempfile
+
+        from pyinfra.api.util import TEMPLATES, get_template
+
+        TEMPLATES.clear()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "motd.j2")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("hello {{ name }}")
+
+            template = get_template(path)
+            assert template.render(name="world") == "hello world"
+
+    def test_get_template_prefers_existing_path_over_loader_search(self):
+        import os
+        import tempfile
+
+        import jinja2
+
+        from pyinfra.api.util import TEMPLATES, get_template
+
+        TEMPLATES.clear()
+        with tempfile.TemporaryDirectory() as tmp:
+            existing = os.path.join(tmp, "motd.j2")
+            with open(existing, "w", encoding="utf-8") as f:
+                f.write("from-file")
+            search = os.path.join(tmp, "search")
+            os.mkdir(search)
+            with open(os.path.join(search, "motd.j2"), "w", encoding="utf-8") as f:
+                f.write("from-loader")
+
+            # Existing path is still read directly so include/extends loaders keep working.
+            template = get_template(existing, {"loader": jinja2.FileSystemLoader([search])})
+            assert template.render() == "from-file"
