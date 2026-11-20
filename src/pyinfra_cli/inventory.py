@@ -141,7 +141,7 @@ def _resolves_to_host(maybe_host: str) -> bool:
         # Use getaddrinfo to support IPv6 hosts
         socket.getaddrinfo(maybe_host, port=None)
         return True
-    except socket.gaierror:
+    except (socket.gaierror, UnicodeError):
         alias = _get_ssh_alias(maybe_host)
         if not alias:
             return False
@@ -149,7 +149,7 @@ def _resolves_to_host(maybe_host: str) -> bool:
         try:
             socket.getaddrinfo(alias, port=None)
             return True
-        except socket.gaierror:
+        except (socket.gaierror, UnicodeError):
             return False
 
 
@@ -207,6 +207,10 @@ def make_inventory(
         # The inventory is either an inventory file or a (list of) hosts
         return make_inventory_from_files(inventory, override_data, cwd, group_data_directories)
     elif inventory_func is None:
+        # If the input looks like a file path but the file doesn't exist, give a
+        # clear error instead of the generic warning below (GH #2087).
+        if "/" in inventory or inventory.startswith("."):
+            raise CliError(f"Inventory file not found: {inventory}")
         logger.warning(
             f"{inventory} is neither an inventory file, a (list of) hosts or connectors "
             "nor refers to a python module"
