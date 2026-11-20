@@ -30,7 +30,7 @@
         }
     },
     "commands": [
-        "cd /home/myrepo && git fetch",
+        "cd /home/myrepo && git fetch origin mybranch",
         "cd /home/myrepo && git checkout mybranch"
     ]
 }

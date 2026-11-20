@@ -1,0 +1,44 @@
+{
+    "args": ["myrepo", "/home/myrepo"],
+    "kwargs": {
+        "branch": "mybranch",
+        "fetch_tags": true
+    },
+    "facts": {
+        "git.GitConfig": {
+            "repo=/home/myrepo, system=False": {
+                "remote.origin.url": ["myrepo"],
+                "branch.master.remote": ["upstream"]
+            }
+        },
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": {
+                "mode": 0
+            }
+        },
+        "git.GitBranch": {
+            "repo=/home/myrepo": "master"
+        },
+        "git.GitTag": {
+            "repo=/home/myrepo": [
+            ]
+        },
+        "git.GitLocalCommit": {
+            "ref=mybranch, repo=/home/myrepo": null
+        },
+        "git.GitRemoteBranchCommit": {
+            "branch=mybranch, remote=origin, repo=/home/myrepo": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+    },
+    "commands": [
+        "cd /home/myrepo && git fetch --tags upstream mybranch",
+        "cd /home/myrepo && git checkout mybranch",
+        "cd /home/myrepo && git pull"
+    ],
+    "second_output_commands": [
+        "cd /home/myrepo && git pull"
+    ],
+    "idempotent": false,
+    "disable_idempotent_warning_reason": "git branch pull always executed"
+}
