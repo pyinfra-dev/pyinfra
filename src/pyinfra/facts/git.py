@@ -8,6 +8,8 @@ from pyinfra.api.facts import FactBase
 
 
 class GitFactBase(FactBase):
+    abstract = True
+
     @override
     def requires_command(self, *args, **kwargs) -> str:
         return "git"

@@ -1,7 +1,8 @@
+from inspect import isclass
 from unittest import mock
 import unittest
 
-from pyinfra.api.facts import fact
+from pyinfra.api.facts import FactCore, fact
 
 
 class TestFactDecorator(unittest.TestCase):
@@ -11,9 +12,12 @@ class TestFactDecorator(unittest.TestCase):
             """A simple test fact"""
             return "hello"
 
+        assert "abstract" in basic_fact.__dict__
         assert basic_fact.abstract is False
         assert basic_fact.name == f"{self.__module__}.basic_fact"
         assert basic_fact.__doc__ == "A simple test fact"
+        assert isclass(basic_fact)
+        assert issubclass(basic_fact, FactCore)
 
     def test_default_default_is_None(self):
         @fact()

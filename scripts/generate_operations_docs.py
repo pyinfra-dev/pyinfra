@@ -7,7 +7,7 @@ from os import makedirs, path
 from pathlib import Path
 from types import FunctionType
 
-from pyinfra.api.facts import FactBase
+from pyinfra.api.facts import FactCore
 from pyinfra.api.metadata import ALLOWED_TAGS, parse_plugins
 
 sys.path.append(path.dirname(path.realpath(__file__)))
@@ -122,7 +122,7 @@ def build_operations_docs():
             (key, value)
             for m in including_sub_modules(module)
             for key, value in getmembers(m)
-            if (isclass(value) and issubclass(value, FactBase))
+            if (isclass(value) and issubclass(value, FactCore))
         ]
 
         unique_facts = remove_dups(operation_facts)

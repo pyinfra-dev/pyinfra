@@ -24,7 +24,7 @@ from .arguments import EXECUTION_KWARG_KEYS, AllArguments, pop_global_arguments
 from .arguments_typed import PyinfraOperation
 from .command import PyinfraCommand, StringCommand
 from .exceptions import ArgumentTypeError, NestedOperationError, OperationValueError, PyinfraError
-from .facts import FactBase, ShortFactBase
+from .facts import FactCore
 from .host import Host
 from .operations import run_host_op
 from .state import State, StateOperationHostData, StateOperationMeta, StateStage
@@ -305,7 +305,7 @@ def _wrap_operation(
 
         conditions = global_arguments.get("_if")
         for condition in conditions if isinstance(conditions, list) else (conditions,):
-            if isinstance(condition, type) and issubclass(condition, (FactBase, ShortFactBase)):
+            if isinstance(condition, type) and issubclass(condition, FactCore):
                 raise ArgumentTypeError(
                     "Invalid argument `_if`: bare fact classes are not conditions. "
                     "Use any_fact(MyFact), all_fact(MyFact), or "

@@ -7,7 +7,7 @@ from os import makedirs, path
 from pathlib import Path
 from types import FunctionType, MethodType
 
-from pyinfra.api.facts import FactBase, ShortFactBase
+from pyinfra.api.facts import FactCore
 from pyinfra.api.metadata import ALLOWED_TAGS, parse_plugins
 
 sys.path.append(path.dirname(path.realpath(__file__)))
@@ -125,10 +125,10 @@ def build_facts_docs():
             for key, value in getmembers(m)
             if (
                 isclass(value)
-                and (issubclass(value, FactBase) or issubclass(value, ShortFactBase))
+                and issubclass(value, FactCore)
                 and value.__module__.startswith(m.__name__)
-                and value is not FactBase
-                and not value.__name__.endswith("Base")  # hacky!
+                # Hack to check `abstract` is coming from `value` class itself, not from a parent
+                and not ("abstract" in value.__dict__ and value.abstract)
             )
         ]
 

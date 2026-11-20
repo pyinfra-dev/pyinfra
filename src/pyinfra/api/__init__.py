@@ -35,6 +35,7 @@ __all__ = [
     "Config",
     "DeployError",
     "FactBase",
+    "FactCore",
     "FactError",
     "FactNotCollected",
     "FactPreconditionError",
@@ -59,5 +60,6 @@ __all__ = [
     "State",
     "StringCommand",
     "deploy",
+    "fact",
     "operation",
 ]

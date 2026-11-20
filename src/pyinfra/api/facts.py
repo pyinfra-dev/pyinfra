@@ -501,7 +501,7 @@ class FactBase(FactCore[T]):
 
 class ShortFactBase(FactCore[T]):
     name: str
-    fact: type[FactBase]
+    fact: type[FactCore]
 
     @override
     @classmethod

@@ -398,6 +398,8 @@ class HashFileFactBase(FactBaseOptionalStr):
     _raw_cmd: str
     _regexes: tuple[str, str]
 
+    abstract = True
+
     @override
     def __init_subclass__(cls, digits: int, cmds: list[str], **kwargs) -> None:
         super().__init_subclass__(**kwargs)
