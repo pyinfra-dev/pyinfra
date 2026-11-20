@@ -1,0 +1,10 @@
+args:
+  - ["--allow-untrusted"]
+kwargs:
+  update: true
+  upgrade: true
+facts: {}
+commands: []
+exception:
+  name: OperationValueError
+  message: "APK options cannot be passed as packages: --allow-untrusted"
