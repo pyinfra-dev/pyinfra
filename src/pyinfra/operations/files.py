@@ -568,7 +568,12 @@ def replace(
         date (taken from the machine running ``pyinfra``) appended as the extension. If
         you pass a string value this will be used as the extension of the backed up file.
 
-    **Example:**
+    Backreferences:
+        ``replace`` is passed to ``sed`` as is, so it can use backreferences like ``\\1`` to
+        insert the groups matched by ``text``. Write it as a raw string (``r"\\1"``): in a
+        normal Python string ``"\\1"`` is a control character, not a backslash and ``1``.
+
+    **Examples:**
 
     .. code:: python
 
@@ -577,6 +582,16 @@ def replace(
             path="/etc/motd",
             text="verboten",
             replace="forbidden",
+        )
+
+        # The matched line goes back into the replacement with \\1. Once the line is
+        # commented out, ``text`` no longer matches it, so a second run changes nothing.
+        files.replace(
+            name="Comment out the PasswordAuthentication line",
+            path="/etc/ssh/sshd_config",
+            text=r"^(PasswordAuthentication .*)$",
+            replace=r"# \\1",
+            extended_regex=True,
         )
     """
 
