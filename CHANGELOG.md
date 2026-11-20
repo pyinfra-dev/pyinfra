@@ -1,3 +1,32 @@
+# v3.11.2
+
+Core:
+
+- api: declare `FactBase.command` as a method to prevent `ty` errors (#2074) (@karlicoss)
+
+Operations/facts:
+
+- operations.apt: idempotency for virtual packages (#2010) (@wowi42)
+
+Connectors:
+
+- connectors.ssh: allow including the same ssh config file more than once (#2076)
+- connectors: add Docker image tag option (#2062) (@wowi42)
+- connectors.local: fragile sudo handling resulting in faillocks and premature errors. (#1689) (@Dexmachi)
+
+CLI:
+
+- cli: allow Cyclopts 5 (#2077) (@wowi42)
+
+Docs/meta:
+
+- ci: check operation argument collisions (#2061) (@wowi42)
+- ci: remove macOS 15 from CI (#2079) (@wowi42)
+
+Other:
+
+- fix: define __all__ for the public API packages (#2058) (@SparkDrago05)
+
 # v3.11.1
 
 Core:
