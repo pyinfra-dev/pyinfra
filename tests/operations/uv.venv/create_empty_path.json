@@ -5,7 +5,7 @@
     },
     "facts": {
         "files.File": {
-            "path=   /.venv/bin/activate": null
+            "path=   /bin/activate": null
         },
         "files.Directory": {
             "path=   /.venv": null

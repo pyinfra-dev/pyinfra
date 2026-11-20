@@ -1,5 +1,11 @@
 {
-    "args": [["elasticquery==1.1", "flask", "test==1.1"]],
+    "args": [
+        [
+            "elasticquery==1.1",
+            "flask",
+            "test==1.1"
+        ]
+    ],
     "kwargs": {
         "virtualenv": "testdir",
         "virtualenv_kwargs": {
@@ -7,18 +13,12 @@
         }
     },
     "facts": {
-        "pip.PipPackages": {
-            "pip=testdir/bin/pip": {
-                "elasticquery": ["1.0"],
-                "test": ["1.1"]
-            }
-        },
         "files.File": {
             "path=testdir/bin/activate": null
         }
     },
     "commands": [
         "virtualenv --system-site-packages testdir",
-        "testdir/bin/pip install elasticquery==1.1 flask"
+        "testdir/bin/pip install elasticquery==1.1 flask test==1.1"
     ]
 }

@@ -1,0 +1,7 @@
+arg:
+  request: "3.13"
+command: uv python find --system --show-version 3.13 || true
+requires_command: uv
+output:
+  - 3.13.4
+fact: [3, 13, 4]

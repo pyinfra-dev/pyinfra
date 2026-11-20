@@ -1,0 +1,9 @@
+kwargs:
+  path: /some/virtualenv
+  python: python3.14
+  on_mismatch: ignore
+facts:
+  files.File:
+    path=/some/virtualenv/bin/activate: true
+commands: []
+noop_description: virtualenv /some/virtualenv exists

@@ -1,0 +1,11 @@
+args:
+  - /somewhere/useful/.venv
+kwargs:
+  allow_existing: true
+facts:
+  files.File:
+    path=/somewhere/useful/.venv/bin/activate: true
+  pip.PythonVersion:
+    python=/somewhere/useful/.venv/bin/python: null
+commands:
+  - uv venv --clear /somewhere/useful/.venv
