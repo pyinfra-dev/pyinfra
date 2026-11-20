@@ -1,0 +1,8 @@
+args:
+  - [curl]
+kwargs:
+  allow_untrusted: true
+facts:
+  apk.ApkPackages: {}
+commands:
+  - apk add --allow-untrusted curl

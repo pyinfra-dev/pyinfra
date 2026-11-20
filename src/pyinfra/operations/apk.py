@@ -5,7 +5,7 @@ Manage apk packages. (Alpine Linux)
 from __future__ import annotations
 
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import OperationValueError, operation
 from pyinfra.facts.apk import ApkPackages
 
 from .util.packaging import ensure_packages
@@ -47,6 +47,7 @@ def packages(
     latest=False,
     update=False,
     upgrade=False,
+    allow_untrusted: bool = False,
 ):
     """
     Add/remove/update apk packages.
@@ -56,6 +57,7 @@ def packages(
     + latest: whether to upgrade packages without a specified version
     + update: run ``apk update`` before installing packages
     + upgrade: run ``apk upgrade`` before installing packages
+    + allow_untrusted: allow installing packages with untrusted or missing signatures
 
     Versions:
         Package versions can be pinned like apk: ``<pkg>=<version>``.
@@ -80,6 +82,11 @@ def packages(
         )
     """
 
+    package_list = [packages] if isinstance(packages, str) else packages
+    for package in package_list or []:
+        if package.startswith("-"):
+            raise OperationValueError(f"APK options cannot be passed as packages: {package}")
+
     if update:
         yield from _update()
 
@@ -91,7 +98,7 @@ def packages(
         packages,
         host.get_fact(ApkPackages),
         present,
-        install_command="apk add",
+        install_command="apk add --allow-untrusted" if allow_untrusted else "apk add",
         uninstall_command="apk del",
         upgrade_command="apk upgrade",
         version_join="=",
