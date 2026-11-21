@@ -424,6 +424,18 @@ class TestEnsurePackagesDualFormat(TestCase):
         assert commands == ["upgrade vim"]
         host.noop.assert_any_call("package git is up to date (2.40)")
 
+    def test_new_format_latest_uses_status_over_generic_version_order(self):
+        current = {
+            "vim": PackageInfo(
+                name="vim",
+                installed_versions=("2.0",),
+                available_version="1:2.0",
+                status=PackageStatus.UPGRADEABLE,
+            )
+        }
+        commands, _ = self._run(current, latest=True)
+        assert commands == ["upgrade vim"]
+
     def test_new_format_held_is_noop_even_when_latest(self):
         current = {
             "vim": PackageInfo(

@@ -195,7 +195,8 @@ def ensure_packages(
     When ``current_packages`` values are :class:`PackageInfo` objects, the richer
     status information is used:
 
-    * **HELD** packages always produce a noop, even when ``latest=True``.
+    * **HELD** packages are unchanged when ``present=True``, even with
+      ``latest=True``. Explicit removal is still allowed.
     * **UPGRADEABLE** packages are upgraded when ``latest=True``.
     * **INSTALLED** packages with no available upgrade produce a noop.
 

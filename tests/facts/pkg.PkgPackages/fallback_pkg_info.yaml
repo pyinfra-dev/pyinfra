@@ -1,0 +1,15 @@
+command: if command -v pkg >/dev/null 2>&1; then pkg query '%n %v %k' && echo __pyinfra_pkg_remote__ && pkg version -vURL=; else pkg_info || true; fi
+output: |
+  nano-3.48 Nano editor
+  py-pip-20.1.1 Python pip
+fact:
+  nano:
+    name: nano
+    installed_versions: ["3.48"]
+    available_version: null
+    status: installed
+  py-pip:
+    name: py-pip
+    installed_versions: ["20.1.1"]
+    available_version: null
+    status: installed
