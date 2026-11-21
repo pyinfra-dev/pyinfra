@@ -1,0 +1,14 @@
+args:
+  - work_mem
+kwargs:
+  value: "4MB"
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      work_mem:
+        value: "4096"
+        unit: kB
+        source: configuration file
+        context: user
+commands: []
+noop_description: "postgresql setting work_mem is already set to 4MB"

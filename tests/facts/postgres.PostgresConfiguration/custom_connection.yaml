@@ -1,0 +1,19 @@
+arg:
+  psql_user: myuser
+  psql_password: mypassword
+  psql_host: myhost
+  psql_port: 5432
+command:
+  raw: "PGPASSWORD=mypassword psql -U myuser -h myhost -p 5432 -Ac 'SELECT name, setting, unit, source, context FROM pg_settings ORDER BY name'"
+  masked: "PGPASSWORD='*MASKED*' psql -U myuser -h myhost -p 5432 -Ac 'SELECT name, setting, unit, source, context FROM pg_settings ORDER BY name'"
+requires_command: psql
+output: |
+  name|setting|unit|source|context
+  work_mem|4096|kB|default|user
+  (1 row)
+fact:
+  work_mem:
+    value: "4096"
+    unit: kB
+    source: default
+    context: user

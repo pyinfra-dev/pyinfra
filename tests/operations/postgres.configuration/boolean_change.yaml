@@ -1,0 +1,14 @@
+args:
+  - ssl
+kwargs:
+  value: "on"
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      ssl:
+        value: "off"
+        unit: null
+        source: default
+        context: postmaster
+commands:
+  - "psql -Ac 'ALTER SYSTEM SET ssl = '\"'\"'on'\"'\"''"

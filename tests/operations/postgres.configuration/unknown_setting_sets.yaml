@@ -1,0 +1,9 @@
+args:
+  - auto_explain.log_min_duration
+kwargs:
+  value: "100"
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {}
+commands:
+  - "psql -Ac 'ALTER SYSTEM SET auto_explain.log_min_duration = '\"'\"'100'\"'\"''"
