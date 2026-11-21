@@ -1,0 +1,20 @@
+args:
+  - redis-server.service
+kwargs:
+  running: false
+  enabled: false
+  masked: true
+facts:
+  systemd.SystemdStatus:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: true
+  systemd.SystemdMasked:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: null
+  systemd.SystemdEnabled:
+    "machine=None, services=['redis-server.service'], user_mode=False, user_name=None":
+      redis-server.service: true
+commands:
+  - systemctl stop redis-server.service
+  - systemctl disable redis-server.service
+  - systemctl mask redis-server.service
