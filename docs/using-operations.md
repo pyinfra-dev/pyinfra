@@ -371,6 +371,50 @@ config.SUDO = True
 
     See [Global Arguments](arguments.md) for the full list of settings that can be set on `config`.
 
+### Customizing Jinja templates
+
+Set Jinja defaults once in `config.py` (or before template operations in a deploy):
+
+```python
+from pyinfra import config
+
+
+def is_positive(value: int) -> bool:
+    return value > 0
+
+
+config.JINJA_ENV_KWARGS = {"trim_blocks": True}
+config.JINJA_FILTERS = {"shout": str.upper}
+config.JINJA_GLOBALS = {"application": "myapp"}
+config.JINJA_TESTS = {"positive": is_positive}
+```
+
+Templates can then use `{{ application | shout }}` and `{% if count is positive %}`.
+Filters, globals, and tests are registered before compilation and are also available
+to included and imported templates. Jinja's built-in registrations remain available.
+
+Override defaults for an individual template using the matching arguments:
+
+```python
+from pyinfra.operations import files
+
+files.template(
+    src="templates/app.conf.j2",
+    dest="/etc/app.conf",
+    jinja_env_kwargs={"trim_blocks": False},
+    jinja_globals={"application": "another-app"},
+    jinja_filters={"shout": str.capitalize},
+    jinja_tests={"positive": lambda value: value >= 0},
+    count=3,
+)
+```
+
+Each mapping is merged by name, with per-call entries taking precedence. `None` or
+an empty mapping adds no overrides. Variables passed directly to `files.template`
+take precedence over Jinja globals, including the automatic `host`, `state`, and
+`inventory` variables. `JINJA_ENV_KWARGS` accepts Jinja `Environment` constructor
+options; use the separate registration settings for filters, globals, and tests.
+
 ## Retry Functionality
 
 Operations can be configured to retry automatically on failure using retry arguments:

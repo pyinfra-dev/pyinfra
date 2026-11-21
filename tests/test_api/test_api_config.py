@@ -6,6 +6,18 @@ from pyinfra.api.exceptions import PyinfraError
 
 
 class TestStateApi(TestCase):
+    def test_jinja_settings_copy(self):
+        original = Config(
+            JINJA_ENV_KWARGS={"trim_blocks": True},
+            JINJA_FILTERS={"shout": str.upper},
+            JINJA_GLOBALS={"label": "hello"},
+            JINJA_TESTS={"positive": lambda value: value > 0},
+        )
+        copied = original.copy()
+        for name in ("JINJA_ENV_KWARGS", "JINJA_FILTERS", "JINJA_GLOBALS", "JINJA_TESTS"):
+            assert getattr(copied, name) == getattr(original, name)
+            assert getattr(Config(), name) is None
+
     def test_require_pyinfra_requirement_ok(self):
         with patch("pyinfra.api.config.__version__", "100"):
             Config(REQUIRE_PYINFRA_VERSION=">=100")

@@ -338,6 +338,8 @@ def _wrap_operation(
         # we later evaluate the operation at runtime.This means we put back the
         # expected deploy data.
         current_deploy_data = host.current_deploy_data
+        # Operations execute lazily, after the deploy-local config context has ended.
+        current_config = (context.ctx_config.get() or state.config).copy()
 
         # "Run" operation - here we make a generator that will yield out actual commands to execute
         # and, if we're diff-ing, we then iterate the generator now to determine if any changes
@@ -356,6 +358,8 @@ def _wrap_operation(
             host.current_op_hash = op_hash
             host.current_op_global_arguments = global_arguments
             host.current_op_deploy_data = current_deploy_data
+            previous_config = context.ctx_config.get()
+            context.ctx_config.set(current_config)
 
             try:
                 for command in func(*args, **kwargs):
@@ -363,6 +367,7 @@ def _wrap_operation(
                         command = StringCommand(command.strip())
                     yield command
             finally:
+                context.ctx_config.set(previous_config)
                 host.in_op = False
                 host.current_op_hash = None
                 host.current_op_global_arguments = None

@@ -147,56 +147,51 @@ def get_operation_order_from_stack(state: State):
 
 
 def get_template(
-    filename_or_io: str | IO, jinja_env_kwargs: dict[str, Any] | None = None
+    filename_or_io: str | IO,
+    jinja_env_kwargs: dict[str, Any] | None = None,
+    jinja_filters: dict[str, Callable[..., Any]] | None = None,
+    jinja_globals: dict[str, Any] | None = None,
+    jinja_tests: dict[str, Callable[..., Any]] | None = None,
 ) -> Template:
     """
-    Gets a jinja2 ``Template`` object for the input filename or string, with caching
-    based on the filename of the template, or the SHA1 of the input string.
+    Gets a jinja2 ``Template`` object for a filename or IO object. Only filenames
+    without custom environment options or registrations are cached.
 
     If a custom ``loader`` is supplied and ``filename_or_io`` is a template name
     that does not exist as a local path, the loader searches for that name
     (so a ``FileSystemLoader`` search path is honoured). Existing file paths
     and IO objects are still read directly and compiled with ``from_string``.
     """
-    if jinja_env_kwargs is None:
-        jinja_env_kwargs = {}
-    else:
-        # Copy so popping the default loader cannot mutate the caller's dict.
-        jinja_env_kwargs = dict(jinja_env_kwargs)
-
-    loader = jinja_env_kwargs.get("loader")
-    if (
+    loader = (jinja_env_kwargs or {}).get("loader")
+    load_by_name = (
         loader is not None
         and isinstance(filename_or_io, str)
         and not os.path.isfile(filename_or_io)
-    ):
-        cache_key = f"loader:{id(loader)}:{filename_or_io}"
-        if cache_key in TEMPLATES:
-            return TEMPLATES[cache_key]
-        template = Environment(
-            undefined=StrictUndefined,
-            keep_trailing_newline=True,
-            **jinja_env_kwargs,
-        ).get_template(filename_or_io)
-        TEMPLATES[cache_key] = template
-        return template
-
-    file_data = get_file_io(filename_or_io, mode="r")
-    cache_key = file_data.cache_key
+    )
+    file_data = None if load_by_name else get_file_io(filename_or_io, mode="r")
+    customized = any((jinja_env_kwargs, jinja_filters, jinja_globals, jinja_tests))
+    cache_key = None if customized or file_data is None else file_data.cache_key
 
     if cache_key and cache_key in TEMPLATES:
         return TEMPLATES[cache_key]
 
+    environment_kwargs: dict[str, Any] = {
+        "undefined": StrictUndefined,
+        "keep_trailing_newline": True,
+        "loader": FileSystemLoader(getcwd()),
+        **(jinja_env_kwargs or {}),
+    }
+    environment = Environment(**environment_kwargs)
+    environment.filters.update(jinja_filters or {})
+    environment.globals.update(jinja_globals or {})
+    environment.tests.update(jinja_tests or {})
+    if file_data is None:
+        return environment.get_template(str(filename_or_io))
+
     with file_data as file_io:
         template_string = file_io.read()
 
-    default_loader = FileSystemLoader(getcwd())
-    template = Environment(
-        undefined=StrictUndefined,
-        keep_trailing_newline=True,
-        loader=jinja_env_kwargs.pop("loader", default_loader),
-        **jinja_env_kwargs,
-    ).from_string(template_string)
+    template = environment.from_string(template_string)
 
     if cache_key:
         TEMPLATES[cache_key] = template

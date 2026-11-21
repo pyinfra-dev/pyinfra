@@ -1,0 +1,16 @@
+args:
+  - 'io:{{ greeting }} {{ target }}'
+  - /template
+kwargs:
+  jinja_globals:
+    greeting: hello
+    target: global
+  target: render
+facts:
+  files.File:
+    path=/template: null
+  files.Directory:
+    path=/: true
+    path=/template: null
+commands:
+  - [upload, 'hello render', /template]

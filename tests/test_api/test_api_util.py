@@ -4,7 +4,15 @@ import tempfile
 from io import BytesIO, StringIO
 from unittest import TestCase
 
-from pyinfra.api.util import format_exception, get_caller_frameinfo, get_file_io, try_int
+from jinja2 import DictLoader, Undefined
+
+from pyinfra.api.util import (
+    format_exception,
+    get_caller_frameinfo,
+    get_file_io,
+    get_template,
+    try_int,
+)
 
 
 class TestApiUtil(TestCase):
@@ -26,6 +34,85 @@ class TestApiUtil(TestCase):
     def test_format_exception(self):
         exception = Exception("I am a message", 1)
         assert format_exception(exception) == "Exception('I am a message', 1)"
+
+
+def test_template_registrations_and_imports():
+    options = {
+        "loader": DictLoader({"child": "{{ label(value)|shout }}:{{ value is positive }}"}),
+    }
+    filters = {"shout": str.upper}
+    globals_ = {"label": str, "value": 3}
+    tests = {"positive": lambda value: value > 0}
+    template = get_template(
+        StringIO('{% import "child" as child without context %}{{ child }}:{{ [1, 2]|length }}'),
+        options,
+        filters,
+        globals_,
+        tests,
+    )
+    assert template.render() == "3:True:2"
+    assert "loader" in options
+    assert filters == {"shout": str.upper}
+    assert globals_ == {"label": str, "value": 3}
+    assert set(tests) == {"positive"}
+    assert template.render(value=-1) == "3:True:2"  # import without context uses globals
+
+
+def test_template_environment_defaults_can_be_overridden():
+    template = get_template(
+        StringIO("{{ missing }}\n"), {"undefined": Undefined, "keep_trailing_newline": False}
+    )
+    assert template.render() == ""
+
+
+def test_template_loader_registers_before_loading():
+    options = {"loader": DictLoader({"custom.j2": "{{ value|shout }}:{{ value is string }}"})}
+    for value in ("first", "second"):
+        template = get_template(
+            "custom.j2",
+            options,
+            jinja_filters={"shout": str.upper},
+            jinja_globals={"value": value},
+            jinja_tests={"string": lambda value: False},
+        )
+        assert template.render() == f"{value.upper()}:False"
+    assert "loader" in options
+
+
+def test_template_cache_isolates_customizations(tmp_path):
+    source = tmp_path / "template.j2"
+    source.write_text("{{ value|upper }}:{{ value is string }}")
+    filename = str(source)
+    default = get_template(filename)
+    assert default.render(value="hello") == "HELLO:True"
+    for result in ("first", "second"):
+        custom = get_template(
+            filename,
+            jinja_filters={"upper": lambda value: value[0]},
+            jinja_globals={"value": [result]},
+            jinja_tests={"string": lambda value: False},
+        )
+        assert custom.render() == f"{result}:False"
+    assert get_template(filename) is default
+    assert default.render(value="hello") == "HELLO:True"
+
+
+def test_template_cache_isolates_environment_options(tmp_path):
+    source = tmp_path / "options.j2"
+    source.write_text("[[ value ]]\n")
+    filename = str(source)
+    assert (
+        get_template(
+            filename,
+            {
+                "variable_start_string": "[[",
+                "variable_end_string": "]]",
+                "keep_trailing_newline": False,
+            },
+        ).render(value="custom")
+        == "custom"
+    )
+    assert get_template(filename).render(value="default") == "[[ value ]]\n"
 
 
 class TestApiUtilFileIO(TestCase):
