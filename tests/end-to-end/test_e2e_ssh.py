@@ -48,11 +48,11 @@ def run_docker_ssh_server(helpers):
 def test_e2e_ssh_sudo_password(helpers):
     helpers.run_check_output(
         f"{PYINFRA_COMMAND} server.shell echo _sudo=True _sudo_password=password",
-        expected_lines=["localhost] Success"],
+        expected_lines=[r"localhost\s+Success"],
     )
     helpers.run_check_output(
         f"{PYINFRA_COMMAND} server.shell echo _sudo=True _sudo_password=wrongpassword",
-        expected_lines=["localhost] Error"],
+        expected_lines=[r"localhost\s+Error"],
         expected_exit_code=1,
     )
 
@@ -62,12 +62,12 @@ def test_e2e_ssh_sudo_password(helpers):
 def test_int_local_file_no_changes(helpers):
     helpers.run_check_output(  # first run = create the file
         f"{PYINFRA_COMMAND} files.file _testfile",
-        expected_lines=["localhost] Success"],
+        expected_lines=[r"localhost\s+Success"],
     )
 
     helpers.run_check_output(  # second run = no changes
         f"{PYINFRA_COMMAND} files.file _testfile",
-        expected_lines=["localhost] No changes"],
+        expected_lines=[r"localhost\s+No changes"],
     )
 
 
@@ -76,22 +76,22 @@ def test_int_local_file_no_changes(helpers):
 def test_int_local_directory_no_changes(helpers):
     helpers.run_check_output(  # first run = create the directory
         f"{PYINFRA_COMMAND} files.directory _testdir",
-        expected_lines=["localhost] Success"],
+        expected_lines=[r"localhost\s+Success"],
     )
 
     helpers.run_check_output(  # second run = no changes
         f"{PYINFRA_COMMAND} files.directory _testdir",
-        expected_lines=["localhost] No changes"],
+        expected_lines=[r"localhost\s+No changes"],
     )
 
     helpers.run_check_output(  # third run (remove) = remove directory
         f"{PYINFRA_COMMAND} files.directory _testdir present=False",
-        expected_lines=["localhost] Success"],
+        expected_lines=[r"localhost\s+Success"],
     )
 
     helpers.run_check_output(  # fourth run (remove) = no chances
         f"{PYINFRA_COMMAND} files.directory _testdir present=False",
-        expected_lines=["localhost] No changes"],
+        expected_lines=[r"localhost\s+No changes"],
     )
 
 
@@ -100,12 +100,12 @@ def test_int_local_directory_no_changes(helpers):
 def test_int_local_link_no_changes(helpers):
     helpers.run_check_output(  # first run = create the link
         f"{PYINFRA_COMMAND} files.link _testlink target=_testfile",
-        expected_lines=["localhost] Success"],
+        expected_lines=[r"localhost\s+Success"],
     )
 
     helpers.run_check_output(  # second run = no changes
         f"{PYINFRA_COMMAND} files.link _testlink target=_testfile",
-        expected_lines=["localhost] No changes"],
+        expected_lines=[r"localhost\s+No changes"],
     )
 
 
@@ -114,20 +114,20 @@ def test_int_local_link_no_changes(helpers):
 def test_int_local_line_no_changes(helpers):
     helpers.run_check_output(  # first run = create the line
         f"{PYINFRA_COMMAND} files.line _testfile someline",
-        expected_lines=["localhost] Success"],
+        expected_lines=[r"localhost\s+Success"],
     )
 
     helpers.run_check_output(  # second run = no changes
         f"{PYINFRA_COMMAND} files.line _testfile someline",
-        expected_lines=["localhost] No changes"],
+        expected_lines=[r"localhost\s+No changes"],
     )
 
     helpers.run_check_output(  # replace the line
         f"{PYINFRA_COMMAND} files.line _testfile someline replace=anotherline",
-        expected_lines=["localhost] Success"],
+        expected_lines=[r"localhost\s+Success"],
     )
 
     helpers.run_check_output(  # second run replace the line = no changes
         f"{PYINFRA_COMMAND} files.line _testfile someline replace=anotherline",
-        expected_lines=["localhost] No changes"],
+        expected_lines=[r"localhost\s+No changes"],
     )
