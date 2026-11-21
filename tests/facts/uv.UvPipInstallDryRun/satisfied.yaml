@@ -1,0 +1,7 @@
+arg: foo[bar]
+command: uv pip install --dry-run 'foo[bar]' 2>&1
+requires_command: uv
+output:
+- Checked 1 package in 3ms
+- Would make no changes
+fact: true

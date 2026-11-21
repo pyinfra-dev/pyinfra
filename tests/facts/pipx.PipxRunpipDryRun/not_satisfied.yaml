@@ -1,0 +1,8 @@
+arg:
+- foo
+- foo[bar]
+command: pipx runpip foo install --dry-run --quiet --report - 'foo[bar]' 2> /dev/null
+requires_command: pipx
+output:
+- '{"version": "1", "install": [{"metadata": {"name": "bar-dep"}}]}'
+fact: false
