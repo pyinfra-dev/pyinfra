@@ -1,3 +1,4 @@
+import socket
 from base64 import b64decode
 from pathlib import Path
 from unittest import TestCase
@@ -152,6 +153,27 @@ KNOWN_HOSTS_EXAMPLE_DATA = f"""
 class TestSSHUserConfigMissing(TestCase):
     def setUp(self):
         get_ssh_config.cache = {}
+
+    @patch("pyinfra.connectors.sshuserclient.client.get_ssh_config", return_value=None)
+    @patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect")
+    @patch("socket.create_connection")
+    @patch("socket.gethostbyname", return_value="192.0.2.11")
+    @patch("socket.getaddrinfo", side_effect=socket.gaierror())
+    def test_connect_with_fallback_resolution(self, lookup, resolve, create, connect, config):
+        hostname = "node1.example.lan"
+
+        def connect_with_socket(hostname, **kwargs):
+            if "sock" not in kwargs:
+                raise socket.gaierror()
+
+        connect.side_effect = connect_with_socket
+        SSHClient().connect(hostname)
+
+        lookup.assert_called_once_with(hostname, 22, socket.AF_UNSPEC, socket.SOCK_STREAM, 0, 0)
+        resolve.assert_called_once_with(hostname)
+        create.assert_called_once_with(("192.0.2.11", 22), timeout=None)
+        assert connect.call_count == 2
+        connect.assert_called_with(hostname, port=22, sock=create.return_value)
 
     @patch(
         "pyinfra.connectors.sshuserclient.client.Path.exists",
