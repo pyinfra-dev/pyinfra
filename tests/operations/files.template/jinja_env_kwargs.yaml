@@ -1,0 +1,17 @@
+args:
+  - "io:[[ greeting ]]\n"
+  - /template
+kwargs:
+  jinja_env_kwargs:
+    variable_start_string: '[['
+    variable_end_string: ']]'
+    keep_trailing_newline: false
+  greeting: hello
+facts:
+  files.File:
+    path=/template: null
+  files.Directory:
+    path=/: true
+    path=/template: null
+commands:
+  - [upload, hello, /template]

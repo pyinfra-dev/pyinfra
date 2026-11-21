@@ -4,7 +4,8 @@ except ImportError:
     import importlib.metadata as importlib_metadata  # type: ignore[no-redef]
 
 from pathlib import Path
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
@@ -18,6 +19,11 @@ from .exceptions import PyinfraError
 
 
 class ConfigDefaults:
+    # Defaults for files.template environment options and registrations.
+    JINJA_ENV_KWARGS: dict[str, Any] | None = None
+    JINJA_FILTERS: dict[str, Callable[..., Any]] | None = None
+    JINJA_GLOBALS: dict[str, Any] | None = None
+    JINJA_TESTS: dict[str, Callable[..., Any]] | None = None
     # % of hosts which have to fail for all operations to stop
     FAIL_PERCENT: int | None = None
     # Seconds to timeout SSH connections
