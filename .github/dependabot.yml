@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    allow:
+      - dependency-type: "all"
+    labels:
+      - "dependencies"
+    open-pull-requests-limit: 10
+    groups:
+      production:
+        dependency-type: "production"
+      test:
+        dependency-type: "development"
+        patterns:
+          - "pytest*"
+          - "coverage*"
+          - "ruff"
+          - "mypy"
+          - "types-*"
+          - "pyinfra-testing"
+          - "pyyaml"
+          - "freezegun"
+      docs:
+        dependency-type: "development"
+        patterns:
+          - "zensical"
+          - "mkdocstrings*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"
