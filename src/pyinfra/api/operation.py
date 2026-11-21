@@ -245,14 +245,16 @@ def operation(
     is_deprecated: bool = False,
     deprecated_for: str | None = None,
     _set_in_op: bool = True,
-) -> Callable[[Callable[P, Generator]], PyinfraOperation[P]]:
+) -> Callable[[Callable[P, Generator[PyinfraCommand | str, None, None]]], PyinfraOperation[P]]:
     """
     Decorator that takes a simple module function and turn it into the internal
     operation representation that consists of a list of commands + options
     (sudo, (sudo|su)_user, env).
     """
 
-    def decorator(f: Callable[P, Generator]) -> PyinfraOperation[P]:
+    def decorator(
+        f: Callable[P, Generator[PyinfraCommand | str, None, None]],
+    ) -> PyinfraOperation[P]:
         f.is_idempotent = is_idempotent  # type: ignore[attr-defined]
         f.idempotent_notice = idempotent_notice  # type: ignore[attr-defined]
         f.is_deprecated = is_deprecated  # type: ignore[attr-defined]
@@ -262,7 +264,9 @@ def operation(
     return decorator
 
 
-def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> PyinfraOperation[P]:
+def _wrap_operation(
+    func: Callable[P, Generator[PyinfraCommand | str, None, None]], _set_in_op: bool = True
+) -> PyinfraOperation[P]:
     named_parameters = {
         key
         for key, parameter in signature(func).parameters.items()

@@ -8,6 +8,7 @@ from typing_extensions import ParamSpec, Protocol
 from pyinfra.api.hiddenvalue import HiddenValue
 
 if TYPE_CHECKING:
+    from pyinfra.api.command import PyinfraCommand
     from pyinfra.api.operation import OperationMeta
 
 P = ParamSpec("P")
@@ -22,7 +23,7 @@ EnvValue = str | HiddenValue
 # The nature of "global arguments" is somewhat opposed to static typing as it's
 # indirect and somewhat magic, but we are where we are.
 class PyinfraOperation(Generic[P], Protocol):
-    _inner: Callable[P, Generator]
+    _inner: Callable[P, Generator[PyinfraCommand | str, None, None]]
 
     def __call__(
         self,

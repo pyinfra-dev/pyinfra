@@ -1,0 +1,36 @@
+arg: debhelper-compat
+command: apt-cache showpkg debhelper-compat
+requires_command: apt-cache
+output: |
+  Package: debhelper-compat
+  Versions:
+
+  Reverse Depends:
+    python3-stdeb,debhelper-compat 9
+    nginx-dev,debhelper-compat 13
+    xtables-addons-source,debhelper-compat 13
+    bbswitch-source,debhelper-compat 13
+    nginx-dev,debhelper-compat 13
+    maven-repo-helper,debhelper-compat 13
+    javahelper,debhelper-compat 13
+    gem2deb,debhelper-compat 12
+    dh-octave,debhelper-compat 13
+  Dependencies:
+  Provides:
+  Reverse Provides:
+  debhelper 13.11.4 (= 13)
+  debhelper 13.11.4 (= 12)
+  debhelper 13.11.4 (= 11)
+  debhelper 13.11.4 (= 10)
+  debhelper 13.11.4 (= 9)
+fact:
+  - - debhelper
+    - 13.11.4
+  - - debhelper
+    - 13.11.4
+  - - debhelper
+    - 13.11.4
+  - - debhelper
+    - 13.11.4
+  - - debhelper
+    - 13.11.4

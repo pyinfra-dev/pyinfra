@@ -14,6 +14,7 @@ from pyinfra.api import OperationError, QuoteString, StringCommand, operation
 from pyinfra.api.exceptions import OperationValueError
 from pyinfra.facts.apt import (
     AptHeldPackages,
+    AptPackageProvides,
     AptSourcesFile,
     AptSources,
     SimulateOperationWillChange,
@@ -703,6 +704,8 @@ def packages(
         ),
         version_join="=",
         latest=latest,
+        expand_package_fact=lambda package: host.get_fact(AptPackageProvides, package=package),
+        expand_match_any=True,
     )
 
 
