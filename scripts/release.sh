@@ -14,6 +14,11 @@ fi
 
 echo "# Releasing pyinfra v${VERSION} (branch ${BRANCH})"
 
+echo "# Setting version in pyproject.toml..."
+uv run python scripts/generate_next_version.py --write
+git add pyproject.toml
+git diff --cached --quiet || git commit -m "chore: release v${VERSION}"
+
 echo "# Running tests..."
 uv run pytest
 
