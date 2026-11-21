@@ -12,6 +12,6 @@
     },
     "exception": {
         "name": "OperationError",
-        "message": "testfile exists and is not a file"
+        "message": "testfile exists and is not a file, set `force=True` to move the path aside or `force_backup=False` to remove it"
     }
 }
