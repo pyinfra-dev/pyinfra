@@ -1,0 +1,5 @@
+arg:
+  - uses_apk
+command: echo uses_apk && cat /etc/openwrt_release
+output: []
+fact: false

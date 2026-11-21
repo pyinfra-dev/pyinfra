@@ -11,19 +11,22 @@ rendered HTML pages.
 from __future__ import annotations
 
 import sys
-from inspect import getdoc, getfullargspec, getmembers, isclass, signature
+from importlib import import_module
+from inspect import getdoc, getfullargspec, isclass, isfunction, signature
 from os import environ, makedirs, path
 from pathlib import Path
 from types import FunctionType, MethodType, ModuleType
-from importlib import import_module
 
 from pyinfra.api import metadata
 from pyinfra.api.connectors import get_all_connectors
-from pyinfra.api.facts import FactBase, ShortFactBase
 
 sys.path.append(path.dirname(path.realpath(__file__)))
-from docs_utils import including_sub_modules, prepare_docstring, remove_dups  # noqa: E402
-
+from docs_utils import (
+    function_of_interest,
+    get_objects_from_module,
+    is_fact_class,
+    prepare_docstring,
+)  # noqa: E402
 
 BASE_URL = "https://docs.pyinfra.com/en"
 VERSION = environ.get("DOCS_VERSION", "latest")
@@ -199,39 +202,11 @@ def build_index(plugins: list[metadata.Plugin]) -> str:
 
 
 def _extract_operation_funcs(module: ModuleType) -> list[tuple[str, FunctionType]]:
-    funcs = [
-        (
-            f"{m.__name__.split('.')[-1]}.{key}" if m != module else key,
-            getattr(value, "_inner"),
-        )
-        for m in including_sub_modules(module)
-        for key, value in getmembers(m)
-        if (
-            isinstance(value, FunctionType)
-            and value.__module__.startswith(m.__name__)
-            and getattr(value, "_inner", False)
-            and not value.__name__.startswith("_")
-            and not key.startswith("_")
-        )
-    ]
-    return remove_dups(funcs)
+    return get_objects_from_module(module, isfunction, function_of_interest)
 
 
 def _extract_fact_classes(module: ModuleType) -> list[tuple[str, type]]:
-    classes = [
-        (key, value)
-        for m in including_sub_modules(module)
-        for key, value in getmembers(m)
-        if (
-            isclass(value)
-            and (issubclass(value, FactBase) or issubclass(value, ShortFactBase))
-            and value.__module__.startswith(m.__name__)
-            and value is not FactBase
-            and value is not ShortFactBase
-            and not value.__name__.endswith("Base")
-        )
-    ]
-    return remove_dups(classes)
+    return get_objects_from_module(module, isclass, is_fact_class)
 
 
 def render_operation_section(module_name: str) -> list[str]:
