@@ -1,0 +1,13 @@
+command: getent group
+facts:
+  server.Which:
+    command=getent: /usr/bin/getent
+output:
+  - "lpadmin:x:114:vagrant"
+  - "sambashare:x:115:vagrant"
+  - "vboxsf:x:999:"
+fact:
+  - lpadmin
+  - sambashare
+  - vboxsf
+

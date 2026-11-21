@@ -1,5 +1,10 @@
 {
     "command": "cat /etc/group",
+    "facts": {
+        "server.Which": {
+            "command=getent": null
+        }
+    },
     "output": [
         "lpadmin:x:114:vagrant",
         "sambashare:x:115:vagrant",
