@@ -1,0 +1,12 @@
+args:
+  - [ nftables, mysqld, tipidee ]
+kwargs:
+  restarted: true
+facts:
+  s6.S6LiveStatus:
+    livedir=None:
+      nftables: true
+      mysqld: true
+      tipidee: true
+commands:
+  - s6 live restart nftables mysqld tipidee

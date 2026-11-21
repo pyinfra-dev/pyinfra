@@ -1,0 +1,12 @@
+command: s6 live status
+requires_command: s6
+output: |
+  NetworkManager-log/longrun//up/explicit
+  NetworkManager-srv/longrun//up/explicit
+  avahi-daemon-srv/longrun//up/explicit
+  avahi-daemon-log/longrun//up/explicit
+fact:
+  NetworkManager-srv: true
+  NetworkManager-log: true
+  avahi-daemon-srv: true
+  avahi-daemon-log: true

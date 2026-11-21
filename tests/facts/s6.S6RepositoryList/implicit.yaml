@@ -1,0 +1,15 @@
+command: s6 repo list
+requires-command: s6
+output: |
+  kiosk
+  current
+  default
+  minimal
+  recovery
+fact: [
+  kiosk,
+  current,
+  default,
+  minimal,
+  recovery
+]

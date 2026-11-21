@@ -1,0 +1,30 @@
+args:
+  - default
+kwargs:
+  prescriptions:
+    nftables: "always"
+    mysqld: "active"
+    php-fpm: "masked"
+    tipidee: "usable"
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repodir=None:
+      - current
+      - default
+      - desktop
+      - kiosk
+  s6.S6SetStatus:
+    repodir=None, the_set=default:
+      nftables: "active"
+      mysqld: "usable"
+      php-fpm: "usable"
+      tipidee: "active"
+commands:
+  - s6 set make-essential -p -s default nftables
+  - s6 set enable -p -s default mysqld
+  - s6 set disable -p -s default tipidee
+  - s6 set mask -p -s default php-fpm
