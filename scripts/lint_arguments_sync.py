@@ -5,7 +5,7 @@ Lint script to verify that arguments in arguments.py and arguments_typed.py are 
 Due to Python's typing limitations (ParamSpec args cannot be concatenated), we maintain
 two separate definitions of global arguments:
 - arguments.py: TypedDicts (ConnectorArguments, MetaArguments, ExecutionArguments)
-- arguments_typed.py: PyinfraOperation.__call__ method signature
+- arguments_typed.py: PyinfraCallable.__call__ method signature
 
 This script ensures they stay synchronized.
 """
@@ -134,26 +134,26 @@ def main() -> int:
     # Extract argument meta keys (the actual source of truth for what arguments exist)
     meta_keys = get_argument_meta_keys(arguments_tree)
 
-    # Extract PyinfraOperation.__call__ parameters from arguments_typed.py
-    call_params = get_call_parameters(arguments_typed_tree, "PyinfraOperation", "__call__")
+    # Extract PyinfraCallable.__call__ parameters from arguments_typed.py
+    call_params = get_call_parameters(arguments_typed_tree, "PyinfraCallable", "__call__")
     call_param_names = {p.name for p in call_params}
     call_param_types = {p.name: p.type_annotation for p in call_params}
 
     errors: list[str] = []
     warnings: list[str] = []
 
-    # Check that all TypedDict keys are in PyinfraOperation.__call__
+    # Check that all TypedDict keys are in PyinfraCallable.__call__
     for key, type_str in typeddict_keys.items():
         if key not in call_param_names:
             errors.append(
                 f"Argument '{key}' is in arguments.py TypedDicts but missing from "
-                f"PyinfraOperation.__call__ in arguments_typed.py"
+                f"PyinfraCallable.__call__ in arguments_typed.py"
             )
         elif key in call_param_types:
             typed_type = normalize_type(call_param_types[key])
             expected_type = normalize_type(type_str)
 
-            # TypedDict uses non-Optional types, but PyinfraOperation uses Optional
+            # TypedDict uses non-Optional types, but PyinfraCallable uses Optional
             # So we do a loose check - the base type should match
             # This is a simplified check that may need refinement
             if expected_type not in typed_type and typed_type not in expected_type:
@@ -165,7 +165,7 @@ def main() -> int:
                         f"arguments_typed.py has '{call_param_types[key]}'"
                     )
 
-    # Check that all PyinfraOperation.__call__ params (except special ones) are in TypedDicts
+    # Check that all PyinfraCallable.__call__ params (except special ones) are in TypedDicts
     # Skip *args and **kwargs which are the P.args/P.kwargs for operation-specific args
     special_params = {"args", "kwargs"}
     for param in call_params:
@@ -173,7 +173,7 @@ def main() -> int:
             continue
         if param.name not in typeddict_keys:
             errors.append(
-                f"Parameter '{param.name}' is in PyinfraOperation.__call__ but missing from "
+                f"Parameter '{param.name}' is in PyinfraCallable.__call__ but missing from "
                 f"TypedDicts in arguments.py"
             )
 
