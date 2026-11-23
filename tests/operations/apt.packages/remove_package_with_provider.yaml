@@ -1,0 +1,16 @@
+# An installed package that another (not installed) package also provides is
+# still removed.
+args:
+  - - nodejs
+kwargs:
+  present: false
+facts:
+  deb.DebPackages:
+    nodejs:
+      - 26.13.1-1nodesource1
+  apt.AptPackageProvides:
+    "package=nodejs":
+      - - nsolid
+        - 26.13.1-ns6.3.1-1nodesource1
+commands:
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" remove nodejs'
