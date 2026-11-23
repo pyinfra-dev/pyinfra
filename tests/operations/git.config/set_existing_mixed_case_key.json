@@ -1,0 +1,12 @@
+{
+    "args": ["init.defaultBranch", "main"],
+    "facts": {
+        "git.GitConfig": {
+            "repo=None, system=False": {
+                "init.defaultbranch": ["main"]
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "git config init.defaultBranch is set to main"
+}
