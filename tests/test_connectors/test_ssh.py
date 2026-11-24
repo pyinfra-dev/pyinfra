@@ -1507,3 +1507,51 @@ class TestSSHConnector(TestCase):
             unresposivehost.connect(show_errors=False, raise_exceptions=True)
             fake_sleep.assert_called_once()
             assert fake_ssh_client().connect.call_count == 2
+
+
+class TestSSHHostKeyAlias(TestCase):
+    def _connect_with_alias(self, port=None):
+        from io import StringIO
+
+        from paramiko import HostKeys, RSAKey
+
+        from pyinfra.connectors.sshuserclient.client import SSHClient as SSHUserClient
+        from pyinfra.connectors.sshuserclient.config import SSHConfig
+
+        key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("rhost-alias", "ssh-rsa", key)
+
+        config_text = "Host rhost\n  HostName 10.0.0.2\n  HostKeyAlias rhost-alias\n"
+        if port is not None:
+            config_text += f"  Port {port}\n"
+        ssh_config = SSHConfig()
+        ssh_config.parse(StringIO(config_text))
+
+        client = SSHUserClient()
+        connect_kwargs = {}
+        with (
+            mock.patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect"),
+            mock.patch(
+                "pyinfra.connectors.sshuserclient.client.get_host_keys",
+                return_value=host_keys,
+            ),
+            mock.patch(
+                "pyinfra.connectors.sshuserclient.client.get_ssh_config",
+                return_value=ssh_config,
+            ),
+        ):
+            client.connect("rhost", **connect_kwargs)
+        return host_keys
+
+    def test_host_key_alias_registered_under_connect_hostname(self):
+        host_keys = self._connect_with_alias()
+        assert host_keys.lookup("10.0.0.2") is not None
+
+    def test_host_key_alias_registered_with_non_default_port(self):
+        host_keys = self._connect_with_alias(port=2222)
+        assert host_keys.lookup("[10.0.0.2]:2222") is not None
+
+    def test_host_key_alias_not_registered_with_default_port(self):
+        host_keys = self._connect_with_alias()
+        assert host_keys.lookup("[10.0.0.2]:22") is None

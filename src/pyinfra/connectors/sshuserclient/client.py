@@ -403,6 +403,7 @@ class SSHClient(ParamikoClient):
             ssh_config_file=_pyinfra_ssh_config_file,
             strict_host_key_checking=_pyinfra_ssh_strict_host_key_checking,
         )
+        host_key_alias = config.pop("_pyinfra_ssh_host_key_alias", None)
         self.set_missing_host_key_policy(missing_host_key_policy)
         proxyjump_sock = config.get("sock")
         config.update(kwargs)
@@ -414,6 +415,18 @@ class SSHClient(ParamikoClient):
 
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_files)
+
+        # Honor any HostKeyAlias for the host key lookup, like ssh does: the
+        # keys are stored under the alias in known_hosts, so register them
+        # under the hostname we connect to (and the non-default port form).
+        if host_key_alias:
+            aliased_hostnames = [hostname]
+            port = config.get("port")
+            if port is not None and int(port) != 22:
+                aliased_hostnames.append(f"[{hostname}]:{port}")
+            for key_type, key in self._host_keys.lookup(host_key_alias).items():
+                for aliased_hostname in aliased_hostnames:
+                    self._host_keys.add(aliased_hostname, key_type, key)
         # Use the first file for writing new host keys
         if len(host_keys_files) > 0:
             self._host_keys_filename = host_keys_files[0]
@@ -491,6 +504,8 @@ class SSHClient(ParamikoClient):
             )
 
         host_config = ssh_config.lookup(hostname)
+        if "hostkeyalias" in host_config:
+            cfg["_pyinfra_ssh_host_key_alias"] = host_config["hostkeyalias"]
         forward_agent = host_config.get("forwardagent") == "yes"
 
         # If not overridden, apply any StrictHostKeyChecking
