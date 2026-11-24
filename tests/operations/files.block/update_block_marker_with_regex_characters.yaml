@@ -1,0 +1,16 @@
+require_platform:
+- Darwin
+- Linux
+args:
+- /home/someone/something
+kwargs:
+  content: should be this
+  marker: "# {mark} PYINFRA (block)"
+  preserve_meta: false
+facts:
+  files.Block:
+    begin=None, end=None, marker=# {mark} PYINFRA (block), path=/home/someone/something:
+    - previously was something else
+commands:
+- |-
+  OUT="$(TMPDIR=_tempdir_ mktemp -t pyinfra.XXXXXX)" &&  awk 'BEGIN {f=1; x=ARGV[2]; s=ARGV[3]; e=ARGV[4]; ARGV[2]=""; ARGV[3]=""; ARGV[4]=""} index($0, s) {print; print x; f=0} index($0, e) {print; f=1; next} f' /home/someone/something 'should be this' '# BEGIN PYINFRA (block)' '# END PYINFRA (block)' > "$OUT"  && mv "$OUT" /home/someone/something

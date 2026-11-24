@@ -17,6 +17,6 @@
         }
     },
     "commands": [
-        "OUT=\"$(TMPDIR=_tempdir_ mktemp -t pyinfra.XXXXXX)\" &&  MODE=\"$(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something 2>/dev/null)\" && OWNER=\"$(stat -c \"%u:%g\" /home/someone/something 2>/dev/null || stat -f \"%u:%g\" /home/someone/something 2>/dev/null || echo $(id -un):$(id -gn))\" && awk '/# BEGIN PYINFRA BLOCK/,/# END PYINFRA BLOCK/ {next} 1' /home/someone/something > $OUT  && mv \"$OUT\" /home/someone/something  && chown \"$OWNER\" /home/someone/something  && chmod \"$MODE\" /home/someone/something"
+        "OUT=\"$(TMPDIR=_tempdir_ mktemp -t pyinfra.XXXXXX)\" &&  MODE=\"$(stat -c %a /home/someone/something 2>/dev/null || stat -f %Lp /home/someone/something 2>/dev/null)\" && OWNER=\"$(stat -c \"%u:%g\" /home/someone/something 2>/dev/null || stat -f \"%u:%g\" /home/someone/something 2>/dev/null || echo $(id -un):$(id -gn))\" && awk 'BEGIN {s=ARGV[2]; e=ARGV[3]; ARGV[2]=\"\"; ARGV[3]=\"\"} index($0, s) {r=1} r {if (index($0, e)) r=0; next} 1' /home/someone/something '# BEGIN PYINFRA BLOCK' '# END PYINFRA BLOCK' > $OUT  && mv \"$OUT\" /home/someone/something  && chown \"$OWNER\" /home/someone/something  && chmod \"$MODE\" /home/someone/something"
     ]
 }

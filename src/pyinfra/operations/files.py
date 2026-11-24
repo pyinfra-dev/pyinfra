@@ -2259,15 +2259,20 @@ def block(
             if (len(current) != len(content)) or (
                 not all(lines[0] == lines[1] for lines in zip(content, current, strict=True))
             ):  # marked_block found but text is different
+                # markers are passed as arguments and matched literally with index(), so
+                # regex metacharacters in them don't stop the block from being found
                 prog = (
-                    'awk \'BEGIN {{f=1; x=ARGV[2]; ARGV[2]=""}}'
-                    f"/{mark_1}/ {{print; print x; f=0}} /{mark_2}/ {{print; f=1; next}} f'"
+                    "awk 'BEGIN {f=1; x=ARGV[2]; s=ARGV[3]; e=ARGV[4]; "
+                    'ARGV[2]=""; ARGV[3]=""; ARGV[4]=""} '
+                    "index($0, s) {print; print x; f=0} index($0, e) {print; f=1; next} f'"
                 )
                 cmd = StringCommand(
                     out_prep,
                     prog,
                     q_path,
                     QuoteString(block_content),
+                    QuoteString(mark_1),
+                    QuoteString(mark_2),
                     '> "$OUT"',
                     real_out,
                 )
@@ -2284,8 +2289,19 @@ def block(
         elif current == []:
             host.noop("no remove required: markers not found")
         else:
-            cmd = StringCommand(f"awk '/{mark_1}/,/{mark_2}/ {{next}} 1'")
-            yield StringCommand(out_prep, cmd, q_path, "> $OUT", real_out)
+            cmd = StringCommand(
+                'awk \'BEGIN {s=ARGV[2]; e=ARGV[3]; ARGV[2]=""; ARGV[3]=""} '
+                "index($0, s) {r=1} r {if (index($0, e)) r=0; next} 1'"
+            )
+            yield StringCommand(
+                out_prep,
+                cmd,
+                q_path,
+                QuoteString(mark_1),
+                QuoteString(mark_2),
+                "> $OUT",
+                real_out,
+            )
 
 
 _TAR_FORMATS = {
