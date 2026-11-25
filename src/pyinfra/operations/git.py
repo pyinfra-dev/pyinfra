@@ -62,6 +62,17 @@ def _git_safe_directory_fact_kwargs(
     return {"_env": env}
 
 
+def _normalise_config_key(key: str) -> str:
+    """
+    Normalise a git config key the way ``git config -l`` outputs it: the section and
+    variable name are case-insensitive (lowercased), any subsection is case-sensitive.
+    """
+    parts = key.split(".")
+    parts[0] = parts[0].lower()
+    parts[-1] = parts[-1].lower()
+    return ".".join(parts)
+
+
 @operation()
 def config(key: str, value: str, multi_value=False, repo: str | None = None, system=False):
     """
@@ -117,11 +128,12 @@ def config(key: str, value: str, multi_value=False, repo: str | None = None, sys
         base_command = StringCommand("cd", QuoteString(repo), "&&", "git", "config", "--local")
 
     quoted_value = StringCommand('"', value, '"', _separator="")
+    existing_values = existing_config.get(_normalise_config_key(key))
 
-    if not multi_value and existing_config.get(key) != [value]:
+    if not multi_value and existing_values != [value]:
         yield StringCommand(base_command, QuoteString(key), quoted_value)
 
-    elif multi_value and value not in existing_config.get(key, []):
+    elif multi_value and value not in (existing_values or []):
         yield StringCommand(base_command, "--add", QuoteString(key), quoted_value)
 
     else:

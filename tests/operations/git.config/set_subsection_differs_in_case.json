@@ -1,0 +1,13 @@
+{
+    "args": ["Remote.Origin.URL", "https://example.com/repo.git"],
+    "facts": {
+        "git.GitConfig": {
+            "repo=None, system=False": {
+                "remote.origin.url": ["https://example.com/repo.git"]
+            }
+        }
+    },
+    "commands": [
+        "git config --global Remote.Origin.URL \"https://example.com/repo.git\""
+    ]
+}
