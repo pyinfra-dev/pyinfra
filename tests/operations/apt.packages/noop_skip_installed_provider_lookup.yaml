@@ -1,0 +1,17 @@
+# git is installed, so its providers are not looked up (no "package=git" key);
+# fortune is not installed by name, so its providers still are.
+args:
+  - - git
+    - fortune
+facts:
+  deb.DebPackages:
+    git:
+      - "1:2.39.5-0+deb12u2"
+    fortune-mod:
+      - "1:1.99.1-7.3"
+  apt.AptPackageProvides:
+    "package=fortune":
+      - - fortune-mod
+        - "1:1.99.1-7.3"
+commands: []
+noop_description: package fortune is installed
