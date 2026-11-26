@@ -360,6 +360,12 @@ path = "src/pyinfra/operations/docker.py"
 type = "operation"
 tags = ["containers"]
 
+[pyinfra.plugins."podman-ops"]
+name = "podman"
+path = "src/pyinfra/operations/podman.py"
+type = "operation"
+tags = ["containers"]
+
 [pyinfra.plugins."docker-facts"]
 name = "docker"
 path = "src/pyinfra/facts/docker.py"
