@@ -1510,7 +1510,7 @@ class TestSSHConnector(TestCase):
 
 
 class TestSSHHostKeyAlias(TestCase):
-    def _connect_with_alias(self, port=None):
+    def _connect_with_alias(self, port=None, include_hostname_key=False):
         from io import StringIO
 
         from paramiko import HostKeys, RSAKey
@@ -1521,6 +1521,10 @@ class TestSSHHostKeyAlias(TestCase):
         key = RSAKey.generate(1024)
         host_keys = HostKeys()
         host_keys.add("rhost-alias", "ssh-rsa", key)
+        hostname_key = None
+        if include_hostname_key:
+            hostname_key = RSAKey.generate(1024)
+            host_keys.add("10.0.0.2", "ssh-rsa", hostname_key)
 
         config_text = "Host rhost\n  HostName 10.0.0.2\n  HostKeyAlias rhost-alias\n"
         if port is not None:
@@ -1542,16 +1546,22 @@ class TestSSHHostKeyAlias(TestCase):
             ),
         ):
             client.connect("rhost", **connect_kwargs)
-        return host_keys
+        return client, host_keys, hostname_key
 
     def test_host_key_alias_registered_under_connect_hostname(self):
-        host_keys = self._connect_with_alias()
-        assert host_keys.lookup("10.0.0.2") is not None
+        client, host_keys, _ = self._connect_with_alias()
+        assert client._host_keys.lookup("10.0.0.2") is not None
+        assert host_keys.lookup("10.0.0.2") is None
 
     def test_host_key_alias_registered_with_non_default_port(self):
-        host_keys = self._connect_with_alias(port=2222)
-        assert host_keys.lookup("[10.0.0.2]:2222") is not None
+        client, host_keys, _ = self._connect_with_alias(port=2222)
+        assert client._host_keys.lookup("[10.0.0.2]:2222") is not None
+        assert host_keys.lookup("[10.0.0.2]:2222") is None
 
     def test_host_key_alias_not_registered_with_default_port(self):
-        host_keys = self._connect_with_alias()
-        assert host_keys.lookup("[10.0.0.2]:22") is None
+        client, _, _ = self._connect_with_alias()
+        assert client._host_keys.lookup("[10.0.0.2]:22") is None
+
+    def test_host_key_alias_not_used_when_hostname_key_exists(self):
+        client, _, hostname_key = self._connect_with_alias(include_hostname_key=True)
+        assert client._host_keys.lookup("10.0.0.2")["ssh-rsa"] is hostname_key

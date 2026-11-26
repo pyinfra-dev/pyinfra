@@ -370,6 +370,22 @@ def get_host_keys(filenames):
         return host_keys
 
 
+def _copy_host_keys(host_keys: HostKeys) -> HostKeys:
+    copied_host_keys = HostKeys()
+    for hostname in host_keys.keys():
+        hostname_keys = host_keys.lookup(hostname)
+        if hostname_keys is None:
+            continue
+        for key_type, key in hostname_keys.items():
+            copied_host_keys.add(hostname, key_type, key)
+
+    cert_authorities = _get_cert_authorities(host_keys)
+    if cert_authorities:
+        setattr(copied_host_keys, "_pyinfra_cert_authorities", list(cert_authorities))
+
+    return copied_host_keys
+
+
 class SSHClient(ParamikoClient):
     """
     An SSHClient which honors ssh_config and supports proxyjumping
@@ -416,17 +432,18 @@ class SSHClient(ParamikoClient):
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_files)
 
-        # Honor any HostKeyAlias for the host key lookup, like ssh does: the
-        # keys are stored under the alias in known_hosts, so register them
-        # under the hostname we connect to (and the non-default port form).
+        # Honor any HostKeyAlias for the host key lookup, like ssh does. Paramiko
+        # looks up non-default ports as ``[host]:port``, so mirror that name on a
+        # per-client copy rather than mutating the shared memoized host keys.
         if host_key_alias:
-            aliased_hostnames = [hostname]
-            port = config.get("port")
-            if port is not None and int(port) != 22:
-                aliased_hostnames.append(f"[{hostname}]:{port}")
-            for key_type, key in self._host_keys.lookup(host_key_alias).items():
-                for aliased_hostname in aliased_hostnames:
-                    self._host_keys.add(aliased_hostname, key_type, key)
+            port = int(config.get("port", 22))
+            server_hostkey_name = hostname if port == 22 else f"[{hostname}]:{port}"
+            if self._host_keys.lookup(server_hostkey_name) is None:
+                alias_host_keys = self._host_keys.lookup(host_key_alias)
+                if alias_host_keys is not None:
+                    self._host_keys = _copy_host_keys(self._host_keys)
+                    for key_type, key in alias_host_keys.items():
+                        self._host_keys.add(server_hostkey_name, key_type, key)
         # Use the first file for writing new host keys
         if len(host_keys_files) > 0:
             self._host_keys_filename = host_keys_files[0]
