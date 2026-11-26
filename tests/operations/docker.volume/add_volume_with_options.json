@@ -7,7 +7,7 @@
     },
     "facts": {
         "docker.DockerVolume": {
-            "object_id=my_volume": []
+            "docker_cmd=docker, object_id=my_volume": []
         }
     },
     "commands": [

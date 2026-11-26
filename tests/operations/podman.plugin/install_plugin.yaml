@@ -1,0 +1,7 @@
+kwargs:
+  plugin: username/my-awesome-plugin:latest
+facts:
+  docker.DockerPlugin:
+    "docker_cmd=podman, object_id=username/my-awesome-plugin:latest": []
+commands:
+  - "podman plugin install username/my-awesome-plugin:latest --grant-all-permissions"

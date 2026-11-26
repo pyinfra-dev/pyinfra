@@ -1,0 +1,4 @@
+kwargs:
+  all: true
+commands:
+  - "podman system prune -a -f"

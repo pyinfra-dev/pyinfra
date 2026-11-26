@@ -4,11 +4,14 @@
         "tags": "registry.io/app:cache",
         "build_cmd": "docker buildx build",
         "cache_from": "type=registry,ref=registry.io/app:cache",
-        "cache_to": ["type=registry,ref=registry.io/app:cache,mode=max", "type=inline"]
+        "cache_to": [
+            "type=registry,ref=registry.io/app:cache,mode=max",
+            "type=inline"
+        ]
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=registry.io/app:cache": []
+            "docker_cmd=docker, object_id=registry.io/app:cache": []
         }
     },
     "commands": [

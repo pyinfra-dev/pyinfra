@@ -6,7 +6,7 @@
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=app:prod": []
+            "docker_cmd=docker, object_id=app:prod": []
         }
     },
     "commands": [

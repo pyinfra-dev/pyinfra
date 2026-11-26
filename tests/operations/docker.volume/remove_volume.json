@@ -5,7 +5,7 @@
     },
     "facts": {
         "docker.DockerVolume": {
-            "object_id=nginx_volume": {
+            "docker_cmd=docker, object_id=nginx_volume": {
                 "Name": "nginx_volume",
                 "Driver": "local"
             }

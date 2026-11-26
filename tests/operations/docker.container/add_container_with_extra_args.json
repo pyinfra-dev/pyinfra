@@ -2,13 +2,18 @@
     "kwargs": {
         "container": "myapp",
         "image": "myapp:latest",
-        "extra_args": ["--cap-add", "NET_ADMIN", "--device", "/dev/net/tun"],
+        "extra_args": [
+            "--cap-add",
+            "NET_ADMIN",
+            "--device",
+            "/dev/net/tun"
+        ],
         "present": "true",
         "start": false
     },
     "facts": {
         "docker.DockerContainer": {
-            "object_id=myapp": []
+            "docker_cmd=docker, object_id=myapp": []
         }
     },
     "commands": [

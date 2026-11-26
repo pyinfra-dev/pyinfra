@@ -9,7 +9,7 @@
     },
     "facts": {
         "docker.DockerPlugin": {
-            "object_id=my-plugin": []
+            "docker_cmd=docker, object_id=my-plugin": []
         }
     },
     "commands": [

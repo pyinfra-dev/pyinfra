@@ -48,6 +48,7 @@ def container(
     extra_args: list[str] | None = None,
     dns: list[str] | None = None,
     command: str | None = None,
+    docker_cmd: str = "docker",
 ):
     """
     Manage Docker containers
@@ -76,6 +77,7 @@ def container(
     + extra_args: list of additional raw arguments passed to ``docker container create``
     + dns: list of dns servers to be used by the container
     + command: custom command to run on container start
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     **Examples:**
 
@@ -157,7 +159,7 @@ def container(
         dns or list(),
         command,
     )
-    existent_container = host.get_fact(DockerContainer, object_id=container)
+    existent_container = host.get_fact(DockerContainer, object_id=container, docker_cmd=docker_cmd)
 
     container_spec_changes = want_spec.diff_from_inspect(existent_container)
 
@@ -179,6 +181,7 @@ def container(
             resource="container",
             command="remove",
             container=container,
+            docker_cmd=docker_cmd,
         )
 
     if do_create:
@@ -187,6 +190,7 @@ def container(
             command="create",
             container=container,
             spec=want_spec,
+            docker_cmd=docker_cmd,
         )
 
     if do_start:
@@ -194,6 +198,7 @@ def container(
             resource="container",
             command="start",
             container=container,
+            docker_cmd=docker_cmd,
         )
 
     if do_stop:
@@ -201,17 +206,19 @@ def container(
             resource="container",
             command="stop",
             container=container,
+            docker_cmd=docker_cmd,
         )
 
 
 @operation()
-def image(image: str, present: bool = True, force: bool = False):
+def image(image: str, present: bool = True, force: bool = False, docker_cmd: str = "docker"):
     """
     Manage Docker images
 
     + image: Image and tag ex: nginx:alpine
     + present: whether the Docker image should exist
     + force: always pull the image if present is True
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     **Examples:**
 
@@ -239,10 +246,11 @@ def image(image: str, present: bool = True, force: bool = False):
                 resource="image",
                 command="pull",
                 image=image,
+                docker_cmd=docker_cmd,
             )
             return
         else:
-            existent_image = host.get_fact(DockerImage, object_id=image)
+            existent_image = host.get_fact(DockerImage, object_id=image, docker_cmd=docker_cmd)
             if image_info.digest:
                 # If a digest is specified, we must ensure the exact image is present
                 if existent_image:
@@ -252,6 +260,7 @@ def image(image: str, present: bool = True, force: bool = False):
                         resource="image",
                         command="pull",
                         image=image,
+                        docker_cmd=docker_cmd,
                     )
             elif image_info.tag == "latest" or not image_info.tag:
                 # If the tag is 'latest' or not specified, always pull to ensure freshness
@@ -259,6 +268,7 @@ def image(image: str, present: bool = True, force: bool = False):
                     resource="image",
                     command="pull",
                     image=image,
+                    docker_cmd=docker_cmd,
                 )
             else:
                 # For other tags, check if the image exists
@@ -269,14 +279,16 @@ def image(image: str, present: bool = True, force: bool = False):
                         resource="image",
                         command="pull",
                         image=image,
+                        docker_cmd=docker_cmd,
                     )
     else:
-        existent_image = host.get_fact(DockerImage, object_id=image)
+        existent_image = host.get_fact(DockerImage, object_id=image, docker_cmd=docker_cmd)
         if existent_image:
             yield handle_docker(
                 resource="image",
                 command="remove",
                 image=image,
+                docker_cmd=docker_cmd,
             )
         else:
             host.noop(f"There is no {image} image!")
@@ -299,7 +311,8 @@ def build(
     no_cache: bool = False,
     force: bool = False,
     builder: str | None = None,
-    build_cmd: str = "docker build",
+    build_cmd: str | None = None,
+    docker_cmd: str = "docker",
 ):
     """
     Build a Docker image from a context directory or URL.
@@ -323,8 +336,9 @@ def build(
     + force: rebuild even if all provided tags already exist locally
     + builder: optional name passed via ``--builder`` to select a buildx
       builder instance (BuildKit only)
-    + build_cmd: command used to invoke the build, defaults to ``docker build``;
+    + build_cmd: command used to invoke the build, defaults to ``f"{docker_cmd} build"``;
       set to ``"docker buildx build"`` to force BuildKit
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     Idempotency is tag-based: when ``tags`` is provided and ``force`` is false, the
     operation no-ops if every tag already exists on the target. Without ``tags``
@@ -359,6 +373,9 @@ def build(
             cache_to="type=registry,ref=registry.io/app:cache,mode=max",
         )
     """
+    if build_cmd is None:
+        build_cmd = f"{docker_cmd} build"
+
     if not path:
         raise OperationError("docker.build requires a context path")
 
@@ -377,7 +394,11 @@ def build(
     )
 
     if tag_list and not force:
-        missing = [tag for tag in tag_list if not host.get_fact(DockerImage, object_id=tag)]
+        missing = [
+            tag
+            for tag in tag_list
+            if not host.get_fact(DockerImage, object_id=tag, docker_cmd=docker_cmd)
+        ]
         if not missing:
             host.noop(f"Image(s) {', '.join(tag_list)} already exist!")
             return
@@ -421,6 +442,7 @@ def volume(
     labels: list[str] | None = None,
     options: list[str] | None = None,
     present: bool = True,
+    docker_cmd: str = "docker",
 ):
     """
     Manage Docker volumes
@@ -430,6 +452,7 @@ def volume(
     + labels: Label list to attach in the volume
     + options: Driver-specific options
     + present: whether the Docker volume should exist
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     **Examples:**
 
@@ -443,7 +466,7 @@ def volume(
         )
     """
 
-    existent_volume = host.get_fact(DockerVolume, object_id=volume)
+    existent_volume = host.get_fact(DockerVolume, object_id=volume, docker_cmd=docker_cmd)
 
     if present:
         if existent_volume:
@@ -458,6 +481,7 @@ def volume(
             labels=labels,
             options=options,
             present=present,
+            docker_cmd=docker_cmd,
         )
 
     else:
@@ -469,6 +493,7 @@ def volume(
             resource="volume",
             command="remove",
             volume=volume,
+            docker_cmd=docker_cmd,
         )
 
 
@@ -488,6 +513,7 @@ def network(
     ingress: bool = False,
     attachable: bool = False,
     present: bool = True,
+    docker_cmd: str = "docker",
 ):
     """
     Manage docker networks
@@ -506,6 +532,7 @@ def network(
     + ingress: Create swarm routing-mesh network
     + attachable: Enable manual container attachment
     + present: whether the Docker network should exist
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     **Examples:**
 
@@ -518,7 +545,7 @@ def network(
             present=True,
         )
     """
-    existent_network = host.get_fact(DockerNetwork, object_id=network)
+    existent_network = host.get_fact(DockerNetwork, object_id=network, docker_cmd=docker_cmd)
 
     if present:
         if existent_network:
@@ -542,6 +569,7 @@ def network(
             ingress=ingress,
             attachable=attachable,
             present=present,
+            docker_cmd=docker_cmd,
         )
 
     else:
@@ -553,6 +581,7 @@ def network(
             resource="network",
             command="remove",
             network=network,
+            docker_cmd=docker_cmd,
         )
 
 
@@ -561,6 +590,7 @@ def prune(
     all: bool = False,
     volumes: bool = False,
     filter: str = "",
+    docker_cmd: str = "docker",
 ):
     """
     Execute a docker system prune.
@@ -568,6 +598,7 @@ def prune(
     + all: Remove all unused images not just dangling ones
     + volumes: Prune anonymous volumes
     + filter: Provide filter values (e.g. "label=<key>=<value>" or "until=24h")
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     **Examples:**
 
@@ -598,6 +629,7 @@ def prune(
         all=all,
         volumes=volumes,
         filter=filter,
+        docker_cmd=docker_cmd,
     )
 
 
@@ -608,6 +640,7 @@ def plugin(
     present: bool = True,
     enabled: bool = True,
     plugin_options: dict[str, str] | None = None,
+    docker_cmd: str = "docker",
 ):
     """
     Manage Docker plugins
@@ -617,6 +650,7 @@ def plugin(
     + present: Whether the plugin should be installed
     + enabled: Whether the plugin should be enabled
     + plugin_options: Options to pass to the plugin
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     **Examples:**
 
@@ -633,7 +667,7 @@ def plugin(
         )
     """
     plugin_name = alias if alias else plugin
-    existent_plugin = host.get_fact(DockerPlugin, object_id=plugin_name)
+    existent_plugin = host.get_fact(DockerPlugin, object_id=plugin_name, docker_cmd=docker_cmd)
     if existent_plugin:
         existent_plugin = existent_plugin[0]
 
@@ -649,6 +683,7 @@ def plugin(
                         resource="plugin",
                         command="disable",
                         plugin=plugin_name,
+                        docker_cmd=docker_cmd,
                     )
                 yield handle_docker(
                     resource="plugin",
@@ -657,12 +692,14 @@ def plugin(
                     enabled=enabled,
                     existent_options=existent_plugin["Settings"]["Env"],
                     required_options=plugin_options,
+                    docker_cmd=docker_cmd,
                 )
                 if enabled:
                     yield handle_docker(
                         resource="plugin",
                         command="enable",
                         plugin=plugin_name,
+                        docker_cmd=docker_cmd,
                     )
             else:
                 # Options are the same, check if enabled state is different
@@ -678,6 +715,7 @@ def plugin(
                         resource="plugin",
                         command=command,
                         plugin=plugin_name,
+                        docker_cmd=docker_cmd,
                     )
         else:
             yield handle_docker(
@@ -687,6 +725,7 @@ def plugin(
                 alias=alias,
                 enabled=enabled,
                 plugin_options=plugin_options,
+                docker_cmd=docker_cmd,
             )
     else:
         if not existent_plugin:
@@ -696,6 +735,7 @@ def plugin(
             resource="plugin",
             command="remove",
             plugin=plugin_name,
+            docker_cmd=docker_cmd,
         )
 
 
@@ -705,6 +745,7 @@ def login(
     password: str,
     server: str | None = None,
     force: bool = False,
+    docker_cmd: str = "docker",
 ):
     """
     Log in to a Docker registry.
@@ -712,14 +753,14 @@ def login(
     + username: username to authenticate with
     + password: password to authenticate with
     + server: registry server to log in to (defaults to Docker Hub)
-    + force: log in even if ``~/.docker/config.json`` already has an entry for the server
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     Idempotency is checked against the ``auths`` section of
     ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``: if the server is already
-    present, the operation is a no-op. Use ``force=True`` to re-run ``docker
-    login`` (e.g. after rotating credentials).
+    present, the operation is a no-op. Use ``force=True`` to re-run the login command
+    (e.g. after rotating credentials).
 
-    The password is piped to ``docker login --password-stdin`` so it is not
+    The password is piped to the `login --password-stdin` subcommand so it is not
     exposed on the command line, and is masked in pyinfra's command log.
 
     **Examples:**
@@ -759,7 +800,7 @@ def login(
     command_bits: list = [
         "printf '%s'",
         QuoteString(HiddenValue(password)),
-        "| docker login --username",
+        f"| {docker_cmd} login --username",
         QuoteString(username),
         "--password-stdin",
     ]
@@ -770,11 +811,12 @@ def login(
 
 
 @operation()
-def logout(server: str | None = None):
+def logout(server: str | None = None, docker_cmd: str = "docker"):
     """
     Log out of a Docker registry.
 
     + server: registry server to log out of (defaults to Docker Hub)
+    + docker_cmd: Docker-compatible CLI to substitute for ``docker`` (e.g. ``podman``)
 
     No-ops when the server is not present in
     ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.
@@ -801,7 +843,7 @@ def logout(server: str | None = None):
         host.noop(f"Not logged in to Docker registry {target_server}")
         return
 
-    command_bits: list = ["docker logout"]
+    command_bits: list = [f"{docker_cmd} logout"]
     if server:
         command_bits.append(QuoteString(server))
 

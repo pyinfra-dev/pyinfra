@@ -13,6 +13,16 @@ from typing_extensions import override
 from pyinfra.api import FactBase, ShortFactBase
 
 
+def _docker_cmd(kwargs: dict) -> str:
+    return kwargs.get("docker_cmd") or "docker"
+
+
+def _docker_inspect_all(docker_cmd: str, resource: str, list_command: str) -> str:
+    return f"""
+    ids=$({docker_cmd} {list_command}) && [ -n "$ids" ] && {docker_cmd} {resource} inspect $ids || echo "[]"
+    """.strip()
+
+
 class DockerFactBase(FactBase):
     abstract = True
 
@@ -20,7 +30,7 @@ class DockerFactBase(FactBase):
 
     @override
     def requires_command(self, *args, **kwargs) -> str:
-        return "docker"
+        return _docker_cmd(kwargs)
 
     @override
     def process(self, output):
@@ -33,7 +43,7 @@ class _DockerJsonLinesFactBase(FactBase):
 
     @override
     def requires_command(self, *args, **kwargs) -> str:
-        return "docker"
+        return _docker_cmd(kwargs)
 
     @override
     def process(self, output):
@@ -46,8 +56,9 @@ class DockerSystemInfo(DockerFactBase):
     """
 
     @override
-    def command(self) -> str:
-        return 'docker system info --format="{{json .}}"'
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return f'{docker_cmd} system info --format="{{{{json .}}}}"'
 
 
 class DockerVersion(FactBase[str]):
@@ -56,12 +67,13 @@ class DockerVersion(FactBase[str]):
     """
 
     @override
-    def requires_command(self) -> str:
-        return "docker"
+    def requires_command(self, *args, **kwargs) -> str:
+        return _docker_cmd(kwargs)
 
     @override
-    def command(self) -> str:
-        return "docker --version"
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return f"{docker_cmd} --version"
 
     @override
     def process(self, output):
@@ -78,10 +90,9 @@ class DockerContainers(DockerFactBase):
     """
 
     @override
-    def command(self) -> str:
-        return """
-        ids=$(docker ps -qa) && [ -n "$ids" ] && docker container inspect $ids || echo "[]"
-        """.strip()
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return _docker_inspect_all(docker_cmd, "container", "ps -qa")
 
 
 class DockerImages(DockerFactBase):
@@ -90,10 +101,9 @@ class DockerImages(DockerFactBase):
     """
 
     @override
-    def command(self) -> str:
-        return """
-        ids=$(docker images -q) && [ -n "$ids" ] && docker image inspect $ids || echo "[]"
-        """.strip()
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return _docker_inspect_all(docker_cmd, "image", "images -q")
 
 
 class DockerNetworks(DockerFactBase):
@@ -102,8 +112,9 @@ class DockerNetworks(DockerFactBase):
     """
 
     @override
-    def command(self) -> str:
-        return "docker network inspect `docker network ls -q`"
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return f"{docker_cmd} network inspect `{docker_cmd} network ls -q`"
 
 
 class DockerVolumes(DockerFactBase):
@@ -112,8 +123,9 @@ class DockerVolumes(DockerFactBase):
     """
 
     @override
-    def command(self) -> str:
-        return "docker volume inspect `docker volume ls -q`"
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return f"{docker_cmd} volume inspect `{docker_cmd} volume ls -q`"
 
 
 class DockerPlugins(DockerFactBase):
@@ -122,10 +134,9 @@ class DockerPlugins(DockerFactBase):
     """
 
     @override
-    def command(self) -> str:
-        return """
-        ids=$(docker plugin ls -q) && [ -n "$ids" ] && docker plugin inspect $ids || echo "[]"
-        """.strip()
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return _docker_inspect_all(docker_cmd, "plugin", "plugin ls -q")
 
 
 # Single Docker objects
@@ -134,8 +145,8 @@ class DockerPlugins(DockerFactBase):
 
 class DockerSingleMixin(DockerFactBase):
     @override
-    def command(self, object_id):
-        return f"docker {self.docker_type} inspect {object_id} 2>&- || true"
+    def command(self, object_id, docker_cmd: str = "docker") -> str:
+        return f"{docker_cmd} {self.docker_type} inspect {object_id} 2>&- || true"
 
 
 class DockerContainer(DockerSingleMixin):
@@ -328,8 +339,8 @@ class DockerContainerFsChanges(DockerFactBase):
     """
 
     @override
-    def command(self, container_id) -> str:
-        return f"docker container diff {container_id} 2>&- || true"
+    def command(self, container_id, docker_cmd: str = "docker") -> str:
+        return f"{docker_cmd} container diff {container_id} 2>&- || true"
 
     @override
     def process(self, output):
@@ -350,8 +361,8 @@ class DockerContainerProcesses(DockerFactBase):
     """
 
     @override
-    def command(self, container_id) -> str:
-        return f"docker container top {container_id} 2>&- || true"
+    def command(self, container_id, docker_cmd: str = "docker") -> str:
+        return f"{docker_cmd} container top {container_id} 2>&- || true"
 
     @override
     def process(self, output):
@@ -375,8 +386,9 @@ class DockerContainerStats(_DockerJsonLinesFactBase):
     """
 
     @override
-    def command(self) -> str:
-        return "docker stats --no-stream --format '{{json .}}'"
+    def command(self, *args, **kwargs) -> str:
+        docker_cmd = _docker_cmd(kwargs)
+        return docker_cmd + " stats --no-stream --format '{{json .}}'"
 
 
 class DockerImageHistory(_DockerJsonLinesFactBase):
@@ -385,8 +397,8 @@ class DockerImageHistory(_DockerJsonLinesFactBase):
     """
 
     @override
-    def command(self, image_id) -> str:
-        return f"docker image history --no-trunc --format '{{{{json .}}}}' {image_id} 2>&- || true"
+    def command(self, image_id, docker_cmd: str = "docker") -> str:
+        return f"{docker_cmd} image history --no-trunc --format '{{{{json .}}}}' {image_id} 2>&- || true"
 
 
 class DockerAuths(FactBase[list[str]]):

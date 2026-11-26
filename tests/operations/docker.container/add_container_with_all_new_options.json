@@ -2,21 +2,28 @@
     "kwargs": {
         "container": "myapp",
         "image": "myapp:latest",
-        "ports": ["8080:80"],
-        "mounts": ["type=bind,source=/host/data,target=/app/data"],
+        "ports": [
+            "8080:80"
+        ],
+        "mounts": [
+            "type=bind,source=/host/data,target=/app/data"
+        ],
         "privileged": true,
         "hostname": "myapp-host",
         "entrypoint": "/bin/sh",
         "user": "1000:1000",
         "cpus": 1.5,
         "memory": "1g",
-        "extra_args": ["--cap-add", "SYS_PTRACE"],
+        "extra_args": [
+            "--cap-add",
+            "SYS_PTRACE"
+        ],
         "present": "true",
         "start": false
     },
     "facts": {
         "docker.DockerContainer": {
-            "object_id=myapp": []
+            "docker_cmd=docker, object_id=myapp": []
         }
     },
     "commands": [

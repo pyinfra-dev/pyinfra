@@ -5,7 +5,7 @@
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=nginx:alpine": []
+            "docker_cmd=docker, object_id=nginx:alpine": []
         }
     },
     "commands": [],

@@ -1,0 +1,7 @@
+command: docker system info --format="{{json .}}"
+requires_command: docker
+output: |
+  {"ID": "abc123", "Name": "docker-host"}
+fact:
+  ID: abc123
+  Name: docker-host

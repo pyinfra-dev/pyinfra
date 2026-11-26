@@ -1,0 +1,5 @@
+kwargs:
+  project_directory: /srv/app
+  compose_command: podman compose
+commands:
+  - "podman compose --project-directory /srv/app up -d --remove-orphans"

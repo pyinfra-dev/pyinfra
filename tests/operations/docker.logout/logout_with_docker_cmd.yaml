@@ -1,0 +1,7 @@
+kwargs:
+  server: myregistry.io:5000
+  docker_cmd: podman
+facts:
+  docker.DockerAuths: ["myregistry.io:5000"]
+commands:
+  - "podman logout myregistry.io:5000"

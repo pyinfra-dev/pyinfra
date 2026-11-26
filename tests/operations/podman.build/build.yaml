@@ -1,0 +1,8 @@
+kwargs:
+  path: /srv/app
+  tags: app:1.0
+facts:
+  docker.DockerImage:
+    "docker_cmd=podman, object_id=app:1.0": []
+commands:
+  - "podman build -t app:1.0 /srv/app"

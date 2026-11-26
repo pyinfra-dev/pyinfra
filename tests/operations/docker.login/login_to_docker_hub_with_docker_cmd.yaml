@@ -1,0 +1,9 @@
+kwargs:
+  username: ci
+  password: s3cret
+  docker_cmd: podman
+facts:
+  docker.DockerAuths: []
+commands:
+  - raw: "printf '%s' s3cret | podman login --username ci --password-stdin"
+    masked: "printf '%s' '*MASKED*' | podman login --username ci --password-stdin"

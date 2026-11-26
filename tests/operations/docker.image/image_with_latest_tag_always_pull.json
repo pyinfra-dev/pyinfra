@@ -6,7 +6,7 @@
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=nginx:latest": [
+            "docker_cmd=docker, object_id=nginx:latest": [
                 {
                     "Id": "sha256:e784f4560448b14a66f55c26e1b4dad2c2877cc73d001b7cd0b18e24a700a070",
                     "RepoTags": [

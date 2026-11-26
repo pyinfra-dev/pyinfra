@@ -1,0 +1,10 @@
+kwargs:
+  container: nginx
+  image: nginx:alpine
+  present: true
+  start: false
+facts:
+  docker.DockerContainer:
+    "docker_cmd=podman, object_id=nginx": []
+commands:
+  - "podman container create --name nginx nginx:alpine"

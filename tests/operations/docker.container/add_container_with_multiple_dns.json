@@ -11,7 +11,7 @@
     },
     "facts": {
         "docker.DockerContainer": {
-            "object_id=nginx": []
+            "docker_cmd=docker, object_id=nginx": []
         }
     },
     "commands": [

@@ -254,7 +254,7 @@ class ContainerSpec:
         return []
 
 
-def _create_container(**kwargs):
+def _create_container(docker_cmd: str = "docker", **kwargs):
     if "spec" not in kwargs:
         raise OperationError("missing 1 required argument: 'spec'")
 
@@ -264,7 +264,10 @@ def _create_container(**kwargs):
         raise OperationError("Docker image not specified")
 
     command: list[str | QuoteString] = [
-        "docker container create --name",
+        docker_cmd,
+        "container",
+        "create",
+        "--name",
         QuoteString(kwargs["container"]),
     ]
     command += spec.container_create_args()
@@ -272,28 +275,28 @@ def _create_container(**kwargs):
     return StringCommand(*command)
 
 
-def _remove_container(**kwargs) -> StringCommand:
-    return StringCommand("docker container rm -f", QuoteString(kwargs["container"]))
+def _remove_container(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "container", "rm -f", QuoteString(kwargs["container"]))
 
 
-def _start_container(**kwargs) -> StringCommand:
-    return StringCommand("docker container start", QuoteString(kwargs["container"]))
+def _start_container(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "container", "start", QuoteString(kwargs["container"]))
 
 
-def _stop_container(**kwargs) -> StringCommand:
-    return StringCommand("docker container stop", QuoteString(kwargs["container"]))
+def _stop_container(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "container", "stop", QuoteString(kwargs["container"]))
 
 
-def _pull_image(**kwargs) -> StringCommand:
-    return StringCommand("docker image pull", QuoteString(kwargs["image"]))
+def _pull_image(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "image", "pull", QuoteString(kwargs["image"]))
 
 
-def _remove_image(**kwargs) -> StringCommand:
-    return StringCommand("docker image rm", QuoteString(kwargs["image"]))
+def _remove_image(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "image", "rm", QuoteString(kwargs["image"]))
 
 
-def _prune_command(**kwargs) -> StringCommand:
-    command: list[str | QuoteString] = ["docker system prune"]
+def _prune_command(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    command: list[str | QuoteString] = [docker_cmd, "system", "prune"]
 
     if kwargs["all"]:
         command.append("-a")
@@ -309,35 +312,43 @@ def _prune_command(**kwargs) -> StringCommand:
     return StringCommand(*command)
 
 
-def _create_volume(**kwargs) -> StringCommand:
+def _create_volume(docker_cmd: str = "docker", **kwargs) -> StringCommand:
     labels = kwargs["labels"] if kwargs["labels"] else []
     options = kwargs["options"] if kwargs["options"] else []
 
-    command: list[str | QuoteString] = ["docker volume create", QuoteString(kwargs["volume"])]
+    command: list[str | QuoteString] = [
+        docker_cmd,
+        "volume",
+        "create",
+        QuoteString(kwargs["volume"]),
+    ]
 
     if kwargs["driver"] != "":
         command += ["-d", QuoteString(kwargs["driver"])]
 
     for label in labels:
         command += ["--label", QuoteString(label)]
-
     for option in options:
         command += ["--opt", QuoteString(option)]
-
     return StringCommand(*command)
 
 
-def _remove_volume(**kwargs) -> StringCommand:
-    return StringCommand("docker volume rm", QuoteString(kwargs["volume"]))
+def _remove_volume(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "volume", "rm", QuoteString(kwargs["volume"]))
 
 
-def _create_network(**kwargs) -> StringCommand:
+def _create_network(docker_cmd: str = "docker", **kwargs) -> StringCommand:
     aux_addresses = kwargs["aux_addresses"] if kwargs["aux_addresses"] else {}
     opts = kwargs["opts"] if kwargs["opts"] else []
     ipam_opts = kwargs["ipam_opts"] if kwargs["ipam_opts"] else []
     labels = kwargs["labels"] if kwargs["labels"] else []
 
-    command: list[str | QuoteString] = ["docker network create", QuoteString(kwargs["network"])]
+    command: list[str | QuoteString] = [
+        docker_cmd,
+        "network",
+        "create",
+        QuoteString(kwargs["network"]),
+    ]
     if kwargs["driver"] != "":
         command += ["-d", QuoteString(kwargs["driver"])]
 
@@ -376,13 +387,15 @@ def _create_network(**kwargs) -> StringCommand:
     return StringCommand(*command)
 
 
-def _remove_network(**kwargs) -> StringCommand:
-    return StringCommand("docker network rm", QuoteString(kwargs["network"]))
+def _remove_network(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "network", "rm", QuoteString(kwargs["network"]))
 
 
-def _install_plugin(**kwargs) -> StringCommand:
+def _install_plugin(docker_cmd: str = "docker", **kwargs) -> StringCommand:
     command: list[str | QuoteString] = [
-        "docker plugin install",
+        docker_cmd,
+        "plugin",
+        "install",
         QuoteString(kwargs["plugin"]),
         "--grant-all-permissions",
     ]
@@ -401,20 +414,20 @@ def _install_plugin(**kwargs) -> StringCommand:
     return StringCommand(*command)
 
 
-def _remove_plugin(**kwargs) -> StringCommand:
-    return StringCommand("docker plugin rm -f", QuoteString(kwargs["plugin"]))
+def _remove_plugin(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "plugin", "rm -f", QuoteString(kwargs["plugin"]))
 
 
-def _enable_plugin(**kwargs) -> StringCommand:
-    return StringCommand("docker plugin enable", QuoteString(kwargs["plugin"]))
+def _enable_plugin(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "plugin", "enable", QuoteString(kwargs["plugin"]))
 
 
-def _disable_plugin(**kwargs) -> StringCommand:
-    return StringCommand("docker plugin disable", QuoteString(kwargs["plugin"]))
+def _disable_plugin(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    return StringCommand(docker_cmd, "plugin", "disable", QuoteString(kwargs["plugin"]))
 
 
-def _set_plugin_options(**kwargs) -> StringCommand:
-    command: list[str | QuoteString] = ["docker plugin set", QuoteString(kwargs["plugin"])]
+def _set_plugin_options(docker_cmd: str = "docker", **kwargs) -> StringCommand:
+    command: list[str | QuoteString] = [docker_cmd, "plugin", "set", QuoteString(kwargs["plugin"])]
     existent_options = kwargs.get("existing_options", {})
     required_options = kwargs.get("required_options", {})
     options_to_set = existent_options | required_options
@@ -423,7 +436,9 @@ def _set_plugin_options(**kwargs) -> StringCommand:
     return StringCommand(*command)
 
 
-def handle_docker(resource: str, command: str, **kwargs):
+def handle_docker(
+    resource: str, command: str, docker_cmd: str = "docker", **kwargs
+) -> StringCommand:
     container_commands = {
         "create": _create_container,
         "remove": _remove_container,
@@ -467,4 +482,4 @@ def handle_docker(resource: str, command: str, **kwargs):
         "plugin": plugin_commands,
     }
 
-    return docker_commands[resource][command](**kwargs)
+    return docker_commands[resource][command](docker_cmd=docker_cmd, **kwargs)

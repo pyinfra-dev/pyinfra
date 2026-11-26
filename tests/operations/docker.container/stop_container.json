@@ -9,9 +9,8 @@
         "start": false
     },
     "facts": {
-        "docker.DockerContainer":
-        {
-            "object_id=nginx": [
+        "docker.DockerContainer": {
+            "docker_cmd=docker, object_id=nginx": [
                 {
                     "Id": "9bb5a79e7c4da9ad38e7183aa7c943ee41dcbbab70e4832fe29b2788ab88d4b4",
                     "Created": "2024-05-26T22: 01: 24.10525839Z",
@@ -240,7 +239,6 @@
                 }
             ]
         }
- 
     },
     "commands": [
         "docker container stop nginx"
