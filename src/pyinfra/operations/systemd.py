@@ -146,3 +146,7 @@ def service(
         # Is enabled and want disabled?
         elif is_enabled and enabled is False:
             yield StringCommand(systemctl_cmd, "disable", QuoteString(service))
+
+        else:
+            already = "enabled" if is_enabled else "disabled"
+            host.noop(f"service {service} is already {already}")
