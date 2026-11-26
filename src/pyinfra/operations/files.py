@@ -1871,6 +1871,26 @@ def file(
             host.noop(f"file {path} already exists")
 
 
+def _directory_chmod_mode(current_mode: int | str | None, mode: int | str) -> int | str:
+    """
+    GNU chmod keeps a directory's setuid and setgid bits when given a numeric
+    mode such as ``755``; only an extra leading zero (``00755``) clears them.
+    So when the directory has either bit and the wanted numeric mode has
+    neither, write the mode that way, or the bits stay and every run changes
+    the directory again. Other chmods (BSD, busybox) read ``00755`` as ``755``.
+    """
+
+    special_bits = 6  # setuid (4) and setgid (2): the thousands digit
+    if (
+        isinstance(current_mode, int)
+        and isinstance(mode, int)
+        and (current_mode // 1000) & special_bits
+        and not (mode // 1000) & special_bits
+    ):
+        return f"0{mode:04d}"
+    return mode
+
+
 @operation()
 def directory(
     path: str,
@@ -1969,7 +1989,11 @@ def directory(
         changed = False
 
         if mode and (not info or info["mode"] != mode):
-            yield file_utils.chmod(path, mode, recursive=recursive)
+            yield file_utils.chmod(
+                path,
+                _directory_chmod_mode(info["mode"], mode),
+                recursive=recursive,
+            )
             changed = True
 
         if (user and info["user"] != user) or (group and info["group"] != group):
