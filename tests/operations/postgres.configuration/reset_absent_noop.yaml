@@ -1,0 +1,9 @@
+args:
+  - some_custom.guc
+kwargs:
+  present: false
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None": {}
+commands: []
+noop_description: "postgresql setting some_custom.guc is not set"

@@ -1,0 +1,13 @@
+arg:
+  setting: work_mem
+command: "psql -Ac 'SELECT name, setting, unit, source, context FROM pg_settings WHERE name = '\"'\"'work_mem'\"'\"''"
+requires_command: psql
+output: |
+  name|setting|unit|source|context
+  work_mem|4096|kB|default|user
+  (1 row)
+fact:
+  value: "4096"
+  unit: kB
+  source: default
+  context: user

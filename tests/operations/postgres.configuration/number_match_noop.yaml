@@ -1,0 +1,14 @@
+args:
+  - seq_page_cost
+kwargs:
+  value: "1.0"
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=None, psql_password=None, psql_port=None, psql_user=None":
+      seq_page_cost:
+        value: "1"
+        unit: null
+        source: default
+        context: user
+commands: []
+noop_description: "postgresql setting seq_page_cost is already set to 1.0"

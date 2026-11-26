@@ -1,0 +1,30 @@
+command: "psql -Ac 'SELECT name, setting, unit, source, context FROM pg_settings ORDER BY name'"
+requires_command: psql
+output: |
+  name|setting|unit|source|context
+  max_connections|100||default|postmaster
+  shared_buffers|16384|8kB|configuration file|postmaster
+  ssl|off||default|postmaster
+  work_mem|4096|kB|default|user
+  (4 rows)
+fact:
+  max_connections:
+    value: "100"
+    unit: null
+    source: default
+    context: postmaster
+  shared_buffers:
+    value: "16384"
+    unit: "8kB"
+    source: configuration file
+    context: postmaster
+  ssl:
+    value: "off"
+    unit: null
+    source: default
+    context: postmaster
+  work_mem:
+    value: "4096"
+    unit: kB
+    source: default
+    context: user

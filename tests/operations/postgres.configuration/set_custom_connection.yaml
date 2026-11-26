@@ -1,0 +1,19 @@
+args:
+  - work_mem
+kwargs:
+  value: "8MB"
+  psql_user: myuser
+  psql_password: mypassword
+  psql_host: myhost
+  psql_port: 5432
+facts:
+  postgres.PostgresConfiguration:
+    "psql_database=None, psql_host=myhost, psql_password=mypassword, psql_port=5432, psql_user=myuser":
+      work_mem:
+        value: "4096"
+        unit: kB
+        source: default
+        context: user
+commands:
+  - raw: "PGPASSWORD=mypassword psql -U myuser -h myhost -p 5432 -Ac 'ALTER SYSTEM SET work_mem = '\"'\"'8MB'\"'\"''"
+    masked: "PGPASSWORD='*MASKED*' psql -U myuser -h myhost -p 5432 -Ac 'ALTER SYSTEM SET work_mem = '\"'\"'8MB'\"'\"''"
