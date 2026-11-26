@@ -4,6 +4,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import os
+import socket
 from base64 import b64decode
 from binascii import Error as BinasciiError
 from collections.abc import Iterator
@@ -431,6 +432,61 @@ class SSHClient(ParamikoClient):
             os.environ["SSH_AUTH_SOCK"] = identity_agent
         try:
             super().connect(hostname, **config)
+        except socket.gaierror as original_error:
+            if config.get("sock") is not None:
+                raise
+
+            port = config["port"]
+            try:
+                addresses = socket.getaddrinfo(
+                    hostname, port, socket.AF_UNSPEC, socket.SOCK_STREAM, 0, 0
+                )
+            except OSError:
+                try:
+                    ip = socket.gethostbyname(hostname)
+                except OSError:
+                    raise original_error from None
+                candidates = [(ip, port)]
+            else:
+                candidates = []
+                for family, _, _, _, address in addresses:
+                    # sockaddr is IPv4 (host, port), IPv6 (host, port, flow, scope), or other.
+                    raw_host = address[0]
+                    if not isinstance(raw_host, str):
+                        continue
+                    ip = raw_host
+                    if family == socket.AF_INET6 and len(address) == 4:
+                        scope_id: int = address[3]
+                        if scope_id and "%" not in ip:
+                            ip = f"{ip}%{scope_id}"
+                    candidates.append((ip, port))
+
+            last_error: OSError = original_error
+            for candidate in candidates:
+                try:
+                    sock = socket.create_connection(candidate, timeout=config.get("timeout"))
+                    break
+                except OSError as error:
+                    last_error = error
+            else:
+                raise last_error
+
+            try:
+                super().connect(hostname, **{**config, "sock": sock})
+            except BaseException as connect_error:
+                try:
+                    sock.close()
+                except Exception as close_error:
+                    # close() failed, so this socket is still open. Keep it on the
+                    # error that propagates: report the failure, and do not drop
+                    # the only reference to what we could not release.
+                    logger.warning(
+                        "Failed to close fallback socket %s: %s",
+                        sock,
+                        close_error,
+                    )
+                    setattr(connect_error, "unclosed_fallback_sock", sock)
+                raise
         finally:
             if identity_agent:
                 if old_auth_sock is not None:
