@@ -1,0 +1,6 @@
+kwargs:
+  docker_cmd: podman
+facts:
+  docker.DockerAuths: ["https://index.docker.io/v1/"]
+commands:
+  - "podman logout"

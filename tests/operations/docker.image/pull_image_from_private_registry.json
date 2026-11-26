@@ -6,7 +6,7 @@
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=myregistry.io:5000/myapp:v1.0": []
+            "docker_cmd=docker, object_id=myregistry.io:5000/myapp:v1.0": []
         }
     },
     "commands": [

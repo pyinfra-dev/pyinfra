@@ -1,0 +1,8 @@
+kwargs:
+  network: nginx
+  present: true
+facts:
+  docker.DockerNetwork:
+    "docker_cmd=podman, object_id=nginx": []
+commands:
+  - "podman network create nginx"

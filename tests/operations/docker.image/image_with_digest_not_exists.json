@@ -6,7 +6,7 @@
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=nginx@sha256:abcd1234567890": []
+            "docker_cmd=docker, object_id=nginx@sha256:abcd1234567890": []
         }
     },
     "commands": [

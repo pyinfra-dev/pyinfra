@@ -4,7 +4,7 @@
     },
     "facts": {
         "docker.DockerPlugin": {
-            "object_id=username/my-awesome-plugin:latest": []
+            "docker_cmd=docker, object_id=username/my-awesome-plugin:latest": []
         }
     },
     "commands": [

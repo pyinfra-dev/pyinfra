@@ -1,0 +1,9 @@
+arg:
+  docker_cmd: podman
+command: podman system info --format="{{json .}}"
+requires_command: podman
+output: |
+  {"ID": "def456", "Name": "podman-host"}
+fact:
+  ID: def456
+  Name: podman-host

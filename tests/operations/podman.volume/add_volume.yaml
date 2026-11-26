@@ -1,0 +1,8 @@
+kwargs:
+  volume: nginx_volume
+  present: true
+facts:
+  docker.DockerVolume:
+    "docker_cmd=podman, object_id=nginx_volume": []
+commands:
+  - "podman volume create nginx_volume"

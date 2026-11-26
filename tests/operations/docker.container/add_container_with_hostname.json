@@ -8,7 +8,7 @@
     },
     "facts": {
         "docker.DockerContainer": {
-            "object_id=myapp": []
+            "docker_cmd=docker, object_id=myapp": []
         }
     },
     "commands": [

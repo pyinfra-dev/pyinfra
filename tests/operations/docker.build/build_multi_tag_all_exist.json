@@ -1,15 +1,28 @@
 {
     "kwargs": {
         "path": "/srv/app",
-        "tags": ["app:1.0", "app:latest"]
+        "tags": [
+            "app:1.0",
+            "app:latest"
+        ]
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=app:1.0": [
-                {"Id": "sha256:abcd1234", "RepoTags": ["app:1.0"]}
+            "docker_cmd=docker, object_id=app:1.0": [
+                {
+                    "Id": "sha256:abcd1234",
+                    "RepoTags": [
+                        "app:1.0"
+                    ]
+                }
             ],
-            "object_id=app:latest": [
-                {"Id": "sha256:abcd1234", "RepoTags": ["app:latest"]}
+            "docker_cmd=docker, object_id=app:latest": [
+                {
+                    "Id": "sha256:abcd1234",
+                    "RepoTags": [
+                        "app:latest"
+                    ]
+                }
             ]
         }
     },

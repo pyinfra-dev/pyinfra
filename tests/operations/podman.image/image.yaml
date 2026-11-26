@@ -1,0 +1,8 @@
+kwargs:
+  image: nginx:latest
+  present: true
+facts:
+  docker.DockerImage:
+    "docker_cmd=podman, object_id=nginx:latest": []
+commands:
+  - "podman image pull nginx:latest"

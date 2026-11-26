@@ -8,7 +8,7 @@
     },
     "facts": {
         "docker.DockerImage": {
-            "object_id=registry.io/app:arm64": []
+            "docker_cmd=docker, object_id=registry.io/app:arm64": []
         }
     },
     "commands": [
