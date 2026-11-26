@@ -57,6 +57,48 @@ def ensure_mode_int(mode: str | int | None) -> int | str | None:
     return int(digits)
 
 
+_SYMBOLIC_CLAUSE = re.compile(r"([ugoa]+)((?:[-+=][rwx]*)+)")
+_SYMBOLIC_ACTION = re.compile(r"([-+=])([rwx]*)")
+_SYMBOLIC_SHIFTS = {"u": 6, "g": 3, "o": 0}
+_SYMBOLIC_BITS = {"r": 4, "w": 2, "x": 1}
+
+
+def apply_symbolic_mode(current_mode: int, mode: str) -> int | None:
+    """
+    Work out the mode ``chmod`` would give a path that has ``current_mode``
+    (eg ``770``) when given a symbolic ``mode`` (eg ``"u+rwx,g-w,o="``).
+
+    Returns ``None`` when it can't be worked out here, so callers should still
+    run ``chmod``: the path has setuid/setgid/sticky bits, or the mode leaves
+    out ``u``/``g``/``o``/``a`` (``+x`` depends on the umask), or uses other
+    letters like ``X``, ``s`` or ``t``.
+    """
+
+    bits = int(str(current_mode), 8)
+    if bits > 0o777:
+        return None
+
+    for clause in mode.split(","):
+        match = _SYMBOLIC_CLAUSE.fullmatch(clause)
+        if not match:
+            return None
+
+        who, actions = match.groups()
+        shifts = {_SYMBOLIC_SHIFTS[w] for w in ("ugo" if "a" in who else who)}
+
+        for action, perms in _SYMBOLIC_ACTION.findall(actions):
+            perm_bits = sum(_SYMBOLIC_BITS[p] for p in set(perms))
+            mask = sum(perm_bits << shift for shift in shifts)
+            if action == "+":
+                bits |= mask
+            elif action == "-":
+                bits &= ~mask
+            else:
+                bits = (bits & ~sum(0o7 << shift for shift in shifts)) | mask
+
+    return int(oct(bits)[2:])
+
+
 def get_timestamp() -> str:
     return datetime.now().strftime("%y%m%d%H%M")
 

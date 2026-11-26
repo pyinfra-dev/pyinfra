@@ -1,0 +1,12 @@
+args:
+  - testdir
+kwargs:
+  mode: +x
+facts:
+  files.Directory:
+    path=testdir:
+      mode: 755
+      user: testuser
+      group: testgroup
+commands:
+  - chmod +x testdir

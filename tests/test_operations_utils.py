@@ -8,7 +8,7 @@ from pyinfra.facts.server import Hostname, LinuxName
 from pyinfra.facts.util.packages import PackageInfo, PackageStatus
 from pyinfra.operations.util import all_fact, any_fact
 from pyinfra.operations.util.docker import parse_image_reference, parse_registry
-from pyinfra.operations.util.files import ensure_mode_int, unix_path_join
+from pyinfra.operations.util.files import apply_symbolic_mode, ensure_mode_int, unix_path_join
 from pyinfra.operations.util.packaging import ensure_packages
 
 
@@ -82,6 +82,40 @@ class TestEnsureModeInt(TestCase):
     def test_non_octal_string_raises(self):
         with pytest.raises(ValueError, match="non-octal digits"):
             ensure_mode_int("0o899")
+
+
+class TestApplySymbolicMode(TestCase):
+    def test_add(self):
+        assert apply_symbolic_mode(700, "g+rx,o+r") == 754
+
+    def test_remove(self):
+        assert apply_symbolic_mode(777, "o-rwx") == 770
+
+    def test_set(self):
+        assert apply_symbolic_mode(777, "u=rwx,g=rx,o=") == 750
+
+    def test_all(self):
+        assert apply_symbolic_mode(700, "a+r") == 744
+
+    def test_several_actions_in_one_clause(self):
+        assert apply_symbolic_mode(640, "u+x-w") == 540
+
+    def test_no_change(self):
+        assert apply_symbolic_mode(770, "u+rwx,g+rwx,o-rwx") == 770
+
+    def test_repeated_letters(self):
+        assert apply_symbolic_mode(0, "uu+r,ua+w") == 622
+
+    def test_unknown_returns_none(self):
+        # No u/g/o/a depends on the umask, and X/s/t aren't handled
+        assert apply_symbolic_mode(755, "+x") is None
+        assert apply_symbolic_mode(755, "u+X") is None
+        assert apply_symbolic_mode(755, "g+s") is None
+        assert apply_symbolic_mode(755, "u=g") is None
+        assert apply_symbolic_mode(755, "") is None
+
+    def test_special_bits_return_none(self):
+        assert apply_symbolic_mode(2775, "g+w") is None
 
 
 class TestParseRegistry(TestCase):
