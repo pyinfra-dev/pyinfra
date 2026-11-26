@@ -1,0 +1,8 @@
+args:
+  - redis-server.service
+kwargs:
+  masked: true
+facts: {}
+exception:
+  name: OperationValueError
+  message: A masked unit cannot be running, set `running=False`
