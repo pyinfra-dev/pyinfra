@@ -22,7 +22,7 @@
         }
     },
     "commands": [
-        "cd /home/myrepo && git fetch",
+        "cd /home/myrepo && git fetch origin 'feature/evil; rm -rf /'",
         "cd /home/myrepo && git checkout 'feature/evil; rm -rf /'"
     ]
 }

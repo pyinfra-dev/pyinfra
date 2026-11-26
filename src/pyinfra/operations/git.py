@@ -279,11 +279,12 @@ def repo(
         # operate against the new source instead of silently continuing to track
         # the old remote (see GH #1763). Only act when an `origin` URL already
         # exists and differs - if it is missing we leave remote management alone.
-        existing_remote = host.get_fact(
+        git_config = host.get_fact(
             GitConfig,
             repo=dest,
             **safe_directory_fact_kwargs,
-        ).get("remote.origin.url")
+        )
+        existing_remote = git_config.get("remote.origin.url")
         remote_changed = existing_remote is not None and existing_remote != [src]
         if remote_changed:
             git_commands.append(StringCommand("remote", "set-url", "origin", QuoteString(src)))
@@ -300,7 +301,14 @@ def repo(
             fetch_options.extend(depth_options)
             if fetch_tags:
                 fetch_options.append("--tags")
-            git_commands.append(StringCommand("fetch", *fetch_options, *force_flag_list))
+            # Determine the remote tracking the current branch; fall back to
+            # "origin" if the config key is absent (e.g. detached HEAD).
+            tracking_remote = git_config.get(f"branch.{current_branch}.remote", ["origin"])[0]
+            git_commands.append(
+                StringCommand(
+                    "fetch", *fetch_options, *force_flag_list, tracking_remote, QuoteString(branch)
+                ),
+            )
 
             git_commands.append(StringCommand("checkout", QuoteString(branch), *force_flag_list))
         if branch and branch in (
