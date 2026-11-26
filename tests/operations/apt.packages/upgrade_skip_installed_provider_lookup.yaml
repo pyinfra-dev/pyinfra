@@ -1,0 +1,14 @@
+# git is installed, so its providers are not looked up before upgrading it.
+args:
+  - - git
+kwargs:
+  latest: true
+facts:
+  deb.DebPackages:
+    git:
+      - "1:2.39.5-0+deb12u2"
+  apt.AptPackageProvides: {}
+commands:
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install git'
+idempotent: false
+disable_idempotent_warning_reason: package upgrades are always executed
