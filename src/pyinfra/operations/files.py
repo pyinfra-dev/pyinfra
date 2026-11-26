@@ -72,6 +72,7 @@ from .util import files as file_utils
 from .util.files import (
     MetadataTimeField,
     adjust_regex,
+    apply_symbolic_mode,
     ensure_mode_int,
     generate_color_diff,
     get_timestamp,
@@ -1985,6 +1986,10 @@ def directory(
     else:  # update
         if _no_check_owner_mode:
             return
+
+        # Skip a symbolic mode (eg "g+w") that wouldn't change the directory
+        if isinstance(mode, str) and apply_symbolic_mode(info["mode"], mode) == info["mode"]:
+            mode = None
 
         changed = False
 

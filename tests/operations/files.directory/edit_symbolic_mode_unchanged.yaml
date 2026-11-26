@@ -1,0 +1,13 @@
+args:
+  - testdir
+kwargs:
+  mode: u+rwx,g+rwx,o-rwx
+  recursive: true
+facts:
+  files.Directory:
+    path=testdir:
+      mode: 770
+      user: testuser
+      group: testgroup
+commands: []
+noop_description: directory testdir already exists
