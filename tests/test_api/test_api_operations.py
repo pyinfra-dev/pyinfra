@@ -25,7 +25,7 @@ from pyinfra.api.operation import OperationMeta, add_op, operation
 from pyinfra.api.operations import run_ops
 from pyinfra.api.state import StateOperationMeta, StateStage
 from pyinfra.connectors.util import CommandOutput, OutputLine
-from pyinfra.context import ctx_host, ctx_state
+from pyinfra.context import ctx_config, ctx_host, ctx_state
 from pyinfra.facts.server import Hostname, LinuxName, Which
 from pyinfra.operations import files, python, server
 from pyinfra.operations.util import all_fact, any_fact
@@ -168,6 +168,36 @@ class TestOperationsApi(PatchSSHTestCase):
                         assert run_command.call_count == 1
                         assert results[somehost].did_change() is False
                         assert results[anotherhost].did_change() is True
+
+    def test_template_config_captured_for_lazy_api_execution(self):
+        inventory = make_inventory()
+        state = State(inventory, Config(JINJA_GLOBALS={"value": "scheduled"}))
+        state.current_stage = StateStage.Prepare
+        connect_all(state)
+        try:
+            with ctx_config.use(None):
+                add_op(
+                    state,
+                    files.template,
+                    src=StringIO("{{ value }}"),
+                    dest="/jinja-api",
+                    create_remote_dir=False,
+                )
+            state.config.JINJA_GLOBALS = {"value": "later"}
+            previous_config = ctx_config.get()
+            run_ops(state)
+            assert ctx_config.get() is previous_config
+            for host in inventory:
+                assert state.results[host].success_ops == 1
+                commands = state.ops[host][state.get_op_order()[0]].operation_meta._commands
+                uploads = [
+                    command for command in commands if isinstance(command, FileUploadCommand)
+                ]
+                assert len(uploads) == 1
+                uploads[0].src.seek(0)
+                assert uploads[0].src.read() == "scheduled"
+        finally:
+            disconnect_all(state)
 
     def test_op(self):
         inventory = make_inventory()

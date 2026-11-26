@@ -2,6 +2,7 @@ from os import path
 from random import shuffle
 
 from pyinfra import state
+from pyinfra.api import FileUploadCommand
 from pyinfra.context import ctx_state
 
 from ..paramiko_util import PatchSSHTestCase
@@ -9,6 +10,29 @@ from .util import run_cli
 
 
 class TestCliDeployState(PatchSSHTestCase):
+    def test_jinja_configuration(self):
+        result = run_cli(
+            "-y",
+            "somehost,anotherhost",
+            path.join("tests", "test_cli", "deploy", "jinja.py"),
+            "--config=jinja_config.py",
+            f"--chdir={path.join('tests', 'test_cli', 'deploy')}",
+        )
+        assert result.exit_code == 0, (result.stderr, result.exception)
+        for host in state.inventory:
+            uploads = {}
+            for op in state.ops[host].values():
+                for command in op.operation_meta._commands or []:
+                    if isinstance(command, FileUploadCommand):
+                        command.src.seek(0)
+                        uploads[command.dest] = command.src.read()
+            assert uploads == {
+                "/jinja-configured": "CONFIGURED:Configured:True",
+                "/jinja-local": f"{host.name.upper()}:{host.name.capitalize()}:True",
+                "/jinja-overridden": "override:Override:True\n",
+                "/jinja-render-data": "RENDER:Render:False",
+            }
+
     def _run_cli(self, hosts, filename):
         return run_cli(
             "-y",

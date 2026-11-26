@@ -14,6 +14,7 @@ from fnmatch import fnmatch
 from io import StringIO
 from pathlib import Path, PurePosixPath
 from typing import IO, Any
+from collections.abc import Callable
 
 from jinja2 import (
     Environment,
@@ -37,6 +38,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.command import make_formatted_string_command
 from pyinfra.api.output import format_text
+from pyinfra.context import ctx_config
 from pyinfra.api.util import (
     get_call_location,
     get_file_io,
@@ -1358,6 +1360,9 @@ def template(
     mode: int | str | None = None,
     create_remote_dir: bool = True,
     jinja_env_kwargs: dict[str, Any] | None = None,
+    jinja_filters: dict[str, Callable[..., Any]] | None = None,
+    jinja_globals: dict[str, Any] | None = None,
+    jinja_tests: dict[str, Callable[..., Any]] | None = None,
     **data,
 ):
     '''
@@ -1370,6 +1375,9 @@ def template(
     + mode: permissions of the files
     + create_remote_dir: create the remote directory if it doesn't exist
     + jinja_env_kwargs: keyword arguments to be passed into the jinja Environment()
+    + jinja_filters: custom jinja filters, overriding config.JINJA_FILTERS by name
+    + jinja_globals: custom jinja globals, overriding config.JINJA_GLOBALS by name
+    + jinja_tests: custom jinja tests, overriding config.JINJA_TESTS by name
 
     ``create_remote_dir``:
         If the remote directory does not exist it will be created using the same
@@ -1380,6 +1388,13 @@ def template(
         To have more control over how jinja2 renders your template, you can pass
         a dict with arguments that will be passed as keyword args to the jinja2
         `Environment() <https://jinja.palletsprojects.com/en/3.0.x/api/#jinja2.Environment>`_.
+        These override matching entries in ``config.JINJA_ENV_KWARGS``.
+
+    ``jinja_filters``, ``jinja_globals``, and ``jinja_tests``:
+        Registrations are merged with their corresponding config defaults before
+        compiling the template, preserving jinja's built-ins. Per-call entries win
+        by name; empty dictionaries add no overrides. Variables passed as render
+        data take precedence over globals.
 
     The ``host``, ``state``, and ``inventory`` objects will be automatically passed to the template.
     To pass additional data or variables, explicitly add them as keyword arguments to the operation
@@ -1476,6 +1491,9 @@ def template(
         )
     '''
 
+    template_config = ctx_config.get() if ctx_config.isset() else state.config
+    jinja_env_kwargs = {**(template_config.JINJA_ENV_KWARGS or {}), **(jinja_env_kwargs or {})}
+
     if not hasattr(src, "read") and state.cwd:
         # A custom loader searches by template name. Only absolutize when we
         # will read the file ourselves (no loader, or the path already exists).
@@ -1491,7 +1509,13 @@ def template(
 
     # Render and make file-like it's output
     try:
-        output = get_template(src, jinja_env_kwargs).render(data)
+        output = get_template(
+            src,
+            jinja_env_kwargs=jinja_env_kwargs,
+            jinja_filters={**(template_config.JINJA_FILTERS or {}), **(jinja_filters or {})},
+            jinja_globals={**(template_config.JINJA_GLOBALS or {}), **(jinja_globals or {})},
+            jinja_tests={**(template_config.JINJA_TESTS or {}), **(jinja_tests or {})},
+        ).render(data)
     except TemplateNotFound as e:
         raise OperationError(f"Template not found: {e.name or src}")
     except (TemplateRuntimeError, TemplateSyntaxError, UndefinedError) as e:
