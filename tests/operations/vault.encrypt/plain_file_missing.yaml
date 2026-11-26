@@ -1,0 +1,11 @@
+args:
+  - /tmp/plain.txt
+  - /tmp/cipher.txt
+facts:
+  files.FileContents:
+    path=/tmp/plain.txt: null
+  files.File:
+    path=/tmp/cipher.txt: null
+exception:
+  name: OperationError
+  message: plain file /tmp/plain.txt does not exist

@@ -7,6 +7,10 @@ import pyinfra_testing.operations
 import pyinfra_testing.util
 from pyinfra_testing.util import patch_files as _patch_files
 
+# Vault fixtures call get_password() at operation-generation time. Default to a
+# known password so tests never hit the interactive prompt.
+os.environ.setdefault("PYINFRA_VAULT_PASSWORD", "testvaultpassword")
+
 
 def _check_name_too_long(filename):
     # Real filesystems reject path components over NAME_MAX (255 bytes) with
