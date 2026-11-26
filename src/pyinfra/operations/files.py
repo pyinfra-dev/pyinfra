@@ -1987,8 +1987,13 @@ def directory(
         if _no_check_owner_mode:
             return
 
-        # Skip a symbolic mode (eg "g+w") that wouldn't change the directory
-        if isinstance(mode, str) and apply_symbolic_mode(info["mode"], mode) == info["mode"]:
+        # Skip a symbolic mode (eg "g+w") that wouldn't change the directory. Not
+        # when recursive, as files inside could still need it.
+        if (
+            not recursive
+            and isinstance(mode, str)
+            and apply_symbolic_mode(info["mode"], mode) == info["mode"]
+        ):
             mode = None
 
         changed = False
