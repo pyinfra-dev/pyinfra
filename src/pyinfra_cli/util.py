@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import dataclasses
 import json
 from datetime import datetime
 from importlib import import_module
@@ -109,6 +110,13 @@ def json_encode(obj):
     if isinstance(obj, FunctionType):
         return f"Function: {obj.__name__}"
 
+    if isinstance(obj, type):
+        return f"Class: {obj.__name__}"
+
+    # Shallow, unlike dataclasses.asdict, so nested values go through this function too
+    if dataclasses.is_dataclass(obj):
+        return {field.name: getattr(obj, field.name) for field in dataclasses.fields(obj)}
+
     if isinstance(obj, datetime):
         return obj.isoformat()
 
@@ -134,7 +142,9 @@ def json_encode(obj):
     if hasattr(obj, "to_json"):
         return obj.to_json()
 
-    raise TypeError(f"Cannot serialize: {type(obj)} ({obj})")
+    # Anything else is user data (eg objects in host data), show it rather than failing
+    # the whole output over one value.
+    return repr(obj)
 
 
 def parse_cli_arg(arg):

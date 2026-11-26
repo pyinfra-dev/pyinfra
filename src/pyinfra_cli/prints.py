@@ -122,9 +122,9 @@ def _host_to_dict(host: Host) -> dict:
 
     ``data`` is the host's inventory data passed through as-is. It is
     dumped by ``print_json`` (with ``json_encode`` as the fallback
-    encoder), so any value that is neither natively JSON-serialisable nor
-    handled by ``json_encode`` (arbitrary Python objects, etc.) will raise
-    when the payload is written. Keep inventory data JSON-friendly when
+    encoder), so any value that is not natively JSON-serialisable and not
+    handled specifically by ``json_encode`` (arbitrary Python objects, etc.)
+    is written as its ``repr()``. Keep inventory data JSON-friendly when
     you intend to consume this output.
     """
     return {

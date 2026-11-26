@@ -1,3 +1,4 @@
+import dataclasses
 import os
 import sys
 from datetime import datetime, timezone
@@ -26,6 +27,26 @@ class TestCliUtil(TestCase):
 
     def test_json_encode_set(self):
         assert json_encode({1, 2, 3}) == [1, 2, 3]
+
+    def test_json_encode_class(self):
+        assert json_encode(TestCliUtil) == "Class: TestCliUtil"
+
+    def test_json_encode_dataclass(self):
+        @dataclasses.dataclass
+        class Point:
+            x: int
+            when: datetime
+
+        now = datetime.now(timezone.utc)
+        # Shallow, so nested values are encoded on their own
+        assert json_encode(Point(x=1, when=now)) == {"x": 1, "when": now}
+
+    def test_json_encode_unknown_object(self):
+        class Opaque:
+            def __repr__(self):
+                return "<Opaque>"
+
+        assert json_encode(Opaque()) == "<Opaque>"
 
     def test_setup_no_module(self):
         with self.assertRaises(CliError) as context:
