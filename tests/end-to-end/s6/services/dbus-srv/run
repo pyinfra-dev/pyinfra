@@ -1,0 +1,15 @@
+#!/bin/execlineb -P
+
+# see
+# https://gitlab.alpinelinux.org/alpine/aports/-/blob/master/main/dbus/dbus.initd
+# and
+# https://gitea.artixlinux.org/artix/s6-services/src/branch/master/srv/dbus/dbus-srv
+
+foreground {
+	install -m 755 -g messagebus -o messagebus -d /run/dbus
+}
+foreground {
+	dbus-uuidgen --ensure=/etc/machine-id
+}
+fdmove -c 2 1
+exec dbus-daemon --system --nofork --nosyslog --nopidfile --print-pid=3

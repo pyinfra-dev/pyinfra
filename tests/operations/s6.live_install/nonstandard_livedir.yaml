@@ -1,0 +1,4 @@
+kwargs:
+  livedir: /run/s7-rc
+commands:
+  - s6-rc-set-install -l /run/s7-rc current

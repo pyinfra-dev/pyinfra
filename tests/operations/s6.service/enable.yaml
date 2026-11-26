@@ -1,0 +1,17 @@
+args:
+  - tipidee
+kwargs:
+  enabled: true
+facts:
+  server.Command:
+    'command=printf %s "$S6_CONF"': ""
+  files.FileContents:
+    path=/etc/s6.conf: null
+  s6.S6RepositoryList:
+    repodir=None:
+      - current
+  s6.S6SetStatus:
+    repodir=None, the_set=current:
+      tipidee: "usable"
+commands:
+  - s6 set enable -p -s current tipidee
