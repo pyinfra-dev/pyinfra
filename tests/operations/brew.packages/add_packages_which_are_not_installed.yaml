@@ -1,0 +1,7 @@
+args:
+  - - php
+    - curl
+facts:
+  brew.BrewPackages: {}
+commands:
+  - brew install php curl

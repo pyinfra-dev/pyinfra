@@ -4,10 +4,18 @@ The iptables modules handles iptables rules
 
 from __future__ import annotations
 
+import shlex
+
 from pyinfra import host
-from pyinfra.api import operation
+from pyinfra.api import QuoteString, StringCommand, operation
 from pyinfra.api.exceptions import OperationError
-from pyinfra.facts.iptables import Ip6tablesChains, Ip6tablesRules, IptablesChains, IptablesRules
+from pyinfra.facts.iptables import (
+    Ip6tablesChains,
+    Ip6tablesRules,
+    IptablesChains,
+    IptablesRules,
+    parse_extras,
+)
 
 
 @operation()
@@ -37,25 +45,28 @@ def chain(
         else host.get_fact(Ip6tablesChains, table=table)
     )
 
-    command = "iptables" if version == 4 else "ip6tables"
-    command = f"{command} -t {table}"
+    base: list[str | QuoteString] = [
+        "iptables" if version == 4 else "ip6tables",
+        "-t",
+        QuoteString(table),
+    ]
 
     if not present:
         if chain in chains:
-            yield f"{command} -X {chain}"
+            yield StringCommand(*base, "-X", QuoteString(chain))
         else:
             host.noop(f"iptables chain {chain} does not exist")
         return
 
     if present:
         if chain not in chains:
-            yield f"{command} -N {chain}"
+            yield StringCommand(*base, "-N", QuoteString(chain))
         else:
             host.noop(f"iptables chain {chain} exists")
 
         if policy:
             if chain not in chains or chains[chain] != policy:
-                yield f"{command} -P {chain} {policy}"
+                yield StringCommand(*base, "-P", QuoteString(chain), QuoteString(policy))
 
 
 @operation()
@@ -85,6 +96,7 @@ def rule(
     # Extras and extra shortcuts
     destination_port: int | None = None,
     source_port: int | None = None,
+    comment: str | None = None,
     extras: str = "",
 ):
     """
@@ -113,6 +125,7 @@ def rule(
     + extras: a place to define iptables extension arguments (eg --limit, --physdev)
     + destination_port: destination port (requires protocol)
     + source_port: source port (requires protocol)
+    + comment: rule comment
 
     **Examples:**
 
@@ -142,20 +155,23 @@ def rule(
 
     # These are only shortcuts for extras
     if destination_port:
-        extras = f"{extras} --dport {destination_port}"
+        extras = f"{extras} --dport {shlex.quote(str(destination_port))}"
 
     if source_port:
-        extras = f"{extras} --sport {source_port}"
+        extras = f"{extras} --sport {shlex.quote(str(source_port))}"
 
-    # Convert the extras string into a set to enable comparison with the fact
-    extras_set = set(extras.split())
+    if comment:
+        extras = f"{extras} -m comment --comment {shlex.quote(comment)}"
+
+    # Parse the extras string into a sorted list of [flag, value] pairs for comparison with the fact
+    extras_list = parse_extras(shlex.split(extras))
 
     # When protocol is set, the extension is automagically added by iptables (which shows
     # in iptables-save): http://ipset.netfilter.org/iptables-extensions.man.html
     if protocol:
         protocol = protocol.lower()
-        extras_set.add("-m")
-        extras_set.add(protocol)
+        extras_list.append(["-m", protocol])
+        extras_list.sort()
 
     # --dport and --sport do not work without a protocol (because they need -m [tcp|udp]
     elif destination_port or source_port:
@@ -208,7 +224,7 @@ def rule(
         "to_destination": to_destination,
         "to_source": to_source,
         "to_ports": to_ports,
-        "extras": extras_set,
+        "extras": sorted(extras_list),
     }
 
     definition = {
@@ -250,63 +266,65 @@ def rule(
 
     # Are we adding/removing a rule? Lets build it
     if action:
-        args = [
+        # `extras` is a raw, multi-token passthrough of iptables extension args, so it
+        # is left unquoted; every other value is user input wrapped in QuoteString.
+        args: list[str | QuoteString] = [
             "iptables" if version == 4 else "ip6tables",
             # Add the table
             "-t",
-            table,
+            QuoteString(table),
             # Add the action and target chain
             action,
-            chain,
+            QuoteString(chain),
         ]
 
         if protocol:
-            args.extend(("-p", protocol))
+            args.extend(("-p", QuoteString(protocol)))
 
         if source:
-            args.extend(("-s", source))
+            args.extend(("-s", QuoteString(source)))
 
         if destination:
-            args.extend(("-d", destination))
+            args.extend(("-d", QuoteString(destination)))
 
         if in_interface:
-            args.extend(("-i", in_interface))
+            args.extend(("-i", QuoteString(in_interface)))
 
         if out_interface:
-            args.extend(("-o", out_interface))
+            args.extend(("-o", QuoteString(out_interface)))
 
         if not_protocol:
-            args.extend(("!", "-p", not_protocol.lower()))
+            args.extend(("!", "-p", QuoteString(not_protocol.lower())))
 
         if not_source:
-            args.extend(("!", "-s", not_source))
+            args.extend(("!", "-s", QuoteString(not_source)))
 
         if not_destination:
-            args.extend(("!", "-d", not_destination))
+            args.extend(("!", "-d", QuoteString(not_destination)))
 
         if not_in_interface:
-            args.extend(("!", "-i", not_in_interface))
+            args.extend(("!", "-i", QuoteString(not_in_interface)))
 
         if not_out_interface:
-            args.extend(("!", "-o", not_out_interface))
+            args.extend(("!", "-o", QuoteString(not_out_interface)))
 
         if extras:
             args.append(extras.strip())
 
         # Add the jump
-        args.extend(("-j", jump))
+        args.extend(("-j", QuoteString(jump)))
 
         if log_prefix:
-            args.extend(("--log-prefix", log_prefix))
+            args.extend(("--log-prefix", QuoteString(log_prefix)))
 
         if to_destination:
-            args.extend(("--to-destination", to_destination))
+            args.extend(("--to-destination", QuoteString(to_destination)))
 
         if to_source:
-            args.extend(("--to-source", to_source))
+            args.extend(("--to-source", QuoteString(to_source)))
 
         if to_ports:
-            args.extend(("--to-ports", to_ports))
+            args.extend(("--to-ports", QuoteString(to_ports)))
 
         # Build the final iptables command
-        yield " ".join(args)
+        yield StringCommand(*args)

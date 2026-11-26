@@ -1,0 +1,6 @@
+{
+    "arg": {"path": "/foo/other", "target": "/foo/file"},
+    "command": "test /foo/other -ef /foo/file && echo true || echo false",
+    "output": ["false"],
+    "fact": false
+}

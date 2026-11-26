@@ -1,0 +1,18 @@
+command: podman quadlet list --format=json
+requires_command: podman
+output: |
+  [
+    {
+      "Name": "example.container",
+      "UnitName": "example.service",
+      "Path": "/home/user/.config/containers/systemd/example.container",
+      "Status": "inactive/dead",
+      "App": ""
+    }
+  ]
+fact:
+  - Name: example.container
+    UnitName: example.service
+    Path: /home/user/.config/containers/systemd/example.container
+    Status: inactive/dead
+    App: ""

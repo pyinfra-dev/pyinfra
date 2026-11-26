@@ -11,6 +11,6 @@
         }
     },
     "commands": [
-        "zypper --non-interactive install -y git python-devel MozillaFirefox"
+        "zypper --non-interactive --gpg-auto-import-keys install -y git python-devel MozillaFirefox"
     ]
 }

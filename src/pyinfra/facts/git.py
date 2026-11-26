@@ -83,7 +83,7 @@ class GitLocalCommit(GitFactBase):
 
     @override
     def command(self, repo: str, ref: str = "HEAD") -> str:
-        return f"! test -d {repo} || (cd {repo} && git rev-parse {ref} 2>/dev/null)"
+        return f"! test -d {repo} || (cd {repo} && git rev-parse {ref} 2>/dev/null) || true"
 
     @override
     def process(self, output: list[str]):

@@ -1,0 +1,48 @@
+{
+    "command": "cd /etc/ && for file in $(ls -pdL *-release | grep -v /); do echo \"/etc/${file}\"; cat \"/etc/${file}\"; echo ---; done",
+    "output": [
+        "/etc/os-release",
+        "NAME=\"RED OS\"",
+        "VERSION=\"8.0\"",
+        "PLATFORM_ID=\"platform:red80\"",
+        "ID=\"redos\"",
+        "ID_LIKE=\"rhel centos fedora\"",
+        "VERSION_ID=\"8.0\"",
+        "PRETTY_NAME=\"RED OS 8.0\"",
+        "ANSI_COLOR=\"0;31\"",
+        "CPE_NAME=\"cpe:/o:redos:redos:8\"",
+        "HOME_URL=\"https://redos.red-soft.ru\"",
+        "BUG_REPORT_URL=\"https://support.red-soft.ru\"",
+        "EDITION=\"Standard\"",
+        "",
+        "---",
+        "/etc/redhat-release",
+        "RED OS release (8.0) MINIMAL",
+        "---",
+        "/etc/redos-release",
+        "RED OS release (8.0) MINIMAL",
+        "---",
+        "/etc/system-release",
+        "RED OS release (8.0) MINIMAL",
+        "---"
+    ],
+    "fact": {
+        "name": "RED OS",
+        "major": 8,
+        "minor": 0,
+        "release_meta": {
+            "NAME": "RED OS",
+            "VERSION": "8.0",
+            "PLATFORM_ID": "platform:red80",
+            "ID": "redos",
+            "ID_LIKE": "rhel centos fedora",
+            "VERSION_ID": "8.0",
+            "PRETTY_NAME": "RED OS 8.0",
+            "ANSI_COLOR": "0;31",
+            "CPE_NAME": "cpe:/o:redos:redos:8",
+            "HOME_URL": "https://redos.red-soft.ru",
+            "BUG_REPORT_URL": "https://support.red-soft.ru",
+            "EDITION": "Standard"
+        }
+    }
+}

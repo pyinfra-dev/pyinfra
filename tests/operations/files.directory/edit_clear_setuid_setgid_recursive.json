@@ -1,0 +1,21 @@
+{
+    "args": [
+        "testdir"
+    ],
+    "kwargs": {
+        "mode": 775,
+        "recursive": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=testdir": {
+                "mode": 6775,
+                "user": "testuser",
+                "group": "testgroup"
+            }
+        }
+    },
+    "commands": [
+        "chmod -R 00775 testdir"
+    ]
+}

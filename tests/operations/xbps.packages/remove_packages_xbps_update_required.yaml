@@ -1,0 +1,10 @@
+args:
+  - curl
+kwargs:
+  present: false
+facts:
+  xbps.XbpsPackages:
+    curl: ["1"]
+  xbps.XbpsSelfUpdate: ["xbps-0.60.5_1"]
+commands:
+  - xbps-remove -y curl

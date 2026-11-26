@@ -4,6 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import IntEnum
 from graphlib import CycleError, TopologicalSorter
+from itertools import pairwise
 from multiprocessing import cpu_count
 from typing import TYPE_CHECKING
 from collections.abc import Callable, Iterator
@@ -40,53 +41,66 @@ except ImportError:
 
 
 class BaseStateCallback:
+    """
+    Base class for state callback handlers.
+
+    Subclass it and override the hooks you care about, then register the instance with
+    ``state.add_callback_handler``. Hooks that are not overridden do nothing.
+    """
+
     # Host callbacks
     #
 
     @staticmethod
     def host_before_connect(state: State, host: Host):
-        pass
+        """Called before connecting to a host."""
 
     @staticmethod
     def host_connect(state: State, host: Host):
-        pass
+        """Called after a host has connected."""
 
     @staticmethod
     def host_connect_error(state: State, host: Host, error):
-        pass
+        """Called when connecting to a host fails, where ``error`` is the raised exception."""
 
     @staticmethod
     def host_disconnect(state: State, host: Host):
-        pass
+        """Called after a host has disconnected."""
 
     # Operation callbacks
     #
 
     @staticmethod
     def operation_start(state: State, op_hash):
-        pass
+        """Called before an operation runs, once per operation rather than per host."""
 
     @staticmethod
     def operation_host_start(state: State, host: Host, op_hash):
-        pass
+        """Called before an operation runs on a host."""
 
     @staticmethod
     def operation_host_success(state: State, host: Host, op_hash, retry_count: int = 0):
-        pass
+        """Called after an operation succeeds on a host, where ``retry_count`` is the number of
+        retries it took (``0`` on the first attempt).
+        """
 
     @staticmethod
     def operation_host_error(
         state: State, host: Host, op_hash, retry_count: int = 0, max_retries: int = 0
     ):
-        pass
+        """Called after an operation fails on a host, once any retries are exhausted."""
 
     @staticmethod
     def operation_host_retry(state: State, host: Host, op_hash, retry_num: int, max_retries: int):
-        pass
+        """Called before an operation is retried on a host, where ``retry_num`` is the upcoming
+        attempt out of ``max_retries``.
+        """
 
     @staticmethod
     def operation_end(state: State, op_hash):
-        pass
+        """Called after an operation has finished on every host, once per operation rather than
+        per host.
+        """
 
 
 class StateStage(IntEnum):
@@ -306,6 +320,25 @@ class State:
             func = getattr(handler, method_name)
             func(self, *args, **kwargs)
 
+    def _describe_op_cycle(self, cycle: list[str]) -> str:
+        def op_label(op_hash: str) -> str:
+            op_meta = self.op_meta[op_hash]
+            names = ", ".join(sorted(op_meta.names))
+            return f"{names} ({', '.join(op_meta.args)})" if op_meta.args else names
+
+        lines = []
+        for before, after in pairwise(cycle):
+            hosts = [
+                host.name
+                for host in self.inventory
+                if (before, after) in pairwise(host.op_hash_order)
+            ]
+            shown = ", ".join(hosts[:3])
+            if len(hosts) > 3:
+                shown += f" and {len(hosts) - 3} more"
+            lines.append(f"    {op_label(before)} -> {op_label(after)} (on {shown})")
+        return "\n".join(lines)
+
     def get_op_order(self):
         ts: TopologicalSorter = TopologicalSorter()
 
@@ -324,7 +357,8 @@ class State:
             raise PyinfraError(
                 (
                     "Cycle detected in operation ordering DAG.\n"
-                    f"    Error: {e}\n\n"
+                    "    These hosts call the operations in an order that forms a loop:\n"
+                    f"{self._describe_op_cycle(e.args[1])}\n\n"
                     "    This can happen when using loops in operation code, "
                     "please see: https://docs.pyinfra.com/en/latest/deploy-process.html#loops-cycle-errors"  # noqa: E501
                 ),

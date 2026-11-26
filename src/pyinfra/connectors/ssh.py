@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import os
 from random import uniform
-from shutil import which
+from shutil import copyfileobj, which
 from socket import gaierror
+from tempfile import SpooledTemporaryFile
 from time import sleep
-from typing import IO, TYPE_CHECKING, Any, Protocol
+from typing import IO, TYPE_CHECKING, Any, Protocol, cast
 from collections.abc import Iterable
 
 from paramiko import AuthenticationException, BadHostKeyException, SFTPClient, SSHException
@@ -20,7 +21,7 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .base import BaseConnector, DataMeta
 from .scp import SCPClient
-from .ssh_util import get_private_key, raise_connect_error
+from .ssh_util import _patch_paramiko_sk_key_support, get_private_key, raise_connect_error
 from .sshuserclient import SSHClient
 from .util import (
     CommandOutput,
@@ -33,6 +34,10 @@ from .util import (
 
 if TYPE_CHECKING:
     from pyinfra.api.arguments import ConnectorArguments
+
+# Downloads are buffered in memory up to this size before spilling over onto disk, so that
+# the local destination is only written once the remote file has arrived in full.
+GET_FILE_BUFFER_MAX_SIZE = 1024 * 1024  # 1MB
 
 
 class ConnectorData(TypedDict):
@@ -216,6 +221,8 @@ class SSHConnector(BaseConnector):
 
     @override
     def connect(self) -> None:
+        _patch_paramiko_sk_key_support()
+
         retries = self.data["ssh_connect_retries"]
 
         try:
@@ -269,7 +276,7 @@ class SSHConnector(BaseConnector):
 
         except BadHostKeyException as e:
             remove_entry = e.hostname
-            port = self.client._ssh_config.get("port", 22)
+            port = getattr(self.client, "_ssh_config", {}).get("port", 22)
             if port != 22:
                 remove_entry = f"[{e.hostname}]:{port}"
 
@@ -465,10 +472,15 @@ class SSHConnector(BaseConnector):
                 ),
             ) from e
 
-    def _get_file(self, remote_filename: str, filename_or_io: str | IO):
-        with get_file_io(filename_or_io, "wb") as file_io:
-            sftp = self.get_file_transfer_connection()
-            sftp.getfo(remote_filename, file_io)
+    def _get_file(self, remote_filename: str, filename_or_io: str | IO) -> None:
+        # Download into a temporary buffer first - opening the destination truncates it, so
+        # writing into it directly would destroy the local file if the transfer then failed.
+        transfer_client = self.get_file_transfer_connection()
+        with SpooledTemporaryFile(max_size=GET_FILE_BUFFER_MAX_SIZE, mode="w+b") as buff:
+            transfer_client.getfo(remote_filename, buff)
+            buff.seek(0)
+            with get_file_io(filename_or_io, "wb") as file_io:
+                copyfileobj(buff, file_io)
 
     @override
     def get_file(
@@ -603,6 +615,18 @@ class SSHConnector(BaseConnector):
                     **noauth_arguments,
                 )
 
+                if (
+                    status is False
+                    and "branding mismatch" in output.stderr
+                    and "existing ACL is NFSv4" in output.stderr
+                ):
+                    status, output = self.run_shell_command(
+                        StringCommand("setfacl", "-m", f"u:{other_user}:r::allow", temp_file),
+                        print_output=print_output,
+                        print_input=print_input,
+                        **noauth_arguments,
+                    )
+
                 if status is False:
                     logger.error(f"Error on handover to sudo/su user: {output.stderr}")
                     return False
@@ -670,6 +694,17 @@ class SSHConnector(BaseConnector):
     ):
         _sudo = arguments.pop("_sudo", False)
         _sudo_user = arguments.pop("_sudo_user", False)
+        sudo_arguments = cast(
+            "ConnectorArguments",
+            {
+                "_sudo": _sudo,
+                "_sudo_user": _sudo_user,
+                "_sudo_password": arguments.pop("_sudo_password", None),
+                "_shell_executable": None,
+            },
+        )
+        if "_temp_dir" in arguments:
+            sudo_arguments["_temp_dir"] = arguments.pop("_temp_dir")
 
         hostname = self.data["ssh_hostname"] or self.host.name
         user = self.data["ssh_user"]
@@ -714,34 +749,53 @@ class SSHConnector(BaseConnector):
         if ssh_key:
             ssh_flags.append(f"-i {ssh_key}")
 
-        remote_rsync_command = "rsync"
-        if _sudo:
-            remote_rsync_command = "sudo rsync"
-            if _sudo_user:
-                remote_rsync_command = f"sudo -u {_sudo_user} rsync"
+        def run_rsync() -> tuple[int, CommandOutput]:
+            remote_rsync_command = StringCommand("rsync")
+            if _sudo:
+                remote_rsync_command = make_unix_command_for_host(
+                    self.state,
+                    self.host,
+                    remote_rsync_command,
+                    **sudo_arguments,
+                )
 
-        rsync_command = (
-            "rsync {rsync_flags} "
-            '--rsh "ssh {ssh_flags}" '
-            "--rsync-path '{remote_rsync_command}' "
-            "{src} {user}{hostname}:{dest}"
-        ).format(
-            rsync_flags=" ".join(flags),
-            ssh_flags=" ".join(ssh_flags),
-            remote_rsync_command=remote_rsync_command,
-            user=user or "",
-            hostname=hostname,
-            src=src,
-            dest=dest,
-        )
+            rsync_command_template = (
+                "rsync {rsync_flags} "
+                '--rsh "ssh {ssh_flags}" '
+                "--rsync-path {remote_rsync_command} "
+                "{src} {user}{hostname}:{dest}"
+            )
+            remote_rsync_command = StringCommand(QuoteString(remote_rsync_command))
+            rsync_command_arguments = dict(
+                rsync_flags=" ".join(flags),
+                ssh_flags=" ".join(ssh_flags),
+                user=user or "",
+                hostname=hostname,
+                src=src,
+                dest=dest,
+            )
+            rsync_command = rsync_command_template.format(
+                remote_rsync_command=remote_rsync_command.get_raw_value(),
+                **rsync_command_arguments,
+            )
 
-        if print_input:
-            echo(f"{self.host.print_prefix}>>> {rsync_command}", err=True)
+            if print_input:
+                display_command = rsync_command_template.format(
+                    remote_rsync_command=remote_rsync_command,
+                    **rsync_command_arguments,
+                )
+                echo(f"{self.host.print_prefix}>>> {display_command}", err=True)
 
-        return_code, output = run_local_process(
-            rsync_command,
-            print_output=print_output,
-            print_prefix=self.host.print_prefix,
+            return run_local_process(
+                rsync_command,
+                print_output=print_output,
+                print_prefix=self.host.print_prefix,
+            )
+
+        return_code, output = execute_command_with_sudo_retry(
+            self.host,
+            sudo_arguments,
+            run_rsync,
         )
 
         status = return_code == 0

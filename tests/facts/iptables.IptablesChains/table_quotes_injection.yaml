@@ -1,0 +1,5 @@
+arg: "filter; reboot"
+command: "iptables-save -t 'filter; reboot'"
+requires_command: iptables-save
+output: []
+fact: {}

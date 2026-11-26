@@ -1,0 +1,12 @@
+args:
+  - rad
+kwargs:
+  enabled: true
+facts:
+  server.Os: FreeBSD
+  bsdinit.RcdStatus:
+    rad: false
+  bsdinit.ServiceEnabled: {}
+commands:
+  - service rad enable
+  - test -e /etc/rc.d/rad && /etc/rc.d/rad start || /usr/local/etc/rc.d/rad start

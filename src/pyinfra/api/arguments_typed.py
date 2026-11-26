@@ -1,25 +1,30 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Generic, TypeVar
 from collections.abc import Callable, Generator, Iterable, Mapping
 
 from typing_extensions import ParamSpec, Protocol
 
+from pyinfra.api.hiddenvalue import HiddenValue
+
 if TYPE_CHECKING:
-    from pyinfra.api.operation import OperationMeta
+    from pyinfra.api.command import PyinfraCommand
+    from pyinfra.api.operation import OperationMeta  # noqa: F401 (used as a string base arg)
 
 P = ParamSpec("P")
+R = TypeVar("R")
+R_co = TypeVar("R_co", covariant=True)
+
+EnvValue = str | HiddenValue
 
 
 # Unfortunately we have to re-type out all of the global arguments here because
-# Python typing doesn't (yet) support merging kwargs. This acts as the operation
+# Python typing doesn't (yet) support merging kwargs. This acts as the operation/deploy
 # decorator output function which merges actual operation args/kwargs in paramspec
 # with the global arguments available in all operations.
 # The nature of "global arguments" is somewhat opposed to static typing as it's
 # indirect and somewhat magic, but we are where we are.
-class PyinfraOperation(Generic[P], Protocol):
-    _inner: Callable[P, Generator]
-
+class PyinfraCallable(Generic[P, R_co], Protocol):
     def __call__(
         self,
         #
@@ -31,6 +36,7 @@ class PyinfraOperation(Generic[P], Protocol):
         _use_sudo_login: bool = False,
         _sudo_password: None | str = None,
         _preserve_sudo_env: bool = False,
+        _sudo_set_home: bool = True,
         _su_user: None | str = None,
         _use_su_login: bool = False,
         _preserve_su_env: bool = False,
@@ -43,7 +49,7 @@ class PyinfraOperation(Generic[P], Protocol):
         # Shell arguments
         _shell_executable: None | str = None,
         _chdir: None | str = None,
-        _env: None | Mapping[str, str] = None,
+        _env: None | Mapping[str, EnvValue] = None,
         # Connector control
         _success_exit_codes: Iterable[int] = (0,),
         _timeout: None | int = None,
@@ -75,4 +81,12 @@ class PyinfraOperation(Generic[P], Protocol):
         # op kwargs
         #
         **kwargs: P.kwargs,
-    ) -> OperationMeta: ...
+    ) -> R_co: ...
+
+
+class PyinfraOperation(PyinfraCallable[P, "OperationMeta"], Protocol):
+    _inner: Callable[P, Generator[PyinfraCommand | str, None, None]]
+
+
+class PyinfraDeploy(PyinfraCallable[P, R], Protocol):
+    _inner: Callable[P, R]

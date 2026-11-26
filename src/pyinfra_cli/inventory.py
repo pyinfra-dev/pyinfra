@@ -1,8 +1,9 @@
 import ast
 import socket
 from collections import defaultdict
-from os import listdir, path
-from typing import Any, TypeVar, Union
+from os import listdir
+from pathlib import Path
+from typing import Any, TypeVar
 from collections.abc import Callable
 
 from pyinfra import logger
@@ -13,7 +14,7 @@ from pyinfra.context import ctx_inventory
 from .exceptions import CliError
 from .util import exec_file, try_import_module_attribute
 
-HostType = Union[str, tuple[str, dict]]
+HostType = str | tuple[str, dict]
 
 # Hosts in an inventory can be just the hostname or a tuple (hostname, data)
 ALLOWED_HOST_TYPES = (str, tuple)
@@ -87,17 +88,17 @@ def _get_group_data(dirname_or_filename: str):
 
     logger.debug("Checking possible group_data at: %s", dirname_or_filename)
 
-    if path.exists(dirname_or_filename):
-        if path.isfile(dirname_or_filename):
+    if Path(dirname_or_filename).exists():
+        if Path(dirname_or_filename).is_file():
             files = [dirname_or_filename]
         else:
-            files = [path.join(dirname_or_filename, file) for file in listdir(dirname_or_filename)]
+            files = [str(Path(dirname_or_filename) / file) for file in listdir(dirname_or_filename)]
 
         for file in files:
             if not file.endswith(".py"):
                 continue
 
-            group_name = path.basename(file)[:-3]
+            group_name = Path(file).stem
 
             logger.debug("Looking for group data in: %s", file)
 
@@ -140,7 +141,7 @@ def _resolves_to_host(maybe_host: str) -> bool:
         # Use getaddrinfo to support IPv6 hosts
         socket.getaddrinfo(maybe_host, port=None)
         return True
-    except socket.gaierror:
+    except (socket.gaierror, UnicodeError):
         alias = _get_ssh_alias(maybe_host)
         if not alias:
             return False
@@ -148,7 +149,7 @@ def _resolves_to_host(maybe_host: str) -> bool:
         try:
             socket.getaddrinfo(alias, port=None)
             return True
-        except socket.gaierror:
+        except (socket.gaierror, UnicodeError):
             return False
 
 
@@ -185,7 +186,7 @@ def make_inventory(
     # (1) an inventory file is a common use case and (2) no other option can have a comma or an @
     # symbol in them.
     is_path_or_host_list_or_connector = (
-        path.exists(inventory)
+        Path(inventory).exists()
         or "," in inventory
         or "@" in inventory
         # Special case: passing an arbitrary name and specifying --data ssh_hostname=a.b.c
@@ -206,6 +207,10 @@ def make_inventory(
         # The inventory is either an inventory file or a (list of) hosts
         return make_inventory_from_files(inventory, override_data, cwd, group_data_directories)
     elif inventory_func is None:
+        # If the input looks like a file path but the file doesn't exist, give a
+        # clear error instead of the generic warning below (GH #2087).
+        if "/" in inventory or inventory.startswith("."):
+            raise CliError(f"Inventory file not found: {inventory}")
         logger.warning(
             f"{inventory} is neither an inventory file, a (list of) hosts or connectors "
             "nor refers to a python module"
@@ -311,7 +316,7 @@ def make_inventory_from_files(
     groups: dict[str, list[str] | tuple[list[str], dict[str, Any]]]
 
     # If we're not a valid file we assume a list of comma separated hostnames
-    if not path.exists(inventory_filename):
+    if not Path(inventory_filename).exists():
         groups = {
             "all": inventory_filename.split(","),
         }
@@ -319,7 +324,7 @@ def make_inventory_from_files(
         groups = _get_groups_from_filename(inventory_filename)
         # Used to set all the hosts to an additional group - that of the filename
         # ie inventories/dev.py means all the hosts are in the dev group, if not present
-        file_groupname = path.basename(inventory_filename).rsplit(".", 1)[0]
+        file_groupname = Path(inventory_filename).name.rsplit(".", 1)[0]
 
     all_data: dict[str, Any] = {}
 
@@ -364,10 +369,10 @@ def make_inventory_from_files(
 
     possible_group_data_folders = []
     if cwd:
-        possible_group_data_folders.append(path.join(cwd, "group_data"))
-    inventory_dirname = path.abspath(path.dirname(inventory_filename))
+        possible_group_data_folders.append(str(Path(cwd) / "group_data"))
+    inventory_dirname = str(Path(inventory_filename).parent.resolve())
     if inventory_dirname != cwd:
-        possible_group_data_folders.append(path.join(inventory_dirname, "group_data"))
+        possible_group_data_folders.append(str(Path(inventory_dirname) / "group_data"))
 
     if group_data_directories:
         possible_group_data_folders.extend(group_data_directories)

@@ -119,11 +119,8 @@ def _has_package(
         return any(version in value for version in pkg_versions)
 
     packages_to_check: list[str | list[str]] = [package]
-    if expand_package_fact:
-        if isinstance(package, list):
-            packages_to_check = expand_package_fact(package[0]) or packages_to_check
-        else:
-            packages_to_check = expand_package_fact(package) or packages_to_check
+    if expand_package_fact and not isinstance(package, list):
+        packages_to_check = expand_package_fact(package) or packages_to_check
 
     package_name_to_versions = defaultdict(set)
     for pkg in packages_to_check:
@@ -394,6 +391,12 @@ def ensure_yum_repo(
         repo_lines.append(f"type={type_}")
 
     if gpgkey:
+        for key_url in gpgkey.split():
+            parsed_key = urlparse(key_url)
+            if not parsed_key.scheme and not key_url.startswith("/"):
+                raise OperationValueError(
+                    f"gpgkey must be a valid URL or an absolute path, got: {key_url}"
+                )
         repo_lines.append(f"gpgkey={gpgkey}")
 
     repo_lines.append("")
@@ -401,4 +404,4 @@ def ensure_yum_repo(
     repo_file = StringIO(repo)
 
     # Ensure this is the file on the server
-    yield from files.put._inner(src=repo_file, dest=filename)
+    yield from files.put._inner(src=repo_file, dest=filename, mode="0644")

@@ -33,6 +33,18 @@ cd pyinfra
 uv sync
 ```
 
+Re-run `uv sync` every time you switch branches. The editable install records the connector entry
+points in the virtualenv metadata at install time, while the modules themselves are read from the
+checked out tree, and `uv` does not notice a checkout: its staleness marker is the modification
+time of `src/`, which `git checkout` leaves alone. A branch that adds or removes a connector can
+therefore leave an entry point pointing at a module that is not there.
+
+pyinfra imports only the connectors an inventory asks for, so an entry point you never use is
+harmless - but the connector you do use will fail to load until the virtualenv is resynced.
+
+A plain `uv sync` also drops the `docs` dependency group, so pass `--group docs` when you want to
+build the documentation.
+
 If you will use pyinfra as a module, and want to be able to edit its code as you go, make sure you add it as an editable dependency to your project instead:
 
 ```
@@ -49,7 +61,9 @@ uv add --editable ./pyinfra
 ### Code Style & Type Checking
 
 Code style is enforced via [ruff](https://docs.astral.sh/ruff/). Types are checked with mypy currently, and pyright is
-recommended for local development though currently optional. There is a script to run the linting & type-checking:
+recommended for local development though currently optional. Shell scripts are checked with
+[shellcheck](https://www.shellcheck.net/), so install it before running the lint script (eg `apt-get install shellcheck`
+or `brew install shellcheck`). There is a script to run the linting & type-checking:
 
 ```sh
 # Check formatting & types
@@ -64,9 +78,12 @@ scripts/dev-format.sh
 Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 standard. PRs that follow this will be rebased, PRs that do not will be squashed.
 
-The following scopes are allowed: `api`, `cli`, `operations`, `facts`, `connectors`. With the last 
-three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
+The following scopes are (optionally) allowed: `api`, `cli`, `deps`, `operations`, `facts`, `connectors`. 
+With the last three an optional sub-scope can be added, ie `operations.docker` or `facts.apt`.
 
+When creating a PR, the last commit message is typically used as the PR title. When merging PRs, 
+we typically squash all commits into a single commit, and use the PR title as the commit message.
+For this reason, PR titles are linted to check if they follow our commit message conventions.
 
 ### Tests
 
@@ -85,6 +102,12 @@ uv run pytest tests/test_facts.py -k "efibootmgr.EFIBootMGR"
 # Only run operation tests for operations.selinux
 uv run pytest tests/test_operations.py -k "selinux."
 ```
+
+Tests for facts and operations are written in a declarative manner and use the 
+[pyinfra-testing harness](https://github.com/pyinfra-dev/pyinfra-testing). Review the harness README 
+to understand how tests for facts and operations are written, and how to add new tests.
+
+The test harness can also be used for writing tests for 3rd party facts and operations.
 
 #### End-to-End Tests
 

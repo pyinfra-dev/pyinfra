@@ -1,0 +1,11 @@
+args:
+  - ["lodash"]
+kwargs:
+  directory: /opt/app
+  present: false
+facts:
+  pnpm.PnpmPackages:
+    directory=/opt/app:
+      lodash: ["4.17.21"]
+commands:
+  - cd /opt/app && pnpm remove lodash

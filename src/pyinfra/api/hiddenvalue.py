@@ -8,7 +8,15 @@ class HiddenValue:
     """
 
     def unmask(self) -> str:
-        return self.raw_value
+        # A HiddenValue handed to another one must not stay wrapped. Returning it would hand back
+        # the mask — `*MASKED*` is what its __str__ produces — and a StringCommand built from it
+        # would run with the literal "*MASKED*" where the real value belongs: no error, no warning,
+        # just a wrong credential. Unwrapping here rather than in __init__ keeps a subclass in
+        # charge of its own unmask().
+        value = self.raw_value
+        while isinstance(value, HiddenValue):
+            value = value.unmask()
+        return value
 
     def __init__(self, content="", masked_value="*MASKED*"):
         self.masked_value = masked_value

@@ -104,4 +104,4 @@ run_ops(state)
 # timings.timings now holds per-host start/end times for every operation
 ```
 
-The available hooks are defined on `BaseStateCallback` — subclass it and override only the ones you care about. The current set covers host connect/disconnect, operation start/end, and per-host operation start/success/error/retry. See [`pyinfra.api.state.BaseStateCallback`](reference.md) for the full signature list.
+The available hooks are defined on `BaseStateCallback` — subclass it and override only the ones you care about. The current set covers host connect/disconnect, operation start/end, and per-host operation start/success/error/retry. See [`pyinfra.api.state.BaseStateCallback`](reference.md#pyinfra.api.state.BaseStateCallback) for the full signature list.

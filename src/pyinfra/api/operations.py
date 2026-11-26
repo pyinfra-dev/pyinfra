@@ -304,16 +304,32 @@ def _run_no_wait_ops(state: State):
         # Spawn greenlet for each host to run *all* ops
         if state.pool is None:
             raise PyinfraError("No pool found on state.")
-        greenlets = [
+        greenlet_to_host = {
             state.pool.spawn(
                 _run_host_ops,
                 state,
                 host,
                 progress=progress,
-            )
+            ): host
             for host in state.inventory.get_active_hosts()
-        ]
-        gevent.joinall(greenlets)
+        }
+        gevent.joinall(list(greenlet_to_host))
+
+        # `_run_host_ops` raises as soon as one of a host's operations fails, and nothing else
+        # reports it here: a greenlet that ended with a pyinfra error is a host that failed.
+        # Any other exception is a bug, and is raised rather than reported as a host failure -
+        # the same distinction `_run_serial_ops` makes.
+        failed_hosts = set()
+
+        for greenlet, host in greenlet_to_host.items():
+            exception = greenlet.exception
+            if exception is None:
+                continue
+            if not isinstance(exception, PyinfraError):
+                raise exception
+            failed_hosts.add(host)
+
+        state.fail_hosts(failed_hosts)
 
 
 def _run_single_op(state: State, op_hash: str):
@@ -326,8 +342,6 @@ def _run_single_op(state: State, op_hash: str):
     op_meta = state.get_op_meta(op_hash)
     log_operation_start(op_meta)
 
-    failed_hosts = set()
-
     if op_meta.global_arguments["_serial"]:
         with progress_spinner(state.inventory.get_active_hosts()) as progress:
             # For each host, run the op
@@ -335,8 +349,10 @@ def _run_single_op(state: State, op_hash: str):
                 result = _run_host_op_with_context(state, host, op_hash)
                 progress(host)
 
+                # Fail each host straight away so the fail percent can stop the
+                # operation before it runs on the remaining hosts.
                 if not result:
-                    failed_hosts.add(host)
+                    state.fail_hosts({host})
 
     else:
         # Start with the whole inventory in one batch
@@ -364,12 +380,13 @@ def _run_single_op(state: State, op_hash: str):
                     progress(host)
 
                 # Get all the results
-                for greenlet, host in greenlet_to_host.items():
-                    if not greenlet.get():
-                        failed_hosts.add(host)
+                failed_hosts = {
+                    host for greenlet, host in greenlet_to_host.items() if not greenlet.get()
+                }
 
-    # Now all the batches/hosts are complete, fail any failures
-    state.fail_hosts(failed_hosts)
+            # Fail each batch's hosts before starting the next batch, so the fail
+            # percent can stop the operation part way through.
+            state.fail_hosts(failed_hosts)
 
     state.trigger_callbacks("operation_end", op_hash)
 

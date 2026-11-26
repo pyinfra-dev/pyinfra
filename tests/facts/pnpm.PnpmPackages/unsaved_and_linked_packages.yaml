@@ -1,0 +1,29 @@
+arg:
+  directory: /opt/app
+command: "! test -d /opt/app || (cd /opt/app && pnpm list --depth=0 --json)"
+requires_command: pnpm
+output: |
+  [
+    {
+      "name": "app",
+      "version": "1.0.0",
+      "path": "/opt/app",
+      "private": false,
+      "dependencies": {
+        "shared": {
+          "from": "shared",
+          "version": "link:../shared",
+          "path": "/opt/shared"
+        }
+      },
+      "unsavedDependencies": {
+        "cowsay": {
+          "from": "cowsay",
+          "version": "1.6.0",
+          "path": "/opt/app/node_modules/cowsay"
+        }
+      }
+    }
+  ]
+fact:
+  shared: ["link:../shared"]

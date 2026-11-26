@@ -8,7 +8,7 @@
     },
     "commands": [
         "zypper clean --all",
-        "zypper update -y"
+        "zypper --non-interactive --gpg-auto-import-keys update -y"
     ],
     "idempotent": false,
     "disable_idempotent_warning_reason": "package upgrades are always executed"

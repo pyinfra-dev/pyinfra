@@ -1,0 +1,11 @@
+args:
+  - ["typescript"]
+kwargs:
+  directory: /opt/app
+  latest: true
+facts:
+  pnpm.PnpmPackages:
+    directory=/opt/app:
+      typescript: ["5.7.2"]
+commands:
+  - cd /opt/app && pnpm update --latest typescript

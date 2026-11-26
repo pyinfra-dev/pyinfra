@@ -1,0 +1,20 @@
+{
+    "args": ["INPUT"],
+    "kwargs": {
+        "jump": "ACCEPT",
+        "extras": "--another 'argument with spaces'"
+    },
+    "facts": {
+        "iptables.IptablesRules": {
+            "table=filter": [
+                {
+                    "chain": "INPUT",
+                    "extras": [["--another", "argument with spaces"]],
+                    "jump": "ACCEPT"
+                }
+            ]
+        }
+    },
+    "commands": [],
+    "noop_description": "iptables INPUT rule exists"
+}

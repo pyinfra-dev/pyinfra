@@ -1,0 +1,15 @@
+arg: selinux-bauen1-policy
+command: apt-cache showpkg selinux-bauen1-policy
+requires_command: apt-cache
+output: |
+  Package: selinux-bauen1-policy
+  Versions:
+  0.0.20dev147 (/var/lib/apt/lists/deb.bauen1.xyz_testing_dists_unstable_main_binary-amd64_Packages) (/var/lib/dpkg/status)
+
+  Reverse Depends:
+  Dependencies:
+  0.0.20dev147 - policycoreutils (2 3.1) systemd (2 247.2) setools (0 (null))
+  Provides:
+  0.0.20dev147 -
+  Reverse Provides:
+fact: []

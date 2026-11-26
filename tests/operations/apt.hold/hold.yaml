@@ -1,0 +1,6 @@
+args:
+  - nomad
+facts:
+  apt.AptHeldPackages: []
+commands:
+  - apt-mark hold nomad

@@ -314,6 +314,7 @@ def _prune_command(docker_cmd: str = "docker", **kwargs) -> StringCommand:
 
 def _create_volume(docker_cmd: str = "docker", **kwargs) -> StringCommand:
     labels = kwargs["labels"] if kwargs["labels"] else []
+    options = kwargs["options"] if kwargs["options"] else []
 
     command: list[str | QuoteString] = [
         docker_cmd,
@@ -327,6 +328,8 @@ def _create_volume(docker_cmd: str = "docker", **kwargs) -> StringCommand:
 
     for label in labels:
         command += ["--label", QuoteString(label)]
+    for option in options:
+        command += ["--opt", QuoteString(option)]
     return StringCommand(*command)
 
 

@@ -1,0 +1,15 @@
+# apt-cache showpkg lists only other packages under "Reverse Provides:", so an
+# installed package that another (not installed) package also provides must
+# still be found by its own name.
+args:
+  - - nodejs
+facts:
+  deb.DebPackages:
+    nodejs:
+      - 26.13.1-1nodesource1
+  apt.AptPackageProvides:
+    "package=nodejs":
+      - - nsolid
+        - 26.13.1-ns6.3.1-1nodesource1
+commands: []
+noop_description: package nodejs is installed (26.13.1-1nodesource1)

@@ -11,6 +11,11 @@
         "deb.DebPackages": {
             "git": [""],
             "python-pip": [""]
+        },
+        "apt.AptPackageProvides": {
+            "package=git": [],
+            "package=python-pip": [],
+            "package=another": []
         }
     },
     "commands": [

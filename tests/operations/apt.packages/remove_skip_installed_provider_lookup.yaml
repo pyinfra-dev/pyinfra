@@ -1,0 +1,12 @@
+# git is installed, so its providers are not looked up before removing it.
+args:
+  - - git
+kwargs:
+  present: false
+facts:
+  deb.DebPackages:
+    git:
+      - "1:2.39.5-0+deb12u2"
+  apt.AptPackageProvides: {}
+commands:
+  - 'DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" remove git'

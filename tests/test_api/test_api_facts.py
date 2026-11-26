@@ -97,12 +97,78 @@ class TestFactsApi(PatchSSHTestCase):
         defaults = _get_executor_defaults(state, anotherhost)
         defaults.update(anotherhost.current_op_global_arguments)
 
+        command = fake_run_command.call_args.args[0]
+        assert str(command) == "printf '##PYINFRA_SU_READY##' && yes"
         fake_run_command.assert_called_with(
-            "yes",
+            command,
             print_input=False,
             print_output=False,
             **defaults,
         )
+
+    def test_get_fact_strips_freebsd_su_password_prompt_from_stdout(self):
+        inventory = make_inventory(hosts=("anotherhost",))
+        state = State(inventory, Config())
+
+        anotherhost = inventory.get_host("anotherhost")
+        anotherhost.data._su_user = "root"
+
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (
+                True,
+                CommandOutput(
+                    [
+                        OutputLine("stdout", "Password:##PYINFRA_SU_READY##some-output"),
+                    ],
+                ),
+            )
+            fact_data = get_facts(state, Command, ("echo some-output",))
+
+        assert fact_data == {anotherhost: "some-output"}
+        assert "##PYINFRA_SU_READY##" in str(fake_run_command.call_args.args[0])
+
+    def test_get_fact_preserves_real_output_starting_with_password(self):
+        inventory = make_inventory(hosts=("anotherhost",))
+        state = State(inventory, Config())
+
+        anotherhost = inventory.get_host("anotherhost")
+        anotherhost.data._su_user = "root"
+
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (
+                True,
+                CommandOutput([OutputLine("stdout", "Password:some-output")]),
+            )
+            fact_data = get_facts(state, Command, ("echo Password:some-output",))
+
+        assert fact_data == {anotherhost: "Password:some-output"}
+
+    def test_get_fact_preserves_leading_newline_after_su_password_prompt(self):
+        inventory = make_inventory(hosts=("anotherhost",))
+        state = State(inventory, Config())
+
+        anotherhost = inventory.get_host("anotherhost")
+        anotherhost.data._su_user = "root"
+
+        connect_all(state)
+
+        with patch("pyinfra.connectors.ssh.SSHConnector.run_shell_command") as fake_run_command:
+            fake_run_command.return_value = (
+                True,
+                CommandOutput(
+                    [
+                        OutputLine("stdout", "Password:##PYINFRA_SU_READY##"),
+                        OutputLine("stdout", "some-output"),
+                    ],
+                ),
+            )
+            fact_data = get_facts(state, Command, ("printf '\\nsome-output\\n'",))
+
+        assert fact_data == {anotherhost: "\nsome-output"}
 
     def test_get_fact_error(self):
         inventory = make_inventory(hosts=("anotherhost",))
@@ -247,8 +313,10 @@ class TestFactsApi(PatchSSHTestCase):
         defaults["_sudo_user"] = "override-sudo-user"
         defaults["_su_user"] = "override-su-user"
 
+        command = fake_run_command.call_args.args[0]
+        assert str(command) == "printf '##PYINFRA_SU_READY##' && yes"
         fake_run_command.assert_called_with(
-            "yes",
+            command,
             print_input=False,
             print_output=False,
             **defaults,

@@ -1,0 +1,5 @@
+args:
+  - build
+  - /opt/app
+commands:
+  - cd /opt/app && pnpm run build

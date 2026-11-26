@@ -1,0 +1,10 @@
+{
+    "arg": {
+        "repo": "myrepo",
+        "ref": "v34.0.1"
+    },
+    "command": "! test -d myrepo || (cd myrepo && git rev-parse v34.0.1 2>/dev/null) || true",
+    "requires_command": "git",
+    "output": [],
+    "fact": null
+}

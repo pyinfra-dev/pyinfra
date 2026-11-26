@@ -12,7 +12,7 @@ occurs during fact collection.
 There are two base classes for facts and they solve different problems:
 
 - **`FactBase`** — defines a *new* fact that runs a shell command on the host and parses the output. Use this whenever you need information that isn't already available from an existing fact.
-- **`ShortFactBase`** — defines a *derived* view over an existing fact. It does not run any command on the host; instead it points at another fact via a `fact` class attribute and post-processes that fact's result. Use this when you want a simpler or different shape of an existing fact (e.g. just one field from a dict). Both facts share the same cached command result, so adding a `ShortFactBase` costs nothing at runtime.
+- **`ShortFactBase`** — defines a *derived* view over an existing fact. It does not define a command of its own; instead it points at another fact via a `fact` class attribute and post-processes that fact's result. Use this when you want a simpler or different shape of an existing fact (e.g. just one field from a dict). Fact results are not cached, so requesting a `ShortFactBase` runs the underlying fact's command, costing the same as requesting that fact directly.
 
 For example, `LinuxName` is a `ShortFactBase` that extracts the `name` field from the larger `LinuxDistribution` fact:
 

@@ -1,0 +1,23 @@
+{
+    "args": ["somefile.txt", "/home/config/"],
+    "local_files": {
+        "files": {
+            "somefile.txt": null
+        },
+        "dirs": {}
+    },
+    "facts": {
+        "files.File": {
+            "path=/home/config/": null,
+            "path=/home/config/somefile.txt": null
+        },
+        "files.Directory": {
+            "path=/home/config/": null,
+            "path=/home/config": null
+        }
+    },
+    "commands": [
+        "mkdir -p /home/config",
+        ["upload", "/somefile.txt", "/home/config/somefile.txt"]
+    ]
+}

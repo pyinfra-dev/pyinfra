@@ -15,13 +15,25 @@
         "SubState=exited",
         "",
         "Id=mnt-foo.mount",
-        "SubState=mounted"
+        "SubState=mounted",
+        "",
+        "Id=multi-user.target",
+        "SubState=active",
+        "",
+        "Id=system.slice",
+        "SubState=active",
+        "",
+        "Id=dev-sda1.device",
+        "SubState=plugged"
     ],
     "fact":  {
         "lvm2-activation.service": false,
         "lvm2-lvmetad.service": true,
         "lvm2-lvmpolld.service": false,
         "ebtables.timer": true,
-        "mnt-foo.mount": true
+        "mnt-foo.mount": true,
+        "multi-user.target": true,
+        "system.slice": true,
+        "dev-sda1.device": true
     }
 }

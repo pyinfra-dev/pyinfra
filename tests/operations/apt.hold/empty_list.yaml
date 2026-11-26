@@ -1,0 +1,6 @@
+args:
+  - []
+facts: {}
+exception:
+  name: OperationValueError
+  message: all packages must have non-empty names

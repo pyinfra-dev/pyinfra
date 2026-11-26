@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import shlex
+
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString, StringCommand
 
 # Mapping for iptables code arguments to variable names
 IPTABLES_ARGS = {
@@ -23,15 +25,41 @@ IPTABLES_ARGS = {
 }
 
 
+def parse_extras(tokens):
+    """
+    Parse a list of tokens into a sorted list of [flag, value] pairs.
+    Tokens that don't start with "-" are joined as the value of the preceding flag.
+    """
+
+    extras = []
+    current_flag = None
+    current_values: list[str] = []
+
+    for token in tokens:
+        if token.startswith("-"):
+            if current_flag is not None:
+                extras.append([current_flag, " ".join(current_values)])
+            current_flag = token
+            current_values = []
+        else:
+            current_values.append(token)
+
+    if current_flag is not None:
+        extras.append([current_flag, " ".join(current_values)])
+
+    return sorted(extras)
+
+
 def parse_iptables_rule(line):
     """
     Parse one iptables rule. Returns a dict where each iptables code argument
     is mapped to a name using IPTABLES_ARGS.
     """
 
-    bits = line.split()
+    bits = shlex.split(line)
 
     definition: dict = {}
+    extra_tokens: list[str] = []
 
     key = None
     args: list[str] = []
@@ -43,8 +71,9 @@ def parse_iptables_rule(line):
         if key and key in IPTABLES_ARGS:
             definition_key = f"not_{IPTABLES_ARGS[key]}" if not_arg else IPTABLES_ARGS[key]
             definition[definition_key] = arg_string
-        else:
-            definition.setdefault("extras", []).extend((key, arg_string))
+        elif key:
+            extra_tokens.append(key)
+            extra_tokens.extend(args)
 
     for bit in bits:
         if bit == "!":
@@ -69,8 +98,8 @@ def parse_iptables_rule(line):
     if key:
         add_args()
 
-    if "extras" in definition:
-        definition["extras"] = set(definition["extras"])
+    if extra_tokens:
+        definition["extras"] = parse_extras(extra_tokens)
 
     return definition
 
@@ -96,8 +125,8 @@ class IptablesRules(FactBase):
         return "iptables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"iptables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("iptables-save", "-t", QuoteString(table))
 
     @override
     def process(self, output):
@@ -129,8 +158,8 @@ class Ip6tablesRules(IptablesRules):
         return "ip6tables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"ip6tables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("ip6tables-save", "-t", QuoteString(table))
 
 
 class IptablesChains(FactBase):
@@ -151,8 +180,8 @@ class IptablesChains(FactBase):
         return "iptables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"iptables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("iptables-save", "-t", QuoteString(table))
 
     @override
     def process(self, output):
@@ -180,9 +209,9 @@ class Ip6tablesChains(IptablesChains):
     """
 
     @override
-    def requires_command(self) -> str:
+    def requires_command(self, *args, **kwargs) -> str:
         return "ip6tables-save"
 
     @override
-    def command(self, table="filter"):
-        return f"ip6tables-save -t {table}"
+    def command(self, table: str = "filter") -> StringCommand:
+        return StringCommand("ip6tables-save", "-t", QuoteString(table))

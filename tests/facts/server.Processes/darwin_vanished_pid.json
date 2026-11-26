@@ -1,0 +1,34 @@
+{
+  "command": "LANG=C ps -eo pid,user,stat,%cpu,%mem,args -ww && echo ===PYINFRA-PROCESSES-COMM=== && LANG=C ps -eo pid,comm -ww",
+  "facts": {
+    "server.Kernel": "Darwin"
+  },
+  "output": [
+    "  PID USER     STAT  %CPU %MEM ARGS",
+    "    1 root     Ss    0.0  0.1 /sbin/launchd",
+    "  200 root     S     0.0  0.0 /usr/libexec/opendirectoryd",
+    "  300 root     Ss    0.0  0.2 /usr/sbin/sshd -D",
+    "===PYINFRA-PROCESSES-COMM===",
+    "  PID COMM",
+    "    1 /sbin/launchd",
+    "  300 /usr/sbin/sshd"
+  ],
+  "fact": {
+    "1": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.1,
+      "command": "/sbin/launchd",
+      "args": "/sbin/launchd"
+    },
+    "300": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.2,
+      "command": "/usr/sbin/sshd",
+      "args": "/usr/sbin/sshd -D"
+    }
+  }
+}

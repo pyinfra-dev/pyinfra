@@ -8,7 +8,7 @@ to the deploy state. This is then run later by pyinfra's ``__main__`` or the
 from __future__ import annotations
 
 from functools import wraps
-from inspect import signature
+from inspect import Parameter, signature
 from io import StringIO
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, cast
@@ -23,7 +23,8 @@ from pyinfra.context import ctx_host, ctx_state
 from .arguments import EXECUTION_KWARG_KEYS, AllArguments, pop_global_arguments
 from .arguments_typed import PyinfraOperation
 from .command import PyinfraCommand, StringCommand
-from .exceptions import NestedOperationError, OperationValueError, PyinfraError
+from .exceptions import ArgumentTypeError, NestedOperationError, OperationValueError, PyinfraError
+from .facts import FactBase, ShortFactBase
 from .host import Host
 from .operations import run_host_op
 from .state import State, StateOperationHostData, StateOperationMeta, StateStage
@@ -244,14 +245,16 @@ def operation(
     is_deprecated: bool = False,
     deprecated_for: str | None = None,
     _set_in_op: bool = True,
-) -> Callable[[Callable[P, Generator]], PyinfraOperation[P]]:
+) -> Callable[[Callable[P, Generator[PyinfraCommand | str, None, None]]], PyinfraOperation[P]]:
     """
     Decorator that takes a simple module function and turn it into the internal
     operation representation that consists of a list of commands + options
     (sudo, (sudo|su)_user, env).
     """
 
-    def decorator(f: Callable[P, Generator]) -> PyinfraOperation[P]:
+    def decorator(
+        f: Callable[P, Generator[PyinfraCommand | str, None, None]],
+    ) -> PyinfraOperation[P]:
         f.is_idempotent = is_idempotent  # type: ignore[attr-defined]
         f.idempotent_notice = idempotent_notice  # type: ignore[attr-defined]
         f.is_deprecated = is_deprecated  # type: ignore[attr-defined]
@@ -261,7 +264,15 @@ def operation(
     return decorator
 
 
-def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> PyinfraOperation[P]:
+def _wrap_operation(
+    func: Callable[P, Generator[PyinfraCommand | str, None, None]], _set_in_op: bool = True
+) -> PyinfraOperation[P]:
+    named_parameters = {
+        key
+        for key, parameter in signature(func).parameters.items()
+        if parameter.kind is not Parameter.VAR_KEYWORD
+    }
+
     @wraps(func)
     def decorated_func(*args: P.args, **kwargs: P.kwargs) -> OperationMeta:
         state = context.state
@@ -292,15 +303,24 @@ def _wrap_operation(func: Callable[P, Generator], _set_in_op: bool = True) -> Py
         # Get the meta kwargs (globals that apply to all hosts)
         global_arguments, global_argument_keys = pop_global_arguments(state, host, kwargs)
 
+        conditions = global_arguments.get("_if")
+        for condition in conditions if isinstance(conditions, list) else (conditions,):
+            if isinstance(condition, type) and issubclass(condition, (FactBase, ShortFactBase)):
+                raise ArgumentTypeError(
+                    "Invalid argument `_if`: bare fact classes are not conditions. "
+                    "Use any_fact(MyFact), all_fact(MyFact), or "
+                    "lambda: bool(host.get_fact(MyFact, ...)) for facts with arguments."
+                )
+
         names, add_args = generate_operation_name(func, host, kwargs, global_arguments)
-        op_order, op_hash = solve_operation_consistency(names, state, host)
+        op_order, op_hash = solve_operation_consistency(names, args, kwargs, state, host)
 
         # Ensure shared (between servers) operation meta, mutates state
         op_meta = ensure_shared_op_meta(state, op_hash, op_order, global_arguments, names)
 
         # Attach normal args, if we're auto-naming this operation
         if add_args:
-            op_meta = attach_args(op_meta, args, kwargs)
+            op_meta = attach_args(op_meta, named_parameters, args, kwargs)
 
         # Check if we're actually running the operation on this host
         # Run once and we've already added meta for this op? Stop here.
@@ -410,7 +430,7 @@ def generate_operation_name(func, host, kwargs, global_arguments):
     return names, add_args
 
 
-def solve_operation_consistency(names, state, host):
+def solve_operation_consistency(names, args, kwargs, state, host):
     # Operation order is used to tie-break available nodes in the operation DAG, in CLI mode
     # we use stack call order so this matches as defined by the user deploy code.
     if pyinfra.is_cli:
@@ -422,8 +442,18 @@ def solve_operation_consistency(names, state, host):
     if host.loop_position:
         op_order.extend(host.loop_position)
 
-    # Make a hash from the call stack lines
-    op_hash = make_hash(op_order)
+    # Make a hash from the call stack lines, operation names and arguments. Names and
+    # arguments are included so that different operations at the same position (eg calls
+    # in a plain loop with per-host data) do not collide into one hash, while identical
+    # operations across hosts still share a hash.
+    op_hash = make_hash(
+        (
+            op_order,
+            sorted(names),
+            [_get_arg_value(arg) for arg in args],
+            {key: _get_arg_value(value) for key, value in kwargs.items()},
+        )
+    )
 
     # Avoid adding duplicates! This happens if an operation is called within
     # a loop - such that the filename/lineno/code _are_ the same, but the
@@ -488,13 +518,16 @@ def _get_arg_value(arg):
     return arg
 
 
-def attach_args(op_meta, args, kwargs):
+def attach_args(op_meta, named_parameters: set[str], args, kwargs):
     for arg in args:
         if arg not in op_meta.args:
             op_meta.args.append(str(_get_arg_value(arg)))
 
     # Attach keyword args
     for key, value in kwargs.items():
+        if key not in named_parameters:
+            continue
+
         arg = "=".join((str(key), str(_get_arg_value(value))))
         if arg not in op_meta.args:
             op_meta.args.append(arg)

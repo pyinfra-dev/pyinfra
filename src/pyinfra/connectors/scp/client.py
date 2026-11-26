@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import ntpath
 import os
-from pathlib import PurePath
+import posixpath
+from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from shlex import quote
 from typing import IO, AnyStr
 
@@ -96,9 +96,9 @@ class SCPClient:
     def getfo(self, remote_path: str, fl: IO):
         remote_path_sanitized = quote(remote_path)
         if os.name == "nt":
-            remote_file_name = ntpath.basename(remote_path_sanitized)
+            remote_file_name = PureWindowsPath(remote_path_sanitized).name
         else:
-            remote_file_name = os.path.basename(remote_path_sanitized)
+            remote_file_name = PurePosixPath(remote_path_sanitized).name
         self.channel.settimeout(self.socket_timeout)
         self.channel.exec_command(self.scp_command + b" -f " + asbytes(remote_path_sanitized))
         self._recv_all(fl, remote_file_name)
@@ -112,12 +112,12 @@ class SCPClient:
             self._channel = None
 
     def _send_file(self, fl, name, mode, size):
-        basename = asbytes(os.path.basename(name))
+        basename = asbytes(posixpath.basename(name))
         # The protocol can't handle \n in the filename.
         # Quote them as the control sequence \^J for now,
         # which is how openssh handles it.
         self.channel.sendall(
-            ("C%s %d " % (mode, size)).encode("ascii") + basename.replace(b"\n", b"\\^J") + b"\n"
+            f"C{mode} {size} ".encode("ascii") + basename.replace(b"\n", b"\\^J") + b"\n"
         )
         self._recv_confirm()
         file_pos = 0

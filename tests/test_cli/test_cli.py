@@ -17,6 +17,59 @@ class TestCliEagerFlags(TestCase):
         result = run_cli("--help")
         assert result.exit_code == 0, result.stderr
 
+    def test_support_standalone(self):
+        # `pyinfra --support` must work without INVENTORY/OPERATIONS: the crash
+        # handler tells users to run exactly this.
+        result = run_cli("--support")
+        assert result.exit_code == 0, result.stderr
+        assert "pyinfra: v" in result.stderr
+
+
+class TestCliYesEnvVar(TestCase):
+    def _parse_yes(self, value):
+        import os
+
+        from pyinfra_cli.cli import app
+
+        os.environ["PYINFRA_YES"] = value
+        try:
+            _, bound, _ = app.parse_args(["inv.py", "server.shell", "x"], exit_on_error=False)
+            return bound.arguments["yes"]
+        finally:
+            del os.environ["PYINFRA_YES"]
+
+    def test_empty_is_false(self):
+        assert self._parse_yes("") is False
+
+    def test_whitespace_is_false(self):
+        assert self._parse_yes("  ") is False
+
+    def test_on_off(self):
+        assert self._parse_yes("on") is True
+        assert self._parse_yes("off") is False
+
+    def test_numeric(self):
+        assert self._parse_yes("1") is True
+        assert self._parse_yes("0") is False
+
+    def test_true_false_any_case(self):
+        assert self._parse_yes("true") is True
+        assert self._parse_yes("False") is False
+
+    def test_invalid_value_errors(self):
+        import os
+
+        from cyclopts import CycloptsError
+
+        from pyinfra_cli.cli import app
+
+        os.environ["PYINFRA_YES"] = "junk"
+        try:
+            with self.assertRaises(CycloptsError):
+                app.parse_args(["inv.py", "x"], exit_on_error=False, print_error=False)
+        finally:
+            del os.environ["PYINFRA_YES"]
+
 
 class TestOperationCli(PatchSSHTestCase):
     def test_invalid_operation_module(self):
@@ -47,7 +100,7 @@ class TestOperationCli(PatchSSHTestCase):
     def test_deploy_operation_with_all(self):
         result = run_cli(
             "-y",
-            path.join("tests", "test_cli", "deploy", "inventory_all.py"),
+            path.join("tests", "test_cli", "deploy", "inventories", "inventory_all.py"),
             "server.shell",
             "echo hi",
         )
@@ -56,7 +109,7 @@ class TestOperationCli(PatchSSHTestCase):
     def test_deploy_operation_json_args(self):
         result = run_cli(
             "-y",
-            path.join("tests", "test_cli", "deploy", "inventory_all.py"),
+            path.join("tests", "test_cli", "deploy", "inventories", "inventory_all.py"),
             "server.shell",
             '[["echo hi"], {}]',
         )
@@ -338,7 +391,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
     def test_deploy_operation_direct(self):
         with self.assertRaises(SystemExit) as e:
             _main(
-                inventory=path.join("tests", "test_deploy", "inventories", "inventory.py"),
+                inventory=path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
                 operations=["server.shell", "echo hi"],
                 chdir=None,
                 group_data=None,

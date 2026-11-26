@@ -1,0 +1,4 @@
+command: apt-mark showhold
+requires_command: apt-mark
+output: ""
+fact: []

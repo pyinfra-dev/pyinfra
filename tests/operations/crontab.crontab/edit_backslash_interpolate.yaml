@@ -1,0 +1,17 @@
+args:
+  - echo changed
+kwargs:
+  cron_name: backslash
+  special_time: "@daily"
+  interpolate_variables: true
+facts:
+  crontab.Crontab:
+    user=None:
+      echo foo\bar $HOME `date`:
+        special_time: "@weekly"
+        comments:
+          - "# pyinfra-name=backslash"
+commands:
+  - 'crontab -l > _tempfile_'
+  - 'sed -i.a-timestamp "s/.*echo foo\\\\bar \$HOME \`date\`.*/@daily echo changed/" _tempfile_ && rm -f _tempfile_.a-timestamp'
+  - 'crontab _tempfile_'

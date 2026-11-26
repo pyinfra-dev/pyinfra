@@ -1,0 +1,12 @@
+args:
+  - rad
+kwargs:
+  enabled: false
+facts:
+  server.Os: FreeBSD
+  bsdinit.RcdStatus:
+    rad: true
+  bsdinit.ServiceEnabled:
+    rad: true
+commands:
+  - service rad disable

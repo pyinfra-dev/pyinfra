@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from typing_extensions import TypedDict, override
 
-from pyinfra.api import FactBase
+from pyinfra.api import FactBase, QuoteString, StringCommand
 
 from .gpg import GpgKeyrings
 from .util.packaging import parse_packages
@@ -230,11 +230,24 @@ class AptSourcesFile:
         return repos
 
 
-def noninteractive_apt(command: str, force=False):
+def apt_lock_timeout(wait_for_lock: bool | int) -> str:
+    """
+    Return the ``DPkg::Lock::Timeout`` apt option for a ``wait_for_lock`` argument.
+    ``True`` maps to a 60 second default, an int sets the timeout in seconds.
+    """
+
+    timeout = 60 if wait_for_lock is True else int(wait_for_lock)
+    return f"-o DPkg::Lock::Timeout={timeout}"
+
+
+def noninteractive_apt(command: str, force=False, wait_for_lock: bool | int = False):
     args = ["DEBIAN_FRONTEND=noninteractive apt-get -y"]
 
     if force:
         args.append("--force-yes")
+
+    if wait_for_lock:
+        args.append(apt_lock_timeout(wait_for_lock))
 
     args.extend(
         (
@@ -423,6 +436,72 @@ class AptPackages(FactBase):
     @override
     def process(self, output):
         return parse_packages(self.regex, output)
+
+
+class AptPackageProvides(FactBase):
+    """
+    Returns a list of packages that provide the specified (virtual) package name:
+
+    .. code:: python
+
+        [
+            ["package_name", "version"],
+        ]
+    """
+
+    default = list
+
+    @override
+    def command(self, package: str) -> StringCommand:
+        return StringCommand("apt-cache showpkg", QuoteString(package))
+
+    @override
+    def requires_command(self, package: str) -> str:
+        return "apt-cache"
+
+    @override
+    def process(self, output: list[str]) -> list[list[str]]:
+        packages: list[list[str]] = []
+        in_reverse_provides = False
+
+        for line in output:
+            line = line.strip()
+            if line == "Reverse Provides:":
+                in_reverse_provides = True
+                continue
+            if in_reverse_provides and line:
+                name, version = line.split()[:2]
+                packages.append([name, version])
+
+        return packages
+
+
+class AptHeldPackages(FactBase[list[str]]):
+    """
+    Returns a list of apt packages marked as held (``apt-mark showhold``). Held
+    packages are not automatically upgraded, removed or changed by ``apt``.
+
+    .. code:: python
+
+        [
+            "nomad",
+            "libfoo:i386",
+        ]
+    """
+
+    @override
+    def command(self) -> str:
+        return "apt-mark showhold"
+
+    @override
+    def requires_command(self) -> str:
+        return "apt-mark"
+
+    default = list
+
+    @override
+    def process(self, output: list[str]) -> list[str]:
+        return [line.strip() for line in output if line.strip()]
 
 
 class AptKeys(GpgKeyrings):

@@ -1,0 +1,39 @@
+arg:
+  directory: /opt/app
+command: "! test -d /opt/app || (cd /opt/app && pnpm list --depth=0 --json)"
+requires_command: pnpm
+output: |
+  [
+    {
+      "name": "app",
+      "version": "1.0.0",
+      "path": "/opt/app",
+      "private": false,
+      "dependencies": {
+        "lodash": {
+          "from": "lodash",
+          "version": "4.17.21",
+          "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
+          "path": "/opt/app/node_modules/.pnpm/lodash@4.17.21/node_modules/lodash"
+        }
+      },
+      "devDependencies": {
+        "typescript": {
+          "from": "typescript",
+          "version": "5.4.5",
+          "path": "/opt/app/node_modules/.pnpm/typescript@5.4.5/node_modules/typescript"
+        }
+      },
+      "optionalDependencies": {
+        "dayjs": {
+          "from": "dayjs",
+          "version": "1.11.13",
+          "path": "/opt/app/node_modules/.pnpm/dayjs@1.11.13/node_modules/dayjs"
+        }
+      }
+    }
+  ]
+fact:
+  lodash: ["4.17.21"]
+  typescript: ["5.4.5"]
+  dayjs: ["1.11.13"]

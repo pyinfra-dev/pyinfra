@@ -1,0 +1,5 @@
+args:
+  - app
+  - "./manage.py migrate 2>&1 | tee /var/log/migrate.log"
+commands:
+  - "docker exec app sh -c './manage.py migrate 2>&1 | tee /var/log/migrate.log'"

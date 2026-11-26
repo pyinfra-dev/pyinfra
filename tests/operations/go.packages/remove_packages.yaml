@@ -1,0 +1,9 @@
+args:
+  - ["github.com/foo/bar/cmd/mytool"]
+kwargs:
+  present: false
+facts:
+  go.GoPackages:
+    github.com/foo/bar/cmd/mytool: ["v1.2.3"]
+commands:
+  - 'BINDIR=$(go env GOBIN); [ -z "$BINDIR" ] && BINDIR="$(go env GOPATH)/bin"; rm -f "$BINDIR"/mytool'

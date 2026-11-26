@@ -1,0 +1,14 @@
+arg:
+  directory: "/app dir; rm -rf /"
+command: "! test -d '/app dir; rm -rf /' || (cd '/app dir; rm -rf /' && pnpm list --depth=0 --json)"
+requires_command: pnpm
+output: |
+  [
+    {
+      "name": "app",
+      "version": "1.0.0",
+      "path": "/app dir; rm -rf /",
+      "private": false
+    }
+  ]
+fact: {}

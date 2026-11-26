@@ -1,0 +1,10 @@
+args:
+  - app
+  - ["touch", "/srv/ready"]
+kwargs:
+  user: appuser
+  workdir: /srv
+  env:
+    STAGE: prod
+commands:
+  - "docker exec --user appuser --workdir /srv --env STAGE=prod app touch /srv/ready"

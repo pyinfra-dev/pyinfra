@@ -5,9 +5,10 @@ Linux/BSD.
 
 from __future__ import annotations
 
+import os
+from collections.abc import Generator
 from io import StringIO
 from itertools import filterfalse, tee
-from os import path
 from time import sleep
 from typing import TYPE_CHECKING
 
@@ -95,7 +96,13 @@ def reboot(delay=10, interval=1, reboot_timeout=300):
 
     yield FunctionCommand(capture_uptime, (), {})
 
-    yield StringCommand("reboot", _success_exit_codes=[0, -1])  # -1 being error/disconnected
+    # Detach the reboot from the SSH session so the channel closes immediately.
+    # When the reboot is run inline, paramiko blocks on `recv_exit_status` for
+    # the remote process - that never returns when the connection goes through
+    # a still-alive ProxyCommand (#1708).
+    yield StringCommand(
+        "( sleep 1 && reboot ) </dev/null >/dev/null 2>&1 &",
+    )
 
     def wait_and_reconnect(state, host):  # pragma: no cover
         sleep(delay)
@@ -179,7 +186,9 @@ def shell(commands: str | list[str]):
     """
     Run raw shell code on server during a deploy. If the command would
     modify data that would be in a fact, the fact would not be updated
-    since facts are only run at the start of a deploy.
+    since facts are only run at the start of a deploy. Commands run via the
+    configured shell, which defaults to ``sh``; use the ``_shell_executable``
+    global argument when a command needs Bash or another shell.
 
     + commands: command or list of commands to execute on the remote server
 
@@ -190,6 +199,12 @@ def shell(commands: str | list[str]):
         server.shell(
             name="Run lxd auto init",
             commands=["lxd init --auto"],
+        )
+
+        server.shell(
+            name="Source a Bash environment before building",
+            commands=["source /opt/example/setupvars.sh && make"],
+            _shell_executable="bash",
         )
     """
 
@@ -325,6 +340,8 @@ def mount(
     + path: the path of the mounted filesystem
     + mounted: whether the filesystem should be mounted
     + options: the mount options
+    + device: the device behind the mount
+    + fs_type: the filesystem type
 
     Options:
         If the currently mounted filesystem does not have all of the provided
@@ -373,14 +390,14 @@ def mount(
         mounted_options = mounts[mounted_path]["options"]
         needed_options = set(options) - set(mounted_options)
         if needed_options:
-            if host.get_fact(Kernel).strip() == "FreeBSD":
+            # the -u option is common among FreeBSD, OpenBSD, NetBSD, DragonFlyBSD
+            if "BSD" in host.get_fact(Kernel).strip():
                 fs_type = mounts[mounted_path]["type"]
                 device = mounts[mounted_path]["device"]
-
                 yield StringCommand(
                     "mount",
-                    "-o",
-                    StringCommand("update,", options_string, _separator=""),
+                    "-uo",
+                    StringCommand(options_string, _separator=""),
                     "-t",
                     fs_type,
                     QuoteString(device),
@@ -409,7 +426,7 @@ def hostname(hostname: str, hostname_file: str | None = None):
     + hostname_file: the file that permanently sets the hostname
 
     Hostname file:
-        The hostname file only matters no systems that do not have ``hostnamectl``,
+        The hostname file only matters on systems that do not have ``hostnamectl``,
         which is part of ``systemd``.
 
         By default pyinfra will auto detect this by targeting ``/etc/hostname``
@@ -930,9 +947,11 @@ def user_authorized_keys(
     def read_any_pub_key_file(key):
         try_path = key
         if state.cwd:
-            try_path = path.join(state.cwd, key)
+            try_path = os.path.join(state.cwd, key)
 
-        if path.exists(try_path):
+        # NOTE: os.path.exists swallows OSError (eg ENAMETOOLONG from long inline
+        # keys), whereas Path.exists re-raises it on Python < 3.14.
+        if os.path.exists(try_path):
             with open(try_path) as f:
                 return [key.strip() for key in f.readlines()]
 
@@ -1016,6 +1035,7 @@ def user(
     comment: str | None = None,
     unique=True,
     password: str | None = None,
+    password_lock: bool | None = None,
 ):
     """
     Add/remove/update system users & their ssh `authorized_keys`.
@@ -1036,6 +1056,7 @@ def user(
     + comment: the user GECOS comment
     + unique: prevent creating users with duplicate UID
     + password: set the encrypted password for the user
+    + password_lock: whether the user's password should be locked (``True``) or unlocked (``False``)
 
     Home directory:
         When ``ensure_home`` or ``public_keys`` are provided, ``home`` defaults to
@@ -1046,6 +1067,14 @@ def user(
     Public keys:
         These can be provided as strings containing the public key or as a path to
         a public key file which pyinfra will read.
+
+    Password lock:
+        New users created without a ``password`` have a locked (Linux) or disabled
+        (FreeBSD, ``*``) password. ``password_lock=False`` unlocks the password, or
+        deletes it (making it empty) when there is no password hash to unlock, so the
+        user can set one with ``passwd``. When ``password_lock`` is set, ``password`` is
+        compared ignoring the lock prefix. Only supported on Linux and FreeBSD, and
+        ignored when ``present=False``.
 
     **Examples:**
 
@@ -1063,6 +1092,12 @@ def user(
             shell="/bin/bash",
         )
 
+        server.user(
+            name="Ensure alice exists and can set her own password",
+            user="alice",
+            password_lock=False,
+        )
+
         # multiple users
         for user in ["kevin", "bob"]:
             server.user(
@@ -1076,6 +1111,10 @@ def user(
     existing_groups = host.get_fact(Groups)
     existing_user = users.get(user)
     os_type = host.get_fact(Os)
+
+    if present and password_lock is not None and os_type not in ("Linux", "FreeBSD"):
+        raise OperationError("password_lock is only supported on Linux and FreeBSD")
+
     if groups is None:
         groups = []
 
@@ -1174,6 +1213,10 @@ def user(
                 raise OperationError("useradd is not installed")
             yield StringCommand("useradd", *args, QuoteString(user))
 
+        # useradd leaves users without a password locked, pw useradd leaves them disabled
+        current_password = password or ("*" if os_type == "FreeBSD" else "!")
+        user_changed = True
+
     # User exists and we want them, check home/shell/keys/password
     else:
         mod_args: list[str | QuoteString | StringCommand] = []
@@ -1208,7 +1251,16 @@ def user(
         if comment and existing_user["comment"] != comment:
             mod_args.extend(["-c", QuoteString(comment)])
 
-        if password and existing_user["password"] != password:
+        current_password = existing_user.get("password") or ""
+        existing_password = current_password
+        if password_lock is not None:
+            # The lock state is managed by password_lock, so compare the hash itself
+            existing_password = _strip_password_lock(current_password, os_type)
+
+        password_changed = False
+        if password and existing_password != password:
+            password_changed = True
+            current_password = password
             if os_type == "FreeBSD":
                 yield StringCommand(
                     "echo",
@@ -1224,6 +1276,8 @@ def user(
             else:
                 mod_args.extend(["-p", QuoteString(password)])
 
+        user_changed = password_changed or bool(mod_args)
+
         # Need to mod the user?
         if mod_args:
             if os_type == "FreeBSD":
@@ -1236,6 +1290,15 @@ def user(
                         )
                     raise OperationError("usermod is not installed")
                 yield StringCommand("usermod", *mod_args, QuoteString(user))
+
+    if password_lock is not None:
+        yield from _user_password_lock(
+            user,
+            current_password,
+            password_lock,
+            os_type,
+            user_changed,
+        )
 
     # Ensure home directory ownership
     if ensure_home and home:
@@ -1257,6 +1320,67 @@ def user(
             authorized_key_directory=f"{home}/.ssh",
             authorized_key_filename=None,
         )
+
+
+def _password_lock_prefix(os_type: str) -> str:
+    return "*LOCKED*" if os_type == "FreeBSD" else "!"
+
+
+def _strip_password_lock(password: str, os_type: str) -> str:
+    lock_prefix = _password_lock_prefix(os_type)
+    while password.startswith(lock_prefix):
+        password = password[len(lock_prefix) :]
+    return password
+
+
+def _user_password_lock(
+    user: str,
+    current_password: str,
+    password_lock: bool,
+    os_type: str,
+    user_changed: bool,
+) -> Generator[StringCommand, None, None]:
+    is_locked = current_password.startswith(_password_lock_prefix(os_type))
+    # No usable hash: either nothing behind the lock, or a disabled (`*`) password
+    has_hash = _strip_password_lock(current_password, os_type) not in ("", "*")
+
+    if password_lock:
+        if is_locked:
+            if not user_changed:
+                host.noop(f"password for user {user} is already locked")
+            return
+        if os_type == "FreeBSD":
+            yield StringCommand("pw", "lock", QuoteString(user))
+        else:
+            _check_usermod_installed(os_type)
+            yield StringCommand("usermod", "-L", QuoteString(user))
+        return
+
+    if has_hash or current_password == "":
+        if not is_locked:
+            if not user_changed:
+                host.noop(f"password for user {user} is already unlocked")
+            return
+        if os_type == "FreeBSD":
+            yield StringCommand("pw", "unlock", QuoteString(user))
+        else:
+            _check_usermod_installed(os_type)
+            yield StringCommand("usermod", "-U", QuoteString(user))
+        return
+
+    # There is no hash to unlock (`usermod -U` refuses to leave an empty password), so
+    # delete the password instead, letting the user set one with `passwd`.
+    if os_type == "FreeBSD":
+        yield StringCommand("pw", "usermod", "-n", QuoteString(user), "-w", "none")
+    else:
+        yield StringCommand("passwd", "-d", QuoteString(user))
+
+
+def _check_usermod_installed(os_type: str) -> None:
+    if os_type == "Linux" and not host.get_fact(Which, command="usermod"):
+        if host.get_fact(LinuxName) == "Alpine":
+            raise OperationError("usermod is not installed (install the shadow package)")
+        raise OperationError("usermod is not installed")
 
 
 @operation()

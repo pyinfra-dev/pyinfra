@@ -1,5 +1,5 @@
 {
-    "args": ["evil; rm -rf /"],
+    "args": ["evil;id"],
     "kwargs": {
         "force": true
     },
@@ -11,12 +11,12 @@
             }
         },
         "files.FindInFile": {
-            "extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=evil; rm -rf /": [true]
+            "extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=evil;id": ["evil;id ssh-ed25519 AAAA"]
         }
     },
     "commands": [
-        "ssh-keygen -R 'evil; rm -rf /'",
-        "ssh-keyscan -p 22 'evil; rm -rf /' >> /home/pyinfra/.ssh/known_hosts"
+        "ssh-keygen -R 'evil;id'",
+        "ssh-keyscan -p 22 'evil;id' >> /home/pyinfra/.ssh/known_hosts"
     ],
     "idempotent": false,
     "disable_idempotent_warning_reason": "forced keyscans are always executed"

@@ -1,3 +1,5 @@
+[English](https://github.com/pyinfra-dev/pyinfra/blob/3.x/README.md) | [简体中文](https://github.com/pyinfra-dev/pyinfra/blob/3.x/README.zh-CN.md)
+
 <p align="center">
     <a href="https://pyinfra.com">
         <img src="https://pyinfra.com/static/logo_readme.png" alt="pyinfra" />
@@ -98,8 +100,8 @@ See the more detailed [getting started](https://docs.pyinfra.com/page/getting-st
 <p align="center">
     <a href="https://pypi.python.org/pypi/pyinfra"><img alt="PyPI version" src="https://img.shields.io/pypi/v/pyinfra?color=blue"></a>
     <a href="https://pepy.tech/project/pyinfra"><img alt="PyPi downloads" src="https://pepy.tech/badge/pyinfra"></a>
-    <a href="https://docs.pyinfra.com"><img alt="Docs status" src="https://img.shields.io/github/actions/workflow/status/Fizzadar/pyinfra/docs.yml?branch=2.x"></a>
-    <a href="https://github.com/Fizzadar/pyinfra/actions?query=workflow%3A%22Execute+tests%22"><img alt="Execute tests status" src="https://img.shields.io/github/actions/workflow/status/Fizzadar/pyinfra/test.yml?branch=2.x"></a>
-    <a href="https://codecov.io/github/Fizzadar/pyinfra"><img alt="Codecov Coverage" src="https://img.shields.io/codecov/c/gh/Fizzadar/pyinfra"></a>
-    <a href="https://github.com/Fizzadar/pyinfra/blob/2.x/LICENSE.md"><img alt="MIT Licensed" src="https://img.shields.io/pypi/l/pyinfra"></a>
+    <a href="https://docs.pyinfra.com"><img alt="Docs status" src="https://img.shields.io/github/actions/workflow/status/pyinfra-dev/pyinfra/docs.yml?branch=3.x"></a>
+    <a href="https://github.com/pyinfra-dev/pyinfra/actions?query=workflow%3A%22Execute+tests%22"><img alt="Execute tests status" src="https://img.shields.io/github/actions/workflow/status/pyinfra-dev/pyinfra/test.yml?branch=3.x"></a>
+    <a href="https://codecov.io/github/pyinfra-dev/pyinfra"><img alt="Codecov Coverage" src="https://img.shields.io/codecov/c/gh/pyinfra-dev/pyinfra"></a>
+    <a href="https://github.com/pyinfra-dev/pyinfra/blob/3.x/LICENSE.md"><img alt="MIT Licensed" src="https://img.shields.io/pypi/l/pyinfra"></a>
 </p>

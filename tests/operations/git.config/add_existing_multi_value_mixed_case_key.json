@@ -1,0 +1,15 @@
+{
+    "args": ["Remote.origin.Fetch", "+refs/heads/*:refs/remotes/origin/*"],
+    "kwargs": {
+        "multi_value": true
+    },
+    "facts": {
+        "git.GitConfig": {
+            "repo=None, system=False": {
+                "remote.origin.fetch": ["+refs/heads/*:refs/remotes/origin/*"]
+            }
+        }
+    },
+    "commands": [],
+    "noop_description": "git config Remote.origin.Fetch is set to +refs/heads/*:refs/remotes/origin/*"
+}

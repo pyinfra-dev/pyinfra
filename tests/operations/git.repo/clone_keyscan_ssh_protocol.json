@@ -1,0 +1,25 @@
+{
+    "args": ["ssh://git@git.example.com/org/repo.git", "/home/myrepo"],
+    "kwargs": {
+        "branch": "mybranch",
+        "ssh_keyscan": true,
+        "pull": false
+    },
+    "facts": {
+        "server.Home": "/home/pyinfra",
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null,
+            "path=/home/pyinfra/.ssh": {
+                "mode": 700
+            }
+        },
+        "files.FindInFile": {
+            "extended_regex=False, interpolate_variables=False, path=/home/pyinfra/.ssh/known_hosts, pattern=git.example.com": []
+        }
+    },
+    "commands": [
+        "ssh-keyscan -p 22 git.example.com >> /home/pyinfra/.ssh/known_hosts",
+        "cd /home/myrepo && git clone ssh://git@git.example.com/org/repo.git --branch mybranch ."
+    ]
+}

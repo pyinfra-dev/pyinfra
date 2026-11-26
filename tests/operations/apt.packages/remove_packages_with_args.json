@@ -9,6 +9,9 @@
     "facts": {
         "deb.DebPackages": {
             "git": [""]
+        },
+        "apt.AptPackageProvides": {
+            "package=git": []
         }
     },
     "commands": [

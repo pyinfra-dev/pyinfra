@@ -1,0 +1,53 @@
+{
+  "command": "LANG=C ps -eo pid,user,stat,%cpu,%mem,args -ww && echo ===PYINFRA-PROCESSES-COMM=== && LANG=C ps -eo pid,comm -ww",
+  "facts": {
+    "server.Kernel": "Darwin"
+  },
+  "output": [
+    "  PID USER     STAT  %CPU %MEM ARGS\r",
+    "    1 root     Ss    0.0  0.1 /sbin/launchd\r",
+    "  200 root     S     0.0  0.0 /usr/libexec/opendirectoryd\r",
+    "  300 root     Ss    0.0  0.2 /usr/sbin/sshd -D -o PermitRootLogin=no\r",
+    "  500 root     Ss    0.3  1.2 /System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper\r",
+    "===PYINFRA-PROCESSES-COMM===\r",
+    "  PID COMM\r",
+    "    1 /sbin/launchd\r",
+    "  200 /usr/libexec/opendirectoryd\r",
+    "  300 /usr/sbin/sshd\r",
+    "  500 /System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper\r"
+  ],
+  "fact": {
+    "1": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.1,
+      "command": "/sbin/launchd",
+      "args": "/sbin/launchd"
+    },
+    "200": {
+      "user": "root",
+      "state": "S",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.0,
+      "command": "/usr/libexec/opendirectoryd",
+      "args": "/usr/libexec/opendirectoryd"
+    },
+    "300": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.0,
+      "mem_percent": 0.2,
+      "command": "/usr/sbin/sshd",
+      "args": "/usr/sbin/sshd -D -o PermitRootLogin=no"
+    },
+    "500": {
+      "user": "root",
+      "state": "Ss",
+      "cpu_percent": 0.3,
+      "mem_percent": 1.2,
+      "command": "/System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper",
+      "args": "/System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/XPCServices/backupd-helper.xpc/Contents/MacOS/backupd-helper"
+    }
+  }
+}

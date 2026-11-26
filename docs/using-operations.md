@@ -28,7 +28,7 @@ files.file(
 )
 ```
 
-Uses [`operations.files`](operations/files.md) and [`operations.server`](operations/server.md). You can see all available operations in the [Operations Index](operations/index.md). If you save the file as `deploy.py` you can test it out using Docker:
+Uses [`operations.files`](operations/files.md) and [`operations.server`](operations/server.md). You can see all available operations in the [Operations Index](operations.md). If you save the file as `deploy.py` you can test it out using Docker:
 
 ```sh
 pyinfra @docker/ubuntu:20.04 deploy.py
@@ -157,7 +157,7 @@ if host.get_fact(LinuxName) == "Ubuntu":
 pyinfra inventory.py nano.py
 ```
 
-See [Facts Index](facts/index.md) for a full list of available facts and arguments.
+See [Facts Index](facts.md) for a full list of available facts and arguments.
 
 !!! important
     Only use **immutable** facts in deploy code — facts whose value cannot change *over the course of the deploy*. OS family, distribution, architecture and kernel version are immutable in this sense; "is this package installed", "does this file exist" and "is this service running" are **not**, because an earlier operation in the same deploy could flip them. Facts are read during prepare, before any operation runs, so a mutable fact branched on in Python sees pre-deploy state — not the state at the point of the branch in source order. Use `_if` (see [Change Detection](#change-detection) below) for conditions that need execute-time evaluation. More detail: [using host facts](deploy-process.md#using-host-facts).
@@ -227,7 +227,7 @@ server.shell(
     _if=[create_user.did_change, create_otheruser.did_change],
 )
 
-# You can also build your own lamba functions to achieve, e.g. an OR condition
+# You can also build your own lambda functions to achieve, e.g. an OR condition
 server.shell(
     commands=["echo 'myuser or otheruser changed'"],
     _if=lambda: create_user.did_change() or create_otheruser.did_change(),
@@ -241,6 +241,31 @@ server.shell(commands=["..."], _if=all_changed(create_user, create_otheruser))
 
 !!! important
     `_if` must be a callable, or a list of callables. Passing a value directly (e.g. `_if=host.get_fact(MyFact)`) does not gate the operation: most non-callable values raise `ArgumentTypeError` at prepare time, and `None` is treated as "no condition" so the operation always runs. Wrap the value in a lambda to gate on it: `_if=lambda: bool(host.get_fact(MyFact))`.
+
+Use `any_fact` (OR) or `all_fact` (AND) to gate an operation on the truthiness of facts that take no arguments:
+
+```python
+from pyinfra import host
+from pyinfra.facts.server import HasGui, LinuxName, Which
+from pyinfra.operations.util import any_fact, all_fact
+
+server.shell(commands=["..."], _if=any_fact(HasGui, LinuxName))
+server.shell(commands=["..."], _if=all_fact(HasGui, LinuxName))
+# Lists keep their AND semantics and can mix fact and operation conditions.
+server.shell(commands=["..."], _if=[any_fact(HasGui, LinuxName), create_user.did_change])
+
+# Facts that need arguments use an explicit lambda.
+server.shell(commands=["..."], _if=lambda: bool(host.get_fact(Which, "git")))
+```
+
+These helpers collect facts lazily when the condition runs, using the current executing host.
+They short-circuit: `any_fact` stops at the first truthy value, and `all_fact` stops at the
+first falsey value. Each invocation reads facts through the existing fact API.
+With no facts, `any_fact()` returns a condition that is always false and `all_fact()` returns
+one that is always true. An empty `_if` list also allows the operation to run.
+
+Passing a bare fact class, such as `_if=HasGui` or `_if=[HasGui]`, raises `ArgumentTypeError`
+during prepare. Wrap it with `any_fact` or `all_fact`, or use a lambda as above.
 
 ## Output & Callbacks
 

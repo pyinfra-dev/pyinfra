@@ -5,7 +5,9 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 
 import glob
 import re
+import shlex
 from os import environ, path
+from pathlib import Path
 
 import paramiko.config
 from gevent.subprocess import CalledProcessError, check_call
@@ -85,22 +87,28 @@ def _expand_include_statements(file_obj, parsed_files=None):
         if parsed_files is None:
             parsed_files = []
 
-        # The path can be relative to its parent configuration file
-        if path.isabs(value) is False and value[0] != "~":
-            folder = path.dirname(file_obj.name)
-            value = path.join(folder, value)
+        includes = shlex.shlex(value, posix=True)
+        includes.whitespace_split = True
+        includes.commenters = ""  # Inline comments were already stripped above.
+        includes.escape = ""  # Preserve backslashes in Windows paths.
+        for include in includes:
+            # The path can be relative to its parent configuration file
+            if not path.isabs(include) and not include.startswith("~"):
+                folder = path.dirname(file_obj.name)
+                include = path.join(folder, include)
 
-        value = path.expanduser(value)
+            include = path.expanduser(include)
 
-        for filename in glob.iglob(value):
-            if path.isfile(filename):
-                if filename in parsed_files:
-                    raise Exception(
-                        f"Include loop detected in ssh config file: {filename}",
-                    )
-                with open(filename, encoding="utf-8") as fd:
-                    parsed_files.append(filename)
-                    parsed_lines.extend(_expand_include_statements(fd, parsed_files))
+            for filename in sorted(glob.iglob(include)):
+                if Path(filename).is_file():
+                    if filename in parsed_files:
+                        raise Exception(
+                            f"Include loop detected in ssh config file: {filename}",
+                        )
+                    with open(filename, encoding="utf-8") as fd:
+                        parsed_lines.extend(
+                            _expand_include_statements(fd, [*parsed_files, filename])
+                        )
 
     return parsed_lines
 

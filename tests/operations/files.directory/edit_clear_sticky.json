@@ -1,0 +1,20 @@
+{
+    "args": [
+        "testdir"
+    ],
+    "kwargs": {
+        "mode": 777
+    },
+    "facts": {
+        "files.Directory": {
+            "path=testdir": {
+                "mode": 1777,
+                "user": "testuser",
+                "group": "testgroup"
+            }
+        }
+    },
+    "commands": [
+        "chmod 777 testdir"
+    ]
+}

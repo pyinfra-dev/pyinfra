@@ -3,10 +3,7 @@
     "commands": [
         ["remove_any_askpass_file", [], {}],
         ["capture_uptime", [], {}],
-        {
-            "command": "reboot",
-            "_success_exit_codes": [0, -1]
-        },
+        "( sleep 1 && reboot ) </dev/null >/dev/null 2>&1 &",
         ["wait_and_reconnect", [], {}],
         ["clean_sudo_info", [], {}]
     ],

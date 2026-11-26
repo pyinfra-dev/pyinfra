@@ -241,7 +241,7 @@ def database(
     """
     Add/remove PostgreSQL databases.
 
-    + name: name of the database
+    + database: name of the database
     + present: whether the database should exist or not
     + owner: the PostgreSQL role that owns the database
     + template: name of the PostgreSQL template to use

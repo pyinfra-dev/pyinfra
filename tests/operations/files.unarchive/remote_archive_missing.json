@@ -12,8 +12,5 @@
             "path=/tmp/missing.tar.gz": null
         }
     },
-    "exception": {
-        "name": "OperationError",
-        "message": "Remote archive /tmp/missing.tar.gz does not exist"
-    }
+    "commands": ["tar -xz -f /tmp/missing.tar.gz -C /opt/app"]
 }

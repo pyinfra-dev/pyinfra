@@ -16,6 +16,8 @@ def ssh_ca_keypair(tmp_path_factory) -> dict[str, Path]:
     ca_key = ssh_dir / "ca"
     user_key = ssh_dir / "user_ed25519"
     user_cert = ssh_dir / "user_ed25519-cert.pub"
+    host_key = ssh_dir / "host_ed25519"
+    host_cert = ssh_dir / "host_ed25519-cert.pub"
 
     subprocess.run(
         ["ssh-keygen", "-t", "ed25519", "-N", "", "-f", str(ca_key), "-C", "test-ca"],
@@ -43,12 +45,55 @@ def ssh_ca_keypair(tmp_path_factory) -> dict[str, Path]:
         check=True,
         capture_output=True,
     )
+    subprocess.run(
+        ["ssh-keygen", "-t", "ed25519", "-N", "", "-f", str(host_key), "-C", "test-host"],
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        [
+            "ssh-keygen",
+            "-s",
+            str(ca_key),
+            "-I",
+            "test-host",
+            "-h",
+            "-n",
+            "192.168.1.236,host.example.com",
+            "-V",
+            "+1h",
+            str(host_key) + ".pub",
+        ],
+        check=True,
+        capture_output=True,
+    )
 
     assert user_cert.is_file(), "ssh-keygen did not produce the expected certificate"
+    assert host_cert.is_file(), "ssh-keygen did not produce the expected host certificate"
 
     return {
         "ca_key": ca_key,
         "user_key": user_key,
         "user_cert": user_cert,
+        "host_key": host_key,
+        "host_cert": host_cert,
         "ssh_dir": ssh_dir,
     }
+
+
+@pytest.fixture(scope="session")
+def ssh_encrypted_key(tmp_path_factory) -> dict[str, object]:
+    if shutil.which("ssh-keygen") is None:
+        pytest.skip("ssh-keygen not available on PATH")
+
+    ssh_dir = tmp_path_factory.mktemp("ssh_encrypted")
+    key = ssh_dir / "encrypted_ed25519"
+    passphrase = "correct horse battery staple"
+
+    subprocess.run(
+        ["ssh-keygen", "-t", "ed25519", "-N", passphrase, "-f", str(key), "-C", "encrypted-test"],
+        check=True,
+        capture_output=True,
+    )
+
+    return {"key": key, "passphrase": passphrase}

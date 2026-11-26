@@ -5,7 +5,9 @@ from functools import wraps
 from hashlib import md5, sha1, sha256
 from inspect import getframeinfo, stack
 from io import BytesIO, StringIO
-from os import getcwd, path, stat
+import os.path
+from os import getcwd, stat
+from pathlib import Path
 from socket import error as socket_error, timeout as timeout_error
 from typing import IO, TYPE_CHECKING, Any
 from collections.abc import Callable
@@ -30,20 +32,24 @@ BLOCKSIZE = 65536
 TEMPLATES: dict[str, Template] = {}
 FILE_SHAS: dict[Any, Any] = {}
 
-PYINFRA_INSTALL_DIR = path.normpath(path.join(path.dirname(__file__), ".."))
+PYINFRA_INSTALL_DIR = str(Path(__file__).parent.parent)
 
 
 def get_file_path(state: State, filename: str):
-    if path.isabs(filename):
+    # These are real local controller paths (state.cwd from getcwd(),
+    # current_exec_filename is an actual file), so use the platform-aware
+    # pathlib.Path (WindowsPath on Windows, PosixPath elsewhere) rather than
+    # forcing posix semantics.
+    if Path(filename).is_absolute():
         return filename
 
     assert state.cwd is not None, "Cannot use `get_file_path` with no `state.cwd` set"
     relative_to = state.cwd
 
     if state.current_exec_filename and (filename.startswith("./") or filename.startswith(".\\")):
-        relative_to = path.dirname(state.current_exec_filename)
+        relative_to = str(Path(state.current_exec_filename).parent)
 
-    return path.join(relative_to, filename)
+    return str(Path(relative_to) / filename)
 
 
 def get_kwargs_str(kwargs: dict[Any, Any]):
@@ -87,7 +93,7 @@ def get_call_location(frame_offset: int = 1):
     try:
         # On Windows if pyinfra is on a different drive to the filename here, this will
         # error as there's no way to do relative paths between drives.
-        relpath = path.relpath(frame.filename)
+        relpath = os.path.relpath(frame.filename)
     except ValueError:
         pass
 
@@ -146,9 +152,35 @@ def get_template(
     """
     Gets a jinja2 ``Template`` object for the input filename or string, with caching
     based on the filename of the template, or the SHA1 of the input string.
+
+    If a custom ``loader`` is supplied and ``filename_or_io`` is a template name
+    that does not exist as a local path, the loader searches for that name
+    (so a ``FileSystemLoader`` search path is honoured). Existing file paths
+    and IO objects are still read directly and compiled with ``from_string``.
     """
     if jinja_env_kwargs is None:
         jinja_env_kwargs = {}
+    else:
+        # Copy so popping the default loader cannot mutate the caller's dict.
+        jinja_env_kwargs = dict(jinja_env_kwargs)
+
+    loader = jinja_env_kwargs.get("loader")
+    if (
+        loader is not None
+        and isinstance(filename_or_io, str)
+        and not os.path.isfile(filename_or_io)
+    ):
+        cache_key = f"loader:{id(loader)}:{filename_or_io}"
+        if cache_key in TEMPLATES:
+            return TEMPLATES[cache_key]
+        template = Environment(
+            undefined=StrictUndefined,
+            keep_trailing_newline=True,
+            **jinja_env_kwargs,
+        ).get_template(filename_or_io)
+        TEMPLATES[cache_key] = template
+        return template
+
     file_data = get_file_io(filename_or_io, mode="r")
     cache_key = file_data.cache_key
 
@@ -374,7 +406,9 @@ class get_file_io:
 
     def __enter__(self):
         if isinstance(self.filename_or_io, str):
-            file_io = open(self.filename_or_io, self.mode)
+            # Text is UTF-8, whatever the platform's default encoding
+            encoding = None if "b" in self.mode else "utf-8"
+            file_io = open(self.filename_or_io, self.mode, -1, encoding)
             self._file_io = file_io
             self._close = True
         else:

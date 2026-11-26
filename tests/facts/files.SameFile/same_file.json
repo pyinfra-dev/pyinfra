@@ -1,0 +1,6 @@
+{
+    "arg": {"path": "/foo/hardlink", "target": "/foo/file"},
+    "command": "test /foo/hardlink -ef /foo/file && echo true || echo false",
+    "output": ["true"],
+    "fact": true
+}

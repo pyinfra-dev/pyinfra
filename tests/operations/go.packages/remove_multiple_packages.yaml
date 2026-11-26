@@ -1,0 +1,10 @@
+args:
+  - ["github.com/foo/bar/cmd/mytool", "honnef.co/go/tools/cmd/staticcheck"]
+kwargs:
+  present: false
+facts:
+  go.GoPackages:
+    github.com/foo/bar/cmd/mytool: ["v1.2.3"]
+    honnef.co/go/tools/cmd/staticcheck: ["v0.4.0"]
+commands:
+  - 'BINDIR=$(go env GOBIN); [ -z "$BINDIR" ] && BINDIR="$(go env GOPATH)/bin"; rm -f "$BINDIR"/mytool "$BINDIR"/staticcheck'

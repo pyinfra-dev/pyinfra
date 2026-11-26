@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 from collections.abc import Iterable
 
 from typing_extensions import override
@@ -18,7 +18,7 @@ class EFIBootMgrInfoDict(TypedDict):
     Entries: dict[int, BootEntry]
 
 
-class EFIBootMgr(FactBase[Optional[EFIBootMgrInfoDict]]):
+class EFIBootMgr(FactBase[EFIBootMgrInfoDict | None]):
     """
     Returns information about the UEFI boot variables:
 

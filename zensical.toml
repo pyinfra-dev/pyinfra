@@ -20,6 +20,7 @@ nav = [
         { "Using Operations" = "using-operations.md" },
         { "Inventory & Data" = "inventory-data.md" },
         { "Using the CLI" = "cli.md" },
+        { "Debugging Deploys" = "debugging.md" },
         { "FAQ" = "faq.md" },
     ] },
     { "Deploy Reference" = [
@@ -31,6 +32,7 @@ nav = [
     { "How pyinfra Works" = [
         { "Deploy Process" = "deploy-process.md" },
         { "Packaging Deploys" = "api/deploys.md" },
+        { "Testing Deploys" = "api/testing.md" },
         { "Writing Connectors" = "api/connectors.md" },
         { "Writing Operations" = "api/operations.md" },
         { "Writing Facts" = "api/facts.md" },

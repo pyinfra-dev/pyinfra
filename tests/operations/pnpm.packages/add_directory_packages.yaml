@@ -1,0 +1,10 @@
+args:
+  - ["lodash@4.17.21", "dayjs"]
+kwargs:
+  directory: /opt/app
+facts:
+  pnpm.PnpmPackages:
+    directory=/opt/app:
+      lodash: ["4.17.20"]
+commands:
+  - cd /opt/app && pnpm add lodash@4.17.21 dayjs

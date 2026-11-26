@@ -1,0 +1,19 @@
+{
+    "args": ["https://github.com/org/repo.git", "/home/myrepo"],
+    "kwargs": {
+        "ssh_keyscan": true
+    },
+    "facts": {
+        "files.Directory": {
+            "path=/home/myrepo": {},
+            "path=/home/myrepo/.git": null,
+            "path=~/.ssh": {
+                "mode": 700
+            }
+        }
+    },
+    "exception": {
+        "name": "OperationError",
+        "message": "ssh_keyscan only applies to SSH sources, not: https://github.com/org/repo.git (a clone over any other transport never reads known_hosts)"
+    }
+}

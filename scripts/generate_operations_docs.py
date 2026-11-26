@@ -193,12 +193,11 @@ def build_operations_docs():
                 args_string = sig.format(max_width=MODULE_DEF_LINE_MAX)
             else:
                 args_string = str(sig)
-            args_string = (
-                f"{args_string[:-1].rstrip()},\n    **kwargs,\n"
-                if args_string != "()"
-                else "**kwargs,"
-            )
-            args_string = f"{args_string.replace('   ', '        ')}    )"
+            if args_string == "()":
+                args_string = "(**kwargs)"
+            else:
+                args_string = f"{args_string[:-1].rstrip()},\n    **kwargs,\n"
+                args_string = f"{args_string.replace('   ', '        ')}    )"
 
             lines.append("```python")
             lines.append(f"{module_name}.{name}{args_string}")
