@@ -30,11 +30,12 @@ def _put_with_diff(src_path, dest, current_contents):
         ctx_host.use(host),
         patch.object(host, "get_fact", get_fact),
         patch.object(host, "log", lambda message, log_func: None, create=True),
+        patch.object(host, "log_diff", create=True) as log_diff,
         patch("pyinfra.operations.files.logger") as logger,
     ):
         commands = list(files.put._inner(str(src_path), dest))
 
-    logged = "\n".join(str(call) for call in logger.info.call_args_list)
+    logged = "\n".join(str(call) for call in logger.info.call_args_list + log_diff.call_args_list)
     return commands, requested_facts, logged
 
 

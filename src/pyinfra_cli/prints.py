@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 from typing import TYPE_CHECKING, Any
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 
 from rich.cells import cell_len
 from rich.console import Group
@@ -13,11 +13,13 @@ from rich.json import JSON
 from rich.padding import Padding
 from rich.table import Table
 from rich.text import Text
+from rich.tree import Tree
 
-from pyinfra import __version__, logger
+from pyinfra import __version__
 from pyinfra.api.host import Host
 from pyinfra.api.output import format_text
 
+from . import routing
 from .console import console, stdout_console
 from .util import json_encode
 
@@ -252,14 +254,14 @@ def print_state_operations(state: State):
     state_ops = {host: ops for host, ops in state.ops.items() if state.is_host_in_limit(host)}
 
     console.print()
-    console.print("--> Operations:")
+    console.print("Operations:")
     console.print(jsonify(state_ops, indent=4, default=json_encode))
     console.print()
-    console.print("--> Operation meta:")
+    console.print("Operation meta:")
     console.print(jsonify(state.op_meta, indent=4, default=json_encode))
 
     console.print()
-    console.print("--> Operation order:")
+    console.print("Operation order:")
     console.print()
     for op_hash in state.get_op_order():
         meta = state.op_meta[op_hash]
@@ -376,7 +378,7 @@ def print_facts(facts):
     for name, data in facts.items():
         console.print()
         console.print(
-            f"--> Fact data for: {format_text(name, bold=True)}",
+            f"Fact data for: {format_text(name, bold=True)}",
         )
         print_fact(data)
 
@@ -476,10 +478,17 @@ def pretty_op_name(op_meta):
     return name
 
 
+def _split_op_name(name: str) -> tuple[str | None, str]:
+    """Split a "file.py | Operation" name into (file, operation)."""
+    if " | " in name:
+        filename, op_name = name.split(" | ", 1)
+        return filename, op_name
+    return None, name
+
+
 def print_meta(state: State):
-    rows: list[tuple[Callable, list[str] | str]] = [
-        (logger.info, ["Operation", "Change", "Conditional Change"]),
-    ]
+    tree = Tree(Text("Proposed changes", style="bold"), guide_style="dim")
+    file_branches: dict[str, Any] = {}
 
     for op_hash in state.get_op_order():
         hosts_in_op = []
@@ -493,32 +502,51 @@ def print_meta(state: State):
                     else:
                         hosts_in_op.append(host.name)
 
-        rows.append(
-            (
-                logger.info,
-                [
-                    pretty_op_name(state.op_meta[op_hash]),
-                    (
-                        "-"
-                        if len(hosts_in_op) == 0
-                        else f"{len(hosts_in_op)} ({truncate(', '.join(sorted(hosts_in_op)), 48)})"
-                    ),
-                    (
-                        "-"
-                        if len(hosts_maybe_in_op) == 0
-                        else f"{len(hosts_maybe_in_op)} ({truncate(', '.join(sorted(hosts_maybe_in_op)), 48)})"
-                    ),
-                ],
-            )
-        )
+        filename, op_name = _split_op_name(pretty_op_name(state.op_meta[op_hash]))
 
-    print_rows(rows)
+        parent = tree
+        if filename is not None:
+            branch = file_branches.get(filename)
+            if branch is None:
+                branch = tree.add(Text(filename, style="bold blue"))
+                file_branches[filename] = branch
+            parent = branch
+
+        n_change = len(hosts_in_op)
+        n_maybe = len(hosts_maybe_in_op)
+        summary = Text(op_name, style="cyan")
+        if n_change:
+            summary.append(f"  [{n_change} change]", style="green")
+        if n_maybe:
+            summary.append(f"  [{n_maybe} conditional]", style="yellow")
+        if not n_change and not n_maybe:
+            summary.append("  [no change]", style="dim")
+
+        op_branch = parent.add(summary)
+        for host_name in sorted(hosts_in_op):
+            op_branch.add(routing.host_label(host_name, base_style="green"))
+        for host_name in sorted(hosts_maybe_in_op):
+            label = routing.host_label(host_name, base_style="yellow")
+            label.append(" (conditional)", style="yellow")
+            op_branch.add(label)
+
+    console.print(tree)
+
+
+def _result_summary(n_success: int, n_error: int, n_no_change: int) -> Text:
+    parts = Text()
+    if n_success:
+        parts.append(f"  {n_success} ✓", style="green")
+    if n_error:
+        parts.append(f"  {n_error} ✗", style="red")
+    if n_no_change:
+        parts.append(f"  {n_no_change} –", style="blue")
+    return parts
 
 
 def print_results(state: State):
-    rows: list[tuple[Callable, list[str] | str]] = [
-        (logger.info, ["Operation", "Hosts", "Success", "Error", "No Change"]),
-    ]
+    tree = Tree(Text("Results", style="bold"), guide_style="dim")
+    file_branches: dict[str, Any] = {}
 
     totals = {"hosts": 0, "success": 0, "error": 0, "no_change": 0}
 
@@ -542,37 +570,32 @@ def print_results(state: State):
             else:
                 hosts_in_op_error.append(host.name)
 
-        row = [
-            pretty_op_name(state.op_meta[op_hash]),
-            str(hosts_in_op),
-        ]
-
         totals["hosts"] += hosts_in_op
+        totals["success"] += len(hosts_in_op_success)
+        totals["error"] += len(hosts_in_op_error)
+        totals["no_change"] += len(hosts_in_op_no_change)
 
-        if hosts_in_op_success:
-            num_hosts_in_op_success = len(hosts_in_op_success)
-            row.append(str(num_hosts_in_op_success))
-            totals["success"] += num_hosts_in_op_success
-        else:
-            row.append("-")
+        filename, op_name = _split_op_name(pretty_op_name(state.op_meta[op_hash]))
+        parent = tree
+        if filename is not None:
+            branch = file_branches.get(filename)
+            if branch is None:
+                branch = tree.add(Text(filename, style="bold blue"))
+                file_branches[filename] = branch
+            parent = branch
 
-        if hosts_in_op_error:
-            num_hosts_in_op_error = len(hosts_in_op_error)
-            row.append(str(num_hosts_in_op_error))
-            totals["error"] += num_hosts_in_op_error
-        else:
-            row.append("-")
+        label = Text(op_name, style="red" if hosts_in_op_error else "cyan")
+        label.append_text(
+            _result_summary(
+                len(hosts_in_op_success), len(hosts_in_op_error), len(hosts_in_op_no_change)
+            )
+        )
+        op_branch = parent.add(label)
+        for host_name in sorted(hosts_in_op_error):
+            op_branch.add(routing.host_label(host_name, base_style="red", prefix="✗ "))
 
-        if hosts_in_op_no_change:
-            num_hosts_in_op_no_change = len(hosts_in_op_no_change)
-            row.append(str(num_hosts_in_op_no_change))
-            totals["no_change"] += num_hosts_in_op_no_change
-        else:
-            row.append("-")
+    grand = Text("Grand total", style="bold")
+    grand.append_text(_result_summary(totals["success"], totals["error"], totals["no_change"]))
+    tree.add(grand)
 
-        rows.append((logger.info, row))
-
-    totals_row = ["Grand total"] + [str(i) if i else "-" for i in totals.values()]
-    rows.append((logger.info, totals_row))
-
-    print_rows(rows)
+    console.print(tree)
