@@ -13,7 +13,7 @@ T = TypeVar("T")
 
 class PodmanFactBase(FactBase[T]):
     """
-    Base for facts using `podman` to retrieve
+    Base for facts using ``podman`` to retrieve state.
     """
 
     abstract = True
@@ -25,7 +25,7 @@ class PodmanFactBase(FactBase[T]):
 
 class PodmanSystemInfo(PodmanFactBase[dict[str, Any]]):
     """
-    Output of 'podman system info'
+    Returns ``podman system info`` output in JSON format.
     """
 
     @override
@@ -41,7 +41,7 @@ class PodmanSystemInfo(PodmanFactBase[dict[str, Any]]):
 
 class PodmanPs(PodmanFactBase[list[dict[str, Any]]]):
     """
-    Output of 'podman ps'
+    Returns ``podman ps`` output for all containers in JSON format.
     """
 
     @override
