@@ -147,3 +147,14 @@ def test_int_local_line_ensure_newline_false(helpers, tmp_path):
         cwd=tmp_path,
     )
     assert path.read_bytes() == b"hello world\nsomeline\n"
+
+
+@pytest.mark.end_to_end
+@pytest.mark.end_to_end_local
+def test_int_local_block_marker_with_slash(helpers, tmp_path):
+    path = tmp_path / "_testfile"
+    cmd = "pyinfra -y -v @local files.block _testfile content=hello 'marker=# {mark} spam/eggs'"
+
+    helpers.run_check_output(cmd, expected_lines=["@local] Success"], cwd=tmp_path)
+    helpers.run_check_output(cmd, expected_lines=["@local] No changes"], cwd=tmp_path)
+    assert path.read_text() == "# BEGIN spam/eggs\nhello\n# END spam/eggs\n"
