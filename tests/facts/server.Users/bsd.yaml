@@ -1,0 +1,38 @@
+command: |-
+  for i in `cat /etc/passwd | cut -d: -f1`; do
+              ENTRY=`USER="$i" awk -F: '$1 == ENVIRON["USER"] {print}' /etc/passwd`;
+              LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | USER="$i" awk '$1 == ENVIRON["USER"] {print}' | tr -s ' ')`;
+              PASSWORD=`USER="$i" awk -F: '$1 == ENVIRON["USER"] {print}' /etc/master.passwd 2> /dev/null | cut -d: -f2`;
+              echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
+          done
+facts:
+  server.Kernel: FreeBSD
+  server.Which:
+    command=getent: null
+output:
+  - "freebsd:*:1001:1001:FreeBSD:/home/freebsd:/bin/sh|freebsd|freebsd|freebsd pts/0 10.1.10.10 Thu Aug 31 05:37:58 2023|$bsdpw$"
+  - "freebsdnologin:*:1001:1001:FreeBSD NoLogin:/home/freebsdnologin:/bin/sh|freebsdnologin|freebsdnologin||"
+fact:
+  freebsd:
+    home: /home/freebsd
+    comment: FreeBSD
+    shell: /bin/sh
+    group: freebsd
+    groups: []
+    uid: 1001
+    gid: 1001
+    lastlog: Thu Aug 31 05:37:58 2023
+    login_time: "2023-08-31T05:37:58"
+    password: $bsdpw$
+  freebsdnologin:
+    home: /home/freebsdnologin
+    comment: FreeBSD NoLogin
+    shell: /bin/sh
+    group: freebsdnologin
+    groups: []
+    uid: 1001
+    gid: 1001
+    lastlog: null
+    login_time: null
+    password: ""
+

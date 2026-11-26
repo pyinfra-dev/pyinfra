@@ -1,0 +1,44 @@
+command: |-
+  for i in `getent passwd | cut -d: -f1`; do
+              ENTRY=`getent passwd $i`;
+              LASTLOG=`(((lastlog -u $i || lastlogin $i) 2> /dev/null) | USER="$i" awk '$1 == ENVIRON["USER"] {print}' | tr -s ' ')`;
+              PASSWORD=`getent shadow $i 2> /dev/null | cut -d: -f2`;
+              echo "$ENTRY|`id -gn $i`|`id -Gn $i`|$LASTLOG|$PASSWORD";
+          done
+facts:
+  server.Kernel: Linux
+  server.Which:
+    command=getent: /usr/bin/getent
+output:
+  - "root:x:0:0:root:/root:/bin/ks|wheel|wheel kmem sys tty operator staff guest|root pts/0 Sat Jun 5 12:03:23 -0600 2021|$rootpw$"
+  - "_tesTy.test:x:1004:1004::/home/_tesTy.test:/bin/ksh|_tesTy.test|_tesTy.test pyinfra|_tesTy.test pts/0 host-ip Sat Jun 12 13:43:42 -0600 2021|$testpw$"
+fact:
+  root:
+    home: /root
+    comment: root
+    shell: /bin/ks
+    group: wheel
+    groups:
+      - kmem
+      - sys
+      - tty
+      - operator
+      - staff
+      - guest
+    uid: 0
+    gid: 0
+    lastlog: Sat Jun 5 12:03:23 -0600 2021
+    login_time: "2021-06-05T12:03:23-06:00"
+    password: $rootpw$
+  _tesTy.test:
+    home: /home/_tesTy.test
+    comment: null
+    shell: /bin/ksh
+    group: _tesTy.test
+    groups:
+      - pyinfra
+    uid: 1004
+    gid: 1004
+    lastlog: Sat Jun 12 13:43:42 -0600 2021
+    login_time: "2021-06-12T13:43:42-06:00"
+    password: $testpw$
