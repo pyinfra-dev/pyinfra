@@ -686,9 +686,16 @@ class Block(FactBase):
             QuoteString(f"{MISSING}{path}"),
         )
 
+        # markers are passed as arguments and matched literally (not as regexes) so that
+        # characters like ``/`` or ``'`` in them can't break the awk program
         cmd = StringCommand(
-            f"awk '/{end}/{{ f=0}} f; /{start}/{{ f=1}} ' ",
+            'awk \'BEGIN {s=ARGV[2]; e=ARGV[3]; ARGV[2]=ARGV[3]=""} '
+            "index($0, e) {f=0} f; index($0, s) {f=1}' ",
             QuoteString(path),
+            " ",
+            QuoteString(start),
+            " ",
+            QuoteString(end),
             " || ",
             backstop,
             _separator="",
