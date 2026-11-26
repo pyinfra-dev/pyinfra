@@ -19,7 +19,7 @@ from typing_extensions import override
 
 from pyinfra import logger
 from pyinfra.api import StringCommand
-from pyinfra.api.facts import FactBase
+from pyinfra.api.facts import ShellFact
 from pyinfra.facts.util.packaging import PackageVersionDict
 
 UV_CMD = "uv"
@@ -40,7 +40,7 @@ def process_json(command: str, output: Iterable[str], key: str, value: str) -> P
     return {v[key]: {v[value]} for v in sorted(info, key=itemgetter(key))}
 
 
-class UvPipPackages(FactBase[PackageVersionDict]):
+class UvPipPackages(ShellFact[PackageVersionDict]):
     """
     Provides the installed Python packages and their version.
 
@@ -71,7 +71,7 @@ class UvPipPackages(FactBase[PackageVersionDict]):
         return process_json(str(self.command()), output, "name", "version")
 
 
-class UvAvailablePythonsByImplementation(FactBase[PackageVersionDict]):
+class UvAvailablePythonsByImplementation(ShellFact[PackageVersionDict]):
     """
     Provides the implementation(s) of Python available for installation along with the versions(s)
     of the implementation(s).
@@ -175,7 +175,7 @@ class UvInstalledPythonsByVersion(UvInstalledPythonsByImplementation):
         return process_json(str(self.cmd), output, "version", "key")
 
 
-class UvPythonDir(FactBase[str]):
+class UvPythonDir(ShellFact[str]):
     """
     Provides the directory in which uv installs Python implementations.
 
@@ -225,7 +225,7 @@ class UvToolDir(UvPythonDir):
         return f"{UV_CMD} tool dir 2>/dev/null"
 
 
-class UvTools(FactBase[PackageVersionDict]):
+class UvTools(ShellFact[PackageVersionDict]):
     """
     Provides the tool(s) currently installed along with their version(s).
 
@@ -269,7 +269,7 @@ class UvTools(FactBase[PackageVersionDict]):
         return result
 
 
-class UvVersion(FactBase[str]):
+class UvVersion(ShellFact[str]):
     """
     Provides the version of uv installed.
 

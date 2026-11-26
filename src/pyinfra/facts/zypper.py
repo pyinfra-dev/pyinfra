@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util import make_cat_files_command_with_markers
 from .util.packaging import REPO_FILENAME_MARKER, parse_zypper_repositories
 
 
-class ZypperRepositories(FactBase):
+class ZypperRepositories(ShellFact):
     """
     Returns a list of installed zypper repositories:
 

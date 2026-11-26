@@ -4,10 +4,10 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class SnapBaseFact(FactBase):
+class SnapBaseFact(ShellFact):
     abstract = True
 
     @override

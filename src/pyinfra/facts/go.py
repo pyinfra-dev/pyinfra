@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class GoPackages(FactBase):
+class GoPackages(ShellFact):
     """
     Returns a dict of installed Go binary packages (those installed via
     ``go install``) keyed by their import path:

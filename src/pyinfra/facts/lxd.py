@@ -4,10 +4,10 @@ import json
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class LxdContainers(FactBase):
+class LxdContainers(ShellFact):
     """
     Returns a list of running LXD containers
     """

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
 CARGO_REGEX = r"^([a-zA-Z0-9\-]+)\sv([0-9\.]+)"
 
 
-class CargoPackages(FactBase):
+class CargoPackages(ShellFact):
     """
     Returns a dict of installed cargo packages globally:
 

@@ -4,12 +4,12 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
 
-class XbpsPackages(FactBase):
+class XbpsPackages(ShellFact):
     """
     Returns a dict of installed XBPS packages:
 
@@ -37,7 +37,7 @@ class XbpsPackages(FactBase):
         return parse_packages(self.regex, output)
 
 
-class XbpsSelfUpdate(FactBase[list[str]]):
+class XbpsSelfUpdate(ShellFact[list[str]]):
     """
     Returns the packages XBPS would update to update itself, empty if ``xbps``
     is up to date:

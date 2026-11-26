@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, QuoteString
+from pyinfra.api import ShellFact, QuoteString
 from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
@@ -11,7 +11,7 @@ from .util.packaging import parse_packages
 PACMAN_REGEX = r"^(\S+)\s(\S+)"
 
 
-class PacmanUnpackGroup(FactBase):
+class PacmanUnpackGroup(ShellFact):
     """
     Returns a list of actual packages belonging to the provided package name,
     expanding groups or virtual packages.
@@ -41,7 +41,7 @@ class PacmanUnpackGroup(FactBase):
         return output
 
 
-class PacmanPackages(FactBase):
+class PacmanPackages(ShellFact):
     """
     Returns a dict of installed pacman packages:
 

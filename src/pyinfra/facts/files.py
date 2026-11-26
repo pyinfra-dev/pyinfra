@@ -20,7 +20,7 @@ from typing import Literal
 
 from pyinfra.api import StringCommand
 from pyinfra.api.command import QuoteString, make_formatted_string_command
-from pyinfra.api.facts import FactBase
+from pyinfra.api.facts import ShellFact
 from pyinfra.api.util import try_int
 from pyinfra.facts.util.units import parse_size
 
@@ -220,7 +220,7 @@ class FileDict(TypedDict):
     link_target: NotRequired[str]
 
 
-class File(FactBase[FileDict | Literal[False] | None]):
+class File(ShellFact[FileDict | Literal[False] | None]):
     """
     Returns information about a file on the remote system:
 
@@ -369,7 +369,7 @@ class Socket(File):
     type = "socket"
 
 
-class SameFile(FactBase[bool]):
+class SameFile(ShellFact[bool]):
     """
     Returns ``True`` if ``path`` and ``target`` refer to the same file (same device and
     inode, ie one is a hard link to the other), otherwise ``False``.
@@ -389,14 +389,16 @@ class SameFile(FactBase[bool]):
 
 
 if TYPE_CHECKING:
-    FactBaseOptionalStr = FactBase[str | None]
+    FactBaseOptionalStr = ShellFact[str | None]
 else:
-    FactBaseOptionalStr = FactBase
+    FactBaseOptionalStr = ShellFact
 
 
 class HashFileFactBase(FactBaseOptionalStr):
     _raw_cmd: str
     _regexes: tuple[str, str]
+
+    abstract = True
 
     @override
     def __init_subclass__(cls, digits: int, cmds: list[str], **kwargs) -> None:
@@ -454,7 +456,7 @@ class Md5File(HashFileFactBase, digits=32, cmds=["md5sum", "md5"]):
     """
 
 
-class FindInFile(FactBase):
+class FindInFile(ShellFact):
     """
     Checks for the existence of text in a file using grep. Returns a list of matching
     lines if the file exists, and ``None`` if the file does not.
@@ -488,7 +490,7 @@ class FindInFile(FactBase):
         return output
 
 
-class FindFilesBase(FactBase):
+class FindFilesBase(ShellFact):
     abstract = True
     default = list
     type_flag: str
@@ -619,7 +621,7 @@ class FindDirectories(FindFilesBase):
     type_flag = "d"
 
 
-class Flags(FactBase):
+class Flags(ShellFact):
     """
     Returns a list of the file flags set for the specified file or directory.
     """
@@ -647,7 +649,7 @@ EXISTS = "__pyinfra_exists_"
 MISSING = "__pyinfra_missing_"
 
 
-class Block(FactBase):
+class Block(ShellFact):
     """
     Returns a (possibly empty) list of the lines found between the markers.
 
@@ -704,7 +706,7 @@ class Block(FactBase):
         return output
 
 
-class FileContents(FactBase[list[str] | None]):
+class FileContents(ShellFact[list[str] | None]):
     """
     Returns the contents of a file as a list of lines, or ``None`` if the file does not exist.
     """

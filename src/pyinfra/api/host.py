@@ -7,7 +7,6 @@ from typing import (
     Any,
     TypeVar,
     cast,
-    overload,
 )
 from collections.abc import Callable, Generator
 from uuid import uuid4
@@ -22,7 +21,7 @@ from pyinfra.context import ctx_config
 
 from .connectors import get_execution_connector
 from .exceptions import ConnectError
-from .facts import FactBase, ShortFactBase, get_fact
+from .facts import FactCore
 from .util import memoize, sha1_hash
 
 if TYPE_CHECKING:
@@ -361,18 +360,12 @@ class Host:
 
     T = TypeVar("T")
 
-    @overload
-    def get_fact(self, name_or_cls: type[FactBase[T]], *args, **kwargs) -> T: ...
-
-    @overload
-    def get_fact(self, name_or_cls: type[ShortFactBase[T]], *args, **kwargs) -> T: ...
-
-    def get_fact(self, name_or_cls, *args, **kwargs):
+    def get_fact(self, name_or_cls: type[FactCore[T]], *args, **kwargs):
         """
         Get a fact for this host. Facts are not cached, so the fact's command runs on
         the host each time this is called.
         """
-        return get_fact(self.state, self, name_or_cls, args=args, kwargs=kwargs)
+        return name_or_cls.get(self.state, self, args=args, kwargs=kwargs)
 
     # Connector proxy
     #

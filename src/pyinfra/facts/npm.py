@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
 NPM_REGEX = r"^[└├]\─\─\s([a-zA-Z0-9\-]+)@([0-9\.]+)$"
 
 
-class NpmPackages(FactBase):
+class NpmPackages(ShellFact):
     """
     Returns a dict of installed npm packages globally or in a given directory:
 

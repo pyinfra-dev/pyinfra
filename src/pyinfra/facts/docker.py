@@ -10,10 +10,10 @@ import json
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, ShortFactBase
+from pyinfra.api import ShellFact, ShortcutFact
 
 
-class DockerFactBase(FactBase):
+class DockerFactBase(ShellFact):
     abstract = True
 
     docker_type: str
@@ -28,7 +28,7 @@ class DockerFactBase(FactBase):
         return json.loads(output)
 
 
-class _DockerJsonLinesFactBase(FactBase):
+class _DockerJsonLinesFactBase(ShellFact):
     abstract = True
 
     @override
@@ -50,7 +50,7 @@ class DockerSystemInfo(DockerFactBase):
         return 'docker system info --format="{{json .}}"'
 
 
-class DockerVersion(FactBase[str]):
+class DockerVersion(ShellFact[str]):
     """
     Returns the Docker version.
     """
@@ -182,7 +182,7 @@ class DockerPlugin(DockerSingleMixin):
 #
 
 
-class DockerContainerEnvs(ShortFactBase):
+class DockerContainerEnvs(ShortcutFact):
     """
     Returns environment variables for all Docker containers, keyed by container ID.
     """
@@ -203,7 +203,7 @@ class DockerContainerEnvs(ShortFactBase):
         return result
 
 
-class DockerContainerLabels(ShortFactBase):
+class DockerContainerLabels(ShortcutFact):
     """
     Returns labels for all Docker containers, keyed by container ID.
     """
@@ -218,7 +218,7 @@ class DockerContainerLabels(ShortFactBase):
         }
 
 
-class DockerContainerMounts(ShortFactBase):
+class DockerContainerMounts(ShortcutFact):
     """
     Returns mounts for all Docker containers, keyed by container ID.
     """
@@ -230,7 +230,7 @@ class DockerContainerMounts(ShortFactBase):
         return {container.get("Id"): container.get("Mounts") or [] for container in data or []}
 
 
-class DockerContainerNetworks(ShortFactBase):
+class DockerContainerNetworks(ShortcutFact):
     """
     Returns networks for all Docker containers, keyed by container ID.
     """
@@ -245,7 +245,7 @@ class DockerContainerNetworks(ShortFactBase):
         }
 
 
-class DockerContainerPorts(ShortFactBase):
+class DockerContainerPorts(ShortcutFact):
     """
     Returns published port bindings for all Docker containers, keyed by container ID.
     """
@@ -260,7 +260,7 @@ class DockerContainerPorts(ShortFactBase):
         }
 
 
-class DockerImageLabels(ShortFactBase):
+class DockerImageLabels(ShortcutFact):
     """
     Returns labels for all Docker images, keyed by image ID.
     """
@@ -279,7 +279,7 @@ class DockerImageLabels(ShortFactBase):
         }
 
 
-class DockerImageLayers(ShortFactBase):
+class DockerImageLayers(ShortcutFact):
     """
     Returns layer digests for all Docker images, keyed by image ID.
     """
@@ -293,7 +293,7 @@ class DockerImageLayers(ShortFactBase):
         }
 
 
-class DockerNetworkLabels(ShortFactBase):
+class DockerNetworkLabels(ShortcutFact):
     """
     Returns labels for all Docker networks, keyed by network ID.
     """
@@ -305,7 +305,7 @@ class DockerNetworkLabels(ShortFactBase):
         return {network.get("Id"): network.get("Labels") or {} for network in data or []}
 
 
-class DockerVolumeLabels(ShortFactBase):
+class DockerVolumeLabels(ShortcutFact):
     """
     Returns labels for all Docker volumes, keyed by volume name.
     """
@@ -389,7 +389,7 @@ class DockerImageHistory(_DockerJsonLinesFactBase):
         return f"docker image history --no-trunc --format '{{{{json .}}}}' {image_id} 2>&- || true"
 
 
-class DockerAuths(FactBase[list[str]]):
+class DockerAuths(ShellFact[list[str]]):
     """
     Returns the list of registry servers the current user is authenticated
     against, read from ``${DOCKER_CONFIG:-$HOME/.docker}/config.json``.

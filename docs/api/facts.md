@@ -1,26 +1,27 @@
 # Writing Facts
 
-[Facts](../facts) are written as Python classes. They provide a ``command`` (as either a string or method)
+[Facts](../facts) can be written as Python classes. They provide a ``command`` (as either a string or method)
 and a ``process`` function. The command is executed on the target host and the output
 passed (as a ``list`` of lines) to the ``process`` handler to generate fact data. Facts can output anything, normally a ``list`` or ``dict``.
+For simpler facts implemented in Python, use the ``@fact()`` decorator instead.
 
 Fact classes may provide a ``default`` function that takes no arguments (except ``self``). The return value of this function is used if an error
 occurs during fact collection.
 
-## `FactBase` vs `ShortFactBase`
+## `ShellFact` vs `ShortcutFact`
 
 There are two base classes for facts and they solve different problems:
 
-- **`FactBase`** — defines a *new* fact that runs a shell command on the host and parses the output. Use this whenever you need information that isn't already available from an existing fact.
-- **`ShortFactBase`** — defines a *derived* view over an existing fact. It does not define a command of its own; instead it points at another fact via a `fact` class attribute and post-processes that fact's result. Use this when you want a simpler or different shape of an existing fact (e.g. just one field from a dict). Fact results are not cached, so requesting a `ShortFactBase` runs the underlying fact's command, costing the same as requesting that fact directly.
+- **`ShellFact`** — defines a *new* fact that runs a shell command on the host and parses the output. Use this whenever you need information that isn't already available from an existing fact.
+- **`ShortcutFact`** — defines a *derived* view over an existing fact. It does not define a command of its own; instead it points at another fact via a `fact` class attribute and post-processes that fact's result. Use this when you want a simpler or different shape of an existing fact (e.g. just one field from a dict). Fact results are not cached, so requesting a `ShortcutFact` runs the underlying fact's command, costing the same as requesting that fact directly.
 
-For example, `LinuxName` is a `ShortFactBase` that extracts the `name` field from the larger `LinuxDistribution` fact:
+For example, `LinuxName` is a `ShortcutFact` that extracts the `name` field from the larger `LinuxDistribution` fact:
 
 ```py
 from typing_extensions import override
-from pyinfra.api import ShortFactBase
+from pyinfra.api import ShortcutFact
 
-class LinuxName(ShortFactBase[str]):
+class LinuxName(ShortcutFact[str]):
     """
     Returns the name of the Linux distribution. Shortcut for
     ``host.get_fact(LinuxDistribution)['name']``.
@@ -33,7 +34,35 @@ class LinuxName(ShortFactBase[str]):
         return data["name"]
 ```
 
-The rest of this page covers `FactBase`.
+The rest of this page covers `ShellFact` and function facts.
+
+## Writing function facts with `@fact()`
+
+Use ``@fact()`` to turn a Python function into a fact when it can get its data from other facts
+or compute it directly, without defining a remote shell command or output parser. The decorated
+function is called when the fact is requested, and its return value is the fact data:
+
+```py
+from pyinfra import host
+from pyinfra.api import fact
+from pyinfra.facts.server import LinuxDistribution
+
+@fact()
+def linux_name(host):
+    return host.get_fact(LinuxDistribution)["name"]
+
+name = host.get_fact(linux_name)
+```
+
+Parameters named ``host`` and ``state`` are supplied automatically by pyinfra; do not pass either
+as an argument to ``host.get_fact``. Other function parameters are fact arguments and are passed
+as usual, either positionally or by keyword, for example ``host.get_fact(my_fact, path="/etc")``.
+The function runs as Python code on the controller, not as a command on the target host. Facts are
+not cached, so each call to ``host.get_fact`` calls the function again.
+
+You can provide ``default_value`` to set the value returned by the fact's ``default()`` method;
+if omitted, it defaults to ``None``. It is not a fallback for an empty return value and does not
+catch exceptions raised by the function.
 
 ## Guarding against missing binaries: `requires_command`
 
@@ -42,9 +71,9 @@ the fact command is run. When the binary is absent pyinfra emits a unique sentin
 executing the command, then raises `MissingCommandError` internally:
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class ZfsPools(FactBase):
+class ZfsPools(ShellFact):
     def requires_command(self) -> str:
         return "zpool"
 
@@ -68,9 +97,9 @@ Some facts require more than just a binary — they need a specific runtime stat
 module loaded, a service running). Override `check_preconditions` to express these checks:
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class ZfsDatasets(FactBase):
+class ZfsDatasets(ShellFact):
     def requires_command(self) -> str:
         return "zfs"
 
@@ -124,9 +153,9 @@ host.get_fact(Which, command='htop')
 This fact returns a boolean indicating whether swap is enabled. For this fact the ``command`` is declared as a class attribute.
 
 ```py
-from  pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class SwapEnabled(FactBase):
+class SwapEnabled(ShellFact):
     '''
     Returns a boolean indicating whether swap is enabled.
     '''
@@ -148,9 +177,9 @@ is_swap_enabled = host.get_fact(SwapEnabled)
 This fact returns a list of files found in a given directory. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class FindFiles(FactBase):
+class FindFiles(ShellFact):
     '''
     Returns a list of files from a start point, recursively using find.
     '''
@@ -174,9 +203,9 @@ list_of_files = host.get_fact(FindFiles, path='/somewhere')
 This fact returns the raw output of any command. For this fact the ``command`` is declared as a class method, indicating the fact takes arguments.
 
 ```py
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
-class RawCommandOutput(FactBase):
+class RawCommandOutput(ShellFact):
     '''
     Returns the raw output of a command.
     '''

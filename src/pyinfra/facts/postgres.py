@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, HiddenValue, QuoteString, StringCommand
+from pyinfra.api import ShellFact, HiddenValue, QuoteString, StringCommand
 from pyinfra.api.util import try_int
 
 from .util.databases import parse_columns_and_rows
@@ -52,7 +52,7 @@ def make_execute_psql_command(command, **psql_kwargs):
     )
 
 
-class PostgresFactBase(FactBase):
+class PostgresFactBase(ShellFact):
     abstract = True
 
     psql_command: str

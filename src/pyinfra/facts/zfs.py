@@ -4,7 +4,7 @@ Gather information about ZFS filesystems.
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, ShortFactBase
+from pyinfra.api import ShellFact, ShortcutFact
 
 
 def _process_zfs_props_table(output):
@@ -17,7 +17,7 @@ def _process_zfs_props_table(output):
     return datasets
 
 
-class ZfsPools(FactBase):
+class ZfsPools(ShellFact):
     @override
     def command(self) -> str:
         return "zpool get -H all"
@@ -33,7 +33,7 @@ class ZfsPools(FactBase):
         return _process_zfs_props_table(output)
 
 
-class ZfsDatasets(FactBase):
+class ZfsDatasets(ShellFact):
     @override
     def requires_command(self) -> str:
         return "zfs"
@@ -57,7 +57,7 @@ class ZfsDatasets(FactBase):
         return _process_zfs_props_table(output)
 
 
-class ZfsFilesystems(ShortFactBase):
+class ZfsFilesystems(ShortcutFact):
     fact = ZfsDatasets
 
     @override
@@ -65,7 +65,7 @@ class ZfsFilesystems(ShortFactBase):
         return {name: props for name, props in data.items() if props.get("type") == "filesystem"}
 
 
-class ZfsSnapshots(ShortFactBase):
+class ZfsSnapshots(ShortcutFact):
     fact = ZfsDatasets
 
     @override
@@ -73,7 +73,7 @@ class ZfsSnapshots(ShortFactBase):
         return {name: props for name, props in data.items() if props.get("type") == "snapshot"}
 
 
-class ZfsVolumes(ShortFactBase):
+class ZfsVolumes(ShortcutFact):
     fact = ZfsDatasets
 
     @override

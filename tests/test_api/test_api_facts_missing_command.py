@@ -13,7 +13,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api.exceptions import FactError, FactNotCollected, MissingCommandError
-from pyinfra.api.facts import _MISSING_COMMAND_MARKER, get_fact
+from pyinfra.api.facts import _MISSING_COMMAND_MARKER
 from pyinfra.facts.zfs import ZfsPools
 
 
@@ -31,8 +31,10 @@ class TestMissingCommandPhaseAwareness(TestCase):
         state = _make_state(is_executing=False)
         host = MagicMock()
 
-        with patch("pyinfra.api.facts._get_fact", side_effect=MissingCommandError("zpool")):
-            result = get_fact(state, host, ZfsPools)
+        with patch(
+            "pyinfra.api.facts.ShellFact._get_fact", side_effect=MissingCommandError("zpool")
+        ):
+            result = ZfsPools.get(state, host)
 
         assert result == ZfsPools().default()
 
@@ -42,8 +44,10 @@ class TestMissingCommandPhaseAwareness(TestCase):
         state = _make_state(is_executing=True)
         host = MagicMock()
 
-        with patch("pyinfra.api.facts._get_fact", side_effect=MissingCommandError("zpool")):
-            result = get_fact(state, host, ZfsPools)
+        with patch(
+            "pyinfra.api.facts.ShellFact._get_fact", side_effect=MissingCommandError("zpool")
+        ):
+            result = ZfsPools.get(state, host)
 
         assert result == ZfsPools().default()
 

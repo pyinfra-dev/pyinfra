@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
 CHOCO_REGEX = r"^([a-zA-Z0-9\.\-\+\_]+)\s([0-9\.]+)$"
 
 
-class ChocoPackages(FactBase):
+class ChocoPackages(ShellFact):
     """
     Returns a dict of installed choco (Chocolatey) packages:
 
@@ -35,7 +35,7 @@ class ChocoPackages(FactBase):
         return parse_packages(CHOCO_REGEX, output)
 
 
-class ChocoVersion(FactBase):
+class ChocoVersion(ShellFact):
     """
     Returns the choco (Chocolatey) version.
     """

@@ -4,7 +4,7 @@ import re
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase, QuoteString
+from pyinfra.api import ShellFact, QuoteString
 from pyinfra.api.command import make_formatted_string_command
 
 from .util.packaging import parse_packages
@@ -13,7 +13,7 @@ DEB_PACKAGE_NAME_REGEX = r"[a-zA-Z0-9\+\-\.]+"
 DEB_PACKAGE_VERSION_REGEX = r"[a-zA-Z0-9:~\.\-\+]+"
 
 
-class DebArch(FactBase):
+class DebArch(ShellFact):
     """
     Returns the architecture string used in apt repository sources, eg ``amd64``.
     """
@@ -27,7 +27,7 @@ class DebArch(FactBase):
         return "dpkg"
 
 
-class DebPackages(FactBase):
+class DebPackages(ShellFact):
     """
     Returns a dict of installed dpkg packages:
 
@@ -57,7 +57,7 @@ class DebPackages(FactBase):
         return parse_packages(self.regex, output)
 
 
-class DebPackage(FactBase):
+class DebPackage(ShellFact):
     """
     Returns information on a .deb archive or installed package.
 

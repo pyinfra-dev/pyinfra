@@ -14,7 +14,7 @@ from distro import distro
 from typing_extensions import TypedDict, override
 
 from pyinfra import host
-from pyinfra.api import FactBase, ShortFactBase, StringCommand
+from pyinfra.api import ShellFact, ShortcutFact, StringCommand
 from pyinfra.api.command import QuoteString, make_formatted_string_command
 from pyinfra.api.util import try_int
 from pyinfra.facts import crontab
@@ -39,7 +39,7 @@ def _check_tilde_username(user: str) -> None:
         raise ValueError(f"Unsafe username for shell tilde expansion: {user!r}")
 
 
-class User(FactBase):
+class User(ShellFact):
     """
     Returns the name of the current user.
     """
@@ -49,7 +49,7 @@ class User(FactBase):
         return "echo $USER"
 
 
-class Home(FactBase[str | None]):
+class Home(ShellFact[str | None]):
     """
     Returns the home directory of the given user, or the current user if no user is given.
     """
@@ -62,7 +62,7 @@ class Home(FactBase[str | None]):
         return StringCommand(f"echo ~{user}")
 
 
-class Path(FactBase):
+class Path(ShellFact):
     """
     Returns the path environment variable of the current user.
     """
@@ -72,7 +72,7 @@ class Path(FactBase):
         return "echo $PATH"
 
 
-class TmpDir(FactBase):
+class TmpDir(ShellFact):
     """
     Returns the temporary directory of the current server.
 
@@ -98,7 +98,7 @@ fi
         """.strip()
 
 
-class Hostname(FactBase):
+class Hostname(ShellFact):
     """
     Returns the current hostname of the server.
     """
@@ -108,7 +108,7 @@ class Hostname(FactBase):
         return "uname -n"
 
 
-class Kernel(FactBase):
+class Kernel(ShellFact):
     """
     Returns the kernel name according to ``uname``.
     """
@@ -118,7 +118,7 @@ class Kernel(FactBase):
         return "uname -s"
 
 
-class KernelVersion(FactBase):
+class KernelVersion(ShellFact):
     """
     Returns the kernel version according to ``uname``.
     """
@@ -128,7 +128,7 @@ class KernelVersion(FactBase):
         return "uname -r"
 
 
-class Uptime(FactBase[int]):
+class Uptime(ShellFact[int]):
     """
     Returns the number of seconds the system has been up.
     """
@@ -150,7 +150,7 @@ class Uptime(FactBase[int]):
 
 
 # Deprecated/renamed -> Kernel
-class Os(FactBase[str]):
+class Os(ShellFact[str]):
     """
     Returns the OS name according to ``uname``.
 
@@ -164,7 +164,7 @@ class Os(FactBase[str]):
 
 
 # Deprecated/renamed -> KernelVersion
-class OsVersion(FactBase[str]):
+class OsVersion(ShellFact[str]):
     """
     Returns the OS version according to ``uname``.
 
@@ -177,7 +177,7 @@ class OsVersion(FactBase[str]):
         return "uname -r"
 
 
-class Arch(FactBase[str]):
+class Arch(ShellFact[str]):
     """
     Returns the system architecture according to ``uname``.
     """
@@ -189,7 +189,7 @@ class Arch(FactBase[str]):
         return "uname -m"
 
 
-class Command(FactBase[str]):
+class Command(ShellFact[str]):
     """
     Returns the raw output lines of a given command.
     """
@@ -199,7 +199,7 @@ class Command(FactBase[str]):
         return command
 
 
-class Timezone(FactBase[str]):
+class Timezone(ShellFact[str]):
     """
     Returns the current system timezone (e.g. ``Europe/Amsterdam``).
     """
@@ -213,7 +213,7 @@ class Timezone(FactBase[str]):
         return output[0]
 
 
-class Which(FactBase[str | None]):
+class Which(ShellFact[str | None]):
     """
     Returns the path of a given command according to `command -v`, if available.
     """
@@ -223,7 +223,7 @@ class Which(FactBase[str | None]):
         return StringCommand("command -v", QuoteString(command), "|| true")
 
 
-class Date(FactBase[datetime]):
+class Date(ShellFact[datetime]):
     """
     Returns the current datetime on the server.
     """
@@ -239,7 +239,7 @@ class Date(FactBase[datetime]):
         return datetime.strptime(list(output)[0], ISO_DATE_FORMAT)
 
 
-class MacosVersion(FactBase[str]):
+class MacosVersion(ShellFact[str]):
     """
     Returns the installed MacOS version.
     """
@@ -268,7 +268,7 @@ class MountsDict(TypedDict):
     options: list[str]
 
 
-class Mounts(FactBase[dict[str, MountsDict]]):
+class Mounts(ShellFact[dict[str, MountsDict]]):
     """
     Returns a dictionary of mounted filesystems and information.
 
@@ -376,7 +376,7 @@ class Mounts(FactBase[dict[str, MountsDict]]):
         return devices
 
 
-class Port(FactBase[tuple[str, int] | tuple[None, None]]):
+class Port(ShellFact[tuple[str, int] | tuple[None, None]]):
     """
     Returns the process occupying a port and its PID.
 
@@ -458,7 +458,7 @@ class Port(FactBase[tuple[str, int] | tuple[None, None]]):
         return None, None
 
 
-class Ports(FactBase[list[dict[str, int | str]]]):
+class Ports(ShellFact[list[dict[str, int | str]]]):
     """
     Returns a list of all listening ports with their processes and PIDs.
 
@@ -588,7 +588,7 @@ class Ports(FactBase[list[dict[str, int | str]]]):
         return results
 
 
-class KernelModules(FactBase):
+class KernelModules(ShellFact):
     """
     Returns a dictionary of kernel module name -> info.
 
@@ -648,7 +648,7 @@ class KernelModules(FactBase):
         return modules
 
 
-class LsbRelease(FactBase):
+class LsbRelease(ShellFact):
     """
     Returns a dictionary of release information using ``lsb_release``.
 
@@ -694,7 +694,7 @@ class LsbRelease(FactBase):
         return items
 
 
-class OsRelease(FactBase):
+class OsRelease(ShellFact):
     """
     Returns a dictionary of release information stored in ``/etc/os-release``.
 
@@ -726,7 +726,7 @@ class OsRelease(FactBase):
         return items
 
 
-class Sysctl(FactBase):
+class Sysctl(ShellFact):
     """
     Returns a dictionary of sysctl settings and values.
 
@@ -778,7 +778,7 @@ class Sysctl(FactBase):
         return sysctls
 
 
-class Groups(FactBase[list[str]]):
+class Groups(ShellFact[list[str]]):
     """
     Returns a list of groups on the system.
     """
@@ -805,7 +805,7 @@ CrontabDict = crontab.CrontabDict
 Crontab = crontab.Crontab
 
 
-class Users(FactBase):
+class Users(ShellFact):
     """
     Returns a dictionary of users -> details.
 
@@ -888,7 +888,7 @@ class Users(FactBase):
         return users
 
 
-class AuthorizedKeys(FactBase[list[str]]):
+class AuthorizedKeys(ShellFact[list[str]]):
     """
     Returns the SSH public keys listed in a user's ``~/.ssh/authorized_keys`` file as a
     list of full key strings. Empty lines and lines starting with ``#`` are skipped; the
@@ -931,7 +931,7 @@ class LinuxDistributionDict(TypedDict):
     release_meta: dict
 
 
-class LinuxDistribution(FactBase[LinuxDistributionDict]):
+class LinuxDistribution(ShellFact[LinuxDistributionDict]):
     """
     Returns a dict of the Linux distribution version. Ubuntu, Debian, CentOS,
     Fedora & Gentoo currently. Also contains any key/value items located in
@@ -1042,7 +1042,7 @@ class LinuxDistribution(FactBase[LinuxDistributionDict]):
         return release_info
 
 
-class LinuxName(ShortFactBase[str]):
+class LinuxName(ShortcutFact[str]):
     """
     Returns the name of the Linux distribution. Shortcut for
     ``host.get_fact(LinuxDistribution)['name']``.
@@ -1059,7 +1059,7 @@ class SelinuxDict(TypedDict):
     mode: str | None
 
 
-class Selinux(FactBase[SelinuxDict]):
+class Selinux(ShellFact[SelinuxDict]):
     """
     Discovers the SELinux related facts on the target host.
 
@@ -1099,7 +1099,7 @@ class Selinux(FactBase[SelinuxDict]):
         return selinux_info
 
 
-class LinuxGui(FactBase[list[str]]):
+class LinuxGui(ShellFact[list[str]]):
     """
     Returns a list of available Linux GUIs.
     """
@@ -1130,7 +1130,7 @@ class LinuxGui(FactBase[list[str]]):
         return gui_names
 
 
-class HasGui(ShortFactBase[bool]):
+class HasGui(ShortcutFact[bool]):
     """
     Returns a boolean indicating the remote side has GUI capabilities. Linux only.
     """
@@ -1142,7 +1142,7 @@ class HasGui(ShortFactBase[bool]):
         return len(data) > 0
 
 
-class Locales(FactBase[list[str]]):
+class Locales(ShellFact[list[str]]):
     """
     Returns installed locales on the target host.
 
@@ -1168,7 +1168,7 @@ class Locales(FactBase[list[str]]):
         return [line.replace("utf8", "UTF-8") for line in output]
 
 
-class SecurityLimits(FactBase):
+class SecurityLimits(ShellFact):
     """
     Returns a list of security limits on the target host.
 
@@ -1254,7 +1254,7 @@ class SecurityLimits(FactBase):
         return limits
 
 
-class RebootRequired(FactBase[bool]):
+class RebootRequired(ShellFact[bool]):
     """
     Returns a boolean indicating whether the system requires a reboot.
 
@@ -1309,7 +1309,7 @@ _DARWIN_ARGS_FIELDS = "pid,user,stat,%cpu,%mem,args"
 _DARWIN_COMM_MARKER = "===PYINFRA-PROCESSES-COMM==="
 
 
-class Processes(FactBase[dict[int, ProcessDict]]):
+class Processes(ShellFact[dict[int, ProcessDict]]):
     """
     Returns a dictionary of running processes keyed by PID.
 
@@ -1496,7 +1496,7 @@ class Processes(FactBase[dict[int, ProcessDict]]):
         return processes
 
 
-class EtcHosts(FactBase[dict[str, list[str]]]):
+class EtcHosts(ShellFact[dict[str, list[str]]]):
     """
     Returns ``/etc/hosts`` (or the file at ``path``) parsed as a mapping of IP address
     to the list of hostnames declared on the matching lines. Comments and empty lines
@@ -1543,7 +1543,7 @@ class LastRecordDict(TypedDict):
     time: str
 
 
-class Last(FactBase[list[LastRecordDict]]):
+class Last(ShellFact[list[LastRecordDict]]):
     """
     Returns login records parsed from ``last`` as a list of dicts.
 
@@ -1633,7 +1633,7 @@ class Last(FactBase[list[LastRecordDict]]):
         return records
 
 
-class LoadAverage(FactBase[dict[str, float]]):
+class LoadAverage(ShellFact[dict[str, float]]):
     """
     Returns the system load average keyed by window (1, 5 and 15 minutes).
 

@@ -1,11 +1,11 @@
-from typing import cast
+from typing import cast, Any
 from unittest.mock import MagicMock, patch
 
-from pyinfra.api import Config, State
+from pyinfra.api import Config, Host, State, FactCore
 from pyinfra.api.arguments import CONNECTOR_ARGUMENT_KEYS, AllArguments, pop_global_arguments
 from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import PyinfraError
-from pyinfra.api.facts import get_facts
+from pyinfra.api.facts import fact, get_facts
 from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.context import ctx_host, ctx_state
 from pyinfra.facts.server import Arch, Command
@@ -421,3 +421,219 @@ class TestHostFactsApi(PatchSSHTestCase):
             print_output=False,
             **defaults,
         )
+
+
+class TestHostDecoratorFactsApi(PatchSSHTestCase):
+    def test_simple_fact(self):
+        fake_value = MagicMock(name="fake_value")
+
+        @fact()
+        def simple_fact():
+            return fake_value
+
+        assert _host_get_fact(simple_fact) is fake_value
+
+    def test_fact_with_arg(self):
+        fake_arg = MagicMock(name="fake_arg")
+
+        @fact()
+        def fact_with_arg(arg1):
+            return arg1
+
+        assert _host_get_fact(fact_with_arg, fake_arg) is fake_arg
+        assert _host_get_fact(fact_with_arg, arg1=fake_arg) is fake_arg
+
+        @fact()
+        def fact_with_positional_arg(arg1, /):
+            return arg1
+
+        assert _host_get_fact(fact_with_positional_arg, fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_positional_arg, arg1=fake_arg)
+
+        @fact()
+        def fact_with_keyword_arg(*, arg1):
+            return arg1
+
+        assert _host_get_fact(fact_with_keyword_arg, arg1=fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_keyword_arg, fake_arg)
+
+    def test_decorator_fact_with_host(self):
+        fake_arg = MagicMock(name="fake_arg")
+
+        @fact()
+        def simple_fact(host):
+            assert isinstance(host, Host)
+            return fake_arg
+
+        assert _host_get_fact(simple_fact) is fake_arg
+
+        @fact()
+        def fact_with_arg(host, arg1):
+            assert isinstance(host, Host)
+            return arg1
+
+        assert _host_get_fact(fact_with_arg, fake_arg) is fake_arg
+        assert _host_get_fact(fact_with_arg, arg1=fake_arg) is fake_arg
+
+        @fact()
+        def fact_with_positional_arg(host, arg1, /):
+            assert isinstance(host, Host)
+            return arg1
+
+        assert _host_get_fact(fact_with_positional_arg, fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_positional_arg, arg1=fake_arg)
+
+        @fact()
+        def fact_with_keyword_arg(host, *, arg1):
+            assert isinstance(host, Host)
+            return arg1
+
+        assert _host_get_fact(fact_with_keyword_arg, arg1=fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_keyword_arg, fake_arg)
+
+        @fact()
+        def fact_with_positional_arg_not_first(arg1, host, /):
+            assert isinstance(host, Host)
+            return arg1
+
+        assert _host_get_fact(fact_with_positional_arg_not_first, fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_positional_arg_not_first, arg1=fake_arg)
+
+        @fact()
+        def fact_with_keyword_host(*, arg1, host):
+            assert isinstance(host, Host)
+            return arg1
+
+        assert _host_get_fact(fact_with_keyword_host, arg1=fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_keyword_host, fake_arg)
+
+    def test_decorator_fact_with_state(self):
+        fake_arg = MagicMock(name="fake_arg")
+
+        @fact()
+        def simple_fact(state):
+            assert isinstance(state, State)
+            return fake_arg
+
+        assert _host_get_fact(simple_fact) is fake_arg
+
+        @fact()
+        def fact_with_arg(state, arg1):
+            assert isinstance(state, State)
+            return arg1
+
+        assert _host_get_fact(fact_with_arg, fake_arg) is fake_arg
+        assert _host_get_fact(fact_with_arg, arg1=fake_arg) is fake_arg
+
+        @fact()
+        def fact_with_positional_arg(state, arg1, /):
+            assert isinstance(state, State)
+            return arg1
+
+        assert _host_get_fact(fact_with_positional_arg, fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_positional_arg, arg1=fake_arg)
+
+        @fact()
+        def fact_with_keyword_arg(state, *, arg1):
+            assert isinstance(state, State)
+            return arg1
+
+        assert _host_get_fact(fact_with_keyword_arg, arg1=fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_keyword_arg, fake_arg)
+
+        @fact()
+        def fact_with_positional_state_not_first(arg1, state, /):
+            assert isinstance(state, State)
+            return arg1
+
+        assert _host_get_fact(fact_with_positional_state_not_first, fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_positional_state_not_first, arg1=fake_arg)
+
+        @fact()
+        def fact_with_keyword_state(*, arg1, state):
+            assert isinstance(state, State)
+            return arg1
+
+        assert _host_get_fact(fact_with_keyword_state, arg1=fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_keyword_state, fake_arg)
+
+    def test_decorator_fact_with_state_and_host(self):
+        fake_arg = MagicMock(name="fake_arg")
+
+        @fact()
+        def simple_fact(state, host):
+            assert isinstance(state, State)
+            assert isinstance(host, Host)
+            return fake_arg
+
+        assert _host_get_fact(simple_fact) is fake_arg
+
+        @fact()
+        def simple_fact_swapped(host, state):
+            assert isinstance(state, State)
+            assert isinstance(host, Host)
+            return fake_arg
+
+        assert _host_get_fact(simple_fact_swapped) is fake_arg
+
+        @fact()
+        def simple_fact_positional(state, host, /):
+            assert isinstance(state, State)
+            assert isinstance(host, Host)
+            return fake_arg
+
+        assert _host_get_fact(simple_fact_positional) is fake_arg
+
+        @fact()
+        def simple_fact_positional_swapped(host, state, /):
+            assert isinstance(state, State)
+            assert isinstance(host, Host)
+            return fake_arg
+
+        assert _host_get_fact(simple_fact_positional_swapped) is fake_arg
+
+        @fact()
+        def simple_fact_keyword(*, state, host):
+            assert isinstance(state, State)
+            assert isinstance(host, Host)
+            return fake_arg
+
+        assert _host_get_fact(simple_fact_keyword) is fake_arg
+
+        @fact()
+        def fact_with_arg_mixed(host, arg1, state):
+            assert isinstance(state, State)
+            assert isinstance(host, Host)
+            return arg1
+
+        assert _host_get_fact(fact_with_arg_mixed, fake_arg) is fake_arg
+        assert _host_get_fact(fact_with_arg_mixed, arg1=fake_arg) is fake_arg
+
+        @fact()
+        def fact_with_arg_mixed_positional(host, arg1, state, /):
+            assert isinstance(state, State)
+            assert isinstance(host, Host)
+            return arg1
+
+        assert _host_get_fact(fact_with_arg_mixed_positional, fake_arg) is fake_arg
+        with self.assertRaises(TypeError):
+            _host_get_fact(fact_with_arg_mixed_positional, arg1=fake_arg)
+
+
+def _host_get_fact(simple_fact: FactCore[Any], *args, **kwargs) -> Any:
+    inventory = make_inventory(hosts=("host-1",))
+    state = State(inventory, Config())
+    connect_all(state)
+    host_1 = inventory.get_host("host-1")
+
+    return host_1.get_fact(simple_fact, *args, **kwargs)

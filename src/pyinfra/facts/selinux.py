@@ -5,12 +5,12 @@ from collections import defaultdict
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 FIELDS = ["user", "role", "type", "level"]  # order is significant, do not change
 
 
-class SEBoolean(FactBase):
+class SEBoolean(ShellFact):
     """
     Returns the status of a SELinux Boolean as a string (``on`` or ``off``).
     If ``boolean`` does not exist, ``SEBoolean`` returns the empty string.
@@ -32,7 +32,7 @@ class SEBoolean(FactBase):
         return components[1]
 
 
-class FileContext(FactBase):
+class FileContext(ShellFact):
     """
     Returns structured SELinux file context data for a specified file
     or ``None`` if the file does not exist.
@@ -64,7 +64,7 @@ class FileContext(FactBase):
         }
 
 
-class FileContextMapping(FactBase):
+class FileContextMapping(ShellFact):
     """
     Returns structured SELinux file context data for the specified target path prefix
     using the same format as :ref:`facts:selinux.FileContext`.
@@ -92,7 +92,7 @@ class FileContextMapping(FactBase):
         return {k: m.group(i) for i, k in enumerate(FIELDS, 1)} if m is not None else self.default()
 
 
-class SEPorts(FactBase):
+class SEPorts(ShellFact):
     """
     Returns the SELinux 'type' definitions for ``(tcp|udp|dccp|sctp)`` ports.
     Note: This fact requires root privileges.
@@ -138,7 +138,7 @@ class SEPorts(FactBase):
         return labels
 
 
-class SEPort(FactBase):
+class SEPort(ShellFact):
     """
     Returns the SELinux 'type' for the specified protocol ``(tcp|udp|dccp|sctp)`` and port number.
     If no type has been set, ``SEPort`` returns the empty string.

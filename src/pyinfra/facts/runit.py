@@ -1,9 +1,9 @@
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 
-class RunitStatus(FactBase):
+class RunitStatus(ShellFact):
     """
     Returns a dict of name -> status for runit services.
 
@@ -55,7 +55,7 @@ class RunitStatus(FactBase):
         return services
 
 
-class RunitManaged(FactBase):
+class RunitManaged(ShellFact):
     """
     Returns a set of all services managed by runit
 

@@ -19,7 +19,7 @@ from importlib import import_module
 
 from pyinfra.api import metadata
 from pyinfra.api.connectors import get_all_connectors
-from pyinfra.api.facts import FactBase, ShortFactBase
+from pyinfra.api.facts import FactCore
 
 sys.path.append(path.dirname(path.realpath(__file__)))
 from docs_utils import including_sub_modules, prepare_docstring, remove_dups  # noqa: E402
@@ -224,11 +224,10 @@ def _extract_fact_classes(module: ModuleType) -> list[tuple[str, type]]:
         for key, value in getmembers(m)
         if (
             isclass(value)
-            and (issubclass(value, FactBase) or issubclass(value, ShortFactBase))
+            and issubclass(value, FactCore)
             and value.__module__.startswith(m.__name__)
-            and value is not FactBase
-            and value is not ShortFactBase
-            and not value.__name__.endswith("Base")
+            # Hack to check `abstract` is coming from `value` class itself, not from a parent
+            and not ("abstract" in value.__dict__ and value.abstract)
         )
     ]
     return remove_dups(classes)

@@ -8,10 +8,10 @@ from typing import Literal, cast
 from typing_extensions import NotRequired, TypedDict, override
 
 from pyinfra import logger
-from pyinfra.api import FactBase, ShortFactBase
+from pyinfra.api import ShellFact, ShortcutFact
 
 
-class CpuInfo(FactBase):
+class CpuInfo(ShellFact):
     """
     Returns dict of information returned by lscpu command.
 
@@ -132,7 +132,7 @@ class CpuInfo(FactBase):
         return None
 
 
-class Cpus(FactBase[int]):
+class Cpus(ShellFact[int]):
     """
     Returns the number of CPUs on this server.
     """
@@ -149,7 +149,7 @@ class Cpus(FactBase[int]):
             pass
 
 
-class Memory(FactBase):
+class Memory(ShellFact):
     """
     Returns the memory installed in this server, in MB.
     """
@@ -205,7 +205,7 @@ class Memory(FactBase):
             return int(round(total_memory / 1024))
 
 
-class BlockDevices(FactBase):
+class BlockDevices(ShellFact):
     """
     Returns a dict of (mounted) block devices:
 
@@ -272,7 +272,7 @@ class DevInfoType(TypedDict):
 NtwkDevMapType = dict[str, DevInfoType]
 
 
-class NetworkDevices(FactBase[NtwkDevMapType]):
+class NetworkDevices(ShellFact[NtwkDevMapType]):
     """
     Gets & returns a dict of network devices. See the ``ipv4_addresses`` and
     ``ipv6_addresses`` facts for easier-to-use shortcuts to get device addresses.
@@ -573,7 +573,7 @@ class NetworkDevices(FactBase[NtwkDevMapType]):
         return all_devices
 
 
-class Ipv4Addrs(ShortFactBase):
+class Ipv4Addrs(ShortcutFact):
     """
     Gets & returns a dictionary of network interface -> list of IPv4 addresses.
 
@@ -632,7 +632,7 @@ class Ipv6Addrs(Ipv4Addrs):
 #
 
 
-class Ipv4Addresses(ShortFactBase):
+class Ipv4Addresses(ShortcutFact):
     """
     Gets & returns a dictionary of network interface -> IPv4 address.
 

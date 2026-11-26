@@ -5,7 +5,7 @@ from collections.abc import Iterable
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 BootEntry = tuple[bool, str]
 
@@ -18,7 +18,7 @@ class EFIBootMgrInfoDict(TypedDict):
     Entries: dict[int, BootEntry]
 
 
-class EFIBootMgr(FactBase[EFIBootMgrInfoDict | None]):
+class EFIBootMgr(ShellFact[EFIBootMgrInfoDict | None]):
     """
     Returns information about the UEFI boot variables:
 

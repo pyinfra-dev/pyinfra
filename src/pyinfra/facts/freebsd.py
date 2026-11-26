@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 from pyinfra.api.command import QuoteString, StringCommand, make_formatted_string_command
 
 
-class ServiceScript(FactBase):
+class ServiceScript(ShellFact):
     @override
     def command(self, srvname: str, jail: str | None = None) -> StringCommand:
         if jail is None:
@@ -25,7 +25,7 @@ class ServiceScript(FactBase):
         )
 
 
-class ServiceStatus(FactBase):
+class ServiceStatus(ShellFact):
     @override
     def command(self, srvname: str, jail: str | None = None) -> StringCommand:
         if jail is None:
@@ -38,7 +38,7 @@ class ServiceStatus(FactBase):
         )
 
 
-class Sysrc(FactBase):
+class Sysrc(ShellFact):
     @override
     def command(self, parameter: str, jail: str | None = None) -> StringCommand:
         if jail is None:
@@ -53,7 +53,7 @@ class Sysrc(FactBase):
         return command
 
 
-class PkgPackage(FactBase):
+class PkgPackage(ShellFact):
     @override
     def command(self, package: str, jail: str | None = None) -> StringCommand:
         if jail is None:

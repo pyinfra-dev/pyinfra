@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 from collections.abc import Iterable
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 from pyinfra.api.exceptions import FactProcessError
 
 
@@ -30,7 +30,7 @@ def _parse_podman_json(value: Iterable[str], expected: type[PodmanJsonT]) -> Pod
     return output
 
 
-class PodmanFactBase(FactBase[T]):
+class PodmanFactBase(ShellFact[T]):
     """
     Base for facts using `podman` to retrieve
     """

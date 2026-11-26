@@ -14,7 +14,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from pyinfra.api.exceptions import FactError, FactNotCollected, FactPreconditionError
-from pyinfra.api.facts import FactBase, get_fact
+from pyinfra.api.facts import ShellFact
 from pyinfra.connectors.util import CommandOutput, OutputLine
 from pyinfra.facts.zfs import ZfsPools
 
@@ -34,10 +34,10 @@ class TestFactPreconditionError(TestCase):
         host = MagicMock()
 
         with patch(
-            "pyinfra.api.facts._get_fact",
+            "pyinfra.api.facts.ShellFact._get_fact",
             side_effect=FactPreconditionError(ZfsPools, "zfs module not loaded"),
         ):
-            result = get_fact(state, host, ZfsPools)
+            result = ZfsPools.get(state, host)
 
         assert result == ZfsPools().default()
 
@@ -47,11 +47,11 @@ class TestFactPreconditionError(TestCase):
         host = MagicMock()
 
         with patch(
-            "pyinfra.api.facts._get_fact",
+            "pyinfra.api.facts.ShellFact._get_fact",
             side_effect=FactPreconditionError(ZfsPools, "zfs module not loaded"),
         ):
             with self.assertRaises(FactPreconditionError) as ctx:
-                get_fact(state, host, ZfsPools)
+                ZfsPools.get(state, host)
 
         assert ctx.exception.fact_cls is ZfsPools
         assert "zfs module not loaded" in ctx.exception.reason
@@ -69,7 +69,7 @@ class TestFactPreconditionError(TestCase):
         assert isinstance(exc, FactError)
 
 
-class _AsksAboutAProject(FactBase):
+class _AsksAboutAProject(ShellFact):
     """
     A fact whose precondition needs the argument the fact was asked about.
 
@@ -90,7 +90,7 @@ class _AsksAboutAProject(FactBase):
         return {}
 
 
-class _Parameterless(FactBase):
+class _Parameterless(ShellFact):
     """A fact written the old way, with a precondition that takes nothing."""
 
     default = str
@@ -120,7 +120,7 @@ class TestPreconditionReceivesFactArguments(TestCase):
         host.run_shell_command.return_value = (True, CommandOutput([OutputLine("stdout", "[]")]))
 
         with patch("pyinfra.api.facts._handle_fact_kwargs", return_value=(fact_kwargs, {})):
-            return get_fact(state, host, fact_cls)
+            return fact_cls.get(state, host)
 
     def test_a_fact_is_told_which_arguments_it_was_asked_about(self):
         _AsksAboutAProject.seen = {}

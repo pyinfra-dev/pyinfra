@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
 
-class PkgPackages(FactBase):
+class PkgPackages(ShellFact):
     """
     Returns a dict of installed pkg packages:
 

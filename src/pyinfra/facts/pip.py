@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing_extensions import override
 
-from pyinfra.api import FactBase
+from pyinfra.api import ShellFact
 
 from .util.packaging import parse_packages
 
 PIP_REGEX = r"^([a-zA-Z0-9_\-\+\.]+)==([0-9\.]+[a-z0-9\-]*)$"
 
 
-class PipPackages(FactBase):
+class PipPackages(ShellFact):
     """
     Returns a dict of installed pip packages:
 
