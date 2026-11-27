@@ -687,11 +687,20 @@ def packages(
 
     uninstall_command = " ".join(uninstall_command_args)
 
+    current_packages = host.get_fact(DebPackages)
+
+    def expand_package(package: str) -> list[str | list[str]]:
+        # An installed package is matched by name, so skip the provider lookup
+        if package in current_packages:
+            return [package]
+        # "Reverse Provides:" lists only other packages, so check the name itself too
+        return [package, *host.get_fact(AptPackageProvides, package=package)]
+
     # Compare/ensure packages are present/not
     yield from ensure_packages(
         host,
         packages,
-        host.get_fact(DebPackages),
+        current_packages,
         present,
         install_command=noninteractive_apt(
             install_command, force=force, wait_for_lock=wait_for_lock
@@ -704,7 +713,7 @@ def packages(
         ),
         version_join="=",
         latest=latest,
-        expand_package_fact=lambda package: host.get_fact(AptPackageProvides, package=package),
+        expand_package_fact=expand_package,
         expand_match_any=True,
     )
 

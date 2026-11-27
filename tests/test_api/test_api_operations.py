@@ -1,9 +1,12 @@
 from collections import defaultdict
 from io import StringIO
-from os import path
+from os import makedirs, path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, mock_open, patch
 import time
+
+import jinja2
 
 import pyinfra
 from pyinfra.api import (
@@ -18,7 +21,7 @@ from pyinfra.api import (
 )
 from pyinfra.api.connect import connect_all, disconnect_all
 from pyinfra.api.exceptions import ArgumentTypeError, PyinfraError
-from pyinfra.api.operation import OperationMeta, add_op
+from pyinfra.api.operation import OperationMeta, add_op, operation
 from pyinfra.api.operations import run_ops
 from pyinfra.api.state import StateOperationMeta, StateStage
 from pyinfra.connectors.util import CommandOutput, OutputLine
@@ -42,6 +45,43 @@ class TestOperationMeta(TestCase):
 
 
 class TestOperationsApi(PatchSSHTestCase):
+    def test_temp_directory_fact_ignores_privilege_escalation(self):
+        @operation()
+        def show_temp_path():
+            yield StringCommand(pyinfra.host.get_temp_filename("dest", hash_filename=False))
+
+        for check_for_changes in (True, False):
+            with self.subTest(check_for_changes=check_for_changes):
+                inventory = make_inventory(hosts=("somehost",))
+                state = State(inventory, Config(SUDO=True), check_for_changes=check_for_changes)
+                inventory.get_host("somehost")._get_temp_directory.cache.clear()
+                connect_all(state)
+
+                with patch(
+                    "pyinfra.connectors.ssh.SSHConnector.run_shell_command",
+                    return_value=(True, CommandOutput([OutputLine("stdout", "/tmp")])),
+                ) as fake_run_command:
+                    add_op(state, show_temp_path, _su_user="someuser")
+                    run_ops(state)
+
+                tmp_dir_calls = [
+                    call
+                    for call in fake_run_command.call_args_list
+                    if "TMPDIR" in str(call.args[0])
+                ]
+                assert len(tmp_dir_calls) == 1
+                assert {
+                    key: tmp_dir_calls[0].kwargs[key]
+                    for key in ("_sudo", "_su_user", "_doas", "_dzdo")
+                } == {"_sudo": False, "_su_user": None, "_doas": False, "_dzdo": False}
+
+                assert any(
+                    str(call.args[0]) == "/tmp/pyinfra-dest"
+                    and call.kwargs["_sudo"] is True
+                    and call.kwargs["_su_user"] == "someuser"
+                    for call in fake_run_command.call_args_list
+                )
+
     def test_callable_conditions_remain_supported(self):
         inventory = make_inventory(hosts=("somehost",))
         state = State(inventory, Config())
@@ -343,6 +383,75 @@ class TestOperationsApi(PatchSSHTestCase):
         assert "password=!CLEARTEXTPASSWORD" not in op_args
 
         disconnect_all(state)
+
+    def _template_loader_state(self, templates):
+        tmp = TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        search = path.join(tmp.name, "templates")
+        cwd = path.join(tmp.name, "deploy")
+        makedirs(search)
+        makedirs(cwd)
+        for name, content in templates.items():
+            with open(path.join(search, name), "w", encoding="utf-8") as f:
+                f.write(content)
+
+        inventory = make_inventory()
+        state = State(inventory, Config())
+        state.current_stage = StateStage.Prepare
+        state.cwd = cwd
+        connect_all(state)
+        self.addCleanup(disconnect_all, state)
+        return state, {"loader": jinja2.FileSystemLoader([search])}
+
+    def test_template_op_custom_loader_searches_by_name(self):
+        state, jinja_env_kwargs = self._template_loader_state(
+            {"app.conf.j2": "name={{ app_name }}\n"},
+        )
+
+        add_op(
+            state,
+            files.template,
+            "app.conf.j2",
+            "/etc/app.conf",
+            jinja_env_kwargs=jinja_env_kwargs,
+            app_name="pyinfra",
+        )
+
+        [op_hash] = state.get_op_order()
+        assert op_hash in state.ops[state.inventory.get_host("somehost")]
+
+    def test_template_op_custom_loader_error_is_operation_error(self):
+        state, jinja_env_kwargs = self._template_loader_state(
+            {"broken.j2": "line one\n{{ missing_variable }}\nline three\n"},
+        )
+
+        with self.assertRaises(PyinfraError) as context:
+            add_op(
+                state,
+                files.template,
+                "broken.j2",
+                "/etc/broken.conf",
+                jinja_env_kwargs=jinja_env_kwargs,
+            )
+
+        assert isinstance(context.exception, OperationError)
+        message = str(context.exception)
+        assert "Error in template: broken.j2 (L2)" in message
+        assert "missing_variable" in message
+
+    def test_template_op_custom_loader_missing_template(self):
+        state, jinja_env_kwargs = self._template_loader_state({})
+
+        with self.assertRaises(OperationError) as context:
+            add_op(
+                state,
+                files.template,
+                "absent.j2",
+                "/etc/absent.conf",
+                jinja_env_kwargs=jinja_env_kwargs,
+            )
+
+        assert "Template not found: absent.j2" in str(context.exception)
 
     @patch("pyinfra.api.util.open", mock_open(read_data="test!"), create=True)
     @patch("pyinfra.operations.files.Path.is_file", lambda *args, **kwargs: True)

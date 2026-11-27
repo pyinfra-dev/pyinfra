@@ -100,7 +100,7 @@ class TestOperationCli(PatchSSHTestCase):
     def test_deploy_operation_with_all(self):
         result = run_cli(
             "-y",
-            path.join("tests", "test_cli", "deploy", "inventory_all.py"),
+            path.join("tests", "test_cli", "deploy", "inventories", "inventory_all.py"),
             "server.shell",
             "echo hi",
         )
@@ -109,7 +109,7 @@ class TestOperationCli(PatchSSHTestCase):
     def test_deploy_operation_json_args(self):
         result = run_cli(
             "-y",
-            path.join("tests", "test_cli", "deploy", "inventory_all.py"),
+            path.join("tests", "test_cli", "deploy", "inventories", "inventory_all.py"),
             "server.shell",
             '[["echo hi"], {}]',
         )
@@ -391,7 +391,7 @@ class TestDirectMainExecution(PatchSSHTestCase):
     def test_deploy_operation_direct(self):
         with self.assertRaises(SystemExit) as e:
             _main(
-                inventory=path.join("tests", "test_deploy", "inventories", "inventory.py"),
+                inventory=path.join("tests", "test_cli", "deploy", "inventories", "inventory.py"),
                 operations=["server.shell", "echo hi"],
                 chdir=None,
                 group_data=None,

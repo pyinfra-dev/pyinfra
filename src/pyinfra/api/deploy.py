@@ -5,7 +5,7 @@ creation (eg pyinfra-openstack).
 """
 
 from functools import wraps
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from collections.abc import Callable
 
 from typing_extensions import ParamSpec
@@ -15,7 +15,7 @@ from pyinfra import context
 from pyinfra.context import ctx_host, ctx_state
 
 from .arguments import pop_global_arguments
-from .arguments_typed import PyinfraOperation
+from .arguments_typed import PyinfraDeploy
 from .exceptions import PyinfraError
 from .host import Host
 from .util import get_call_location
@@ -53,11 +53,12 @@ def add_deploy(state: "State", deploy_func: Callable[..., Any], *args, **kwargs)
 
 
 P = ParamSpec("P")
+R = TypeVar("R")
 
 
 def deploy(
     name: str | None = None, data_defaults: dict | None = None
-) -> Callable[[Callable[P, Any]], PyinfraOperation[P]]:
+) -> Callable[[Callable[P, R]], PyinfraDeploy[P, R]]:
     """
     Decorator that takes a deploy function (normally from a pyinfra_* package)
     and wraps any operations called inside with any deploy-wide kwargs/data.
@@ -69,7 +70,7 @@ def deploy(
             "see: https://docs.pyinfra.com/en/3.x/compatibility.html#upgrading-pyinfra-from-2-x-3-x"  # noqa
         )
 
-    def decorator(func: Callable[P, Any]) -> PyinfraOperation[P]:
+    def decorator(func: Callable[P, R]) -> PyinfraDeploy[P, R]:
         func.deploy_name = name or func.__name__  # type: ignore[attr-defined]
         if data_defaults:
             func.deploy_data = data_defaults  # type: ignore[attr-defined]
@@ -78,9 +79,9 @@ def deploy(
     return decorator
 
 
-def _wrap_deploy(func: Callable[P, Any]) -> PyinfraOperation[P]:
+def _wrap_deploy(func: Callable[P, R]) -> PyinfraDeploy[P, R]:
     @wraps(func)
-    def decorated_func(*args: P.args, **kwargs: P.kwargs) -> Any:
+    def decorated_func(*args: P.args, **kwargs: P.kwargs) -> R:
         deploy_kwargs, _ = pop_global_arguments(context.state, context.host, kwargs)
 
         deploy_data = getattr(func, "deploy_data", None)
@@ -93,4 +94,4 @@ def _wrap_deploy(func: Callable[P, Any]) -> PyinfraOperation[P]:
             return func(*args, **kwargs)
 
     decorated_func._inner = func  # type: ignore[attr-defined]
-    return cast(PyinfraOperation[P], decorated_func)
+    return cast(PyinfraDeploy[P, R], decorated_func)

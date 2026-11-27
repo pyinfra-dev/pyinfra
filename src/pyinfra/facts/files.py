@@ -253,9 +253,9 @@ class File(FactBase[FileDict | Literal[False] | None]):
         return make_formatted_string_command(
             (
                 # only stat if the path exists (file or symlink)
-                "! (test -e {0} || test -L {0} ) || "
-                "( {linux_stat_command} {0} 2> /dev/null || "
-                "{bsd_stat_command} {0} || {ls_command} {0} )"
+                "! {{ test -e {0} || test -L {0}; }} || "
+                "{{ {linux_stat_command} {0} 2> /dev/null || "
+                "{bsd_stat_command} {0} || {ls_command} {0}; }}"
             ),
             path,
             linux_stat_command=LINUX_STAT_COMMAND,

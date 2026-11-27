@@ -55,6 +55,8 @@ CONVENTIONAL_RE = re.compile(
     r"^(?P<type>[a-z]+)(?:\((?P<scope>[^)]*)\))?(?P<breaking>!)?:\s*(?P<desc>.+)$",
 )
 
+CHERRY_PICK_RE = re.compile(r"\(cherry picked from commit (?P<sha>[0-9a-f]{40})\)")
+
 
 def get_previous_tag():
     result = subprocess.run(
@@ -86,7 +88,18 @@ def get_commits(from_ref):
     return commits
 
 
+def get_original_sha(sha):
+    result = subprocess.run(
+        ["git", "show", "-s", "--format=%b", sha],
+        capture_output=True,
+        text=True,
+    )
+    match = CHERRY_PICK_RE.search(result.stdout)
+    return match["sha"] if match else sha
+
+
 def get_github_username(sha):
+    sha = get_original_sha(sha)
     print(f"Get commit username: {sha}", file=sys.stderr)
     result = subprocess.run(
         ["gh", "api", f"repos/{REPO}/commits/{sha}", "--jq", ".author.login"],
