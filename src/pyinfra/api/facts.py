@@ -52,6 +52,8 @@ SU_REGEXES = (
 
 T = TypeVar("T", covariant=True)
 
+already_logged_as_deprecated = set()  # used to ensure only one warning per deprecated fact
+
 
 class FactBase(Generic[T]):
     name: str
@@ -66,6 +68,10 @@ class FactBase(Generic[T]):
         Implementations declare the fact's own parameters, eg ``(self, path: str) -> str``.
         """
         raise NotImplementedError
+
+    is_deprecated = False
+
+    deprecated_for: str | None = None
 
     def requires_command(self, *args, **kwargs) -> str | None:
         """Return the binary name that must exist on the remote host for this fact to run.
@@ -131,6 +137,8 @@ class FactBase(Generic[T]):
 class ShortFactBase(Generic[T]):
     name: str
     fact: type[FactBase]
+    is_deprecated = False
+    deprecated_for: str | None = None
 
     @override
     def __init_subclass__(cls) -> None:
@@ -208,6 +216,15 @@ def get_fact(
     ensure_hosts: Any | None = None,
     apply_failed_hosts: bool = True,
 ) -> Any:
+    global already_logged_as_deprecated
+
+    if cls.is_deprecated and (cls not in already_logged_as_deprecated):
+        already_logged_as_deprecated.add(cls)
+        msg = f"The {cls.__name__} fact is deprecated"
+        if cls.deprecated_for is not None:
+            msg = f"{msg}, please use: {cls.deprecated_for}"
+        logger.warning(msg)
+
     if issubclass(cls, ShortFactBase):
         return get_short_facts(
             state,

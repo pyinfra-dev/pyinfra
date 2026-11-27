@@ -1,9 +1,10 @@
 import re
-from inspect import cleandoc, getmembers, ismodule
+from collections.abc import Callable
+from inspect import cleandoc, getmembers, isfunction, ismodule
 from pathlib import Path
 from types import ModuleType
-from typing import Any
-from collections.abc import Generator
+
+from pyinfra.api import FactBase, ShortFactBase
 
 
 def format_doc_line(line: str) -> str:
@@ -114,19 +115,6 @@ def prepare_docstring(doc: str | None) -> str:
     return rst_to_md_docstring(cleandoc(doc))
 
 
-def including_sub_modules(module: ModuleType) -> Generator[ModuleType, None, None]:
-    """Yield all modules to be examined, including the base modules."""
-    yield module
-    module_name = module.__name__
-    for key, value in getmembers(module):
-        if (
-            ismodule(value)
-            and value.__name__.startswith(module_name)
-            and (not key.startswith("__"))
-        ):
-            yield from including_sub_modules(value)
-
-
 def get_module_names(
     src_dir: Path,
     *,
@@ -148,11 +136,63 @@ def get_module_names(
     return module_names
 
 
-def remove_dups(all: list[tuple[str, Any]]) -> list[tuple[str, Any]]:
-    """Remove items with duplicate values, i.e. the same function or module found again."""
+def is_fact_class(m: ModuleType, _key: str, value: object) -> bool:
+    return (
+        isinstance(value, type)
+        and (issubclass(value, FactBase) or issubclass(value, ShortFactBase))
+        and value.__module__.startswith(m.__name__)
+        and value is not FactBase
+        and not value.__name__.endswith("Base")  # hacky!
+    )
+
+
+def is_fact_class_in_op(_m: ModuleType, _key: str, value: object) -> bool:
+    return isinstance(value, type) and (
+        issubclass(value, FactBase) or issubclass(value, ShortFactBase)
+    )
+
+
+def function_of_interest(module: ModuleType, key: str, value: object) -> bool:
+    return (
+        isfunction(value)
+        and value.__module__.startswith(module.__name__)
+        and getattr(value, "_inner", False)
+        and not value.__name__.startswith("_")
+        and not key.startswith("_")
+    )
+
+
+def get_objects_from_module(
+    module: ModuleType,
+    predicate: Callable[[object], bool],
+    filt: Callable[[ModuleType, str, object], bool],
+) -> list[tuple[str, type]]:
+    if not hasattr(module, "__path__"):  # not a package thus a single file
+        found = [
+            (key, value) for key, value in getmembers(module, predicate) if filt(module, key, value)
+        ]
+    else:
+        # for packages, deferred import mechanism gives zero members so need to use __all__
+        found = [
+            (name, item)
+            for sym in module.__all__
+            for name, item in (
+                (
+                    (f"{sym}.{key}", value)
+                    for key, value in getmembers(getattr(module, sym), predicate)
+                    if filt(module, key, value)
+                )
+                if ismodule(getattr(module, sym))
+                else ([(sym, getattr(module, sym))] if predicate(getattr(module, sym)) else [])
+            )
+            if filt(module, name, item)
+        ]
+
+    # Remove items with duplicate values, i.e. the same function or module found again
     unique, seen = [], set()
-    for key, value in all:
+    for key, value in found:
         if value not in seen:
             seen.add(value)
             unique.append((key, value))
+
     return unique
