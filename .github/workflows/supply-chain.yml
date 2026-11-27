@@ -1,0 +1,107 @@
+name: Supply Chain Security
+
+on:
+  push:
+    branches: [3.x, 2.x]
+    paths:
+      - uv.lock
+      - pyproject.toml
+      - src/**
+      - .github/workflows/supply-chain.yml
+  pull_request:
+    paths:
+      - uv.lock
+      - pyproject.toml
+      - src/**
+      - .github/workflows/supply-chain.yml
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  osv-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Download osv-scanner
+        run: |
+          OSV_SCANNER_VERSION=2.7.0
+          curl -sSfL "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64" -o osv-scanner_linux_amd64
+          curl -sSfL "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_SHA256SUMS" -o SHA256SUMS
+          grep 'osv-scanner_linux_amd64$' SHA256SUMS | sha256sum -c -
+          mv osv-scanner_linux_amd64 osv-scanner
+          chmod +x osv-scanner
+      - name: Scan dependencies
+        id: scan
+        continue-on-error: true
+        run: |
+          ./osv-scanner \
+            --lockfile uv.lock \
+            --format sarif \
+            --output osv-results.sarif
+      # Fork PRs get a read-only token, so security-events: write is not granted there
+      - name: Upload SARIF to security tab
+        if: always() && steps.scan.outcome != 'skipped' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4
+        with:
+          sarif_file: osv-results.sarif
+          category: osv-scanner
+      - name: Upload scan artifact
+        if: always() && steps.scan.outcome != 'skipped'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: osv-results
+          path: osv-results.sarif
+          if-no-files-found: warn
+          retention-days: 30
+
+  sbom:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.14"
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - run: uv sync --group test --no-default-groups
+      - name: Generate CycloneDX SBOM
+        id: sbom
+        continue-on-error: true
+        run: |
+          uv run --with pip-audit==2.10.1 pip-audit \
+            --format=cyclonedx-json \
+            --output=sbom.json \
+            --skip-editable \
+            --desc=off
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: sbom
+          path: sbom.json
+          retention-days: 30
+
+  bandit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.14"
+      - name: Run Bandit security analysis
+        id: bandit
+        continue-on-error: true
+        run: |
+          pip install bandit==1.9.4
+          bandit -r src/ -f json -o bandit-results.json -ll
+      - name: Upload scan artifact
+        if: always() && steps.bandit.outcome != 'skipped'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: bandit-results
+          path: bandit-results.json
+          if-no-files-found: warn
+          retention-days: 30
