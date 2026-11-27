@@ -24,7 +24,7 @@ def packages(
     + remote: Source from which to install the application or runtime
     + present: whether the package should be installed
     + user: use the current user's installation instead of Flatpak's default
-    + purge: delete application data
+    + purge: delete application data when removing and only applies when present=False
 
     **Examples:**
 
@@ -63,7 +63,7 @@ def packages(
             name="Remove vlc",
             packages="org.videolan.VLC",
             present=False,
-            purge=False,
+            purge=True,
         )
     """
 
