@@ -4,6 +4,9 @@
         "public_keys": ["abc"]
     },
     "facts": {
+        "files.Link": {
+            "path=/root/.ssh/authorized_keys": false
+        },
         "server.Os": "Linux",
         "server.Users": {
             "root": {
