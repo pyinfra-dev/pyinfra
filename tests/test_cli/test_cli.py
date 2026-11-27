@@ -3,7 +3,13 @@ from os import path
 from unittest import TestCase
 
 from pyinfra.api import Host, Inventory
-from pyinfra_cli.cli import _apply_inventory_exclude, _apply_inventory_limit, _main
+from pyinfra_cli.cli import (
+    _apply_inventory_exclude,
+    _apply_inventory_limit,
+    _main,
+    _set_override_data,
+)
+from pyinfra_cli.exceptions import CliError
 
 from ..paramiko_util import PatchSSHTestCase
 from .util import run_cli
@@ -295,6 +301,24 @@ class TestJsonOutput(PatchSSHTestCase):
         operation = payload["results"]["operations"][0]
         assert operation["hosts"] == 1
         assert operation["success"] == ["anotherhost"]
+
+
+class TestCliOverrideData(TestCase):
+    def test_data_argument_without_equals_errors(self):
+        with self.assertRaises(CliError) as context:
+            _set_override_data(("no_equals_sign",), None, None, None, None, None)
+
+        assert context.exception.message == (
+            "Invalid data argument: `no_equals_sign`, should be in the format `key=value`"
+        )
+
+    def test_data_argument_key_value(self):
+        assert _set_override_data(("foo=bar",), None, None, None, None, None) == {"foo": "bar"}
+
+    def test_data_argument_value_with_equals(self):
+        assert _set_override_data(("foo=bar=baz",), None, None, None, None, None) == {
+            "foo": "bar=baz"
+        }
 
 
 class TestCliLimitExclude(TestCase):

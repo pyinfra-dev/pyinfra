@@ -787,6 +787,9 @@ def _set_override_data(
     override_data = {}
 
     for arg in data:
+        if "=" not in arg:
+            raise CliError(f"Invalid data argument: `{arg}`, should be in the format `key=value`")
+
         key, value = arg.split("=", 1)
         override_data[key] = value
 
