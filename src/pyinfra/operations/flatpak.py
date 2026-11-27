@@ -15,6 +15,7 @@ def packages(
     remote: str | None = None,
     present: bool = True,
     user: bool = False,
+    purge: bool = False,
 ):
     """
     Install/remove a flatpak package
@@ -23,6 +24,7 @@ def packages(
     + remote: Source from which to install the application or runtime
     + present: whether the package should be installed
     + user: use the current user's installation instead of Flatpak's default
+    + purge: delete application data when removing and only applies when present=False
 
     **Examples:**
 
@@ -61,6 +63,7 @@ def packages(
             name="Remove vlc",
             packages="org.videolan.VLC",
             present=False,
+            purge=True,
         )
     """
 
@@ -106,6 +109,6 @@ def packages(
 
     if remove_packages:
         yield StringCommand(
-            f"flatpak uninstall --noninteractive{' --user' if user else ''}",
+            f"flatpak uninstall --noninteractive{' --user' if user else ''}{' --delete-data' if purge else ''}",
             *[QuoteString(package) for package in remove_packages],
         )

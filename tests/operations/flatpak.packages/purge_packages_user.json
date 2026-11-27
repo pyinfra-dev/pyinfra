@@ -1,0 +1,16 @@
+{
+    "args": ["org.videolan.VLC"],
+    "kwargs": {
+        "present": false,
+        "purge": true,
+        "user": true
+    },
+    "facts": {
+        "flatpak.FlatpakPackages": {
+            "user=True": ["org.videolan.VLC"]
+        }
+    },
+    "commands": [
+        "flatpak uninstall --noninteractive --user --delete-data org.videolan.VLC"
+    ]
+}
