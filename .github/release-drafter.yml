@@ -1,0 +1,41 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+# Labels below match the existing labels in the pyinfra-dev/pyinfra repo,
+# except 'breaking' which needs creating before it can drive major bumps.
+categories:
+  - title: 'Core'
+    labels:
+      - 'API'
+  - title: 'Operations/Facts'
+    labels:
+      - 'operations'
+      - 'facts'
+  - title: 'Connectors'
+    labels:
+      - 'connectors'
+  - title: 'CLI'
+    labels:
+      - 'CLI'
+  - title: 'Docs/Meta'
+    labels:
+      - 'documentation'
+  - title: 'Dependencies'
+    labels:
+      - 'dependency issue'
+change-template: '- $TITLE (#$NUMBER)'
+change-title-escapes: '\<*_&'
+version-resolver:
+  major:
+    labels:
+      - 'breaking'
+  minor:
+    labels:
+      - 'new feature'
+  patch:
+    labels:
+      - 'bug'
+  default: patch
+template: |
+  ## Changes
+
+  $CHANGES
