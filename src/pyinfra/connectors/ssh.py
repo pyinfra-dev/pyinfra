@@ -21,7 +21,12 @@ from pyinfra.api.util import get_file_io, memoize
 
 from .base import BaseConnector, DataMeta
 from .scp import SCPClient
-from .ssh_util import _patch_paramiko_sk_key_support, get_private_key, raise_connect_error
+from .ssh_util import (
+    _patch_paramiko_dss_key_value_error,
+    _patch_paramiko_sk_key_support,
+    get_private_key,
+    raise_connect_error,
+)
 from .sshuserclient import SSHClient
 from .util import (
     CommandOutput,
@@ -222,6 +227,7 @@ class SSHConnector(BaseConnector):
     @override
     def connect(self) -> None:
         _patch_paramiko_sk_key_support()
+        _patch_paramiko_dss_key_value_error()
 
         retries = self.data["ssh_connect_retries"]
 
