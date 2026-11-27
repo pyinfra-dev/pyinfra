@@ -1,0 +1,20 @@
+args:
+  - [elasticquery==1.1, flask, test==1.1]
+kwargs:
+  virtualenv: testdir
+  virtualenv_kwargs:
+    venv: true
+    python: python3.14
+    on_mismatch: recreate
+facts:
+  files.File:
+    path=testdir/bin/activate: true
+  files.Directory:
+    path=testdir: true
+  pip.PythonVersion:
+    python=testdir/bin/python: [3, 12, 11]
+    python=python3.14: [3, 14, 7]
+commands:
+  - rm -rf testdir
+  - python3.14 -m venv testdir
+  - testdir/bin/pip install elasticquery==1.1 flask test==1.1

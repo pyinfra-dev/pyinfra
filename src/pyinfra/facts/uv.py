@@ -1,6 +1,7 @@
 """
 Present information provided by ``uv``:
     + available and installed versions of Python
+    + the version of Python a request such as ``3.13`` or a path resolves to
     + installed Python packages and their versions
     + where the installed versions of Python are stored
     + where `tools are installed`
@@ -18,9 +19,10 @@ from typing import cast
 from typing_extensions import override
 
 from pyinfra import logger
-from pyinfra.api import StringCommand
+from pyinfra.api import QuoteString, StringCommand
 from pyinfra.api.facts import FactBase
 from pyinfra.facts.util.packaging import PackageVersionDict
+from pyinfra.facts.util.python import parse_python_version
 
 UV_CMD = "uv"
 MANAGED_PYTHON = "--managed-python"
@@ -300,3 +302,38 @@ class UvVersion(FactBase[str]):
             return result
         logger.warning(f"ignoring unexpected output from '{self.command()}': '{output}'")
         return ""
+
+
+class UvPythonVersion(FactBase[tuple[int, int, int] | None]):
+    """
+    Provides the version of the Python interpreter ``uv`` resolves a `Python request`_ to, as a
+    ``(major, minor, micro)`` tuple, or ``None`` when no interpreter matches. Virtual environments
+    are skipped unless the request is a path into one.
+
+    + request: a version such as ``3.13``, an executable name or a path. Default: the
+      interpreter uv would use when none is requested
+
+    .. _Python request: https://docs.astral.sh/uv/concepts/python-versions/#requesting-a-version
+
+    **Example:**
+
+    .. code:: python
+
+        (3, 13, 4)
+    """
+
+    @override
+    def requires_command(self, *args, **kwargs) -> str:
+        return UV_CMD
+
+    @override
+    def command(self, request: str | None = None) -> StringCommand:
+        cmd: list[str | QuoteString] = [UV_CMD, "python", "find", "--system", "--show-version"]
+        if request is not None:
+            cmd.append(QuoteString(request))
+        cmd.append("|| true")
+        return StringCommand(*cmd)
+
+    @override
+    def process(self, output: list[str]) -> tuple[int, int, int] | None:
+        return parse_python_version(output)

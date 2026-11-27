@@ -1,5 +1,5 @@
 {
-    "args": ["/somewhere/useful"],
+    "args": ["/somewhere/useful/.venv"],
     "kwargs": {
         "present": true,
         "python": "3.15",
@@ -14,5 +14,5 @@
             "path=/somewhere/useful.venv": null
         }
     },
-    "commands": ["uv venv --allow-existing --seed --python 3.15 /somewhere/useful"]
+    "commands": ["uv venv --allow-existing --seed --python 3.15 /somewhere/useful/.venv"]
 }

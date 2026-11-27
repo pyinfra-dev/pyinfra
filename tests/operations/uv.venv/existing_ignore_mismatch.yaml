@@ -1,0 +1,10 @@
+args:
+  - /somewhere/useful/.venv
+kwargs:
+  python: "3.15"
+  on_mismatch: ignore
+facts:
+  files.File:
+    path=/somewhere/useful/.venv/bin/activate: true
+commands: []
+noop_description: venv already exists at /somewhere/useful/.venv

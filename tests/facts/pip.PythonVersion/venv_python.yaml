@@ -1,0 +1,6 @@
+arg:
+  python: /opt/my venv/bin/python
+command: "'/opt/my venv/bin/python' -c 'import sys; print(sys.version.split()[0])' || true"
+output:
+  - 3.12.11
+fact: [3, 12, 11]
