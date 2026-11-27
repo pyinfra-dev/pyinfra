@@ -1,11 +1,13 @@
+import os
 from base64 import b64decode
 from pathlib import Path
 from unittest import TestCase
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 from packaging.requirements import Requirement
 from paramiko import PKey, ProxyCommand, SSHException
+from paramiko.agent import AgentKey
 from paramiko.ed25519key import Ed25519Key
 
 from pyinfra.connectors.sshuserclient import SSHClient
@@ -558,6 +560,11 @@ def _write_ssh_config(config_path, host, **directives):
     config_path.write_text("\n".join(body) + "\n")
 
 
+def _make_agent_key(public_key_path):
+    public_key = public_key_path.read_text().split()[1]
+    return AgentKey(agent=MagicMock(name="agent-connection"), blob=b64decode(public_key))
+
+
 def test_parse_config_loads_cert_for_identityfile(
     ssh_ca_keypair, tmp_path, _clear_ssh_config_cache
 ):
@@ -571,8 +578,12 @@ def test_parse_config_loads_cert_for_identityfile(
         IdentityFile=str(ssh_ca_keypair["user_key"]),
     )
 
+    agent = MagicMock(name="agent")
+    agent.get_keys.return_value = []
+
     client = SSHClient()
-    _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", return_value=agent):
+        _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
 
     assert "key_filename" not in cfg
     assert isinstance(cfg["pkey"], PKey)
@@ -635,6 +646,181 @@ def test_parse_config_explicit_pkey_wins_over_encrypted_identityfile(
     assert cfg["pkey"] is sentinel
 
 
+def test_parse_config_identityfile_prefers_matching_agent_key(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # Regression for #2066: when the agent already holds the key for an encrypted
+    # ssh_config IdentityFile, use it instead of prompting to decrypt the file.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+    )
+
+    agent_key = _make_agent_key(Path(f"{ssh_encrypted_key['key']}.pub"))
+    agent = MagicMock(name="agent")
+    agent.get_keys.return_value = [agent_key]
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", return_value=agent):
+        with patch("pyinfra.connectors.ssh_util.getpass") as fake_getpass:
+            with patch("pyinfra.is_cli", True):
+                _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    fake_getpass.assert_not_called()
+    assert cfg["pkey"] is agent_key
+    assert "key_filename" not in cfg
+    agent.close.assert_not_called()
+
+
+def test_parse_config_identityfiles_prefer_agent_match_before_disk_load(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # OpenSSH prefers configured keys found in the agent over keys that only exist
+    # on disk, so an earlier encrypted identity must not prompt when a later one is
+    # already unlocked in the agent.
+    config_path = tmp_path / "ssh_config"
+    config_path.write_text(
+        "Host myhost\n"
+        f"    IdentityFile {ssh_encrypted_key['key']}\n"
+        f"    IdentityFile {ssh_encrypted_key['other_key']}\n"
+    )
+
+    agent_key = _make_agent_key(Path(f"{ssh_encrypted_key['other_key']}.pub"))
+    agent = MagicMock(name="agent")
+    agent.get_keys.return_value = [agent_key]
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", return_value=agent):
+        with patch("pyinfra.connectors.ssh_util.getpass") as fake_getpass:
+            with patch("pyinfra.is_cli", True):
+                _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    fake_getpass.assert_not_called()
+    assert cfg["pkey"] is agent_key
+    assert "key_filename" not in cfg
+
+
+def test_parse_config_identityfile_agent_key_without_public_key_file(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    # OpenSSH private keys carry their public half outside the encrypted section,
+    # so a missing <key>.pub file must not force a passphrase prompt either.
+    key_copy = tmp_path / "encrypted-ed25519"
+    key_copy.write_bytes(ssh_encrypted_key["key"].read_bytes())
+
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(key_copy),
+    )
+
+    agent_key = _make_agent_key(Path(f"{ssh_encrypted_key['key']}.pub"))
+    agent = MagicMock(name="agent")
+    agent.get_keys.return_value = [agent_key]
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", return_value=agent):
+        with patch("pyinfra.connectors.ssh_util.getpass") as fake_getpass:
+            with patch("pyinfra.is_cli", True):
+                _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    fake_getpass.assert_not_called()
+    assert cfg["pkey"] is agent_key
+    assert "key_filename" not in cfg
+
+
+def test_parse_config_identityfile_agent_check_uses_identityagent(
+    ssh_encrypted_key, tmp_path, monkeypatch, _clear_ssh_config_cache
+):
+    config_path = tmp_path / "ssh_config"
+    agent_socket = tmp_path / "agent.sock"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+        IdentityAgent=str(agent_socket),
+    )
+
+    monkeypatch.setenv("SSH_AUTH_SOCK", "original-socket")
+    agent_sockets = []
+
+    def make_agent():
+        agent_sockets.append(os.environ.get("SSH_AUTH_SOCK"))
+        agent = MagicMock(name="agent")
+        agent.get_keys.return_value = []
+        return agent
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", side_effect=make_agent):
+        with patch(
+            "pyinfra.connectors.ssh_util.getpass",
+            return_value=ssh_encrypted_key["passphrase"],
+        ):
+            with patch("pyinfra.is_cli", True):
+                client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert agent_sockets == [str(agent_socket)]
+    assert os.environ["SSH_AUTH_SOCK"] == "original-socket"
+
+
+def test_parse_config_identityfile_does_not_use_agent_when_disallowed(
+    ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
+):
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_encrypted_key["key"]),
+    )
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.sshuserclient.client.Agent") as fake_agent_cls:
+        with patch(
+            "pyinfra.connectors.ssh_util.getpass",
+            return_value=ssh_encrypted_key["passphrase"],
+        ) as fake_getpass:
+            with patch("pyinfra.is_cli", True):
+                _, cfg, *_ = client.parse_config(
+                    "myhost",
+                    {"allow_agent": False},
+                    ssh_config_file=str(config_path),
+                )
+
+    fake_agent_cls.assert_not_called()
+    fake_getpass.assert_called_once()
+    assert isinstance(cfg["pkey"], PKey)
+    assert "key_filename" not in cfg
+
+
+def test_parse_config_identityfile_agent_key_keeps_certificate(
+    ssh_ca_keypair, tmp_path, _clear_ssh_config_cache
+):
+    # A certificate found beside the IdentityFile must still be attached when the
+    # private key itself comes from the agent.
+    config_path = tmp_path / "ssh_config"
+    _write_ssh_config(
+        config_path,
+        host="myhost",
+        IdentityFile=str(ssh_ca_keypair["user_key"]),
+    )
+
+    agent_key = _make_agent_key(ssh_ca_keypair["user_key"].with_suffix(".pub"))
+    agent = MagicMock(name="agent")
+    agent.get_keys.return_value = [agent_key]
+
+    client = SSHClient()
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", return_value=agent):
+        _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+
+    assert cfg["pkey"] is agent_key
+    assert cfg["pkey"].public_blob is not None
+    assert cfg["pkey"].public_blob.key_type == CERT_KEY_TYPE
+    assert "key_filename" not in cfg
+
+
 def test_parse_config_encrypted_identityfile_prompts_in_cli(
     ssh_encrypted_key, tmp_path, _clear_ssh_config_cache
 ):
@@ -647,17 +833,22 @@ def test_parse_config_encrypted_identityfile_prompts_in_cli(
         IdentityFile=str(ssh_encrypted_key["key"]),
     )
 
+    agent = MagicMock(name="agent")
+    agent.get_keys.return_value = []
+
     client = SSHClient()
-    with patch(
-        "pyinfra.connectors.ssh_util.getpass",
-        return_value=ssh_encrypted_key["passphrase"],
-    ) as fake_getpass:
-        with patch("pyinfra.is_cli", True):
-            _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", return_value=agent):
+        with patch(
+            "pyinfra.connectors.ssh_util.getpass",
+            return_value=ssh_encrypted_key["passphrase"],
+        ) as fake_getpass:
+            with patch("pyinfra.is_cli", True):
+                _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
 
     fake_getpass.assert_called_once()
     assert isinstance(cfg["pkey"], PKey)
     assert "key_filename" not in cfg
+    agent.close.assert_called_once()
 
 
 def test_parse_config_encrypted_identityfile_wrong_passphrase_falls_through(
@@ -672,10 +863,14 @@ def test_parse_config_encrypted_identityfile_wrong_passphrase_falls_through(
         IdentityFile=str(ssh_encrypted_key["key"]),
     )
 
+    agent = MagicMock(name="agent")
+    agent.get_keys.return_value = []
+
     client = SSHClient()
-    with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong"):
-        with patch("pyinfra.is_cli", True):
-            _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
+    with patch("pyinfra.connectors.sshuserclient.client.Agent", return_value=agent):
+        with patch("pyinfra.connectors.ssh_util.getpass", return_value="wrong"):
+            with patch("pyinfra.is_cli", True):
+                _, cfg, *_ = client.parse_config("myhost", ssh_config_file=str(config_path))
 
     assert "pkey" not in cfg
     assert cfg["key_filename"] == [str(ssh_encrypted_key["key"])]

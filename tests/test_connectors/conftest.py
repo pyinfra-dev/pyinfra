@@ -88,12 +88,25 @@ def ssh_encrypted_key(tmp_path_factory) -> dict[str, object]:
 
     ssh_dir = tmp_path_factory.mktemp("ssh_encrypted")
     key = ssh_dir / "encrypted_ed25519"
+    other_key = ssh_dir / "other_encrypted_ed25519"
     passphrase = "correct horse battery staple"
 
-    subprocess.run(
-        ["ssh-keygen", "-t", "ed25519", "-N", passphrase, "-f", str(key), "-C", "encrypted-test"],
-        check=True,
-        capture_output=True,
-    )
+    key_comments = ((key, "encrypted-test"), (other_key, "other-encrypted-test"))
+    for key_path, comment in key_comments:
+        subprocess.run(
+            [
+                "ssh-keygen",
+                "-t",
+                "ed25519",
+                "-N",
+                passphrase,
+                "-f",
+                str(key_path),
+                "-C",
+                comment,
+            ],
+            check=True,
+            capture_output=True,
+        )
 
-    return {"key": key, "passphrase": passphrase}
+    return {"key": key, "other_key": other_key, "passphrase": passphrase}

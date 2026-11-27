@@ -4,7 +4,7 @@ source has now vanished (https://github.com/tobald/sshuserclient).
 """
 
 import os
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from binascii import Error as BinasciiError
 from collections.abc import Iterator
 from fnmatch import fnmatchcase
@@ -19,7 +19,7 @@ from paramiko import (
     SSHClient as ParamikoClient,
     SSHException,
 )
-from paramiko.agent import AgentRequestHandler
+from paramiko.agent import Agent, AgentRequestHandler
 from paramiko.hostkeys import HostKeyEntry
 from paramiko.message import Message
 from paramiko.pkey import PKey, UnknownKeyType
@@ -115,16 +115,157 @@ class WarningPolicy(MissingHostKeyPolicy):
         logger.warning("No host key for %s found in known_hosts", hostname)
 
 
-def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
+def _read_public_key_blob(filename: Path) -> str | None:
+    try:
+        with filename.open(encoding="utf-8") as f:
+            line = f.readline()
+    except OSError:
+        return None
+
+    parts = line.strip().split()
+    if len(parts) < 2:
+        return None
+    return parts[1]
+
+
+def _read_openssh_private_key_public_blob(filename: Path) -> str | None:
+    """
+    Read the plaintext public key embedded in an OpenSSH private key file.
+
+    The public key sits outside the encrypted private section in the
+    ``openssh-key-v1`` format, so this never decrypts or prompts. OpenSSH uses
+    the same fallback when a ``<key>.pub`` file is unavailable.
+    """
+
+    magic = b"openssh-key-v1\0"
+    try:
+        lines = filename.read_text(encoding="ascii").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return None
+
+    if not lines or lines[0].strip() != "-----BEGIN OPENSSH PRIVATE KEY-----":
+        return None
+
+    encoded = "".join(line.strip() for line in lines[1:] if not line.startswith("-----END"))
+    try:
+        decoded = b64decode(encoded, validate=True)
+    except (BinasciiError, ValueError):
+        return None
+
+    if not decoded.startswith(magic):
+        return None
+
+    message = Message(decoded[len(magic) :])
+    try:
+        message.get_text()  # ciphername
+        message.get_text()  # kdfname
+        message.get_string()  # kdfoptions
+        key_count = message.get_int()
+        public_key_blob = message.get_string()
+    except (IndexError, SSHException, UnicodeDecodeError):
+        return None
+
+    if key_count != 1 or not public_key_blob:
+        return None
+    return b64encode(public_key_blob).decode("ascii")
+
+
+def _get_identity_certificate_path(
+    identity_file: str,
+    certificate_filename: str | None,
+) -> Path | None:
+    if certificate_filename is not None:
+        certificate_path = Path(certificate_filename).expanduser()
+    else:
+        certificate_path = Path(f"{Path(identity_file).expanduser()}-cert.pub")
+
+    if certificate_path.is_file():
+        return certificate_path
+    return None
+
+
+def _get_agent_keys(identity_agent: str | None) -> tuple[Agent | None, tuple[PKey, ...]]:
+    old_auth_sock = os.environ.get("SSH_AUTH_SOCK")
+    if identity_agent:
+        os.environ["SSH_AUTH_SOCK"] = identity_agent
+
+    try:
+        try:
+            agent = Agent()
+        except Exception as e:
+            logger.debug("Could not connect to SSH agent: %s", e)
+            return None, ()
+    finally:
+        if identity_agent:
+            if old_auth_sock is not None:
+                os.environ["SSH_AUTH_SOCK"] = old_auth_sock
+            else:
+                os.environ.pop("SSH_AUTH_SOCK", None)
+
+    return agent, tuple(agent.get_keys())
+
+
+def _find_agent_key_for_identity(
+    identity_file: str,
+    certificate_filename: str | None,
+    agent_keys: tuple[PKey, ...],
+) -> PKey | None:
+    identity_path = Path(identity_file).expanduser()
+    public_key_blob = _read_public_key_blob(Path(f"{identity_path}.pub"))
+    if public_key_blob is None:
+        public_key_blob = _read_openssh_private_key_public_blob(identity_path)
+    certificate_path = _get_identity_certificate_path(identity_file, certificate_filename)
+    certificate_blob = (
+        _read_public_key_blob(certificate_path) if certificate_path is not None else None
+    )
+
+    if public_key_blob is None and certificate_blob is None:
+        return None
+
+    for key in agent_keys:
+        try:
+            key_blob = key.get_base64()
+        except Exception as e:
+            logger.debug("Could not read SSH agent key public blob: %s", e)
+            continue
+
+        if certificate_blob is not None and key_blob == certificate_blob:
+            return key
+
+        if public_key_blob is not None and key_blob == public_key_blob:
+            certificate_loaded = True
+            if certificate_path is not None:
+                try:
+                    key.load_certificate(str(certificate_path))
+                except (OSError, SSHException, ValueError) as e:
+                    certificate_loaded = False
+                    logger.debug(
+                        "Could not load certificate %s on SSH agent key: %s",
+                        certificate_path,
+                        e,
+                    )
+            if certificate_loaded:
+                return key
+
+    return None
+
+
+def _attach_identity_with_certificate(
+    cfg: dict,
+    host_config: dict,
+    identity_agent: str | None = None,
+) -> None:
     """
     Replace ``cfg["key_filename"]`` with a pre-built ``pkey`` when an ssh_config
     ``IdentityFile`` exists on disk. Honours ``CertificateFile`` directives and
     falls back to the implicit ``<key>-cert.pub`` lookup so OpenSSH-style CA
     auth works without explicit pyinfra ``ssh_key`` configuration (issue #1569).
-    Silent fall-through when no identity exists keeps the legacy paramiko
-    ``key_filename`` flow for missing or otherwise unloadable files. An encrypted
-    identity prompts for its passphrase under the CLI and raises in API mode,
-    both handled inside :func:`load_key_with_certificate` (issue #1917).
+    Before loading and potentially decrypting the identity file, match its public
+    half against the SSH agent and use that key when already unlocked there
+    (issue #2066). Silent fall-through when no identity exists keeps the legacy
+    paramiko ``key_filename`` flow for missing or otherwise unloadable files. An
+    encrypted identity prompts for its passphrase under the CLI and raises in API
+    mode, both handled inside :func:`load_key_with_certificate` (issue #1917).
     """
 
     identity_files = host_config.get("identityfile") or []
@@ -136,20 +277,45 @@ def _attach_identity_with_certificate(cfg: dict, host_config: dict) -> None:
         certificate_files = [certificate_files]
     certificate_filename = certificate_files[0] if certificate_files else None
 
-    for identity_file in identity_files:
-        expanded = Path(identity_file).expanduser()
-        if not expanded.is_file():
-            continue
-        try:
-            cfg["pkey"] = load_key_with_certificate(
-                key_filename=identity_file,
-                certificate_filename=certificate_filename,
-            )
-        except (PyinfraError, SSHException, OSError) as e:
-            logger.debug("Could not load identity %s with certificate: %s", identity_file, e)
-            continue
-        cfg.pop("key_filename", None)
-        return
+    existing_identity_files = [
+        identity_file
+        for identity_file in identity_files
+        if Path(identity_file).expanduser().is_file()
+    ]
+
+    agent = None
+    agent_keys: tuple[PKey, ...] = ()
+    using_agent_key = False
+
+    try:
+        if cfg.get("allow_agent", True) and existing_identity_files:
+            agent, agent_keys = _get_agent_keys(identity_agent)
+            for identity_file in existing_identity_files:
+                agent_key = _find_agent_key_for_identity(
+                    identity_file,
+                    certificate_filename,
+                    agent_keys,
+                )
+                if agent_key is not None:
+                    cfg["pkey"] = agent_key
+                    cfg.pop("key_filename", None)
+                    using_agent_key = True
+                    return
+
+        for identity_file in existing_identity_files:
+            try:
+                cfg["pkey"] = load_key_with_certificate(
+                    key_filename=identity_file,
+                    certificate_filename=certificate_filename,
+                )
+            except (PyinfraError, SSHException, OSError) as e:
+                logger.debug("Could not load identity %s with certificate: %s", identity_file, e)
+                continue
+            cfg.pop("key_filename", None)
+            return
+    finally:
+        if agent is not None and not using_agent_key:
+            agent.close()
 
 
 def get_missing_host_key_policy(policy):
@@ -511,13 +677,18 @@ class SSHClient(ParamikoClient):
         if "user" in host_config:
             cfg["username"] = host_config["user"]
 
+        if "identityagent" in host_config:
+            agent_path = host_config["identityagent"]
+            if agent_path.lower() != "none":
+                identity_agent = os.path.expanduser(agent_path)
+
         # An explicit pyinfra ``ssh_key`` (already loaded into ``pkey`` using
         # ``ssh_key_password``) wins over any ssh_config ``IdentityFile``, the
         # same way ``ssh -i`` overrides the config (issue #1852). Loading the
         # config identity here would otherwise prompt for its passphrase.
         if "identityfile" in host_config and "pkey" not in cfg:
             cfg["key_filename"] = host_config["identityfile"]
-            _attach_identity_with_certificate(cfg, host_config)
+            _attach_identity_with_certificate(cfg, host_config, identity_agent)
 
         if "port" in host_config:
             cfg["port"] = int(host_config["port"])
@@ -530,11 +701,6 @@ class SSHClient(ParamikoClient):
 
         if "serveraliveinterval" in host_config:
             keep_alive = int(host_config["serveraliveinterval"])
-
-        if "identityagent" in host_config:
-            agent_path = host_config["identityagent"]
-            if agent_path.lower() != "none":
-                identity_agent = os.path.expanduser(agent_path)
 
         proxyjump = host_config.get("proxyjump")
 
