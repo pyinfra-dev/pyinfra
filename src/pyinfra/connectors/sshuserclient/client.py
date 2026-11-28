@@ -372,8 +372,9 @@ def get_host_keys(filenames):
 
 def _copy_host_keys(host_keys: HostKeys) -> HostKeys:
     copied_host_keys = HostKeys()
-    copied_host_keys._entries = [
-        HostKeyEntry(list(entry.hostnames or []), entry.key) for entry in host_keys._entries
+    copied_host_keys._entries = [  # type: ignore[attr-defined]
+        HostKeyEntry(list(entry.hostnames or []), entry.key)
+        for entry in host_keys._entries  # type: ignore[attr-defined]
     ]
 
     cert_authorities = _get_cert_authorities(host_keys)
@@ -384,8 +385,10 @@ def _copy_host_keys(host_keys: HostKeys) -> HostKeys:
 
 
 def _copy_new_host_keys(source_host_keys: HostKeys, target_host_keys: HostKeys) -> None:
-    copied_entry_ids = getattr(source_host_keys, "_pyinfra_copied_host_key_entry_ids", set())
-    for entry in source_host_keys._entries:
+    copied_entry_ids: set[int] = getattr(
+        source_host_keys, "_pyinfra_copied_host_key_entry_ids", set()
+    )
+    for entry in source_host_keys._entries:  # type: ignore[attr-defined]
         if id(entry) in copied_entry_ids or entry.key is None:
             continue
 
@@ -396,20 +399,26 @@ def _copy_new_host_keys(source_host_keys: HostKeys, target_host_keys: HostKeys) 
                 hostname in (target_entry.hostnames or [])
                 and target_entry.key is not None
                 and target_entry.key.get_name() == key_type
-                for target_entry in target_host_keys._entries
+                for target_entry in target_host_keys._entries  # type: ignore[attr-defined]
             )
             if not already_present:
                 hostnames_to_add.append(hostname)
 
         if hostnames_to_add:
-            target_host_keys._entries.append(HostKeyEntry(hostnames_to_add, entry.key))
+            target_host_keys._entries.append(  # type: ignore[attr-defined]
+                HostKeyEntry(hostnames_to_add, entry.key)
+            )
 
 
 class HostKeyAliasHostKeys(HostKeys):
+    _host_keys: HostKeys
+    _entries: list[HostKeyEntry]
+    _pyinfra_copied_host_key_entry_ids: set[int]
+
     def __init__(self, host_keys: HostKeys, server_hostkey_name: str, host_key_alias: str):
         copied_host_keys = _copy_host_keys(host_keys)
         self._host_keys = host_keys
-        self._entries = copied_host_keys._entries
+        self._entries = copied_host_keys._entries  # type: ignore[attr-defined]
         self._pyinfra_copied_host_key_entry_ids = {id(entry) for entry in self._entries}
         self._server_hostkey_name = server_hostkey_name
         self._host_key_alias = host_key_alias
@@ -444,12 +453,14 @@ class HostKeyAliasHostKeys(HostKeys):
 
             if any(entry_hostname.startswith("|1|") for entry_hostname in entry_hostnames):
                 for hostname in plain_hostnames:
-                    if HostKeys._hostname_matches(self, hostname, entry):
+                    if HostKeys._hostname_matches(  # type: ignore[attr-defined]
+                        self, hostname, entry
+                    ):
                         hashed_matches[hostname][index] = entry
 
         items = {}
         for hostname in hostnames:
-            hostname_keys = {}
+            hostname_keys: dict[str, PKey] = {}
             matches = exact_matches[hostname] or hashed_matches[hostname]
             for index in sorted(matches):
                 entry = matches[index]
@@ -478,6 +489,10 @@ class SSHClient(ParamikoClient):
     An SSHClient which honors ssh_config and supports proxyjumping
     original idea at http://bitprophet.org/blog/2012/11/05/gateway-solutions/.
     """
+
+    _system_host_keys: HostKeys
+    _host_keys: HostKeys
+    _host_keys_filename: str | None
 
     @override
     def connect(  # type: ignore[override]
