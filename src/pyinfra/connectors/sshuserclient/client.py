@@ -372,18 +372,105 @@ def get_host_keys(filenames):
 
 def _copy_host_keys(host_keys: HostKeys) -> HostKeys:
     copied_host_keys = HostKeys()
-    for hostname in host_keys.keys():
-        hostname_keys = host_keys.lookup(hostname)
-        if hostname_keys is None:
-            continue
-        for key_type, key in hostname_keys.items():
-            copied_host_keys.add(hostname, key_type, key)
+    copied_host_keys._entries = [
+        HostKeyEntry(list(entry.hostnames or []), entry.key) for entry in host_keys._entries
+    ]
 
     cert_authorities = _get_cert_authorities(host_keys)
     if cert_authorities:
         setattr(copied_host_keys, "_pyinfra_cert_authorities", list(cert_authorities))
 
     return copied_host_keys
+
+
+def _copy_new_host_keys(source_host_keys: HostKeys, target_host_keys: HostKeys) -> None:
+    copied_entry_ids = getattr(source_host_keys, "_pyinfra_copied_host_key_entry_ids", set())
+    for entry in source_host_keys._entries:
+        if id(entry) in copied_entry_ids or entry.key is None:
+            continue
+
+        key_type = entry.key.get_name()
+        hostnames_to_add = []
+        for hostname in entry.hostnames or []:
+            already_present = any(
+                hostname in (target_entry.hostnames or [])
+                and target_entry.key is not None
+                and target_entry.key.get_name() == key_type
+                for target_entry in target_host_keys._entries
+            )
+            if not already_present:
+                hostnames_to_add.append(hostname)
+
+        if hostnames_to_add:
+            target_host_keys._entries.append(HostKeyEntry(hostnames_to_add, entry.key))
+
+
+class HostKeyAliasHostKeys(HostKeys):
+    def __init__(self, host_keys: HostKeys, server_hostkey_name: str, host_key_alias: str):
+        copied_host_keys = _copy_host_keys(host_keys)
+        self._host_keys = host_keys
+        self._entries = copied_host_keys._entries
+        self._pyinfra_copied_host_key_entry_ids = {id(entry) for entry in self._entries}
+        self._server_hostkey_name = server_hostkey_name
+        self._host_key_alias = host_key_alias
+        cert_authorities = _get_cert_authorities(copied_host_keys)
+        if cert_authorities:
+            setattr(self, "_pyinfra_cert_authorities", cert_authorities)
+
+    @override
+    def lookup(self, hostname):
+        if hostname == self._server_hostkey_name:
+            hostname = self._host_key_alias
+        return super().lookup(hostname)
+
+    @override
+    def items(self):
+        hostnames = HostKeys.keys(self)
+        hostname_set = set(hostnames)
+        plain_hostnames = [hostname for hostname in hostnames if not hostname.startswith("|1|")]
+        exact_matches: dict[str, dict[int, HostKeyEntry]] = {hostname: {} for hostname in hostnames}
+        hashed_matches: dict[str, dict[int, HostKeyEntry]] = {
+            hostname: {} for hostname in hostnames
+        }
+
+        # Collect exact entries in one pass. Hashed entries can also match a
+        # stored plain hostname, so compare those against the plain names
+        # without rescanning every entry once per hostname.
+        for index, entry in enumerate(self._entries):
+            entry_hostnames = entry.hostnames or []
+            for entry_hostname in entry_hostnames:
+                if entry_hostname in hostname_set:
+                    exact_matches[entry_hostname][index] = entry
+
+            if any(entry_hostname.startswith("|1|") for entry_hostname in entry_hostnames):
+                for hostname in plain_hostnames:
+                    if HostKeys._hostname_matches(self, hostname, entry):
+                        hashed_matches[hostname][index] = entry
+
+        items = {}
+        for hostname in hostnames:
+            hostname_keys = {}
+            matches = exact_matches[hostname] or hashed_matches[hostname]
+            for index in sorted(matches):
+                entry = matches[index]
+                if entry.key is not None:
+                    hostname_keys.setdefault(entry.key.get_name(), entry.key)
+            if hostname_keys:
+                items[hostname] = hostname_keys
+        return items.items()
+
+
+class HostKeyAliasPolicy(MissingHostKeyPolicy):
+    def __init__(self, policy, server_hostkey_name: str, host_key_alias: str):
+        self._policy = policy
+        self._server_hostkey_name = server_hostkey_name
+        self._host_key_alias = host_key_alias
+
+    @override
+    def missing_host_key(self, client, hostname, key):
+        if hostname == self._server_hostkey_name:
+            hostname = self._host_key_alias
+        return self._policy.missing_host_key(client, hostname, key)
 
 
 class SSHClient(ParamikoClient):
@@ -432,24 +519,31 @@ class SSHClient(ParamikoClient):
         # Overwrite paramiko empty defaults with @memoize-d host keys object
         self._host_keys = get_host_keys(host_keys_files)
 
-        # Honor any HostKeyAlias for the host key lookup, like ssh does. Paramiko
-        # looks up non-default ports as ``[host]:port``, so mirror that name on a
-        # per-client copy rather than mutating the shared memoized host keys.
-        if host_key_alias:
-            port = int(config.get("port", 22))
-            server_hostkey_name = hostname if port == 22 else f"[{hostname}]:{port}"
-            if self._host_keys.lookup(server_hostkey_name) is None:
-                alias_host_keys = self._host_keys.lookup(host_key_alias)
-                if alias_host_keys is not None:
-                    self._host_keys = _copy_host_keys(self._host_keys)
-                    for key_type, key in alias_host_keys.items():
-                        self._host_keys.add(server_hostkey_name, key_type, key)
         # Use the first file for writing new host keys
         if len(host_keys_files) > 0:
             self._host_keys_filename = host_keys_files[0]
 
         if _pyinfra_ssh_paramiko_connect_kwargs:
             config.update(_pyinfra_ssh_paramiko_connect_kwargs)
+
+        unwrapped_system_host_keys = self._system_host_keys
+        while isinstance(unwrapped_system_host_keys, HostKeyAliasHostKeys):
+            unwrapped_system_host_keys = unwrapped_system_host_keys._host_keys
+        self._system_host_keys = unwrapped_system_host_keys
+
+        unwrapped_host_keys = self._host_keys
+        if host_key_alias:
+            port = int(config.get("port", 22))
+            server_hostkey_name = hostname if port == 22 else f"[{hostname}]:{port}"
+            self._host_keys = HostKeyAliasHostKeys(
+                unwrapped_host_keys, server_hostkey_name, host_key_alias
+            )
+            self._system_host_keys = HostKeyAliasHostKeys(
+                unwrapped_system_host_keys, server_hostkey_name, host_key_alias
+            )
+            self.set_missing_host_key_policy(
+                HostKeyAliasPolicy(missing_host_key_policy, server_hostkey_name, host_key_alias)
+            )
 
         self._ssh_config = config
         self.identity_agent = identity_agent
@@ -462,6 +556,14 @@ class SSHClient(ParamikoClient):
         try:
             super().connect(hostname, **config)
         finally:
+            if host_key_alias:
+                aliased_host_keys = self._host_keys
+                aliased_system_host_keys = self._system_host_keys
+                self._host_keys = unwrapped_host_keys
+                self._system_host_keys = unwrapped_system_host_keys
+                self.set_missing_host_key_policy(missing_host_key_policy)
+                _copy_new_host_keys(aliased_host_keys, unwrapped_host_keys)
+                _copy_new_host_keys(aliased_system_host_keys, unwrapped_system_host_keys)
             if identity_agent:
                 if old_auth_sock is not None:
                     os.environ["SSH_AUTH_SOCK"] = old_auth_sock

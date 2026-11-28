@@ -13,7 +13,13 @@ from pyinfra.api.connect import connect_all
 from pyinfra.api.exceptions import ConnectError, PyinfraError
 from pyinfra.connectors import ssh
 from pyinfra.connectors.ssh_util import _patch_paramiko_sk_key_support
-from pyinfra.connectors.sshuserclient.client import SSHClient as SSHUserClient
+from pyinfra.connectors.sshuserclient.client import (
+    SSHClient as SSHUserClient,
+    HostKeyAliasHostKeys,
+    HostKeyAliasPolicy,
+    _add_cert_authority,
+    _copy_new_host_keys,
+)
 from pyinfra.context import ctx_state
 
 from ..util import make_inventory
@@ -1509,59 +1515,351 @@ class TestSSHConnector(TestCase):
             assert fake_ssh_client().connect.call_count == 2
 
 
+class FakeSecurityOptions:
+    key_types = ["rsa-sha2-512", "ssh-ed25519"]
+
+
+class FakeSocketWithKey:
+    def __init__(self, server_key):
+        self.server_key = server_key
+
+
+class FakeTransport:
+    def __init__(self, sock, disabled_algorithms=None):
+        self.server_key = sock.server_key
+
+    def use_compression(self, compress):
+        pass
+
+    def start_client(self, timeout=None):
+        pass
+
+    def get_remote_server_key(self):
+        return self.server_key
+
+    def get_security_options(self):
+        return FakeSecurityOptions()
+
+
+def connect_with_parsed_ssh_config(client, ssh_config, connect_name, host_keys, server_key):
+    with (
+        mock.patch("paramiko.client.SSHClient._auth", return_value=None),
+        mock.patch(
+            "pyinfra.connectors.sshuserclient.client.get_host_keys",
+            return_value=host_keys,
+        ),
+        mock.patch(
+            "pyinfra.connectors.sshuserclient.client.get_ssh_config",
+            return_value=ssh_config,
+        ),
+    ):
+        client.connect(
+            connect_name,
+            sock=FakeSocketWithKey(server_key),
+            transport_factory=FakeTransport,
+        )
+    return client
+
+
+def connect_with_ssh_config(config_text, connect_name, host_keys, server_key, client=None):
+    from io import StringIO
+
+    from pyinfra.connectors.sshuserclient.config import SSHConfig
+
+    ssh_config = SSHConfig()
+    ssh_config.parse(StringIO(config_text))
+    client = client or SSHUserClient()
+    return connect_with_parsed_ssh_config(client, ssh_config, connect_name, host_keys, server_key)
+
+
 class TestSSHHostKeyAlias(TestCase):
-    def _connect_with_alias(self, port=None, include_hostname_key=False):
+    def _connect_with_alias(self, host_keys, server_key, port=None, known_hosts_file=None):
+        config_text = "Host rhost\n  HostName 10.0.0.2\n  HostKeyAlias rhost-alias\n"
+        if port is not None:
+            config_text += f"  Port {port}\n"
+        if known_hosts_file is not None:
+            config_text += f"  UserKnownHostsFile {known_hosts_file}\n"
+            config_text += "  StrictHostKeyChecking accept-new\n"
+        return connect_with_ssh_config(config_text, "rhost", host_keys, server_key)
+
+    def test_host_key_alias_key_accepted_over_conflicting_hostname_key(self):
+        from paramiko import HostKeys, RSAKey
+
+        alias_key = RSAKey.generate(1024)
+        hostname_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("rhost-alias", "ssh-rsa", alias_key)
+        host_keys.add("10.0.0.2", "ssh-rsa", hostname_key)
+
+        client = self._connect_with_alias(host_keys, alias_key)
+
+        assert client._host_keys is host_keys
+        assert host_keys.lookup("10.0.0.2")["ssh-rsa"] is hostname_key
+
+    def test_conflicting_hostname_key_rejected_when_host_key_alias_exists(self):
+        from paramiko import BadHostKeyException, HostKeys, RSAKey
+
+        alias_key = RSAKey.generate(1024)
+        hostname_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("rhost-alias", "ssh-rsa", alias_key)
+        host_keys.add("10.0.0.2", "ssh-rsa", hostname_key)
+
+        with self.assertRaises(BadHostKeyException):
+            self._connect_with_alias(host_keys, hostname_key)
+
+    def test_host_key_alias_key_accepted_with_non_default_port(self):
+        from paramiko import HostKeys, RSAKey
+
+        alias_key = RSAKey.generate(1024)
+        hostname_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("rhost-alias", "ssh-rsa", alias_key)
+        host_keys.add("[10.0.0.2]:2222", "ssh-rsa", hostname_key)
+
+        client = self._connect_with_alias(host_keys, alias_key, port=2222)
+
+        assert client._host_keys is host_keys
+        assert host_keys.lookup("[10.0.0.2]:2222")["ssh-rsa"] is hostname_key
+
+    def test_conflicting_hostname_key_rejected_with_non_default_port(self):
+        from paramiko import BadHostKeyException, HostKeys, RSAKey
+
+        alias_key = RSAKey.generate(1024)
+        hostname_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("rhost-alias", "ssh-rsa", alias_key)
+        host_keys.add("[10.0.0.2]:2222", "ssh-rsa", hostname_key)
+
+        with self.assertRaises(BadHostKeyException):
+            self._connect_with_alias(host_keys, hostname_key, port=2222)
+
+    def test_missing_alias_key_is_saved_under_alias_not_hostname(self):
+        from paramiko import HostKeys, RSAKey
+
+        server_key = RSAKey.generate(1024)
+        hostname_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("[10.0.0.2]:2222", "ssh-rsa", hostname_key)
+        physical_line = f"[10.0.0.2]:2222 ssh-rsa {hostname_key.get_base64()}"
+        with TemporaryDirectory() as temp_dir:
+            known_hosts_file = Path(temp_dir) / "known_hosts"
+            known_hosts_file.write_text(physical_line + "\n")
+            self._connect_with_alias(
+                host_keys,
+                server_key,
+                port=2222,
+                known_hosts_file=known_hosts_file,
+            )
+
+            lines = known_hosts_file.read_text().splitlines()
+
+        assert len(lines) == 2
+        assert lines[0] == physical_line
+        assert lines[1].split()[0] == "rhost-alias"
+
+    def test_alias_wrapper_isolated_from_shared_host_keys(self):
+        from paramiko import HostKeys, RSAKey
+
+        alias_key = RSAKey.generate(1024)
+        hostname_key = RSAKey.generate(1024)
+        replacement_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("rhost-alias", "ssh-rsa", alias_key)
+        host_keys.add("10.0.0.2", "ssh-rsa", hostname_key)
+        wrapper = HostKeyAliasHostKeys(host_keys, "10.0.0.2", "rhost-alias")
+
+        wrapper.lookup("10.0.0.2")["ssh-rsa"] = replacement_key
+        wrapper.add("10.0.0.2", "ssh-rsa", replacement_key)
+
+        assert host_keys.lookup("rhost-alias")["ssh-rsa"] is alias_key
+        assert host_keys.lookup("10.0.0.2")["ssh-rsa"] is hostname_key
+
+    def test_alias_wrapper_items_keep_physical_key_identity(self):
+        from paramiko import HostKeys, RSAKey
+
+        alias_key = RSAKey.generate(1024)
+        hostname_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys.add("rhost-alias", "ssh-rsa", alias_key)
+        host_keys.add("10.0.0.2", "ssh-rsa", hostname_key)
+        wrapper = HostKeyAliasHostKeys(host_keys, "10.0.0.2", "rhost-alias")
+
+        items = dict(wrapper.items())
+
+        assert items["10.0.0.2"]["ssh-rsa"] is hostname_key
+        assert items["rhost-alias"]["ssh-rsa"] is alias_key
+
+    def test_repeated_physical_keys_keep_lookup_precedence_when_saving_alias(self):
+        from paramiko import AutoAddPolicy, HostKeys, RSAKey
+        from paramiko.hostkeys import HostKeyEntry
+
+        class SaveHostKeysPolicy(AutoAddPolicy):
+            def missing_host_key(self, client, hostname, key):
+                client._host_keys.add(hostname, key.get_name(), key)
+                if client._host_keys_filename is not None:
+                    client.save_host_keys(client._host_keys_filename)
+
+        first_key = RSAKey.generate(1024)
+        second_key = RSAKey.generate(1024)
+        server_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        host_keys._entries.extend(
+            [
+                HostKeyEntry(["10.0.0.2"], first_key),
+                HostKeyEntry(["10.0.0.2"], second_key),
+            ]
+        )
+
+        with TemporaryDirectory() as temp_dir:
+            known_hosts_file = Path(temp_dir) / "known_hosts"
+            known_hosts_file.write_text("")
+            with mock.patch(
+                "pyinfra.connectors.sshuserclient.client.get_missing_host_key_policy",
+                return_value=SaveHostKeysPolicy(),
+            ):
+                self._connect_with_alias(
+                    host_keys,
+                    server_key,
+                    known_hosts_file=known_hosts_file,
+                )
+
+            saved_lines = known_hosts_file.read_text().splitlines()
+
+        physical_lines = [line for line in saved_lines if line.startswith("10.0.0.2 ")]
+        assert len(physical_lines) == 1
+        assert physical_lines[0].split()[2] == first_key.get_base64()
+        assert any(line.split()[0] == "rhost-alias" for line in saved_lines)
+
+        round_tripped = HostKeys()
+        for line in saved_lines:
+            entry = HostKeyEntry.from_line(line)
+            assert entry is not None
+            round_tripped._entries.append(entry)
+        assert round_tripped.lookup("10.0.0.2")["ssh-rsa"].asbytes() == first_key.asbytes()
+
+    def test_alias_wrapper_preserves_plain_key_after_matching_hashed_entry(self):
+        from paramiko import HostKeys, RSAKey
+
+        hashed_key = RSAKey.generate(1024)
+        plain_key = RSAKey.generate(1024)
+        accepted_alias_key = RSAKey.generate(1024)
+        host_keys = HostKeys()
+        hashed_hostname = HostKeys.hash_host("10.0.0.2", "MTIzNDU2Nzg5MDEyMzQ1Njc4OTA=")
+        host_keys.add(hashed_hostname, "ssh-rsa", hashed_key)
+        host_keys.add("10.0.0.2", "ssh-rsa", plain_key)
+        wrapper = HostKeyAliasHostKeys(host_keys, "10.0.0.2", "rhost-alias")
+
+        items = dict(wrapper.items())
+
+        assert items[hashed_hostname]["ssh-rsa"] is hashed_key
+        assert items["10.0.0.2"]["ssh-rsa"] is plain_key
+
+        wrapper.add("rhost-alias", "ssh-rsa", accepted_alias_key)
+        _copy_new_host_keys(wrapper, host_keys)
+
+        assert any(
+            entry.key is plain_key for entry in host_keys._entries if "10.0.0.2" in entry.hostnames
+        )
+        assert any(
+            entry.key is accepted_alias_key
+            for entry in host_keys._entries
+            if "rhost-alias" in entry.hostnames
+        )
+
+    def test_system_host_keys_unwrapped_for_later_aliasless_connection(self):
         from io import StringIO
 
         from paramiko import HostKeys, RSAKey
 
-        from pyinfra.connectors.sshuserclient.client import SSHClient as SSHUserClient
         from pyinfra.connectors.sshuserclient.config import SSHConfig
 
-        key = RSAKey.generate(1024)
+        alias_key = RSAKey.generate(1024)
+        physical_key = RSAKey.generate(1024)
         host_keys = HostKeys()
-        host_keys.add("rhost-alias", "ssh-rsa", key)
-        hostname_key = None
-        if include_hostname_key:
-            hostname_key = RSAKey.generate(1024)
-            host_keys.add("10.0.0.2", "ssh-rsa", hostname_key)
-
-        config_text = "Host rhost\n  HostName 10.0.0.2\n  HostKeyAlias rhost-alias\n"
-        if port is not None:
-            config_text += f"  Port {port}\n"
+        host_keys.add("rhost-alias", "ssh-rsa", alias_key)
+        config_text = (
+            "Host rhost\n"
+            "  HostName 10.0.0.2\n"
+            "  HostKeyAlias rhost-alias\n"
+            "  StrictHostKeyChecking yes\n"
+            "Host plain\n"
+            "  HostName 10.0.0.2\n"
+            "  StrictHostKeyChecking yes\n"
+        )
         ssh_config = SSHConfig()
         ssh_config.parse(StringIO(config_text))
 
         client = SSHUserClient()
-        connect_kwargs = {}
-        with (
-            mock.patch("pyinfra.connectors.sshuserclient.client.ParamikoClient.connect"),
-            mock.patch(
-                "pyinfra.connectors.sshuserclient.client.get_host_keys",
-                return_value=host_keys,
-            ),
-            mock.patch(
-                "pyinfra.connectors.sshuserclient.client.get_ssh_config",
-                return_value=ssh_config,
-            ),
-        ):
-            client.connect("rhost", **connect_kwargs)
-        return client, host_keys, hostname_key
+        system_host_keys = HostKeys()
+        system_host_keys.add("10.0.0.2", "ssh-rsa", physical_key)
+        client._system_host_keys = system_host_keys
 
-    def test_host_key_alias_registered_under_connect_hostname(self):
-        client, host_keys, _ = self._connect_with_alias()
-        assert client._host_keys.lookup("10.0.0.2") is not None
-        assert host_keys.lookup("10.0.0.2") is None
+        connect_with_parsed_ssh_config(client, ssh_config, "rhost", host_keys, alias_key)
+        assert client._system_host_keys is system_host_keys
+        assert not isinstance(client._policy, HostKeyAliasPolicy)
 
-    def test_host_key_alias_registered_with_non_default_port(self):
-        client, host_keys, _ = self._connect_with_alias(port=2222)
-        assert client._host_keys.lookup("[10.0.0.2]:2222") is not None
-        assert host_keys.lookup("[10.0.0.2]:2222") is None
+        connect_with_parsed_ssh_config(client, ssh_config, "plain", host_keys, physical_key)
+        assert client._system_host_keys is system_host_keys
+        assert not isinstance(client._policy, HostKeyAliasPolicy)
 
-    def test_host_key_alias_not_registered_with_default_port(self):
-        client, _, _ = self._connect_with_alias()
-        assert client._host_keys.lookup("[10.0.0.2]:22") is None
 
-    def test_host_key_alias_not_used_when_hostname_key_exists(self):
-        client, _, hostname_key = self._connect_with_alias(include_hostname_key=True)
-        assert client._host_keys.lookup("10.0.0.2")["ssh-rsa"] is hostname_key
+def test_host_certificate_ca_must_match_host_key_alias(ssh_ca_keypair):
+    from paramiko import HostKeys
+    from paramiko.ed25519key import Ed25519Key
+
+    host_keys = HostKeys()
+    ca_key_type, ca_key_data, *_ = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().split()
+    _add_cert_authority(host_keys, "10.0.0.2", ca_key_type, ca_key_data)
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+    config_text = (
+        "Host rhost\n  HostName 10.0.0.2\n  HostKeyAlias rhost-alias\n  StrictHostKeyChecking yes\n"
+    )
+
+    try:
+        connect_with_ssh_config(config_text, "rhost", host_keys, server_key)
+    except SSHException as e:
+        assert "No host key for rhost-alias" in str(e)
+    else:
+        raise AssertionError("certificate signed by a physical-host CA was accepted for the alias")
+
+
+def test_host_certificate_identity_uses_host_key_alias(ssh_ca_keypair):
+    from paramiko import HostKeys
+    from paramiko.ed25519key import Ed25519Key
+
+    host_keys = HostKeys()
+    ca_key_type, ca_key_data, *_ = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().split()
+    _add_cert_authority(host_keys, "rhost-alias", ca_key_type, ca_key_data)
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["host_cert"]))
+    config_text = (
+        "Host rhost\n  HostName 10.0.0.2\n  HostKeyAlias rhost-alias\n  StrictHostKeyChecking yes\n"
+    )
+
+    connect_with_ssh_config(config_text, "rhost", host_keys, server_key)
+
+
+def test_host_certificate_wrong_principal_rejected_with_alias_ca(ssh_ca_keypair):
+    from paramiko import HostKeys
+    from paramiko.ed25519key import Ed25519Key
+
+    host_keys = HostKeys()
+    ca_key_type, ca_key_data, *_ = ssh_ca_keypair["ca_key"].with_suffix(".pub").read_text().split()
+    _add_cert_authority(host_keys, "rhost-alias", ca_key_type, ca_key_data)
+
+    server_key = Ed25519Key(filename=str(ssh_ca_keypair["host_key"]))
+    server_key.load_certificate(str(ssh_ca_keypair["wrong_principal_host_cert"]))
+    config_text = (
+        "Host rhost\n  HostName 10.0.0.2\n  HostKeyAlias rhost-alias\n  StrictHostKeyChecking yes\n"
+    )
+
+    try:
+        connect_with_ssh_config(config_text, "rhost", host_keys, server_key)
+    except SSHException as e:
+        assert "No host key for rhost-alias" in str(e)
+    else:
+        raise AssertionError("certificate without the alias principal was accepted")
