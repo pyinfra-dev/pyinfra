@@ -59,6 +59,25 @@ def ssh_ca_keypair(tmp_path_factory) -> dict[str, Path]:
             "test-host",
             "-h",
             "-n",
+            "192.168.1.236,host.example.com,rhost-alias",
+            "-V",
+            "+1h",
+            str(host_key) + ".pub",
+        ],
+        check=True,
+        capture_output=True,
+    )
+    correct_host_cert = ssh_dir / "host_ed25519-correct-cert.pub"
+    host_cert.replace(correct_host_cert)
+    subprocess.run(
+        [
+            "ssh-keygen",
+            "-s",
+            str(ca_key),
+            "-I",
+            "test-host-wrong-principal",
+            "-h",
+            "-n",
             "192.168.1.236,host.example.com",
             "-V",
             "+1h",
@@ -67,9 +86,15 @@ def ssh_ca_keypair(tmp_path_factory) -> dict[str, Path]:
         check=True,
         capture_output=True,
     )
+    wrong_principal_host_cert = ssh_dir / "host_ed25519-wrong-principal-cert.pub"
+    host_cert.replace(wrong_principal_host_cert)
+    correct_host_cert.replace(host_cert)
 
     assert user_cert.is_file(), "ssh-keygen did not produce the expected certificate"
     assert host_cert.is_file(), "ssh-keygen did not produce the expected host certificate"
+    assert wrong_principal_host_cert.is_file(), (
+        "ssh-keygen did not produce the wrong-principal certificate"
+    )
 
     return {
         "ca_key": ca_key,
@@ -77,6 +102,7 @@ def ssh_ca_keypair(tmp_path_factory) -> dict[str, Path]:
         "user_cert": user_cert,
         "host_key": host_key,
         "host_cert": host_cert,
+        "wrong_principal_host_cert": wrong_principal_host_cert,
         "ssh_dir": ssh_dir,
     }
 
